@@ -33,3 +33,5 @@ build/
 .vscode/
 
 HELP.md
+
+secret.properties
