@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Choose Username</title>
+</head>
+
+<body>
+	<div>
+		<h2>Choose Your Username</h2>
+		<form th:action="@{/username}" method="post">
+			<div>
+				<label for="username">Username:</label>
+				<input type="text" id="username" name="username" required placeholder="Username">
+			</div>
+			<button type="submit">Submit</button>
+		</form>
+
+		<p th:if="${error}" th:text="${error}"></p>
+
+		<form th:action="@{/logout}" method="post">
+			<button type="submit">Log Out</button>
+		</form>
+	</div>
+</body>
+
+</html>

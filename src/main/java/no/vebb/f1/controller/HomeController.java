@@ -1,21 +1,25 @@
 package no.vebb.f1.controller;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.ui.Model;
 
-@RestController
+
+@Controller
 public class HomeController {
 
 	@GetMapping("/")
-	public String home() {
-		return "Home";
-	}
+	public String home(Model model) {
+		boolean loggedIn = false;
 
-	@GetMapping("/user")
-	public String getUser(@AuthenticationPrincipal OAuth2User principal) {
-		return principal.getName();
-	}
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null && authentication.isAuthenticated() && !(authentication.getPrincipal() instanceof String)) {
+			loggedIn = true;
+		}
 
+		model.addAttribute("loggedIn", loggedIn);
+		return "public";
+	}
 }

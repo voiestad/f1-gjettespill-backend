@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Tipping</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <div>
+                <a th:unless="${loggedIn}" href="/oauth2/authorization/google">Login</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+		F1 Tipping hjemskjerm!
+    </main>
+</body>
+</html>
