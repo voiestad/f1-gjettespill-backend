@@ -18,6 +18,94 @@ public class SQLiteConfig {
 					username TEXT NOT NULL
 			);
 			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Race (
+					id INTEGER PRIMARY KEY,
+					name TEXT NOT NULL
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Driver (
+					name TEXT PRIMARY KEY
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Constructor (
+					name TEXT PRIMARY KEY
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS DriverYear (
+					driver TEXT NOT NULL,
+					year INTEGER NOT NULL,
+					PRIMARY KEY (driver, year),
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS ConstructorYear (
+					constructor TEXT NOT NULL,
+					year INTEGER NOT NULL,
+					PRIMARY KEY (constructor, year),
+					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS DriverStandings (
+					race_number INTEGER NOT NULL,
+					driver TEXT NOT NULL,
+					position INTEGER NOT NULL,
+					points TEXT NOT NULL,
+					PRIMARY KEY (race_number, driver),
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS ConstructorStandings (
+					race_number INTEGER NOT NULL,
+					constructor TEXT NOT NULL,
+					position INTEGER NOT NULL,
+					points TEXT NOT NULL,
+					PRIMARY KEY (race_number, constructor),
+					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS SprintResult (
+					race_number INTEGER NOT NULL,
+					position TEXT NOT NULL,
+					finishing_position INTEGER NOT NULL,
+					driver TEXT NOT NULL,
+					points TEXT NOT NULL,
+					PRIMARY KEY (race_number, driver, finishing_position),
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS RaceResult (
+					race_number INTEGER NOT NULL,
+					position TEXT NOT NULL,
+					finishing_position INTEGER NOT NULL,
+					driver TEXT NOT NULL,
+					points TEXT NOT NULL,
+					PRIMARY KEY (race_number, driver, finishing_position),
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS StartingGrid (
+					race_number INTEGER NOT NULL,
+					position TEXT NOT NULL,
+					driver TEXT NOT NULL,
+					PRIMARY KEY (race_number, driver),
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
 		};
 	}
 }
