@@ -1,6 +1,6 @@
 package no.vebb.f1.components;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -8,17 +8,18 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserService;
+
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Optional;
 
 @Component
 public class UsernameCheckFilter extends OncePerRequestFilter {
 
-	private final JdbcTemplate jdbcTemplate;
-
-	public UsernameCheckFilter(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
+	@Autowired
+    private UserService userService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -30,14 +31,10 @@ public class UsernameCheckFilter extends OncePerRequestFilter {
 		}
 		final Principal principal = request.getUserPrincipal();
 		if (principal != null) {
-			final String id = principal.getName();
-			final String sql = "SELECT COUNT(*) FROM User WHERE id = ?";
-			final Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
-			if (count != null && count > 0) {
-				filterChain.doFilter(request, response);
-				return;
+			Optional<User> user = userService.loadUser();
+			if (user.isEmpty()) {
+				response.sendRedirect("/username");
 			}
-			response.sendRedirect("/username");
 		}
 		filterChain.doFilter(request, response);
 	}

@@ -1,5 +1,8 @@
 package no.vebb.f1.controller;
 
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -10,23 +13,27 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserService;
+
 @Controller
 @RequestMapping("/username")
-public class UserController {
+public class UsernameController {
 
 	private final JdbcTemplate jdbcTemplate;
 
-    public UserController(JdbcTemplate jdbcTemplate) {
+	@Autowired
+    private UserService userService;
+
+    public UsernameController(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
 
 	@GetMapping
-	public String registerUsernameForm(@AuthenticationPrincipal OAuth2User principal) {
-		final String id = principal.getName();
-		final String sql = "SELECT COUNT(*) FROM User WHERE id = ?";
-		final Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
-		if (count != null && count > 0) {
+	public String registerUsernameForm() {
+		Optional<User> user = userService.loadUser();
+		if (user.isPresent()) {
 			return "redirect:/";
 		}
 		return "registerUsername";
