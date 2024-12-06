@@ -7,6 +7,7 @@ import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 public class TableImporter {
 
@@ -31,7 +32,6 @@ public class TableImporter {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		return table;
 	}
@@ -61,4 +61,20 @@ public class TableImporter {
 		return TableImporter.getTable(url);
 	}
 	
+	public static String getGrandPrixName(int race) {
+		String url = String.format("https://www.formula1.com/en/results/a/races/%d/a/race-result", race);
+		String name = "";
+		try {
+			Document doc = Jsoup.connect(url).ignoreContentType(true).get();
+			doc.outputSettings().charset("UTF-8");
+			Elements pTags = doc.getElementsByClass("f1-text");
+			if (pTags == null || pTags.size() < 2) {
+				return name;
+			}
+			name = pTags.get(1).text().split(",")[1].strip();
+		} catch (IOException e) {
+		}
+		return name;
+	}
+
 }
