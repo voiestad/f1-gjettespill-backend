@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
 	<meta charset="UTF-8">
@@ -46,28 +46,16 @@
 
 <body>
 
-	<ul id="sortable" class="container">
-		<li class="item-wrapper" draggable="true">
-			<div class="number">1</div>
-			<div class="item">Item 1</div>
-		</li>
-		<li class="item-wrapper" draggable="true">
-			<div class="number">2</div>
-			<div class="item">Item 2</div>
-		</li>
-		<li class="item-wrapper" draggable="true">
-			<div class="number">3</div>
-			<div class="item">Item 3</div>
-		</li>
-		<li class="item-wrapper" draggable="true">
-			<div class="number">4</div>
-			<div class="item">Item 4</div>
-		</li>
-		<li class="item-wrapper" draggable="true">
-			<div class="number">5</div>
-			<div class="item">Item 5</div>
-		</li>
-	</ul>
+	<form th:action="@{/rank}" method="post">
+		<ul id="sortable" class="container">
+			<li class="item-wrapper" th:each="item, iterStat : ${items}" draggable="true">
+				<div class="number" th:text="${iterStat.index + 1}"></div>
+				<div class="item" th:text="${item}"></div>
+				<input type="hidden" name="rankedItems" th:value="${item}" />
+			</li>
+		</ul>
+		<button type="submit">Submit Ranking</button>
+	</form>
 
 	<script>
 		const list = document.getElementById('sortable');
