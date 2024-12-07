@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Drag and Drop List</title>
+	<style>
+		.container {
+			width: 300px;
+			margin: 50px auto;
+			padding: 0;
+			list-style: none;
+			border: 1px solid #ccc;
+		}
+
+		.item-wrapper {
+			display: flex;
+			align-items: center;
+			padding: 10px;
+			margin: 5px 0;
+			background: #f2f2f2;
+			border: 1px solid #ccc;
+			cursor: move;
+		}
+
+		.item {
+			flex-grow: 1;
+			padding: 15px;
+			display: flex;
+			align-items: center;
+		}
+
+		.number {
+			width: 30px;
+			text-align: right;
+			margin-right: 15px;
+			font-weight: bold;
+		}
+
+		.over {
+			border: 2px dashed #000;
+		}
+	</style>
+</head>
+
+<body>
+
+	<ul id="sortable" class="container">
+		<li class="item-wrapper" draggable="true">
+			<div class="number">1</div>
+			<div class="item">Item 1</div>
+		</li>
+		<li class="item-wrapper" draggable="true">
+			<div class="number">2</div>
+			<div class="item">Item 2</div>
+		</li>
+		<li class="item-wrapper" draggable="true">
+			<div class="number">3</div>
+			<div class="item">Item 3</div>
+		</li>
+		<li class="item-wrapper" draggable="true">
+			<div class="number">4</div>
+			<div class="item">Item 4</div>
+		</li>
+		<li class="item-wrapper" draggable="true">
+			<div class="number">5</div>
+			<div class="item">Item 5</div>
+		</li>
+	</ul>
+
+	<script>
+		const list = document.getElementById('sortable');
+		let draggedItem = null;
+
+		document.addEventListener('dragstart', (event) => {
+			if (event.target.classList.contains('item-wrapper')) {
+				draggedItem = event.target;
+				event.target.style.opacity = 0.5;
+			}
+		});
+
+		document.addEventListener('dragend', (event) => {
+			if (event.target.classList.contains('item-wrapper')) {
+				event.target.style.opacity = "";
+			}
+		});
+
+		list.addEventListener('dragover', (event) => {
+			event.preventDefault();
+			const target = findElementUnderCursor(list, event.clientY);
+			if (target == null) {
+				return;
+			}
+			let targetBefore = false;
+			for (let elem of list.children) {
+				if (elem === target) {
+					targetBefore = true;
+					break;
+				}
+				if (elem === draggedItem) {
+					break;
+				}
+			}
+			if (targetBefore) {
+				list.insertBefore(draggedItem, target);
+			} else {
+				list.insertBefore(target, draggedItem);
+			}
+			updateNumbers();
+		});
+
+		function findElementUnderCursor(container, y) {
+			const draggableElements = [...container.querySelectorAll('.item-wrapper:not(.dragging)')];
+
+			for (const child of draggableElements) {
+				const box = child.getBoundingClientRect();
+				if (y > box.top && y < box.bottom) {
+					return child;
+				}
+			}
+			return null;
+		}
+
+		function updateNumbers() {
+			const items = document.querySelectorAll('.item-wrapper .number');
+			items.forEach((number, index) => {
+				number.textContent = index + 1;
+			});
+		}
+	</script>
+
+</body>
+
+</html>
