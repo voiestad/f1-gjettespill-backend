@@ -18,7 +18,7 @@ public class Importer {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	@Scheduled(fixedRate = 60000, initialDelay = 1000)
+	@Scheduled(fixedRate = 3600000, initialDelay = 1000)
 	public void importData() {
 		logger.info("Starting import of data to database");
 		int newestRace = getMaxRaceId();
