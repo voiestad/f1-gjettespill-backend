@@ -32,7 +32,7 @@ public class RankingController {
 	}
 
 	@PostMapping("/rank")
-	public String rankDrivers(@RequestParam List<String> rankedItems) {
+	public String rankDrivers(@RequestParam List<String> rankedItems, Model model) {
 		String sql = "SELECT name FROM Driver";
 		Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"))));
 		for (String driver : rankedItems) {
@@ -41,6 +41,6 @@ public class RankingController {
 			}
 			logger.info("Guessed {}", driver);
 		}
-		return "public";
+		return "redirect:/";
 	}
 }
