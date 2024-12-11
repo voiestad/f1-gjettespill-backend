@@ -4,13 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+	<link rel="stylesheet" th:href="@{/style.css}">
     <title>F1 Tipping</title>
 </head>
 <body>
     <header>
         <nav>
             <div>
+				<h1>F1 Tipping</h1>
                 <a th:unless="${loggedIn}" href="/oauth2/authorization/google">Login</a>
+                <form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;">
+				</form>
+				<a th:if="${loggedIn}" href="#" onclick="document.getElementById('logoutForm').submit();">Log Out</a>
             </div>
         </nav>
     </header>
