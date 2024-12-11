@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<nav class="topnav">
+	<h1>F1 Tipping</h1>
+	<a href="javascript:void(0);" class="icon" onclick="toggleDropDown()">
+		<i class="fa fa-bars"></i>
+	</a>
+	<div id="links">
+		<a href="/guess">Tipping</a>
+		<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
+		<form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
+		<a th:unless="${loggedOut}" href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
+	</div>
+</nav>
+
+<script>
+	function toggleDropDown() {
+		var x = document.getElementById("links");
+		if (x.style.display === "flex") {
+			x.style.display = "none";
+		} else {
+			x.style.display = "flex";
+		}
+	}
+</script>
+
+</html>

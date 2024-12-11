@@ -10,6 +10,7 @@
 </head>
 
 <body>
+	<header th:insert="~{header}"></header>
 	<div>
 		<h2>Choose Your Username</h2>
 		<form th:action="@{/username}" method="post">
@@ -21,10 +22,6 @@
 		</form>
 
 		<p th:if="${error}" th:text="${error}"></p>
-
-		<form th:action="@{/logout}" method="post">
-			<button type="submit">Log Out</button>
-		</form>
 	</div>
 </body>
 

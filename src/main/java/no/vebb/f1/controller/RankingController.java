@@ -11,9 +11,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
+@RequestMapping("/guess")
 public class RankingController {
 
 	private JdbcTemplate jdbcTemplate;
@@ -21,6 +23,11 @@ public class RankingController {
 
 	public RankingController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
+	}
+
+	@GetMapping()
+	public String guess(Model model) {
+		return "guessMenu";
 	}
 	
 	@GetMapping("/rank")
@@ -41,6 +48,6 @@ public class RankingController {
 			}
 			logger.info("Guessed {}", driver);
 		}
-		return "redirect:/";
+		return "redirect:/guess";
 	}
 }

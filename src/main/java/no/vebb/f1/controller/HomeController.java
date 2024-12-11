@@ -21,8 +21,8 @@ public class HomeController {
 	@GetMapping("/")
 	public String home(Model model) {
 		Optional<User> user = userService.loadUser();
-		boolean loggedIn = user.isPresent();
-		model.addAttribute("loggedIn", loggedIn);
+		boolean loggedOut = !user.isPresent();
+		model.addAttribute("loggedOut", loggedOut);
 		return "public";
 	}
 }

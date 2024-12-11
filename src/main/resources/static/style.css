@@ -14,18 +14,20 @@ header {
 
 nav div {
 	display: flex;
-	align-items: center;
 	justify-content: space-between;
 }
 
 nav a {
-	text-align: right;
 	color: #fff;
+	padding: 5px;
+}
+
+a {
 	text-decoration: none;
 	font-weight: bold;
 }
 
-nav a:hover {
+a:hover {
 	text-decoration: underline;
 }
 
@@ -48,3 +50,41 @@ h1 {
 div {
 	margin: 8px;
 }
+
+.topnav {
+	overflow: hidden;
+	position: relative;
+}
+
+.topnav #links {
+	display: none;
+	flex-direction: column;
+	align-content: right;
+}
+
+.topnav #links a {
+	text-align: right;	
+}
+
+/* Hamburger menu */
+.topnav a.icon {
+	display: block;
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+.rankList {
+	display: flex;
+	flex-direction: column;
+}
+
+.rankList a {
+	margin: 16px;
+	color: black;
+}
+
+.rankList a:hover {
+	color: grey;
+}
+

@@ -47,8 +47,8 @@
 </head>
 
 <body>
-
-	<form th:action="@{/rank}" method="post">
+	<header th:insert="~{header}"></header>
+	<form th:action="@{/guess/rank}" method="post">
 		<ul id="sortable" class="container">
 			<li class="item-wrapper" th:each="item, iterStat : ${items}" draggable="true">
 				<div class="number" th:text="${iterStat.index + 1}"></div>
