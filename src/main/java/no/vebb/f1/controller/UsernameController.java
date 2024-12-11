@@ -45,28 +45,29 @@ public class UsernameController {
                                    Model model) {
         final String id = principal.getName();
         
-        final String sqlCheckUsername = "SELECT COUNT(*) FROM User WHERE username = ?";
-        final Integer usernameCount = jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, username);
-
 		username = username.strip();
-
+		
 		if (username.equals("")) {
 			model.addAttribute("error", "Username cannot be blank.");
 			return "registerUsername";
 		}
-
+		
 		if (!username.matches("^[a-zA-ZÆØÅæøå ]+$")) {
 			model.addAttribute("error", "Username must contain only letters (a-å, A-Å).");
 			return "registerUsername";
 		}
+
+		String username_upper = username.toUpperCase();
+		final String sqlCheckUsername = "SELECT COUNT(*) FROM User WHERE username_upper = ?";
+		Integer usernameCount = jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, username_upper);
         
         if (usernameCount != null && usernameCount > 0) {
             model.addAttribute("error", "This username is already taken. Please choose another.");
             return "registerUsername";
         }
 
-        final String sqlInsertUsername = "INSERT INTO User (id, username) VALUES (?, ?)";
-        jdbcTemplate.update(sqlInsertUsername, id, username);
+        final String sqlInsertUsername = "INSERT INTO User (id, username, username_upper) VALUES (?, ?, ?)";
+        jdbcTemplate.update(sqlInsertUsername, id, username, username_upper);
         
         return "redirect:/";
     }

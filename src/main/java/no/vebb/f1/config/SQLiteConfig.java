@@ -15,7 +15,8 @@ public class SQLiteConfig {
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS User (
 					id TEXT PRIMARY KEY,
-					username TEXT NOT NULL
+					username TEXT NOT NULL,
+					username_upper TEXT NOT NULL
 			);
 			""");
 			jdbcTemplate.execute("""
