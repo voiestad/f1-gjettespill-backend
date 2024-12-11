@@ -32,4 +32,3 @@ For å starte applikasjonen, kjør følgende kommando:
 ```
 mvn spring-boot:run
 ```
----
