@@ -19,7 +19,7 @@ public class UserInformationController {
 	@GetMapping("/id")
 	public String id() {
 		Optional<User> user = userService.loadUser();
-		String id = user.map(User::getId).orElse("No id found");
+		String id = user.map(User::getGoogleId).orElse("No id found");
 		return id;
 	}
 

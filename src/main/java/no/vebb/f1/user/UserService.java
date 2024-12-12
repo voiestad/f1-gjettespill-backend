@@ -1,6 +1,7 @@
 package no.vebb.f1.user;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,11 +23,14 @@ public class UserService {
 		if (authentication == null) {
 			return Optional.empty();
 		}
-		final String id = authentication.getName();
-		final String sql = "SELECT username FROM User WHERE id = ?";
+		final String googleId = authentication.getName();
+		final String sql = "SELECT username, id FROM User WHERE google_id = ?";
 		try {
-			final String username = jdbcTemplate.queryForObject(sql, String.class, id);
-			return Optional.of(new User(id, username));
+			return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+				String username = rs.getString("username");
+				UUID id = UUID.fromString(rs.getString("id"));
+				return Optional.of(new User(googleId, id, username));
+			}, googleId);
 		} catch (EmptyResultDataAccessException e) {
 			return Optional.empty();
 		}

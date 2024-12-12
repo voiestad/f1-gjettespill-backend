@@ -14,7 +14,8 @@ public class SQLiteConfig {
 			jdbcTemplate.execute("PRAGMA foreign_keys = ON;");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS User (
-					id TEXT PRIMARY KEY,
+					google_id TEXT PRIMARY KEY,
+					id TEXT UNIQUE NOT NULL,
 					username TEXT NOT NULL,
 					username_upper TEXT NOT NULL
 			);
@@ -107,19 +108,6 @@ public class SQLiteConfig {
 					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
 			);
 			""");
-			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS Flags (
-					name TEXT PRIMARY KEY
-			);
-			""");
-			jdbcTemplate.execute("""
-                INSERT INTO Flags (name) 
-                VALUES
-                    ('Gult Flagg'), 
-                    ('Rødt Flagg'),
-                    ('Sikkerhetsbil')
-                ON CONFLICT(name) DO NOTHING;
-            """);
 		};
 	}
 }
