@@ -132,6 +132,28 @@ public class SQLiteConfig {
 					FOREIGN KEY (flag) REFERENCES Flag ON DELETE CASCADE
 			);
 			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS ConstructorGuess (
+					guesser TEXT NOT NULL,
+					constructor TEXT NOT NULL,
+					year INTEGER NOT NULL,
+					position INTEGER NOT NULL,
+					PRIMARY KEY (guesser, position, year),
+					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
+					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS DriverGuess (
+					guesser TEXT NOT NULL,
+					driver TEXT NOT NULL,
+					year INTEGER NOT NULL,
+					position INTEGER NOT NULL,
+					PRIMARY KEY (guesser, position, year),
+					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE
+			);
+			""");
 		};
 	}
 }

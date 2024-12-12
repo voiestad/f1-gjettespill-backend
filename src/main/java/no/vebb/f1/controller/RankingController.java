@@ -1,5 +1,7 @@
 package no.vebb.f1.controller;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,8 @@ public class RankingController {
 	@Autowired
 	private UserService userService;
 
+	private int year = 2024;
+
 	public RankingController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
@@ -49,8 +53,27 @@ public class RankingController {
 
 	@GetMapping("/drivers")
 	public String rankDrivers(Model model) {
+		Optional<User> user = userService.loadUser();
+		if (!user.isPresent()) {
+			return "redirect:/";
+		}
 		String sql = "SELECT name FROM Driver";
-		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
+		String guessedSql = "SELECT position, driver FROM DriverGuess where guesser = ?";
+		List<Map<String, Object>> guessed = jdbcTemplate.queryForList(guessedSql, user.get().id);
+		List<String> drivers;
+		if (guessed.size() == 0) {
+			drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
+		} else {
+			drivers = new ArrayList<>();
+			List<PositionedItem> driversWithPos = new ArrayList<>();
+			for (Map<String, Object> row : guessed) {
+				int pos = (int) row.get("position");
+				String driver = (String) row.get("driver");
+				driversWithPos.add(new PositionedItem(pos, driver));
+			}
+			Collections.sort(driversWithPos);
+			driversWithPos.forEach(item -> drivers.add(item.value));
+		}
 		model.addAttribute("items", drivers);
 		model.addAttribute("title", "Ranger sjåførene");
 		model.addAttribute("type", "drivers");
@@ -66,14 +89,43 @@ public class RankingController {
 			logger.warn(error);
 			return "redirect:/guess?success=false";
 		}
+		Optional<User> user = userService.loadUser();
+		if (!user.isPresent()) {
+			return "redirect:/";
+		}
+		int position = 1;
+		for (String driver : rankedItems) {
+			final String addRowDriver = "REPLACE INTO DriverGuess (guesser, driver, year, position) values (?, ?, ?, ?)";
+			jdbcTemplate.update(addRowDriver, user.get().id, driver, year, position);
+			position++;
+		}
 		return "redirect:/guess?success=true";
 	}
 
 	@GetMapping("/constructors")
 	public String rankConstructors(Model model) {
+		Optional<User> user = userService.loadUser();
+		if (!user.isPresent()) {
+			return "redirect:/";
+		}
 		String sql = "SELECT name FROM Constructor";
-		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
-		model.addAttribute("items", drivers);
+		String guessedSql = "SELECT position, constructor FROM ConstructorGuess where guesser = ?";
+		List<Map<String, Object>> guessed = jdbcTemplate.queryForList(guessedSql, user.get().id);
+		List<String> constructors;
+		if (guessed.size() == 0) {
+			constructors = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
+		} else {
+			constructors = new ArrayList<>();
+			List<PositionedItem> constructorWithPos = new ArrayList<>();
+			for (Map<String, Object> row : guessed) {
+				int pos = (int) row.get("position");
+				String constructor = (String) row.get("constructor");
+				constructorWithPos.add(new PositionedItem(pos, constructor));
+			}
+			Collections.sort(constructorWithPos);
+			constructorWithPos.forEach(item -> constructors.add(item.value));
+		}
+		model.addAttribute("items", constructors);
 		model.addAttribute("title", "Ranger konstruktørene");
 		model.addAttribute("type", "constructors");
 		return "ranking";
@@ -81,12 +133,22 @@ public class RankingController {
 
 	@PostMapping("/constructors")
 	public String rankConstructors(@RequestParam List<String> rankedItems, Model model) {
-		String sql = "SELECT name FROM Constructor";
-		Set<String> contructors = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"))));
+		final String getConstructorSql = "SELECT name FROM Constructor";
+		Set<String> contructors = new HashSet<>((jdbcTemplate.query(getConstructorSql, (rs, rowNum) -> rs.getString("name"))));
 		String error = validateGuessList(rankedItems, contructors);
 		if (error != null) {
 			logger.warn(error);
 			return "redirect:/guess?success=false";
+		}
+		Optional<User> user = userService.loadUser();
+		if (!user.isPresent()) {
+			return "redirect:/";
+		}
+		int position = 1;
+		for (String constructor : rankedItems) {
+			final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?)";
+			jdbcTemplate.update(addRowConstructor, user.get().id, constructor, year, position);
+			position++;
 		}
 		return "redirect:/guess?success=true";
 	}
@@ -159,7 +221,7 @@ public class RankingController {
 			return "redirect:/";
 		}
 		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, 2024);
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, year);
 		Flags flags = new Flags();
 		for (Map<String, Object> row : sqlRes) {
 			String flag = (String) row.get("flag");
@@ -188,17 +250,37 @@ public class RankingController {
 			model.addAttribute("error", "Verdier kan ikke være negative");
 			return "guessFlags";
 		}
-		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", 2024, flags.yellow);
-		jdbcTemplate.update(sql, user.get().id, "Red Flag", 2024, flags.red);
-		jdbcTemplate.update(sql, user.get().id, "Safety Car", 2024, flags.safetyCar);
+		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
+		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", year, flags.yellow);
+		jdbcTemplate.update(sql, user.get().id, "Red Flag", year, flags.red);
+		jdbcTemplate.update(sql, user.get().id, "Safety Car", year, flags.safetyCar);
 		logger.info("Guessed '{}' yellow flags, '{}' red flags and '{}' safety cars", flags.yellow, flags.red,
 				flags.safetyCar);
 		return "redirect:/guess?success=true";
+	}
+
+	class PositionedItem implements Comparable<PositionedItem> {
+		public final int pos;
+		public final String value;
+
+		public PositionedItem(int pos, String value) {
+			this.pos = pos;
+			this.value = value;
+		}
+
+		@Override
+		public int compareTo(PositionedItem item) {
+			if (pos > item.pos) {
+				return 1;
+			} else if (pos < item.pos) {
+				return -1;
+			}
+			return 0;
+		}
 	}
 
 	class Flags {
