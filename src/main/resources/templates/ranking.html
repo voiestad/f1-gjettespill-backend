@@ -14,10 +14,10 @@
 	<header th:insert="~{header}"></header>
 	<form th:action="@{/guess/{type}(type=${type})}" method="post">
 		<ul id="sortable" class="container">
-			<li class="item-wrapper" th:each="item, iterStat : ${items}" draggable="true">
+			<li class="item-wrapper" th:each="item, iterStat : ${competitors}" draggable="true">
 				<div class="number" th:text="${iterStat.index + 1}"></div>
 				<div class="item" th:text="${item}"></div>
-				<input type="hidden" name="rankedItems" th:value="${item}" />
+				<input type="hidden" name="rankedCompetitors" th:value="${item}" />
 			</li>
 		</ul>
 		<button type="submit">Send inn rangering</button>

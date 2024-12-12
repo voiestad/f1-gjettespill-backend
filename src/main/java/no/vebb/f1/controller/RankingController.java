@@ -53,101 +53,76 @@ public class RankingController {
 
 	@GetMapping("/drivers")
 	public String rankDrivers(Model model) {
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
-		String sql = "SELECT name FROM Driver";
-		String guessedSql = "SELECT position, driver FROM DriverGuess where guesser = ?";
-		List<Map<String, Object>> guessed = jdbcTemplate.queryForList(guessedSql, user.get().id);
-		List<String> drivers;
-		if (guessed.size() == 0) {
-			drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
-		} else {
-			drivers = new ArrayList<>();
-			List<PositionedItem> driversWithPos = new ArrayList<>();
-			for (Map<String, Object> row : guessed) {
-				int pos = (int) row.get("position");
-				String driver = (String) row.get("driver");
-				driversWithPos.add(new PositionedItem(pos, driver));
-			}
-			Collections.sort(driversWithPos);
-			driversWithPos.forEach(item -> drivers.add(item.value));
-		}
-		model.addAttribute("items", drivers);
+		final String getDriversSql = "SELECT name FROM Driver";
+		final String getGuessedSql = "SELECT position, driver FROM DriverGuess where guesser = ?";
+		final String competitorColName = "driver";
 		model.addAttribute("title", "Ranger sjåførene");
 		model.addAttribute("type", "drivers");
-		return "ranking";
+		return handleRankGet(model, getDriversSql, getGuessedSql, competitorColName);
 	}
 
 	@PostMapping("/drivers")
-	public String rankDrivers(@RequestParam List<String> rankedItems, Model model) {
-		String sql = "SELECT name FROM Driver";
-		Set<String> drivers = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"))));
-		String error = validateGuessList(rankedItems, drivers);
-		if (error != null) {
-			logger.warn(error);
-			return "redirect:/guess?success=false";
-		}
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
-		int position = 1;
-		for (String driver : rankedItems) {
-			final String addRowDriver = "REPLACE INTO DriverGuess (guesser, driver, year, position) values (?, ?, ?, ?)";
-			jdbcTemplate.update(addRowDriver, user.get().id, driver, year, position);
-			position++;
-		}
-		return "redirect:/guess?success=true";
+	public String rankDrivers(@RequestParam List<String> rankedCompetitors, Model model) {
+		final String getDriversSql = "SELECT name FROM Driver";
+		final String addRowDriver = "REPLACE INTO DriverGuess (guesser, driver, year, position) values (?, ?, ?, ?)";
+		return handleRankPost(model, rankedCompetitors, getDriversSql, addRowDriver);
 	}
 
 	@GetMapping("/constructors")
 	public String rankConstructors(Model model) {
+		final String getConstructorsSql = "SELECT name FROM Constructor";
+		final String getGuessedSql = "SELECT position, constructor FROM ConstructorGuess where guesser = ?";
+		final String competitorColName = "constructor";
+		model.addAttribute("title", "Ranger konstruktørene");
+		model.addAttribute("type", "constructors");
+		return handleRankGet(model, getConstructorsSql, getGuessedSql, competitorColName);
+	}
+
+	@PostMapping("/constructors")
+	public String rankConstructors(@RequestParam List<String> rankedCompetitors, Model model) {
+		final String getConstructorSql = "SELECT name FROM Constructor";
+		final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?)";
+		return handleRankPost(model, rankedCompetitors, getConstructorSql, addRowConstructor);
+	}
+
+	private String handleRankGet(Model model, String getCompetitorsSql, String getGuessedSql, String competitorColName) {
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		String sql = "SELECT name FROM Constructor";
-		String guessedSql = "SELECT position, constructor FROM ConstructorGuess where guesser = ?";
-		List<Map<String, Object>> guessed = jdbcTemplate.queryForList(guessedSql, user.get().id);
-		List<String> constructors;
+		List<Map<String, Object>> guessed = jdbcTemplate.queryForList(getGuessedSql, user.get().id);
+		List<String> competitors;
 		if (guessed.size() == 0) {
-			constructors = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
+			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString("name"));
 		} else {
-			constructors = new ArrayList<>();
-			List<PositionedItem> constructorWithPos = new ArrayList<>();
+			competitors = new ArrayList<>();
+			List<PositionedItem> competitorsWithPos = new ArrayList<>();
 			for (Map<String, Object> row : guessed) {
 				int pos = (int) row.get("position");
-				String constructor = (String) row.get("constructor");
-				constructorWithPos.add(new PositionedItem(pos, constructor));
+				String competitor = (String) row.get(competitorColName);
+				competitorsWithPos.add(new PositionedItem(pos, competitor));
 			}
-			Collections.sort(constructorWithPos);
-			constructorWithPos.forEach(item -> constructors.add(item.value));
+			Collections.sort(competitorsWithPos);
+			competitorsWithPos.forEach(item -> competitors.add(item.value));
 		}
-		model.addAttribute("items", constructors);
-		model.addAttribute("title", "Ranger konstruktørene");
-		model.addAttribute("type", "constructors");
+		model.addAttribute("competitors", competitors);
 		return "ranking";
 	}
 
-	@PostMapping("/constructors")
-	public String rankConstructors(@RequestParam List<String> rankedItems, Model model) {
-		final String getConstructorSql = "SELECT name FROM Constructor";
-		Set<String> contructors = new HashSet<>((jdbcTemplate.query(getConstructorSql, (rs, rowNum) -> rs.getString("name"))));
-		String error = validateGuessList(rankedItems, contructors);
+	private String handleRankPost(Model model, List<String> rankedCompetitors, String getCompetitorsSql, String addCompetitorsSql) {
+		Optional<User> user = userService.loadUser();
+		if (!user.isPresent()) {
+			return "redirect:/";
+		}
+		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString("name"))));
+		String error = validateGuessList(rankedCompetitors, competitors);
 		if (error != null) {
 			logger.warn(error);
 			return "redirect:/guess?success=false";
 		}
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
 		int position = 1;
-		for (String constructor : rankedItems) {
-			final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?)";
-			jdbcTemplate.update(addRowConstructor, user.get().id, constructor, year, position);
+		for (String competitor : rankedCompetitors) {
+			jdbcTemplate.update(addCompetitorsSql, user.get().id, competitor, year, position);
 			position++;
 		}
 		return "redirect:/guess?success=true";
