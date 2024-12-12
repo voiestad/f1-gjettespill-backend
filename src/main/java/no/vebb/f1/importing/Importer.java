@@ -36,7 +36,7 @@ public class Importer {
 	private void importStartingGrid(int raceNumber) {
 		final String insertStartingGrid = "INSERT OR IGNORE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
 		while (true) {
-			List<List<String>> startingGrid = TableImporter.getRaceResult(raceNumber);
+			List<List<String>> startingGrid = TableImporter.getStartingGrid(raceNumber);
 			if (startingGrid.isEmpty()) {
 				break;
 			}
