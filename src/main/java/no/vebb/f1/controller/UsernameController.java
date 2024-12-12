@@ -48,12 +48,12 @@ public class UsernameController {
 		username = username.strip();
 		
 		if (username.equals("")) {
-			model.addAttribute("error", "Username cannot be blank.");
+			model.addAttribute("error", "Brukernavn kan ikke være blankt.");
 			return "registerUsername";
 		}
 		
 		if (!username.matches("^[a-zA-ZÆØÅæøå ]+$")) {
-			model.addAttribute("error", "Username must contain only letters (a-å, A-Å).");
+			model.addAttribute("error", "Brukernavn kan bare inneholde (a-å, A-Å).");
 			return "registerUsername";
 		}
 
@@ -62,7 +62,7 @@ public class UsernameController {
 		Integer usernameCount = jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, username_upper);
         
         if (usernameCount != null && usernameCount > 0) {
-            model.addAttribute("error", "This username is already taken. Please choose another.");
+            model.addAttribute("error", "Brukernavnet er allerede i bruk. Vennligst velg et annet.");
             return "registerUsername";
         }
 

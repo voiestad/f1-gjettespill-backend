@@ -6,16 +6,16 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<title>Choose Username</title>
+	<title>Velg Brukernavn</title>
 </head>
 
 <body>
 	<header th:insert="~{header}"></header>
 	<div>
-		<h2>Choose Your Username</h2>
+		<h2>Velg brukernavn</h2>
 		<form th:action="@{/username}" method="post">
 			<div>
-				<label for="username">Username:</label>
+				<label for="username">Brukernavn:</label>
 				<input type="text" id="username" name="username" required placeholder="Username">
 			</div>
 			<button type="submit">Submit</button>

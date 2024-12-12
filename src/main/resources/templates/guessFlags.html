@@ -13,10 +13,13 @@
 	<header th:insert="~{header}"></header>
 	<main>
 		<form th:action="@{/guess/flags}" method="post">
-			<input type="number" value="0" min="0" max="1000" name="yellow">
-			<input type="number" value="0" min="0" max="1000" name="red">
-			<input type="number" value="0" min="0" max="1000" name="safetyCar">
-			<button type="submit">Submit Guesses</button>
+			<label>Antall gule flagg</label>
+			<input type="number" value="0" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="yellow"><br><br>
+			<label>Antall røde flagg</label>
+			<input type="number" value="0" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="red"><br><br>
+			<label>Antall sikkerhetsbiler</label>
+			<input type="number" value="0" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="safetyCar"><br><br>
+			<button type="submit">Send inn gjett</button>
 		</form>
 	</main>
 </body>
