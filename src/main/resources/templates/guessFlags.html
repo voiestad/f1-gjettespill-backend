@@ -12,13 +12,12 @@
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
-		<div class="rankList">
-			<a href="/guess/rank">Ranger sjåfører</a>
-			<a href="/guess/rank">Ranger konstruktører</a>
-			<a href="/guess/flags">Tipp antall</a>
-			<a href="/guess/winner">Tipp 1.plass</a>
-			<a href="/guess/tenth">Tipp 10.plass</a>
-		</div>
+		<form th:action="@{/guess/flags}" method="post">
+			<input type="number" value="0" min="0" max="1000" name="yellow">
+			<input type="number" value="0" min="0" max="1000" name="red">
+			<input type="number" value="0" min="0" max="1000" name="safetyCar">
+			<button type="submit">Submit Guesses</button>
+		</form>
 	</main>
 </body>
 

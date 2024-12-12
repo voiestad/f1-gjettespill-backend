@@ -60,7 +60,7 @@ public class RankingController {
 	}
 
 	@GetMapping("/tenth")
-	public String guessTenthPlace(Model model) {
+	public String guessTenth(Model model) {
 		String sql = "SELECT name FROM Driver";
 		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
 		model.addAttribute("items", drivers);
@@ -91,7 +91,7 @@ public class RankingController {
 	}
 
 	@PostMapping("/winner")
-	public String rankDrivers(@RequestParam String driver, Model model) {
+	public String guessWinner(@RequestParam String driver, Model model) {
 		String sql = "SELECT name FROM Driver";
 		Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"))));
 		if (!driversCheck.contains(driver)) {
@@ -99,5 +99,42 @@ public class RankingController {
 		}
 		logger.info("Guessed {} as winner", driver);
 		return "redirect:/guess";
+	}
+
+	@GetMapping("/flags")
+	public String guessFlags(Model model) {
+		return "guessFlags";
+	}
+
+	@PostMapping("/flags")
+	public String guessFlags(@RequestParam int yellow, @RequestParam int red,
+			@RequestParam int safetyCar, Model model) {
+		Flags flags = new Flags(yellow, red, safetyCar);
+		if (!flags.hasValidValues()) {
+			model.addAttribute("error", "Invalid values");
+			return "redirect:/flags";
+		}
+		logger.info("Guessed {} yellow flags, {} red flags and {} safety cars", flags.yellow, flags.red,
+				flags.safetyCar);
+		return "redirect:/guess";
+	}
+
+	class Flags {
+		public int yellow;
+		public int red;
+		public int safetyCar;
+
+		public boolean hasValidValues() {
+			return yellow >= 0 && red >= 0 && safetyCar >= 0;
+		}
+
+		public Flags() {
+		}
+
+		public Flags(int yellow, int red, int safetyCar) {
+			this.yellow = yellow;
+			this.red = red;
+			this.safetyCar = safetyCar;
+		}
 	}
 }
