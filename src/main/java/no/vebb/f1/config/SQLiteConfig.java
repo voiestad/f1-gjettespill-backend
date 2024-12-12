@@ -108,6 +108,30 @@ public class SQLiteConfig {
 					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
 			);
 			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Flag (
+					name TEXT PRIMARY KEY
+			);
+			""");
+			jdbcTemplate.execute("""
+                INSERT INTO Flag (name) 
+                VALUES
+                    ('Yellow Flag'), 
+                    ('Red Flag'),
+                    ('Safety Car')
+                ON CONFLICT(name) DO NOTHING;
+            """);
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS FlagGuess (
+					guesser TEXT NOT NULL,
+					flag TEXT NOT NULL,
+					year INTEGER NOT NULL,
+					amount INTEGER NOT NULL,
+					PRIMARY KEY (guesser, flag, year),
+					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
+					FOREIGN KEY (flag) REFERENCES Flag ON DELETE CASCADE
+			);
+			""");
 		};
 	}
 }
