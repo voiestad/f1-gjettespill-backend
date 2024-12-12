@@ -14,17 +14,26 @@
 	<header th:insert="~{header}"></header>
 	<form th:action="@{/guess/{type}(type=${type})}" method="post">
 		<input type="hidden" name="driver" value="" id="guessedDriver" />
-		<ol class="container">
-			<li class="item-wrapper" th:each="item, iterStat : ${items}" onclick="select(event)">
+		<ul class="container">
+			<li th:each="item, iterStat : ${items}" onclick="select(event)"
+			th:class="${item == guessedDriver ? 'selected item-wrapper' : 'item-wrapper'}">
+				<div class="number" th:text="${iterStat.index + 1}"></div>
 				<div class="item" th:text="${item}" th:id="${item}"></div>
 			</li>
-		</ol>
+		</ul>
 		<button type="submit">Send inn gjett</button>
 	</form>
 
 	<script>
 		let selectedItem = null;
 		let guessedDriver = document.getElementById("guessedDriver");
+
+		document.querySelectorAll('.item-wrapper').forEach(function(itemWrapper) {
+			if (itemWrapper.classList.contains('selected')) {
+				select({target: itemWrapper});
+			}
+		});
+
 		function select(event) {
 			if (selectedItem != null) {
 				selectedItem.style.color = "";

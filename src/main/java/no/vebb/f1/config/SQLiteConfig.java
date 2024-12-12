@@ -101,7 +101,7 @@ public class SQLiteConfig {
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS StartingGrid (
 					race_number INTEGER NOT NULL,
-					position TEXT NOT NULL,
+					position INTEGER NOT NULL,
 					driver TEXT NOT NULL,
 					PRIMARY KEY (race_number, driver),
 					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
@@ -152,6 +152,28 @@ public class SQLiteConfig {
 					PRIMARY KEY (guesser, position, year),
 					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
 					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS FirstPlaceGuess (
+					guesser TEXT NOT NULL,
+					race_number INTEGER NOT NULL,
+					driver TEXT NOT NULL,
+					PRIMARY KEY (guesser, race_number),
+					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS TenthPlaceGuess (
+					guesser TEXT NOT NULL,
+					race_number INTEGER NOT NULL,
+					driver TEXT NOT NULL,
+					PRIMARY KEY (guesser, race_number),
+					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
 			);
 			""");
 		};
