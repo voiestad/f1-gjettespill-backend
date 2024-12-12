@@ -25,7 +25,7 @@ public class UsernameCheckFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		final String path = request.getRequestURI();
-		if (path.matches("/username|/logout|/favicon.ico|/style.css")) {
+		if (path.matches("/username|/logout|/favicon.ico|/.*\\.css")) {
 			filterChain.doFilter(request, response);
 			return;
 		}

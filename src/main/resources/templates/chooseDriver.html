@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" th:href="@{/list.css}">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<form th:action="@{/guess/{type}(type=${type})}" method="post">
+		<input type="hidden" name="driver" value="" id="guessedDriver" />
+		<ol class="container">
+			<li class="item-wrapper" th:each="item, iterStat : ${items}" onclick="select(event)">
+				<div class="item" th:text="${item}" th:id="${item}"></div>
+			</li>
+		</ol>
+		<button type="submit">Submit Ranking</button>
+	</form>
+
+	<script>
+		let selectedItem = null;
+		let guessedDriver = document.getElementById("guessedDriver");
+		function select(event) {
+			if (selectedItem != null) {
+				selectedItem.style.color = "";
+			}
+			selectedItem = event.target;
+			selectedItem.style.color = "red";
+			let item = selectedItem.getElementsByClassName('item')[0] || selectedItem;
+			guessedDriver.value = item.innerHTML;
+		}
+
+
+	</script>
+
+</body>
+
+</html>

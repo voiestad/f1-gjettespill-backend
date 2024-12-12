@@ -29,12 +29,13 @@ public class RankingController {
 	public String guess(Model model) {
 		return "guessMenu";
 	}
-	
+
 	@GetMapping("/rank")
 	public String rankDrivers(Model model) {
 		String sql = "SELECT name FROM Driver";
 		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
 		model.addAttribute("items", drivers);
+		model.addAttribute("title", "Ranger sjåførene");
 		return "ranking";
 	}
 
@@ -55,6 +56,48 @@ public class RankingController {
 		if (driversCheck.size() != guessedDriver.size()) {
 			throw new IllegalArgumentException("Not all drivers guessed");
 		}
+		return "redirect:/guess";
+	}
+
+	@GetMapping("/tenth")
+	public String guessTenthPlace(Model model) {
+		String sql = "SELECT name FROM Driver";
+		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
+		model.addAttribute("items", drivers);
+		model.addAttribute("title", "Tipp 10.plass");
+		model.addAttribute("type", "tenth");
+		return "chooseDriver";
+	}
+
+	@PostMapping("/tenth")
+	public String guessTenth(@RequestParam String driver, Model model) {
+		String sql = "SELECT name FROM Driver";
+		Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"))));
+		if (!driversCheck.contains(driver)) {
+			throw new IllegalArgumentException("Invalid driver inputted by user");
+		}
+		logger.info("Guessed {} on tenth", driver);
+		return "redirect:/guess";
+	}
+
+	@GetMapping("/winner")
+	public String guessWinner(Model model) {
+		String sql = "SELECT name FROM Driver";
+		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
+		model.addAttribute("items", drivers);
+		model.addAttribute("title", "Tipp Vinneren");
+		model.addAttribute("type", "winner");
+		return "chooseDriver";
+	}
+
+	@PostMapping("/winner")
+	public String rankDrivers(@RequestParam String driver, Model model) {
+		String sql = "SELECT name FROM Driver";
+		Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"))));
+		if (!driversCheck.contains(driver)) {
+			throw new IllegalArgumentException("Invalid driver inputted by user");
+		}
+		logger.info("Guessed {} as winner", driver);
 		return "redirect:/guess";
 	}
 }

@@ -140,7 +140,7 @@ public class Importer {
 	private int getMaxRaceId() {
         String sql = "SELECT MAX(id) FROM Race";
         Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class);
-        return maxId != null ? maxId : 1229;
+        return maxId != null ? maxId : 1252;
     }
 
 	private String parseDriver(String driverName) {

@@ -6,42 +6,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<title>Drag and Drop List</title>
-	<style>
-		.container {
-			width: 300px;
-			margin: 50px auto;
-			padding: 0;
-			list-style: none;
-			border: 1px solid #ccc;
-		}
-
-		.item-wrapper {
-			display: flex;
-			align-items: center;
-			margin: 5px 0;
-			background: #f2f2f2;
-			border: 1px solid #ccc;
-			cursor: move;
-		}
-
-		.item {
-			flex-grow: 1;
-			display: flex;
-			align-items: center;
-		}
-
-		.number {
-			width: 30px;
-			text-align: right;
-			margin-right: 15px;
-			font-weight: bold;
-		}
-
-		.over {
-			border: 2px dashed #000;
-		}
-	</style>
+	<link rel="stylesheet" th:href="@{/list.css}">
+	<title th:text="${title}"></title>
 </head>
 
 <body>
