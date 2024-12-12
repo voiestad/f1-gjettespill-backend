@@ -42,11 +42,18 @@ public class RankingController {
 	public String rankDrivers(@RequestParam List<String> rankedItems, Model model) {
 		String sql = "SELECT name FROM Driver";
 		Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"))));
+		Set<String> guessedDriver = new HashSet<>();
 		for (String driver : rankedItems) {
 			if (!driversCheck.contains(driver)) {
 				throw new IllegalArgumentException("Invalid driver inputted by user");
 			}
+			if (!guessedDriver.add(driver)) {
+				throw new IllegalArgumentException("Duplicate driver inputted by user");
+			}
 			logger.info("Guessed {}", driver);
+		}
+		if (driversCheck.size() != guessedDriver.size()) {
+			throw new IllegalArgumentException("Not all drivers guessed");
 		}
 		return "redirect:/guess";
 	}
