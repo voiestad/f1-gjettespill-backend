@@ -12,6 +12,8 @@
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
+		<p th:if="${error}" th:text="${error}"></p>
+
 		<form th:action="@{/guess/flags}" method="post">
 			<label>Antall gule flagg</label>
 			<input type="number" value="0" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="yellow"><br><br>

@@ -12,9 +12,11 @@
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
+		<p th:if="${successMessage}" th:text="${successMessage}"></p>
+
 		<div class="rankList">
-			<a href="/guess/rank">Ranger sjåfører</a>
-			<a href="/guess/rank">Ranger konstruktører</a>
+			<a href="/guess/drivers">Ranger sjåfører</a>
+			<a href="/guess/constructors">Ranger konstruktører</a>
 			<a href="/guess/flags">Tipp antall</a>
 			<a href="/guess/winner">Tipp 1.plass</a>
 			<a href="/guess/tenth">Tipp 10.plass</a>
