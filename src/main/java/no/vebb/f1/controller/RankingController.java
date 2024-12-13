@@ -1,7 +1,5 @@
 package no.vebb.f1.controller;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +54,7 @@ public class RankingController {
 	@GetMapping("/drivers")
 	public String rankDrivers(Model model) {
 		final String getDriversSql = "SELECT name FROM Driver";
-		final String getGuessedSql = "SELECT position, driver FROM DriverGuess where guesser = ?";
+		final String getGuessedSql = "SELECT position, driver FROM DriverGuess WHERE guesser = ? ORDER BY Position ASC";
 		final String competitorColName = "driver";
 		model.addAttribute("title", "Ranger sjåførene");
 		model.addAttribute("type", "drivers");
@@ -73,7 +71,7 @@ public class RankingController {
 	@GetMapping("/constructors")
 	public String rankConstructors(Model model) {
 		final String getConstructorsSql = "SELECT name FROM Constructor";
-		final String getGuessedSql = "SELECT position, constructor FROM ConstructorGuess where guesser = ?";
+		final String getGuessedSql = "SELECT position, constructor FROM ConstructorGuess WHERE guesser = ? ORDER BY Position ASC";
 		final String competitorColName = "constructor";
 		model.addAttribute("title", "Ranger konstruktørene");
 		model.addAttribute("type", "constructors");
@@ -92,32 +90,12 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		List<Map<String, Object>> guessed = jdbcTemplate.queryForList(getGuessedSql, user.get().id);
-		List<String> competitors;
-		if (guessed.size() == 0) {
+		List<String> competitors = jdbcTemplate.query(getGuessedSql, (rs, rowNum) -> rs.getString(competitorColName), user.get().id);
+		if (competitors.size() == 0) {
 			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString("name"));
-		} else {
-			competitors = getSortedList(guessed, competitorColName);
 		}
 		model.addAttribute("competitors", competitors);
 		return "ranking";
-	}
-
-	private List<String> getSortedList(List<Map<String, Object>> sqlResult, String competitorColName) {
-		List<String> competitors = new ArrayList<>();
-		List<PositionedItem> competitorsWithPos = new ArrayList<>();
-		for (Map<String, Object> row : sqlResult) {
-			int pos = (int) row.get("position");
-			String competitor = (String) row.get(competitorColName);
-			competitorsWithPos.add(new PositionedItem(pos, competitor));
-		}
-		Collections.sort(competitorsWithPos);
-		competitorsWithPos.forEach(item -> competitors.add(item.value));
-		return competitors;
-	}
-
-	private List<String> getSortedList(List<Map<String, Object>> sqlResult) {
-		return getSortedList(sqlResult, "driver");
 	}
 
 	private String handleRankPost(Model model, List<String> rankedCompetitors, String getCompetitorsSql, String addCompetitorsSql) {
@@ -185,9 +163,8 @@ public class RankingController {
 	}
 
 	private String handleGetChooseDriver(Model model, int raceNumber, String getPreviousGuessSql) {
-		String sql = "SELECT driver, position FROM StartingGrid where race_number = ?";
-		List<Map<String, Object>> driversSqlResult = jdbcTemplate.queryForList(sql, raceNumber);
-		List<String> drivers = getSortedList(driversSqlResult);
+		String sql = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY Position ASC";
+		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber);
 		model.addAttribute("items", drivers);
 		try {
 			String driver = jdbcTemplate.queryForObject(getPreviousGuessSql, (rs, rowNum) -> rs.getString("driver"), raceNumber);
@@ -203,7 +180,7 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		String sql = "SELECT driver FROM StartingGrid where race_number = ?";
+		String sql = "SELECT driver FROM StartingGrid WHERE race_number = ?";
 		Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber)));
 		if (!driversCheck.contains(driver)) {
 			logger.warn("'{}', invalid winner driver inputted by user.", driver);
