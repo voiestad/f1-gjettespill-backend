@@ -15,6 +15,7 @@
 		<a href="/guess">Tipping</a>
 		<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
 		<form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
+		<a th:unless="${loggedOut}" href="/user/myprofile" >Min Profil</a>
 		<a th:unless="${loggedOut}" href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
 	</div>
 </nav>

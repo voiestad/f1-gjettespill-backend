@@ -37,6 +37,20 @@ public class ProfileController {
 			return "redirect:/";
 		}
 		User user = optUser.get();
+		return getGuesserProfile(model, user);
+	}
+
+	@GetMapping("/myprofile")
+	public String myProfile(Model model) {
+		Optional<User> optUser = userService.loadUser();
+		if (optUser.isEmpty()) {
+			return "redirect:/";
+		}
+		User user = optUser.get();
+		return getGuesserProfile(model, user);
+	}
+
+	private String getGuesserProfile(Model model, User user) {
 		UserScore userScore = new UserScore(user, year, jdbcTemplate);
 
 		model.addAttribute("summary", userScore.getSummaryTable());
