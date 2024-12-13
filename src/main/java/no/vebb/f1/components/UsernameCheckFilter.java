@@ -8,12 +8,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.Optional;
 
 @Component
 public class UsernameCheckFilter extends OncePerRequestFilter {
@@ -31,8 +29,7 @@ public class UsernameCheckFilter extends OncePerRequestFilter {
 		}
 		final Principal principal = request.getUserPrincipal();
 		if (principal != null) {
-			Optional<User> user = userService.loadUser();
-			if (user.isEmpty()) {
+			if (!userService.isLoggedIn()) {
 				response.sendRedirect("/username");
 			}
 		}

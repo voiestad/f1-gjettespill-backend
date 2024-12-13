@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +32,7 @@ public class HomeController {
 
 	@GetMapping("/")
 	public String home(Model model) {
-		Optional<User> user = userService.loadUser();
-		boolean loggedOut = !user.isPresent();
+		boolean loggedOut = !userService.isLoggedIn();
 		List<List<String>> leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
 		model.addAttribute("loggedOut", loggedOut);

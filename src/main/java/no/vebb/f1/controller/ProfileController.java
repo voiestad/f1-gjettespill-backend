@@ -60,6 +60,7 @@ public class ProfileController {
 		model.addAttribute("winners", userScore.getWinnerTable());
 		model.addAttribute("tenth", userScore.getTenthTable());
 		model.addAttribute("title", user.username);
+		model.addAttribute("loggedOut", !userService.isLoggedIn());
 		return "profile";
 	}
 }

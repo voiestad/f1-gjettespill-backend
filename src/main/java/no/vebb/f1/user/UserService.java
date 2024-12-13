@@ -48,5 +48,10 @@ public class UserService {
 			return Optional.empty();
 		}
 	}
+
+	public boolean isLoggedIn() {
+		Optional<User> user = loadUser();
+		return user.isPresent();
+	}
 	
 }

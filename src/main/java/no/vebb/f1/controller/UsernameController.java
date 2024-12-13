@@ -1,6 +1,5 @@
 package no.vebb.f1.controller;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 
 @Controller
@@ -37,8 +35,7 @@ public class UsernameController {
 
 	@GetMapping
 	public String registerUsernameForm() {
-		Optional<User> user = userService.loadUser();
-		if (user.isPresent()) {
+		if (!userService.isLoggedIn()) {
 			return "redirect:/";
 		}
 		return "registerUsername";
