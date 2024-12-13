@@ -71,7 +71,7 @@ public class UserScore {
 		DiffPointsMap map = new DiffPointsMap("DRIVER", jdbcTemplate);
 		driversTable.add(Arrays.asList("Plass", "Sjåfør", "Gjettet", "Differanse", "Poeng"));
 		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
-		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guess = ? ORDER BY position ASC";
+		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guesser = ? ORDER BY position ASC";
 
 		int driversScore = getGuessedToPos(map, driverStandingsSql, guessedSql, "driver", driversTable);
 		summaryTable.add(Arrays.asList("Sjåfører", String.valueOf(driversScore)));
