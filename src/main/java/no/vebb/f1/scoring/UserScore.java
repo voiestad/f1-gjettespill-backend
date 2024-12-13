@@ -104,6 +104,7 @@ public class UserScore {
 			Integer pos = guessedToPos.get(driver);
 			if (pos == null) {
 				row.add("N/A");
+				row.add("N/A");
 				row.add("0");
 			} else {
 				int diff = Math.abs(actualPos - pos); 
