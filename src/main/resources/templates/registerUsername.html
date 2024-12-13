@@ -4,9 +4,24 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
 	<title>Velg Brukernavn</title>
+	<style>
+		form {
+			text-align: center;
+			border: 1px solid #ccc;
+			padding: 20px;
+			border-radius: 5px;
+		}
+
+		input {
+			width: 100%;
+			max-width: 300px;
+			padding: 10px;
+			margin-bottom: 10px;
+		}
+	</style>
 </head>
 
 <body>
@@ -15,8 +30,7 @@
 		<h2>Velg brukernavn</h2>
 		<form th:action="@{/username}" method="post">
 			<div>
-				<label for="username">Brukernavn:</label>
-				<input type="text" id="username" name="username" required placeholder="Username">
+				<input type="text" id="username" name="username" required placeholder="Brukernavn">
 			</div>
 			<button type="submit">Submit</button>
 		</form>

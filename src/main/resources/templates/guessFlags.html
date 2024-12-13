@@ -6,12 +6,13 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<title>F1 Tipping</title>
+	<title>Tipp Antall</title>
 </head>
 
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
+		<h2>Tipp Antall</h2>
 		<p th:if="${error}" th:text="${error}"></p>
 
 		<form th:action="@{/guess/flags}" method="post">

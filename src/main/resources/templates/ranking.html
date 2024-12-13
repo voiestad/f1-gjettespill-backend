@@ -12,6 +12,7 @@
 
 <body>
 	<header th:insert="~{header}"></header>
+	<h2 th:text="${title}"></h2>
 	<form th:action="@{/guess/{type}(type=${type})}" method="post">
 		<ul id="sortable" class="container">
 			<li class="item-wrapper" th:each="item, iterStat : ${competitors}" draggable="true">

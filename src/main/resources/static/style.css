@@ -88,3 +88,13 @@ div {
 	color: grey;
 }
 
+h2 {
+	text-align: center;
+}
+
+button {
+	margin: 16px;
+	width: 100px;
+	height: 50px;
+	cursor: pointer;
+}
