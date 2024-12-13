@@ -35,5 +35,18 @@ public class UserService {
 			return Optional.empty();
 		}
 	}
+
+	public Optional<User> loadUser(UUID id) {
+		final String sql = "SELECT username, google_id FROM User WHERE id = ?";
+		try {
+			return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+				String username = rs.getString("username");
+				String googleId = rs.getString("google_id");
+				return Optional.of(new User(googleId, id, username));
+			}, id);
+		} catch (EmptyResultDataAccessException e) {
+			return Optional.empty();
+		}
+	}
 	
 }

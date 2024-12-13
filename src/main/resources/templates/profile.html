@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" th:href="@{/temp.css}">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<h2 th:text="${title}"></h2>
+	<div class="tables">
+		<div>
+			<h3>Oppsummering</h3>
+			<table>
+				<thead>
+					<tr>
+						<th th:each="cell : ${summary[0]}" th:text="${cell}"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="row, rowStat : ${summary}">
+						<td th:if="${rowStat.index > 0}" th:each="cell : ${row}" th:text="${cell}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div>
+			<h3>Sjåfører</h3>
+			<table>
+				<thead>
+					<tr>
+						<th th:each="cell : ${drivers[0]}" th:text="${cell}"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="row, rowStat : ${drivers}">
+						<td th:if="${rowStat.index > 0}" th:each="cell : ${row}" th:text="${cell}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div>
+			<h3>Konstruktører</h3>
+			<table>
+				<thead>
+					<tr>
+						<th th:each="cell : ${constructors[0]}" th:text="${cell}"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="row, rowStat : ${constructors}">
+						<td th:if="${rowStat.index > 0}" th:each="cell : ${row}" th:text="${cell}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div>
+			<h3>Antall</h3>
+			<table>
+				<thead>
+					<tr>
+						<th th:each="cell : ${flags[0]}" th:text="${cell}"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="row, rowStat : ${flags}">
+						<td th:if="${rowStat.index > 0}" th:each="cell : ${row}" th:text="${cell}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div>
+			<h3>1.plass</h3>
+			<table>
+				<thead>
+					<tr>
+						<th th:each="cell : ${winners[0]}" th:text="${cell}"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="row, rowStat : ${winners}">
+						<td th:if="${rowStat.index > 0}" th:each="cell : ${row}" th:text="${cell}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div>
+			<h3>10.plass</h3>
+			<table>
+				<thead>
+					<tr>
+						<th th:each="cell : ${tenth[0]}" th:text="${cell}"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="row, rowStat : ${tenth}">
+						<td th:if="${rowStat.index > 0}" th:each="cell : ${row}" th:text="${cell}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+</body>
+
+</html>

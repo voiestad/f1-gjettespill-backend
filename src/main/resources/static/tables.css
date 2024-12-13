@@ -1,0 +1,49 @@
+table {
+	border-collapse: collapse;
+	box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+thead th {
+	background-color: rgb(187, 0, 31);
+	color: #ffffff;
+}
+
+th {
+	position: sticky;
+	top: 0;
+}
+
+tbody tr {
+	border-bottom: 1px solid #bebebe;
+}
+
+tbody tr:nth-of-type(even) {
+	background-color: #ececec;
+}
+
+tbody tr:nth-of-type(odd) {
+	background-color: #ffffffed;
+}
+
+tbody tr:last-of-type {
+	border-bottom: 2px solid rgb(187, 0, 31);
+}
+
+th,
+td {
+	text-align: center;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.tables {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	margin: auto;
+}
+
+h3 {
+	text-align: center;
+}
