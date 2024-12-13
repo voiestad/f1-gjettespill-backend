@@ -54,7 +54,7 @@ public class RankingController {
 	@GetMapping("/drivers")
 	public String rankDrivers(Model model) {
 		final String getDriversSql = "SELECT name FROM Driver";
-		final String getGuessedSql = "SELECT position, driver FROM DriverGuess WHERE guesser = ? ORDER BY Position ASC";
+		final String getGuessedSql = "SELECT position, driver FROM DriverGuess WHERE guesser = ? ORDER BY position ASC";
 		final String competitorColName = "driver";
 		model.addAttribute("title", "Ranger sjåførene");
 		model.addAttribute("type", "drivers");
@@ -71,7 +71,7 @@ public class RankingController {
 	@GetMapping("/constructors")
 	public String rankConstructors(Model model) {
 		final String getConstructorsSql = "SELECT name FROM Constructor";
-		final String getGuessedSql = "SELECT position, constructor FROM ConstructorGuess WHERE guesser = ? ORDER BY Position ASC";
+		final String getGuessedSql = "SELECT position, constructor FROM ConstructorGuess WHERE guesser = ? ORDER BY position ASC";
 		final String competitorColName = "constructor";
 		model.addAttribute("title", "Ranger konstruktørene");
 		model.addAttribute("type", "constructors");
@@ -163,7 +163,7 @@ public class RankingController {
 	}
 
 	private String handleGetChooseDriver(Model model, int raceNumber, String getPreviousGuessSql) {
-		String sql = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY Position ASC";
+		String sql = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
 		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber);
 		model.addAttribute("items", drivers);
 		try {

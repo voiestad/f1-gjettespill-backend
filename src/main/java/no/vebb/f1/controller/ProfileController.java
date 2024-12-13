@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,12 @@ public class ProfileController {
 	@Autowired
 	private UserService userService;
 
+	private JdbcTemplate jdbcTemplate;
+
+	public ProfileController(JdbcTemplate jdbcTemplate) {
+		this.jdbcTemplate = jdbcTemplate;
+	}
+
 	@GetMapping("/{id}")
 	public String guesserProfile(@PathVariable("id") UUID id, Model model) {
 		Optional<User> optUser = userService.loadUser(id);
@@ -30,7 +37,7 @@ public class ProfileController {
 			return "redirect:/";
 		}
 		User user = optUser.get();
-		UserScore userScore = new UserScore(user, year);
+		UserScore userScore = new UserScore(user, year, jdbcTemplate);
 
 		model.addAttribute("summary", userScore.getSummaryTable());
 		model.addAttribute("drivers", userScore.getDriversTable());

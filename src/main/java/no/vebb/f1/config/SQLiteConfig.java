@@ -176,6 +176,59 @@ public class SQLiteConfig {
 					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
 			);
 			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Category (
+					name TEXT PRIMARY KEY
+			);
+			""");
+			jdbcTemplate.execute("""
+                INSERT INTO Category (name) 
+                VALUES
+                    ('DRIVER'), 
+                    ('CONSTRUCTOR'),
+                    ('FLAG'),
+                    ('FIRST'),
+                    ('TENTH')
+                ON CONFLICT(name) DO NOTHING;
+            """);
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS DiffPointsMap (
+					category TEXT NOT NULL,
+					diff INTEGER NOT NULL,
+					points INTEGER NOT NULL,
+					PRIMARY KEY (category, diff),
+					FOREIGN KEY (category) REFERENCES Category ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+                INSERT INTO DiffPointsMap (category, diff, points) 
+                VALUES
+                    ('DRIVER', 0, 20),
+                    ('DRIVER', 1, 12),
+                    ('DRIVER', 2, 6),
+                    ('DRIVER', 3, 3),
+                    ('DRIVER', 4, 1),
+
+                    ('CONSTRUCTOR', 0, 30),
+                    ('CONSTRUCTOR', 1, 15),
+                    ('CONSTRUCTOR', 2, 5),
+
+                    ('FLAG', 0, 60),
+
+                    ('FIRST', 0, 5),
+                    ('FIRST', 1, 2),
+                    ('FIRST', 2, 1),
+
+                    ('TENTH', 0, 10),
+                    ('TENTH', 1, 8),
+                    ('TENTH', 2, 6),
+                    ('TENTH', 3, 5),
+                    ('TENTH', 4, 4),
+                    ('TENTH', 5, 3),
+                    ('TENTH', 6, 2),
+                    ('TENTH', 7, 1)
+                ON CONFLICT(category, diff) DO NOTHING;
+            """);
 		};
 	}
 }

@@ -24,11 +24,11 @@ public class HomeController {
 	@Autowired
 	private UserService userService;
 	
-	private JdbcTemplate jdbcTemlate;
+	private JdbcTemplate jdbcTemplate;
 	private int year = 2024;
 
 	public HomeController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemlate = jdbcTemplate;
+		this.jdbcTemplate = jdbcTemplate;
 	}
 
 	@GetMapping("/")
@@ -47,10 +47,10 @@ public class HomeController {
 		List<Guesser> leaderBoardUnsorted = new ArrayList<>();
 		
 		final String getAllUsersSql = "SELECT id FROM User";
-		List<UUID> userIds = jdbcTemlate.query(getAllUsersSql, (rs, rowNum) -> UUID.fromString(rs.getString("id")));
+		List<UUID> userIds = jdbcTemplate.query(getAllUsersSql, (rs, rowNum) -> UUID.fromString(rs.getString("id")));
 		for (UUID id : userIds) {
 			User user = userService.loadUser(id).get();
-			UserScore userScore = new UserScore(user, year);
+			UserScore userScore = new UserScore(user, year, jdbcTemplate);
 			leaderBoardUnsorted.add(new Guesser(user.username, userScore.getScore(), user.id));
 		}
 		
@@ -65,10 +65,10 @@ public class HomeController {
 	class Guesser implements Comparable<Guesser> {
 
 		public final String username;
-		public final double points;
+		public final int points;
 		public final UUID id;
 
-		public Guesser(String username, double points, UUID id) {
+		public Guesser(String username, int points, UUID id) {
 			this.username = username;
 			this.points = points;
 			this.id = id;
