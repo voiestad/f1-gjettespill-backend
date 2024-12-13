@@ -47,3 +47,7 @@ td {
 h3 {
 	text-align: center;
 }
+
+td a {
+	color: black;
+}

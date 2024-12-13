@@ -6,13 +6,31 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" th:href="@{/tables.css}">
 	<title>F1 Tipping</title>
 </head>
 
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
-		F1 Tipping hjemskjerm!
+		<h2>F1 Tipping hjemskjerm!</h2>
+		<div class="tables">
+			<h3>Rangering</h3>
+			<table>
+				<thead>
+					<tr>
+						<th th:each="cell : ${leaderBoard[0]}" th:text="${cell}"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="row, rowStat : ${leaderBoard}">
+						<td th:if="${rowStat.index > 0}" th:text="${row[0]}"></td>
+						<td th:if="${rowStat.index > 0}"><a th:text="${row[1]}" th:href="@{/user/{id}(id=${row[3]})}"></a></td>
+						<td th:if="${rowStat.index > 0}" th:text="${row[2]}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 	</main>
 </body>
 
