@@ -8,7 +8,7 @@ import no.vebb.f1.user.User;
 public class UserScore {
 	
 	private final User user;
-	private int score;
+	private double score;
 	private final List<List<String>> driversTable = new ArrayList<>();
 	private final List<List<String>> constructorsTable = new ArrayList<>();
 	private final List<List<String>> flagsTable = new ArrayList<>();
@@ -104,6 +104,10 @@ public class UserScore {
 	
 	private void initializeSummaryTable() {
 		// TODO: Implement this method
+	}
+
+	public double getScore() {
+		return score;
 	}
 
 	public List<List<String>> getDriversTable() {

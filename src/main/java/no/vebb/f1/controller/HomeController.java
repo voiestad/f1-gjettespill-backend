@@ -8,9 +8,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 
@@ -21,6 +23,13 @@ public class HomeController {
 
 	@Autowired
 	private UserService userService;
+	
+	private JdbcTemplate jdbcTemlate;
+	private int year = 2024;
+
+	public HomeController(JdbcTemplate jdbcTemplate) {
+		this.jdbcTemlate = jdbcTemplate;
+	}
 
 	@GetMapping("/")
 	public String home(Model model) {
@@ -37,12 +46,13 @@ public class HomeController {
 		leaderBoard.add(Arrays.asList("Plass", "Navn", "Poeng"));
 		List<Guesser> leaderBoardUnsorted = new ArrayList<>();
 		
-
-		leaderBoardUnsorted.add(new Guesser("A", 1, UUID.randomUUID()));
-		leaderBoardUnsorted.add(new Guesser("B", 13, UUID.randomUUID()));
-		leaderBoardUnsorted.add(new Guesser("C", 5, UUID.randomUUID()));
-		leaderBoardUnsorted.add(new Guesser("D", 25, UUID.randomUUID()));
-		leaderBoardUnsorted.add(new Guesser("E", 10, UUID.randomUUID()));
+		final String getAllUsersSql = "SELECT id FROM User";
+		List<UUID> userIds = jdbcTemlate.query(getAllUsersSql, (rs, rowNum) -> UUID.fromString(rs.getString("id")));
+		for (UUID id : userIds) {
+			User user = userService.loadUser(id).get();
+			UserScore userScore = new UserScore(user, year);
+			leaderBoardUnsorted.add(new Guesser(user.username, userScore.getScore(), user.id));
+		}
 		
 		Collections.sort(leaderBoardUnsorted);
 		for (int i = 0; i < leaderBoardUnsorted.size(); i++) {
