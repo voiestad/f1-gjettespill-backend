@@ -98,3 +98,13 @@ button {
 	height: 50px;
 	cursor: pointer;
 }
+
+#logo {
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+}
+
+#logo:hover {
+	text-decoration: none;
+}
