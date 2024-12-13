@@ -71,16 +71,26 @@ public class UserScore {
 		DiffPointsMap map = new DiffPointsMap("DRIVER", jdbcTemplate);
 		driversTable.add(Arrays.asList("Plass", "Sjåfør", "Gjettet", "Differanse", "Poeng"));
 		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
-		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ? ORDER BY position ASC";
+		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guess = ? ORDER BY position ASC";
 
 		int driversScore = getGuessedToPos(map, driverStandingsSql, guessedSql, "driver", driversTable);
 		summaryTable.add(Arrays.asList("Sjåfører", String.valueOf(driversScore)));
 	}
 
+	private void initializeConstructorsTable() {
+		DiffPointsMap map = new DiffPointsMap("CONSTRUCTOR", jdbcTemplate);
+		constructorsTable.add(Arrays.asList("Plass", "Konstruktør", "Gjettet", "Differanse", "Poeng"));
+		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
+		final String guessedSql = "SELECT constructor FROM ConstructorGuess WHERE year = ? AND guesser = ? ORDER BY position ASC";
+
+		int driversScore = getGuessedToPos(map, constructorStandingsSql, guessedSql, "constructor", constructorsTable);
+		summaryTable.add(Arrays.asList("Konstruktører", String.valueOf(driversScore)));
+	}
+
 	private int getGuessedToPos(DiffPointsMap map, final String driverStandingsSql, final String guessedSql, String colname, List<List<String>> table) {
 		int competitorScore = 0;
 		List<String> competitors = jdbcTemplate.query(driverStandingsSql, (rs, rowNum) -> rs.getString(colname), raceNumber);
-		List<String> guessed = jdbcTemplate.query(guessedSql, (rs, rowNum) -> rs.getString(colname), year);
+		List<String> guessed = jdbcTemplate.query(guessedSql, (rs, rowNum) -> rs.getString(colname), year, user.id);
 		Map<String, Integer> guessedToPos = new HashMap<>();
 		for (int i = 0; i < guessed.size(); i++) {
 			guessedToPos.put(guessed.get(i), i+1);
@@ -108,16 +118,6 @@ public class UserScore {
 		}
 		score += competitorScore;
 		return competitorScore;
-	}
-
-	private void initializeConstructorsTable() {
-		DiffPointsMap map = new DiffPointsMap("CONSTRUCTOR", jdbcTemplate);
-		constructorsTable.add(Arrays.asList("Plass", "Konstruktør", "Gjettet", "Differanse", "Poeng"));
-		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
-		final String guessedSql = "SELECT constructor FROM ConstructorGuess WHERE year = ? ORDER BY position ASC";
-
-		int driversScore = getGuessedToPos(map, constructorStandingsSql, guessedSql, "constructor", constructorsTable);
-		summaryTable.add(Arrays.asList("Konstruktører", String.valueOf(driversScore)));
 	}
 
 	private void initializeFlagsTable() {
