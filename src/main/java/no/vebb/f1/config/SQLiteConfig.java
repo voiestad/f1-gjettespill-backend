@@ -23,7 +23,8 @@ public class SQLiteConfig {
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS Race (
 					id INTEGER PRIMARY KEY,
-					name TEXT NOT NULL
+					name TEXT NOT NULL,
+					year INTEGER NOT NULL
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -196,37 +197,38 @@ public class SQLiteConfig {
 					category TEXT NOT NULL,
 					diff INTEGER NOT NULL,
 					points INTEGER NOT NULL,
+					year INTEGER NOT NULL,
 					PRIMARY KEY (category, diff),
 					FOREIGN KEY (category) REFERENCES Category ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
-                INSERT INTO DiffPointsMap (category, diff, points) 
+                INSERT INTO DiffPointsMap (category, diff, points, year) 
                 VALUES
-                    ('DRIVER', 0, 20),
-                    ('DRIVER', 1, 12),
-                    ('DRIVER', 2, 6),
-                    ('DRIVER', 3, 3),
-                    ('DRIVER', 4, 1),
+                    ('DRIVER', 0, 20, 2024),
+                    ('DRIVER', 1, 12, 2024),
+                    ('DRIVER', 2, 6, 2024),
+                    ('DRIVER', 3, 3, 2024),
+                    ('DRIVER', 4, 1, 2024),
 
-                    ('CONSTRUCTOR', 0, 30),
-                    ('CONSTRUCTOR', 1, 15),
-                    ('CONSTRUCTOR', 2, 5),
+                    ('CONSTRUCTOR', 0, 30, 2024),
+                    ('CONSTRUCTOR', 1, 15, 2024),
+                    ('CONSTRUCTOR', 2, 5, 2024),
 
-                    ('FLAG', 0, 60),
+                    ('FLAG', 0, 60, 2024),
 
-                    ('FIRST', 0, 5),
-                    ('FIRST', 1, 2),
-                    ('FIRST', 2, 1),
+                    ('FIRST', 0, 5, 2024),
+                    ('FIRST', 1, 2, 2024),
+                    ('FIRST', 2, 1, 2024),
 
-                    ('TENTH', 0, 10),
-                    ('TENTH', 1, 8),
-                    ('TENTH', 2, 6),
-                    ('TENTH', 3, 5),
-                    ('TENTH', 4, 4),
-                    ('TENTH', 5, 3),
-                    ('TENTH', 6, 2),
-                    ('TENTH', 7, 1)
+                    ('TENTH', 0, 10, 2024),
+                    ('TENTH', 1, 8, 2024),
+                    ('TENTH', 2, 6, 2024),
+                    ('TENTH', 3, 5, 2024),
+                    ('TENTH', 4, 4, 2024),
+                    ('TENTH', 5, 3, 2024),
+                    ('TENTH', 6, 2, 2024),
+                    ('TENTH', 7, 1, 2024)
                 ON CONFLICT(category, diff) DO NOTHING;
             """);
 		};

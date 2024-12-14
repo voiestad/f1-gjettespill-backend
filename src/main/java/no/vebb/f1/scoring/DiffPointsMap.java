@@ -12,11 +12,11 @@ public class DiffPointsMap {
 	private final boolean diffMode;
 	private Map<Integer, Integer> map;
 
-	public DiffPointsMap(String category, JdbcTemplate jdbcTemplate) {
+	public DiffPointsMap(String category, JdbcTemplate jdbcTemplate, int year) {
 		this.jdbcTemplate = jdbcTemplate;
 		diffMode = category.equals("FLAGS");
-		final String sql = "SELECT diff, points FROM DiffPointsMap WHERE category = ?";
-		List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, category);
+		final String sql = "SELECT diff, points FROM DiffPointsMap WHERE category = ? and year = ?";
+		List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, category, year);
 		map = new HashMap<>();
 		for (Map<String, Object> entry : result) {
 			Integer diff = (Integer) entry.get("diff");

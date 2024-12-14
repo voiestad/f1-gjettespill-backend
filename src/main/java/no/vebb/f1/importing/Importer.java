@@ -14,6 +14,8 @@ public class Importer {
 	private static final Logger logger = LoggerFactory.getLogger(Importer.class);
 	private final JdbcTemplate jdbcTemplate;
 
+	private int year = 2024;
+
 	public Importer(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
@@ -97,14 +99,13 @@ public class Importer {
 			if (raceName.equals("")) {
 				break;
 			}
-			final String insertRaceName = "INSERT OR IGNORE INTO Race (id, name) VALUES (?, ?)";
-			jdbcTemplate.update(insertRaceName, raceNumber, raceName);
+			final String insertRaceName = "INSERT OR IGNORE INTO Race (id, name, year) VALUES (?, ?, ?)";
+			jdbcTemplate.update(insertRaceName, raceNumber, raceName, year);
 			raceNumber++;
 		}
 	}
 
 	private void importDriverStandings(int raceNumber) {
-		int year = 2024;
 		List<List<String>> standings = TableImporter.getDriverStandings(year);
 		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
 		final String insertDriverYear = "INSERT OR IGNORE INTO DriverYear (driver, year) VALUES (?, ?)";
@@ -121,7 +122,6 @@ public class Importer {
 	}
 
 	private void importConstructorStandings(int raceNumber) {
-		int year = 2024;
 		List<List<String>> standings = TableImporter.getConstructorStandings(year);
 		final String insertConstructor = "INSERT OR IGNORE INTO Constructor (name) VALUES (?)";
 		final String insertConstructorYear = "INSERT OR IGNORE INTO ConstructorYear (constructor, year) VALUES (?, ?)";

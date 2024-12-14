@@ -68,7 +68,7 @@ public class UserScore {
 	}
 
 	private void initializeDriversTable() {
-		DiffPointsMap map = new DiffPointsMap("DRIVER", jdbcTemplate);
+		DiffPointsMap map = new DiffPointsMap("DRIVER", jdbcTemplate, year);
 		driversTable.add(Arrays.asList("Plass", "Sjåfør", "Gjettet", "Differanse", "Poeng"));
 		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
 		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guesser = ? ORDER BY position ASC";
@@ -78,7 +78,7 @@ public class UserScore {
 	}
 
 	private void initializeConstructorsTable() {
-		DiffPointsMap map = new DiffPointsMap("CONSTRUCTOR", jdbcTemplate);
+		DiffPointsMap map = new DiffPointsMap("CONSTRUCTOR", jdbcTemplate, year);
 		constructorsTable.add(Arrays.asList("Plass", "Konstruktør", "Gjettet", "Differanse", "Poeng"));
 		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
 		final String guessedSql = "SELECT constructor FROM ConstructorGuess WHERE year = ? AND guesser = ? ORDER BY position ASC";
