@@ -35,7 +35,7 @@ public class UsernameController {
 
 	@GetMapping
 	public String registerUsernameForm() {
-		if (!userService.isLoggedIn()) {
+		if (userService.isLoggedIn()) {
 			return "redirect:/";
 		}
 		return "registerUsername";
