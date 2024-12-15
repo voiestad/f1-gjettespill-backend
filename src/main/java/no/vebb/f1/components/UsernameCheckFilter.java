@@ -23,7 +23,7 @@ public class UsernameCheckFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		final String path = request.getRequestURI();
-		if (path.matches("/username|/logout|/favicon.ico|/.*\\.css|/user/*")) {
+		if (path.matches("/username|/logout|/favicon.ico|/.*\\.css|/user/*|/score|/score/*")) {
 			filterChain.doFilter(request, response);
 			return;
 		}

@@ -193,12 +193,29 @@ public class SQLiteConfig {
                 ON CONFLICT(name) DO NOTHING;
             """);
 			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS CategoryTranslation (
+					category TEXT PRIMARY KEY,
+					translation TEXT NOT NULL,
+					FOREIGN KEY (category) REFERENCES Category ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+                INSERT INTO CategoryTranslation (category, translation) 
+                VALUES
+                    ('DRIVER', 'Sjåfører'), 
+                    ('CONSTRUCTOR', 'Konstruktører'),
+                    ('FLAG', 'Antall'),
+                    ('FIRST', '1.plass'),
+                    ('TENTH', '10.plass')
+                ON CONFLICT(category) DO NOTHING;
+            """);
+			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS DiffPointsMap (
 					category TEXT NOT NULL,
 					diff INTEGER NOT NULL,
 					points INTEGER NOT NULL,
 					year INTEGER NOT NULL,
-					PRIMARY KEY (category, diff),
+					PRIMARY KEY (category, diff, year),
 					FOREIGN KEY (category) REFERENCES Category ON DELETE CASCADE
 			);
 			""");
@@ -251,7 +268,7 @@ public class SQLiteConfig {
                     ('TENTH', 5, 3, 2024),
                     ('TENTH', 6, 2, 2024),
                     ('TENTH', 7, 1, 2024)
-                ON CONFLICT(category, diff) DO NOTHING;
+                ON CONFLICT(category, diff, year) DO NOTHING;
             """);
 		};
 	}

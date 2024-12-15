@@ -33,13 +33,13 @@ public class HomeController {
 	@GetMapping("/")
 	public String home(Model model) {
 		boolean loggedOut = !userService.isLoggedIn();
+		model.addAttribute("loggedOut", loggedOut);
 		List<List<String>> leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
-		model.addAttribute("loggedOut", loggedOut);
 		return "public";
 	}
 
-	public List<List<String>> getLeaderBoard() {
+	private List<List<String>> getLeaderBoard() {
 		List<List<String>> leaderBoard = new ArrayList<>();
 		leaderBoard.add(Arrays.asList("Plass", "Navn", "Poeng"));
 		List<Guesser> leaderBoardUnsorted = new ArrayList<>();
