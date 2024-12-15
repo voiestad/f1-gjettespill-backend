@@ -51,8 +51,10 @@ public class HomeController {
 			UserScore userScore = new UserScore(user, year, jdbcTemplate);
 			leaderBoardUnsorted.add(new Guesser(user.username, userScore.getScore(), user.id));
 		}
-		
+
+		leaderBoardUnsorted.removeIf(guesser -> guesser.points == 0);
 		Collections.sort(leaderBoardUnsorted);
+		
 		for (int i = 0; i < leaderBoardUnsorted.size(); i++) {
 			Guesser guesser = leaderBoardUnsorted.get(i);
 			leaderBoard.add(Arrays.asList(String.valueOf(i+1), guesser.username, String.valueOf(guesser.points), guesser.id.toString()));
