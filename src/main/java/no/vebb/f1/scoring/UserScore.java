@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import no.vebb.f1.user.User;
+import no.vebb.f1.util.Table;
 
 public class UserScore {
 	
@@ -17,77 +18,46 @@ public class UserScore {
 	private final JdbcTemplate jdbcTemplate;
 	private int score;
 	private int raceNumber = 1252;
-	private final List<List<String>> driversTable = new ArrayList<>();
-	private final List<List<String>> constructorsTable = new ArrayList<>();
-	private final List<List<String>> flagsTable = new ArrayList<>();
-	private final List<List<String>> winnerTable = new ArrayList<>();
-	private final List<List<String>> tenthTable = new ArrayList<>();
-	private final List<List<String>> summaryTable = new ArrayList<>();
+	public final Table driversTable;
+	public final Table constructorsTable;
+	public final Table flagsTable;
+	public final Table winnerTable;
+	public final Table tenthTable;
+	public final Table summaryTable;
+	private final List<List<String>> summaryTableBody = new ArrayList<>();
 
 	public UserScore(User user, int year, JdbcTemplate jdbcTemplate) {
 		this.user = user;
 		this.year = year;
 		this.jdbcTemplate = jdbcTemplate;
-		summaryTable.add(Arrays.asList("Kategori", "Poeng"));
-		initializeDriversTable();
-		initializeConstructorsTable();
-		initializeFlagsTable();
-		initializeWinnerTable();
-		initializeTenthTable();
-		initializeSummaryTable();
-		initializeDummy();
+		this.driversTable = initializeDriversTable();
+		this.constructorsTable = initializeConstructorsTable();
+		this.flagsTable = initializeFlagsTable();
+		this.winnerTable = initializeWinnerTable();
+		this.tenthTable = initializeTenthTable();
+		this.summaryTable = initializeSummaryTable();
 	}
 
-	private void initializeDummy() {
-		// Adding dummy values for flagsTable
-		List<String> flagsRow = new ArrayList<>();
-		flagsRow.add("Flag1");
-		flagsRow.add("Flag2");
-		flagsTable.add(flagsRow);
-		flagsTable.add(flagsRow);
-		flagsTable.add(flagsRow);
-		flagsTable.add(flagsRow);
-
-		// Adding dummy values for winnerTable
-		List<String> winnerRow = new ArrayList<>();
-		winnerRow.add("Winner1");
-		winnerRow.add("Winner2");
-		winnerTable.add(winnerRow);
-		winnerTable.add(winnerRow);
-		winnerTable.add(winnerRow);
-		winnerTable.add(winnerRow);
-
-		// Adding dummy values for tenthTable
-		List<String> tenthRow = new ArrayList<>();
-		tenthRow.add("Tenth1");
-		tenthRow.add("Tenth2");
-		tenthTable.add(tenthRow);
-		tenthTable.add(tenthRow);
-		tenthTable.add(tenthRow);
-		tenthTable.add(tenthRow);
-	}
-
-	private void initializeDriversTable() {
+	private Table initializeDriversTable() {
 		DiffPointsMap map = new DiffPointsMap("DRIVER", jdbcTemplate, year);
-		driversTable.add(Arrays.asList("Plass", "Sjåfør", "Gjettet", "Differanse", "Poeng"));
+		List<String> header = Arrays.asList("Plass", "Sjåfør", "Gjettet", "Differanse", "Poeng");
 		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
 		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guesser = ? ORDER BY position ASC";
 
-		int driversScore = getGuessedToPos(map, driverStandingsSql, guessedSql, "driver", driversTable);
-		summaryTable.add(Arrays.asList("Sjåfører", String.valueOf(driversScore)));
+		return getGuessedToPos(map, driverStandingsSql, guessedSql, "driver", header);
 	}
 
-	private void initializeConstructorsTable() {
+	private Table initializeConstructorsTable() {
 		DiffPointsMap map = new DiffPointsMap("CONSTRUCTOR", jdbcTemplate, year);
-		constructorsTable.add(Arrays.asList("Plass", "Konstruktør", "Gjettet", "Differanse", "Poeng"));
+		List<String> header = Arrays.asList("Plass", "Konstruktør", "Gjettet", "Differanse", "Poeng");
 		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
 		final String guessedSql = "SELECT constructor FROM ConstructorGuess WHERE year = ? AND guesser = ? ORDER BY position ASC";
 
-		int driversScore = getGuessedToPos(map, constructorStandingsSql, guessedSql, "constructor", constructorsTable);
-		summaryTable.add(Arrays.asList("Konstruktører", String.valueOf(driversScore)));
+		return getGuessedToPos(map, constructorStandingsSql, guessedSql, "constructor", header);
 	}
 
-	private int getGuessedToPos(DiffPointsMap map, final String driverStandingsSql, final String guessedSql, String colname, List<List<String>> table) {
+	private Table getGuessedToPos(DiffPointsMap map, final String driverStandingsSql, final String guessedSql, String colname, List<String> header) {
+		List<List<String>> body = new ArrayList<>();
 		int competitorScore = 0;
 		List<String> competitors = jdbcTemplate.query(driverStandingsSql, (rs, rowNum) -> rs.getString(colname), raceNumber);
 		List<String> guessed = jdbcTemplate.query(guessedSql, (rs, rowNum) -> rs.getString(colname), year, user.id);
@@ -115,61 +85,46 @@ public class UserScore {
 				row.add(String.valueOf(points));
 				
 			}
-			table.add(row);
+			body.add(row);
 		}
 		score += competitorScore;
-		return competitorScore;
+		final String translationSql = """
+				SELECT translation
+				FROM CategoryTranslation
+				WHERE category = ?
+				""";
+
+		String translation = jdbcTemplate.queryForObject(translationSql, String.class, colname.toUpperCase());
+		summaryTableBody.add(Arrays.asList(translation, String.valueOf(competitorScore)));
+		return new Table(translation, header, body);
 	}
 
-	private void initializeFlagsTable() {
+	private Table initializeFlagsTable() {
 		// TODO: Implement this method
-	}
-
-	private void initializeWinnerTable() {
-		// TODO: Implement this method
-	}
-
-	private void initializeTenthTable() {
-		// TODO: Implement this method
+		return new Table("temp", Arrays.asList(), Arrays.asList());
 	}
 	
-	private void initializeSummaryTable() {
+	private Table initializeWinnerTable() {
 		// TODO: Implement this method
+		return new Table("temp", Arrays.asList(), Arrays.asList());
+	}
+	
+	private Table initializeTenthTable() {
+		// TODO: Implement this method
+		return new Table("temp", Arrays.asList(), Arrays.asList());
+	}
+	
+	private Table initializeSummaryTable() {
+		List<String> header = Arrays.asList("Kategori", "Poeng");
+		return new Table("Oppsummering", header, summaryTableBody);
 	}
 
 	public int getScore() {
 		return score;
 	}
 
-	public List<List<String>> getDriversTable() {
-		return copy(driversTable);
-	}
-
-	public List<List<String>> getConstructorsTable() {
-		return copy(constructorsTable);
-	}
-
-	public List<List<String>> getFlagsTable() {
-		return copy(flagsTable);
-	}
-
-	public List<List<String>> getWinnerTable() {
-		return copy(winnerTable);
-	}
-
-	public List<List<String>> getTenthTable() {
-		return copy(tenthTable);
-	}
-
-	public List<List<String>> getSummaryTable() {
-		return copy(summaryTable);
-	}
-
-	private List<List<String>> copy(List<List<String>> original) {
-		List<List<String>> copy = new ArrayList<>();
-		for (List<String> sublist : original) {
-			copy.add(new ArrayList<>(sublist));
-		}
-		return copy;
+	public List<Table> getAllTables() {
+		List<Table> tables = Arrays.asList(summaryTable, driversTable, constructorsTable, flagsTable, winnerTable, tenthTable);
+		return tables;
 	}
 }

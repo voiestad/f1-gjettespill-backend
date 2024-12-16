@@ -53,12 +53,7 @@ public class ProfileController {
 	private String getGuesserProfile(Model model, User user) {
 		UserScore userScore = new UserScore(user, year, jdbcTemplate);
 
-		model.addAttribute("summary", userScore.getSummaryTable());
-		model.addAttribute("drivers", userScore.getDriversTable());
-		model.addAttribute("constructors", userScore.getConstructorsTable());
-		model.addAttribute("flags", userScore.getFlagsTable());
-		model.addAttribute("winners", userScore.getWinnerTable());
-		model.addAttribute("tenth", userScore.getTenthTable());
+		model.addAttribute("tables", userScore.getAllTables());
 		model.addAttribute("title", user.username);
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
 		return "profile";
