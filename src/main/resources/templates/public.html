@@ -15,21 +15,22 @@
 	<main>
 		<h2>F1 Tipping hjemskjerm!</h2>
 		<div class="tables">
-			<h3>Rangering</h3>
 			<table>
+				<h3 th:text="${leaderBoard.getName()}"></h3>
 				<thead>
 					<tr>
-						<th th:each="cell : ${leaderBoard[0]}" th:text="${cell}"></th>
+						<th th:each="cell : ${leaderBoard.getHeader()}" th:text="${cell}"></th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr th:each="row, rowStat : ${leaderBoard}">
-						<td th:if="${rowStat.index > 0}" th:text="${row[0]}"></td>
-						<td th:if="${rowStat.index > 0}"><a th:text="${row[1]}" th:href="@{/user/{id}(id=${row[3]})}"></a></td>
-						<td th:if="${rowStat.index > 0}" th:text="${row[2]}"></td>
+					<tr th:each="row : ${leaderBoard.getBody()}">
+						<td th:text="${row[0]}"></td>
+						<td><a th:text="${row[1]}" th:href="@{/user/{id}(id=${row[3]})}"></a></td>
+						<td th:text="${row[2]}"></td>
 					</tr>
 				</tbody>
 			</table>
+		</div>
 		</div>
 	</main>
 </body>

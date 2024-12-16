@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Table;
 
 import org.springframework.ui.Model;
 
@@ -34,14 +35,14 @@ public class HomeController {
 	public String home(Model model) {
 		boolean loggedOut = !userService.isLoggedIn();
 		model.addAttribute("loggedOut", loggedOut);
-		List<List<String>> leaderBoard = getLeaderBoard();
+		Table leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
 		return "public";
 	}
 
-	private List<List<String>> getLeaderBoard() {
-		List<List<String>> leaderBoard = new ArrayList<>();
-		leaderBoard.add(Arrays.asList("Plass", "Navn", "Poeng"));
+	private Table getLeaderBoard() {
+		List<String> header = Arrays.asList("Plass", "Navn", "Poeng");
+		List<List<String>> body = new ArrayList<>();
 		List<Guesser> leaderBoardUnsorted = new ArrayList<>();
 		
 		final String getAllUsersSql = "SELECT id FROM User";
@@ -57,9 +58,9 @@ public class HomeController {
 		
 		for (int i = 0; i < leaderBoardUnsorted.size(); i++) {
 			Guesser guesser = leaderBoardUnsorted.get(i);
-			leaderBoard.add(Arrays.asList(String.valueOf(i+1), guesser.username, String.valueOf(guesser.points), guesser.id.toString()));
+			body.add(Arrays.asList(String.valueOf(i+1), guesser.username, String.valueOf(guesser.points), guesser.id.toString()));
 		}
-		return leaderBoard;
+		return new Table("Rangering", header, body);
 	}
 
 	class Guesser implements Comparable<Guesser> {
