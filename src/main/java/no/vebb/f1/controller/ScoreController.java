@@ -5,12 +5,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Table;
 
 @Controller
@@ -20,6 +22,9 @@ public class ScoreController {
 	private final JdbcTemplate jdbcTemplate;
 	private int year = 2024;
 
+	@Autowired
+	private UserService userService;
+
 	public ScoreController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
@@ -28,6 +33,7 @@ public class ScoreController {
 	public String scoreMappingTables(Model model) {
 		List<Table> scoreMappingTables = getScoreMappingTables();
 		model.addAttribute("scoreMappingTables", scoreMappingTables);
+		model.addAttribute("loggedOut", !userService.isLoggedIn());
 		return "score";
 	}
 
