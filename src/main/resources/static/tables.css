@@ -52,3 +52,11 @@ h3 {
 td a {
 	color: black;
 }
+
+@media (max-width: 600px) {
+
+	th,
+	td {
+		width: 5px;
+	}
+}
