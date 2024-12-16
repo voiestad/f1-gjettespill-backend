@@ -136,7 +136,7 @@ public class UserScore {
 
 		String translation = translateCategory(category);
 		summaryTableBody.add(Arrays.asList(translation, String.valueOf(driverPlaceScore)));
-		return new Table(category, header, body);
+		return new Table(translation, header, body);
 	}
 
 	private String translateCategory(String category) {
