@@ -156,28 +156,6 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS FirstPlaceGuess (
-					guesser TEXT NOT NULL,
-					race_number INTEGER NOT NULL,
-					driver TEXT NOT NULL,
-					PRIMARY KEY (guesser, race_number),
-					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
-					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
-					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
-			);
-			""");
-			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS TenthPlaceGuess (
-					guesser TEXT NOT NULL,
-					race_number INTEGER NOT NULL,
-					driver TEXT NOT NULL,
-					PRIMARY KEY (guesser, race_number),
-					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
-					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
-					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
-			);
-			""");
-			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS Category (
 					name TEXT PRIMARY KEY
 			);
@@ -192,6 +170,19 @@ public class SQLiteConfig {
                     ('TENTH')
                 ON CONFLICT(name) DO NOTHING;
             """);
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS DriverPlaceGuess (
+					guesser TEXT NOT NULL,
+					race_number INTEGER NOT NULL,
+					category TEXT NOT NULL,
+					driver TEXT NOT NULL,
+					PRIMARY KEY (guesser, race_number, category),
+					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (category) REFERENCES Category ON DELETE CASCADE,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS CategoryTranslation (
 					category TEXT PRIMARY KEY,

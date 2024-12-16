@@ -138,36 +138,33 @@ public class RankingController {
 	public String guessTenth(Model model) {
 		model.addAttribute("title", "Tipp 10.plass");
 		model.addAttribute("type", "tenth");
-		String getPreviousGuessSql = "SELECT driver FROM TenthPlaceGuess WHERE race_number = ?";
-		return handleGetChooseDriver(model, raceNumber, getPreviousGuessSql);
+		return handleGetChooseDriver(model, raceNumber, "TENTH");
 	}
 
 	@PostMapping("/tenth")
 	public String guessTenth(@RequestParam String driver, Model model) {
-		String insertGuessSql = "REPLACE INTO TenthPlaceGuess (guesser, race_number, driver) values (?, ?, ?)";
-		return handlePostChooseDriver(model, raceNumber, insertGuessSql, driver, "tenth");
+		return handlePostChooseDriver(model, raceNumber, driver, "TENTH");
 	}
 
 	@GetMapping("/winner")
 	public String guessWinner(Model model) {
 		model.addAttribute("title", "Tipp Vinneren");
 		model.addAttribute("type", "winner");
-		String getPreviousGuessSql = "SELECT driver FROM FirstPlaceGuess WHERE race_number = ?";
-		return handleGetChooseDriver(model, raceNumber, getPreviousGuessSql);
+		return handleGetChooseDriver(model, raceNumber, "FIRST");
 	}
 
 	@PostMapping("/winner")
 	public String guessWinner(@RequestParam String driver, Model model) {
-		String insertGuessSql = "REPLACE INTO FirstPlaceGuess (guesser, race_number, driver) values (?, ?, ?)";
-		return handlePostChooseDriver(model, raceNumber, insertGuessSql, driver, "first");
+		return handlePostChooseDriver(model, raceNumber, driver, "FIRST");
 	}
 
-	private String handleGetChooseDriver(Model model, int raceNumber, String getPreviousGuessSql) {
-		String sql = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
+	private String handleGetChooseDriver(Model model, int raceNumber, String category) {
+		final String getPreviousGuessSql = "SELECT driver FROM DriverPlaceGuess WHERE race_number = ? AND category = ?";
+		final String sql = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
 		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber);
 		model.addAttribute("items", drivers);
 		try {
-			String driver = jdbcTemplate.queryForObject(getPreviousGuessSql, (rs, rowNum) -> rs.getString("driver"), raceNumber);
+			String driver = jdbcTemplate.queryForObject(getPreviousGuessSql, (rs, rowNum) -> rs.getString("driver"), raceNumber, category);
 			model.addAttribute("guessedDriver", driver);
 		} catch (EmptyResultDataAccessException e) {
 			model.addAttribute("guessedDriver", "");
@@ -175,7 +172,8 @@ public class RankingController {
 		return "chooseDriver";
 	}
 
-	private String handlePostChooseDriver(Model model, int raceNumber, String insertGuessSql, String driver, String place) {
+	private String handlePostChooseDriver(Model model, int raceNumber, String driver, String category) {
+		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?)";
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
@@ -186,8 +184,8 @@ public class RankingController {
 			logger.warn("'{}', invalid winner driver inputted by user.", driver);
 			return "redirect:/guess?success=false";
 		}
-		jdbcTemplate.update(insertGuessSql, user.get().id, raceNumber, driver);
-		logger.info("Guessed '{}' on {}", driver, place);
+		jdbcTemplate.update(insertGuessSql, user.get().id, raceNumber, driver, category);
+		logger.info("Guessed '{}' on {}", driver, category);
 		return "redirect:/guess?success=true";
 	}
 
