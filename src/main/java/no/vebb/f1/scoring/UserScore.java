@@ -40,7 +40,7 @@ public class UserScore {
 
 	private Table initializeDriversTable() {
 		DiffPointsMap map = new DiffPointsMap("DRIVER", jdbcTemplate, year);
-		List<String> header = Arrays.asList("Plass", "Sjåfør", "Gjettet", "Differanse", "Poeng");
+		List<String> header = Arrays.asList("Plass", "Sjåfør", "Gjettet", "Diff", "Poeng");
 		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
 		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guesser = ? ORDER BY position ASC";
 
@@ -49,7 +49,7 @@ public class UserScore {
 
 	private Table initializeConstructorsTable() {
 		DiffPointsMap map = new DiffPointsMap("CONSTRUCTOR", jdbcTemplate, year);
-		List<String> header = Arrays.asList("Plass", "Konstruktør", "Gjettet", "Differanse", "Poeng");
+		List<String> header = Arrays.asList("Plass", "Konstruktør", "Gjettet", "Diff", "Poeng");
 		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
 		final String guessedSql = "SELECT constructor FROM ConstructorGuess WHERE year = ? AND guesser = ? ORDER BY position ASC";
 
@@ -108,7 +108,7 @@ public class UserScore {
 
 	private Table getDriverPlaceGuessTable(String category, int targetPos) {
 		DiffPointsMap map = new DiffPointsMap(category, jdbcTemplate, year);
-		List<String> header = Arrays.asList("Løp", "Sjåfør gjettet", "Startplassering", "Sluttplassering", "Poeng");
+		List<String> header = Arrays.asList("Løp", "Gjettet", "Startet", "Plass", "Poeng");
 		List<List<String>> body = new ArrayList<>();
 		int driverPlaceScore = 0;
 		final String sql = """
