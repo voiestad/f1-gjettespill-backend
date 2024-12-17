@@ -6,20 +6,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<title>F1 Tipping</title>
+	<link rel="stylesheet" th:href="@{/tables.css}">
+	<title th:text="${title}"></title>
 </head>
 
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
 		<p th:if="${successMessage}" th:text="${successMessage}"></p>
-
-		<div class="rankList">
-			<a href="/guess/drivers">Ranger sjåfører</a>
-			<a href="/guess/constructors">Ranger konstruktører</a>
-			<a href="/guess/flags">Tipp antall</a>
-			<a href="/guess/winner">Tipp 1.plass</a>
-			<a href="/guess/tenth">Tipp 10.plass</a>
+		<h2 th:text="${title}"></h2>
+		<div class="linkList">
+			<a th:each="entry : ${linkMap}" th:href="${entry.value}" th:text="${entry.key}"></a>
 		</div>
 	</main>
 </body>
