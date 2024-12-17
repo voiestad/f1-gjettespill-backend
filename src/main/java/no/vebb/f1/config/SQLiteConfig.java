@@ -286,6 +286,12 @@ public class SQLiteConfig {
                     ('Safety Car', 'Sikkerhetsbil')
                 ON CONFLICT(flag) DO NOTHING;
             """);
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Admin (
+					user_id TEXT PRIMARY KEY,
+					FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+			);
+			""");
 		};
 	}
 }
