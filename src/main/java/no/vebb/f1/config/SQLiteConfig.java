@@ -292,6 +292,14 @@ public class SQLiteConfig {
 					FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
 			);
 			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS SeasonInfo (
+					year INTEGER PRIMARY KEY,
+					start INTEGER NOT NULL,
+					end INTEGER NOT NULL CHECK (start <= end),
+					active INTEGER NOT NULL CHECK (active IN (0, 1))
+			);
+			""");
 		};
 	}
 }
