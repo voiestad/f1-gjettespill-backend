@@ -74,17 +74,17 @@ div {
 	top: 0;
 }
 
-.rankList {
+.linkList {
 	display: flex;
 	flex-direction: column;
 }
 
-.rankList a {
+.linkList a {
 	margin: 16px;
 	color: black;
 }
 
-.rankList a:hover {
+.linkList a:hover {
 	color: grey;
 }
 

@@ -37,6 +37,8 @@ public class HomeController {
 		model.addAttribute("loggedOut", loggedOut);
 		Table leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
+
+		model.addAttribute("isAdmin", userService.isAdmin());
 		return "public";
 	}
 

@@ -261,6 +261,37 @@ public class SQLiteConfig {
                     ('TENTH', 7, 1, 2024)
                 ON CONFLICT(category, diff, year) DO NOTHING;
             """);
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS FlagStats (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					flag TEXT NOT NULL,
+					race_number INTEGER NOT NULL,
+					round INTEGER NOT NULL,
+					FOREIGN KEY (flag) REFERENCES Flag ON DELETE CASCADE,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS FlagTranslation (
+					flag TEXT PRIMARY KEY,
+					translation TEXT NOT NULL,
+					FOREIGN KEY (flag) REFERENCES Flag ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+                INSERT INTO FlagTranslation (flag, translation) 
+                VALUES
+                    ('Yellow Flag', 'Gult Flagg'), 
+                    ('Red Flag', 'Rødt Flagg'),
+                    ('Safety Car', 'Sikkerhetsbil')
+                ON CONFLICT(flag) DO NOTHING;
+            """);
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Admin (
+					user_id TEXT PRIMARY KEY,
+					FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+			);
+			""");
 		};
 	}
 }

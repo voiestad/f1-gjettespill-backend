@@ -1,6 +1,7 @@
 package no.vebb.f1.controller;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,7 +49,15 @@ public class RankingController {
 						"Tippingen feilet, vennligst prøv igjen eller kontakt administrator");
 			}
 		}
-		return "guessMenu";
+		model.addAttribute("title", "Velg kategori");
+		Map<String, String> linkMap = new LinkedHashMap<>();
+		linkMap.put("Ranger sjåfører", "/guess/drivers");
+		linkMap.put("Ranger konstruktører", "/guess/constructors");
+		linkMap.put("Tipp antall", "/guess/flags");
+		linkMap.put("Tipp 1.plass", "/guess/winner");
+		linkMap.put("Tipp 10.plass", "/guess/tenth");
+		model.addAttribute("linkMap", linkMap);
+		return "linkList";
 	}
 
 	@GetMapping("/drivers")

@@ -2,6 +2,7 @@ package no.vebb.f1.scoring;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,10 +57,10 @@ public class UserScore {
 		return getGuessedToPos(map, constructorStandingsSql, guessedSql, "constructor", header);
 	}
 
-	private Table getGuessedToPos(DiffPointsMap map, final String driverStandingsSql, final String guessedSql, String colname, List<String> header) {
+	private Table getGuessedToPos(DiffPointsMap map, final String standingsSql, final String guessedSql, String colname, List<String> header) {
 		List<List<String>> body = new ArrayList<>();
 		int competitorScore = 0;
-		List<String> competitors = jdbcTemplate.query(driverStandingsSql, (rs, rowNum) -> rs.getString(colname), raceNumber);
+		List<String> competitors = jdbcTemplate.query(standingsSql, (rs, rowNum) -> rs.getString(colname), raceNumber);
 		List<String> guessed = jdbcTemplate.query(guessedSql, (rs, rowNum) -> rs.getString(colname), year, user.id);
 		Map<String, Integer> guessedToPos = new HashMap<>();
 		for (int i = 0; i < guessed.size(); i++) {
@@ -94,8 +95,40 @@ public class UserScore {
 	}
 
 	private Table initializeFlagsTable() {
-		// TODO: Implement this method
-		return new Table("Antall", Arrays.asList(), Arrays.asList());
+		String category = "FLAG";
+		DiffPointsMap map = new DiffPointsMap(category, jdbcTemplate, year);
+		List<String> header = Arrays.asList("Type", "Gjettet", "Faktisk", "Diff", "Poeng");
+		List<List<String>> body = new ArrayList<>();
+		int flagScore = 0;
+		final String sql = """
+		SELECT f.name AS type, fg.amount AS guessed, COALESCE(COUNT(fs.flag), 0) AS actual
+		FROM Flag f
+		JOIN FlagGuess fg ON f.name = fg.flag
+		JOIN Race r ON fg.year = r.year
+		LEFT JOIN FlagStats fs ON fs.flag = f.name AND fs.race_number = r.id
+		WHERE r.year = ? AND fg.guesser = ?
+		GROUP BY f.name
+		""";
+		
+
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, year, user.id);
+
+		for (Map<String, Object> row : sqlRes) {
+			String flag = translateFlagName((String) row.get("type"));
+			int guessed = (int) row.get("guessed");
+			int actual = (int) row.get("actual");
+			int diff = Math.abs(guessed - actual);
+			int points = map.getPoints(diff);
+			flagScore += points;
+			body.add(Arrays.asList(flag, String.valueOf(guessed), String.valueOf(actual), String.valueOf(diff), String.valueOf(points))); 
+		}
+
+		Collections.sort(body, (a, b) -> a.get(0).compareTo(b.get(0)));
+
+		score += flagScore;
+		String translation = translateCategory(category);
+		summaryTableBody.add(Arrays.asList(translation, String.valueOf(flagScore)));
+		return new Table(translation, header, body);
 	}
 	
 	private Table initializeWinnerTable() {
@@ -128,9 +161,9 @@ public class UserScore {
 			int startPos = (int) row.get("start");
 			int finishPos = (int) row.get("finish");
 			int diff = Math.abs(targetPos - finishPos);
-			int score = map.getPoints(diff);
-			driverPlaceScore += score;
-			body.add(Arrays.asList(raceName, driver, String.valueOf(startPos), String.valueOf(finishPos), String.valueOf(score))); 
+			int points = map.getPoints(diff);
+			driverPlaceScore += points;
+			body.add(Arrays.asList(raceName, driver, String.valueOf(startPos), String.valueOf(finishPos), String.valueOf(driverPlaceScore))); 
 		}
 		score += driverPlaceScore;
 
@@ -147,6 +180,16 @@ public class UserScore {
 				""";
 
 		return jdbcTemplate.queryForObject(translationSql, String.class, category);
+	}
+
+	private String translateFlagName(String flag) {
+		final String translationSql = """
+				SELECT translation
+				FROM FlagTranslation
+				WHERE flag = ?
+				""";
+
+		return jdbcTemplate.queryForObject(translationSql, String.class, flag);
 	}
 	
 	private Table initializeSummaryTable() {

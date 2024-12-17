@@ -53,5 +53,20 @@ public class UserService {
 		Optional<User> user = loadUser();
 		return user.isPresent();
 	}
+
+	public boolean isAdmin() {
+		Optional<User> user = loadUser();
+		if (user.isEmpty()) {
+			return false;
+		}
+		final String sql = "SELECT COUNT(*) FROM Admin WHERE user_id = ?";
+		Integer count = jdbcTemplate.queryForObject(sql, Integer.class, user.get().id);
+
+		if (count != null && count > 0) {
+			return true;
+		}
+		
+		return false;
+	}
 	
 }
