@@ -76,10 +76,11 @@ public class AdminController {
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		final String sql = "SELECT name, id FROM Race WHERE year = ? ORDER BY id ASC";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, year);
+		int i = 1;
 		for (Map<String, Object> row : sqlRes) {
 			String name = (String) row.get("name");
 			int id = (int) row.get("id");
-			linkMap.put(name, "/admin/flag/" + year + "/" + id);
+			linkMap.put(i++ + ". " + name, "/admin/flag/" + year + "/" + id);
 		}
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
