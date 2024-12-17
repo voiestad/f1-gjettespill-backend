@@ -25,7 +25,7 @@
 			<select name="flag">
 				<option th:each="flag : ${flags}" th:text="${flag}" th:value="${flag}"></option>
 			</select>
-			<input type="number" min="1" max="100" pattern="[0-9]*" inputmode="numeric" name="round">
+			<input type="number" min="1" max="100" pattern="[0-9]*" inputmode="numeric" name="round" autofocus>
 			<input type="hidden" name="raceId" th:value="${raceId}">
 			<input type="hidden" name="origin" class="originInput">
 			<input type="submit" value="Legg til">

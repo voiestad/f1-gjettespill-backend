@@ -116,7 +116,6 @@ public class AdminController {
 	@PostMapping("/flag/add")
 	public String registerFlag(@RequestParam("flag") String flag, @RequestParam("round") int round,
 			@RequestParam("raceId") int raceId, @RequestParam("origin") String origin) {
-		logger.info("response");
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
