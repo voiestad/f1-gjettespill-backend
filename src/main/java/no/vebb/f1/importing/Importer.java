@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Importer {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(Importer.class);
 	private final JdbcTemplate jdbcTemplate;
 
@@ -33,7 +33,8 @@ public class Importer {
 			importRaceResults(racesToImportFrom);
 			importSprint(racesToImportFrom);
 			importStandings();
-			// TODO: Refresh newest starting grid and race result. These could be subject to changes.
+			// TODO: Refresh newest starting grid and race result. These could be subject to
+			// changes.
 		}
 		logger.info("Finished import of data to database");
 	}
@@ -44,7 +45,7 @@ public class Importer {
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
 
 		for (Map<String, Object> row : sqlRes) {
-			Map<Integer, Integer> season = new LinkedHashMap<>(); 
+			Map<Integer, Integer> season = new LinkedHashMap<>();
 			int year = (int) row.get("year");
 			int start = (int) row.get("start");
 			int end = (int) row.get("end");
@@ -61,8 +62,11 @@ public class Importer {
 	private void importStartingGrid(Map<Integer, Integer> racesToImportFrom) {
 		final String existCheck = "SELECT COUNT(*) FROM StartingGrid WHERE race_number = ?";
 		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
+		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
+		final String insertDriverYear = "INSERT OR IGNORE INTO DriverYear (driver, year) VALUES (?, ?)";
 		for (Entry<Integer, Integer> entry : racesToImportFrom.entrySet()) {
 			int raceId = entry.getKey();
+			int year = entry.getValue();
 			boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 			if (isAlreadyAdded) {
 				continue;
@@ -74,6 +78,8 @@ public class Importer {
 			for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
 				String position = row.get(0);
 				String driver = parseDriver(row.get(2));
+				jdbcTemplate.update(insertDriver, driver);
+				jdbcTemplate.update(insertDriverYear, driver, year);
 				jdbcTemplate.update(insertStartingGrid, raceId, position, driver);
 			}
 		}
@@ -110,7 +116,7 @@ public class Importer {
 		final String existCheck = "SELECT COUNT(*) FROM Sprint WHERE race_number = ?";
 		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
 		String sql = "SELECT MAX(race_number) FROM RaceResult";
-        Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class);
+		Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class);
 		int toCheck = maxId + 1;
 		if (!racesToImportFrom.containsKey(toCheck)) {
 			return;
@@ -148,23 +154,18 @@ public class Importer {
 		int newestRace = getMaxRaceId();
 		final String getYear = "SELECT year FROM Race WHERE id = ?";
 		int year = jdbcTemplate.queryForObject(getYear, Integer.class, newestRace);
-		
+
 		importDriverStandings(year, newestRace);
 		importConstructorStandings(year, newestRace);
 	}
 
 	private void importDriverStandings(int year, int newestRace) {
 		List<List<String>> standings = TableImporter.getDriverStandings(year);
-		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
-		final String insertDriverYear = "INSERT OR IGNORE INTO DriverYear (driver, year) VALUES (?, ?)";
 		final String insertDriverStandings = "INSERT OR REPLACE INTO DriverStandings (race_number, driver, position, points) VALUES (?, ?, ?, ?)";
 		for (List<String> row : standings.subList(1, standings.size())) {
 			String driver = parseDriver(row.get(1));
 			int position = Integer.parseInt(row.get(0));
 			String points = row.get(4);
-			
-			jdbcTemplate.update(insertDriver, driver);
-			jdbcTemplate.update(insertDriverYear, driver, year);
 			jdbcTemplate.update(insertDriverStandings, newestRace, driver, position, points);
 		}
 	}
@@ -186,10 +187,10 @@ public class Importer {
 	}
 
 	private int getMaxRaceId() {
-        String sql = "SELECT MAX(race_number) FROM Sprint";
-        Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class);
-        return maxId != null ? maxId : -1;
-    }
+		String sql = "SELECT MAX(race_number) FROM Sprint";
+		Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class);
+		return maxId != null ? maxId : -1;
+	}
 
 	private String parseDriver(String driverName) {
 		return driverName.substring(0, driverName.length() - 3);
