@@ -31,9 +31,9 @@ public class Importer {
 			importRaceNames(racesToImportFrom);
 			importStartingGrid(racesToImportFrom);
 			importRaceResults(racesToImportFrom);
-			importSprintResults(racesToImportFrom);
+			importSprint(racesToImportFrom);
 			importStandings();
-			// TODO: Refresh newest starting grid, race result and sprint result. These could be subject to changes.
+			// TODO: Refresh newest starting grid and race result. These could be subject to changes.
 		}
 		logger.info("Finished import of data to database");
 	}
@@ -52,6 +52,7 @@ public class Importer {
 			for (int i = start; i <= end; i++) {
 				season.put(start, year);
 			}
+			activeRaces.add(season);
 		}
 
 		return activeRaces;
@@ -59,7 +60,7 @@ public class Importer {
 
 	private void importStartingGrid(Map<Integer, Integer> racesToImportFrom) {
 		final String existCheck = "SELECT COUNT(*) FROM StartingGrid WHERE race_number = ?";
-		final String insertStartingGrid = "INSERT OR IGNORE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
+		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
 		for (Entry<Integer, Integer> entry : racesToImportFrom.entrySet()) {
 			int raceId = entry.getKey();
 			boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
@@ -80,7 +81,8 @@ public class Importer {
 
 	private void importRaceResults(Map<Integer, Integer> racesToImportFrom) {
 		final String existCheck = "SELECT COUNT(*) FROM RaceResult WHERE race_number = ?";
-		final String insertRaceResult = "INSERT OR IGNORE INTO RaceResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
+		final String insertRaceResult = "INSERT OR REPLACE INTO RaceResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
+		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
 		for (Entry<Integer, Integer> entry : racesToImportFrom.entrySet()) {
 			int raceId = entry.getKey();
 			boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
@@ -91,6 +93,7 @@ public class Importer {
 			if (raceResult.isEmpty()) {
 				break;
 			}
+			jdbcTemplate.update(insertSprint, raceId);
 			int finishingPosition = 1;
 			for (List<String> row : raceResult.subList(1, raceResult.size())) {
 				String position = row.get(0);
@@ -103,31 +106,24 @@ public class Importer {
 		}
 	}
 
-	private void importSprintResults(Map<Integer, Integer> racesToImportFrom) {
-		final String existCheck = "SELECT COUNT(*) FROM SprintResult WHERE race_number = ?";
-		final String insertSprintResult = "INSERT OR IGNORE INTO SprintResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
-		for (Entry<Integer, Integer> entry : racesToImportFrom.entrySet()) {
-			int raceId = entry.getKey();
-			boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
-			if (isAlreadyAdded) {
-				continue;
-			}
-			List<List<String>> raceResult = TableImporter.getSprintResult(raceId);
-			if (raceResult.isEmpty()) {
-				// TODO: Handle empty sprint result.
-				// if SprintResult checked and max(RaceResult) > SprintResult don't import
-				continue;
-			}
-			int finishingPosition = 1;
-			for (List<String> row : raceResult.subList(1, raceResult.size())) {
-				String position = row.get(0);
-				String driver = parseDriver(row.get(2));
-				String points = row.get(6);
-
-				jdbcTemplate.update(insertSprintResult, raceId, position, driver, points, finishingPosition);
-				finishingPosition++;
-			}
+	private void importSprint(Map<Integer, Integer> racesToImportFrom) {
+		final String existCheck = "SELECT COUNT(*) FROM Sprint WHERE race_number = ?";
+		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
+		String sql = "SELECT MAX(race_number) FROM RaceResult";
+        Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class);
+		int toCheck = maxId + 1;
+		if (!racesToImportFrom.containsKey(toCheck)) {
+			return;
 		}
+		boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, toCheck) > 0;
+		if (isAlreadyAdded) {
+			return;
+		}
+		List<List<String>> raceResult = TableImporter.getSprintResult(toCheck);
+		if (raceResult.isEmpty()) {
+			return;
+		}
+		jdbcTemplate.update(insertSprint, toCheck);
 	}
 
 	private void importRaceNames(Map<Integer, Integer> racesToImportFrom) {
@@ -161,7 +157,7 @@ public class Importer {
 		List<List<String>> standings = TableImporter.getDriverStandings(year);
 		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
 		final String insertDriverYear = "INSERT OR IGNORE INTO DriverYear (driver, year) VALUES (?, ?)";
-		final String insertDriverStandings = "INSERT OR IGNORE INTO DriverStandings (race_number, driver, position, points) VALUES (?, ?, ?, ?)";
+		final String insertDriverStandings = "INSERT OR REPLACE INTO DriverStandings (race_number, driver, position, points) VALUES (?, ?, ?, ?)";
 		for (List<String> row : standings.subList(1, standings.size())) {
 			String driver = parseDriver(row.get(1));
 			int position = Integer.parseInt(row.get(0));
@@ -177,7 +173,7 @@ public class Importer {
 		List<List<String>> standings = TableImporter.getConstructorStandings(year);
 		final String insertConstructor = "INSERT OR IGNORE INTO Constructor (name) VALUES (?)";
 		final String insertConstructorYear = "INSERT OR IGNORE INTO ConstructorYear (constructor, year) VALUES (?, ?)";
-		final String insertConstructorStandings = "INSERT OR IGNORE INTO ConstructorStandings (race_number, constructor, position, points) VALUES (?, ?, ?, ?)";
+		final String insertConstructorStandings = "INSERT OR REPLACE INTO ConstructorStandings (race_number, constructor, position, points) VALUES (?, ?, ?, ?)";
 		for (List<String> row : standings.subList(1, standings.size())) {
 			String constructor = row.get(1);
 			int position = Integer.parseInt(row.get(0));
@@ -190,8 +186,7 @@ public class Importer {
 	}
 
 	private int getMaxRaceId() {
-		// TODO: Take max of raceresult and sprintresult
-        String sql = "SELECT MAX(race_number) FROM RaceResult";
+        String sql = "SELECT MAX(race_number) FROM Sprint";
         Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class);
         return maxId != null ? maxId : -1;
     }
