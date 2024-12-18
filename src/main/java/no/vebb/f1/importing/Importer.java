@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -64,19 +65,34 @@ public class Importer {
 	}
 
 	private void refreshLatestStartingGrid() {
-		final String getStartingGridId = "SELECT MAX(race_number) FROM StartingGrid";
-		int raceId = jdbcTemplate.queryForObject(getStartingGridId, Integer.class);
-		final String getYear = "SELECT year FROM Race WHERE id = ?";
-		int year = jdbcTemplate.queryForObject(getYear, Integer.class, raceId);
-		List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
-		insertStartingGridData(raceId, year, startingGrid);
+		try {
+			final String getStartingGridId = "SELECT MAX(race_number) FROM StartingGrid";
+			Integer raceId = jdbcTemplate.queryForObject(getStartingGridId, Integer.class);
+			if (raceId == null) {
+				return;
+			}
+			final String getYear = "SELECT year FROM Race WHERE id = ?";
+			Integer year = jdbcTemplate.queryForObject(getYear, Integer.class, raceId);
+			List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
+			insertStartingGridData(raceId, year, startingGrid);
+		} catch (EmptyResultDataAccessException e) {
+
+		}
 	}
 
 	private void refreshLatestRaceResult() {
-		final String getRaceResultId = "SELECT MAX(race_number) FROM RaceResult";
-		int raceId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class);
-		List<List<String>> raceResult = TableImporter.getRaceResult(raceId);
-		insertRaceResultData(raceId, raceResult);
+		try {
+			final String getRaceResultId = "SELECT MAX(race_number) FROM RaceResult";
+			Integer raceId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class);
+			if (raceId == null) {
+				return;
+			}
+			List<List<String>> raceResult = TableImporter.getRaceResult(raceId);
+			insertRaceResultData(raceId, raceResult);
+		} catch (EmptyResultDataAccessException e) {
+
+		}
+
 	}
 
 	private void importStartingGrid(Map<Integer, Integer> racesToImportFrom) {
@@ -179,12 +195,15 @@ public class Importer {
 	}
 
 	private void importStandings() {
-		int newestRace = getMaxRaceId();
-		final String getYear = "SELECT year FROM Race WHERE id = ?";
-		int year = jdbcTemplate.queryForObject(getYear, Integer.class, newestRace);
+		try {
+			int newestRace = getMaxRaceId();
+			final String getYear = "SELECT year FROM Race WHERE id = ?";
+			int year = jdbcTemplate.queryForObject(getYear, Integer.class, newestRace);
+			importDriverStandings(year, newestRace);
+			importConstructorStandings(year, newestRace);
 
-		importDriverStandings(year, newestRace);
-		importConstructorStandings(year, newestRace);
+		} catch (EmptyResultDataAccessException e) {
+		}
 	}
 
 	private void importDriverStandings(int year, int newestRace) {
