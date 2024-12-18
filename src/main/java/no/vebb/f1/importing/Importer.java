@@ -33,8 +33,7 @@ public class Importer {
 			importRaceResults(racesToImportFrom);
 			importSprint(racesToImportFrom);
 			importStandings();
-			// TODO: Refresh newest starting grid and race result. These could be subject to
-			// changes.
+			refreshLatestImports();
 		}
 		logger.info("Finished import of data to database");
 	}
@@ -59,11 +58,27 @@ public class Importer {
 		return activeRaces;
 	}
 
+	private void refreshLatestImports() {
+		refreshLatestStartingGrid();
+		refreshLatestRaceResult();
+	}
+
+	private void refreshLatestStartingGrid() {
+		final String getStartingGridId = "SELECT MAX(race_number) FROM StartingGrid";
+		int raceId = jdbcTemplate.queryForObject(getStartingGridId, Integer.class);
+		List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
+		insertRaceResultData(raceId, startingGrid);
+	}
+
+	private void refreshLatestRaceResult() {
+		final String getRaceResultId = "SELECT MAX(race_number) FROM RaceResult";
+		int raceId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class);
+		List<List<String>> raceResult = TableImporter.getRaceResult(raceId);
+		insertRaceResultData(raceId, raceResult);
+	}
+
 	private void importStartingGrid(Map<Integer, Integer> racesToImportFrom) {
 		final String existCheck = "SELECT COUNT(*) FROM StartingGrid WHERE race_number = ?";
-		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
-		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
-		final String insertDriverYear = "INSERT OR IGNORE INTO DriverYear (driver, year) VALUES (?, ?)";
 		for (Entry<Integer, Integer> entry : racesToImportFrom.entrySet()) {
 			int raceId = entry.getKey();
 			int year = entry.getValue();
@@ -75,19 +90,25 @@ public class Importer {
 			if (startingGrid.isEmpty()) {
 				break;
 			}
-			for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
-				String position = row.get(0);
-				String driver = parseDriver(row.get(2));
-				jdbcTemplate.update(insertDriver, driver);
-				jdbcTemplate.update(insertDriverYear, driver, year);
-				jdbcTemplate.update(insertStartingGrid, raceId, position, driver);
-			}
+			insertStartingGridData(raceId, year, startingGrid);
+		}
+	}
+
+	private void insertStartingGridData(int raceId, int year, List<List<String>> startingGrid) {
+		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
+		final String insertDriverYear = "INSERT OR IGNORE INTO DriverYear (driver, year) VALUES (?, ?)";
+		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
+		for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
+			String position = row.get(0);
+			String driver = parseDriver(row.get(2));
+			jdbcTemplate.update(insertDriver, driver);
+			jdbcTemplate.update(insertDriverYear, driver, year);
+			jdbcTemplate.update(insertStartingGrid, raceId, position, driver);
 		}
 	}
 
 	private void importRaceResults(Map<Integer, Integer> racesToImportFrom) {
 		final String existCheck = "SELECT COUNT(*) FROM RaceResult WHERE race_number = ?";
-		final String insertRaceResult = "INSERT OR REPLACE INTO RaceResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
 		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
 		for (Entry<Integer, Integer> entry : racesToImportFrom.entrySet()) {
 			int raceId = entry.getKey();
@@ -100,15 +121,20 @@ public class Importer {
 				break;
 			}
 			jdbcTemplate.update(insertSprint, raceId);
-			int finishingPosition = 1;
-			for (List<String> row : raceResult.subList(1, raceResult.size())) {
-				String position = row.get(0);
-				String driver = parseDriver(row.get(2));
-				String points = row.get(6);
+			insertRaceResultData(raceId, raceResult);
+		}
+	}
 
-				jdbcTemplate.update(insertRaceResult, raceId, position, driver, points, finishingPosition);
-				finishingPosition++;
-			}
+	private void insertRaceResultData(int raceId, List<List<String>> raceResult) {
+		final String insertRaceResult = "INSERT OR REPLACE INTO RaceResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
+		int finishingPosition = 1;
+		for (List<String> row : raceResult.subList(1, raceResult.size())) {
+			String position = row.get(0);
+			String driver = parseDriver(row.get(2));
+			String points = row.get(6);
+
+			jdbcTemplate.update(insertRaceResult, raceId, position, driver, points, finishingPosition);
+			finishingPosition++;
 		}
 	}
 
