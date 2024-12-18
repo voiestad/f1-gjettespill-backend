@@ -32,9 +32,9 @@ public class Importer {
 			importStartingGrid(racesToImportFrom);
 			importRaceResults(racesToImportFrom);
 			importSprint(racesToImportFrom);
-			importStandings();
-			refreshLatestImports();
 		}
+		importStandings();
+		refreshLatestImports();
 		logger.info("Finished import of data to database");
 	}
 
@@ -50,7 +50,7 @@ public class Importer {
 			int end = (int) row.get("end");
 
 			for (int i = start; i <= end; i++) {
-				season.put(start, year);
+				season.put(i, year);
 			}
 			activeRaces.add(season);
 		}
@@ -66,8 +66,10 @@ public class Importer {
 	private void refreshLatestStartingGrid() {
 		final String getStartingGridId = "SELECT MAX(race_number) FROM StartingGrid";
 		int raceId = jdbcTemplate.queryForObject(getStartingGridId, Integer.class);
+		final String getYear = "SELECT year FROM Race WHERE id = ?";
+		int year = jdbcTemplate.queryForObject(getYear, Integer.class, raceId);
 		List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
-		insertRaceResultData(raceId, startingGrid);
+		insertStartingGridData(raceId, year, startingGrid);
 	}
 
 	private void refreshLatestRaceResult() {
