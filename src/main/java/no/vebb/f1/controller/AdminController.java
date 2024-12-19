@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import no.vebb.f1.importing.Importer;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 
@@ -96,6 +97,7 @@ public class AdminController {
 		
 		final String addSeasonInfoSql = "INSERT INTO SeasonInfo (year, start, end, active) VALUES (?, ?, ?, 1)";
 		jdbcTemplate.update(addSeasonInfoSql, year, start, end);
+		new Importer(jdbcTemplate).importData();
 		return "redirect:/admin/season";
 	}
 

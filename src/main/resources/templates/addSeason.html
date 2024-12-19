@@ -8,6 +8,49 @@
 	<link rel="stylesheet" th:href="@{/style.css}">
 	<link rel="stylesheet" th:href="@{/tables.css}">
 	<title th:text="${title}"></title>
+	<style>
+		.loading {
+			border: 16px solid #f3f3f3;
+			border-radius: 50%;
+			border-top: 16px solid #db3434;
+			width: 120px;
+			height: 120px;
+			-webkit-animation: spin 2s linear infinite;
+			animation: spin 2s linear infinite;
+		}
+
+		@-webkit-keyframes spin {
+			0% {
+				-webkit-transform: rotate(0deg);
+			}
+
+			100% {
+				-webkit-transform: rotate(360deg);
+			}
+		}
+
+		@keyframes spin {
+			0% {
+				transform: rotate(0deg);
+			}
+
+			100% {
+				transform: rotate(360deg);
+			}
+		}
+
+		#loader {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+		}
+	</style>
 </head>
 
 <body>
@@ -15,7 +58,7 @@
 	<main>
 		<h2 th:text="${title}"></h2>
 		<p th:if="${error}" th:text="${error}"></p>
-		<form th:action="@{/admin/season/add}" method="POST">
+		<form th:action="@{/admin/season/add}" method="POST" id="form" onsubmit="showLoader();">
 			<label>År</label>
 			<input type="number" min="1" max="10000" pattern="[0-9]*" inputmode="numeric" name="year" autofocus>
 			<label>Start</label>
@@ -24,6 +67,16 @@
 			<input type="number" min="1" max="10000" pattern="[0-9]*" inputmode="numeric" name="end">
 			<input type="submit" value="Legg til">
 		</form>
+		<div id="loader">
+			<div class="loading"></div>
+			<p>Laster data...</p>
+		</div>
+		<script>
+			function showLoader() {
+				document.getElementById('form').style.display = 'none';
+				document.getElementById('loader').style.display = 'flex';
+			}
+		</script>
 	</main>
 </body>
 
