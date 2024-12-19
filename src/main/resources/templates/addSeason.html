@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" th:href="@{/tables.css}">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<h2 th:text="${title}"></h2>
+		<p th:if="${error}" th:text="${error}"></p>
+		<form th:action="@{/admin/season/add}" method="POST">
+			<label>År</label>
+			<input type="number" min="1" max="10000" pattern="[0-9]*" inputmode="numeric" name="year" autofocus>
+			<label>Start</label>
+			<input type="number" min="1" max="10000" pattern="[0-9]*" inputmode="numeric" name="start">
+			<label>Slutt</label>
+			<input type="number" min="1" max="10000" pattern="[0-9]*" inputmode="numeric" name="end">
+			<input type="submit" value="Legg til">
+		</form>
+	</main>
+</body>
+
+</html>

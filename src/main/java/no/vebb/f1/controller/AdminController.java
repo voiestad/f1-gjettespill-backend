@@ -47,8 +47,56 @@ public class AdminController {
 		model.addAttribute("title", "Admin Portal");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		linkMap.put("Registrer flagg", "/admin/flag");
+		linkMap.put("Administrer sesonger", "/admin/season");
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
+	}
+
+	@GetMapping("/season")
+	public String seasonAdministrate(Model model) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		model.addAttribute("title", "Administrer sesonger");
+		Map<String, String> linkMap = new LinkedHashMap<>();
+		final String sql = "SELECT DISTINCT year FROM SeasonInfo ORDER BY year DESC";
+		List<Integer> years = jdbcTemplate.query(sql, (rs, rowNum) -> Integer.parseInt(rs.getString("year")));
+		for (Integer year : years) {
+			linkMap.put(String.valueOf(year), "/admin/season/" + year);
+		}
+		linkMap.put("Legg til ny sesong", "/admin/season/add");
+		model.addAttribute("linkMap", linkMap);
+		return "linkList";
+	}
+
+	@GetMapping("/season/add")
+	public String addSeasonForm() {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		return "addSeason";
+	}
+
+	@PostMapping("/season/add")
+	public String addSeason(@RequestParam("year") int year, @RequestParam("start") int start,
+			@RequestParam("end") int end, Model model) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String getRaceNameSql = "SELECT COUNT(*) FROM SeasonInfo WHERE year = ?";
+		boolean isAlreadyAdded = jdbcTemplate.queryForObject(getRaceNameSql, Integer.class, year) > 0;
+		if (isAlreadyAdded) {
+			model.addAttribute("error", String.format("Sesongen %d er allerede lagt til", year));
+			return "addSeason";
+		}
+		if (start > end) {
+			model.addAttribute("error", "Starten av året kan ikke være etter slutten av året");
+			return "addSeason";
+		}
+		
+		final String addSeasonInfoSql = "INSERT INTO SeasonInfo (year, start, end, active) VALUES (?, ?, ?, 1)";
+		jdbcTemplate.update(addSeasonInfoSql, year, start, end);
+		return "redirect:/admin/season";
 	}
 
 	@GetMapping("/flag")
@@ -94,7 +142,7 @@ public class AdminController {
 		List<String> flags = getFlags();
 		model.addAttribute("flags", flags);
 		model.addAttribute("raceId", raceId);
-		
+
 		List<RegisteredFlag> registeredFlags = new ArrayList<>();
 		final String getRegisteredFlags = "SELECT flag, round, id FROM FlagStats WHERE race_number = ?";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRegisteredFlags, raceId);
@@ -107,7 +155,7 @@ public class AdminController {
 		}
 
 		model.addAttribute("registeredFlags", registeredFlags);
-		
+
 		final String getRaceNameSql = "SELECT name FROM Race WHERE id = ?";
 		String raceName = jdbcTemplate.queryForObject(getRaceNameSql, (rs, rowNum) -> rs.getString("name"), raceId);
 		model.addAttribute("title", "Flagg " + raceName);

@@ -76,14 +76,8 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS SprintResult (
-					race_number INTEGER NOT NULL,
-					position TEXT NOT NULL,
-					finishing_position INTEGER NOT NULL,
-					driver TEXT NOT NULL,
-					points TEXT NOT NULL,
-					PRIMARY KEY (race_number, driver, finishing_position),
-					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+				CREATE TABLE IF NOT EXISTS Sprint (
+					race_number INTEGER PRIMARY KEY,
 					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
 			);
 			""");
@@ -94,7 +88,7 @@ public class SQLiteConfig {
 					finishing_position INTEGER NOT NULL,
 					driver TEXT NOT NULL,
 					points TEXT NOT NULL,
-					PRIMARY KEY (race_number, driver, finishing_position),
+					PRIMARY KEY (race_number, finishing_position),
 					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
 					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
 			);
@@ -290,6 +284,14 @@ public class SQLiteConfig {
 				CREATE TABLE IF NOT EXISTS Admin (
 					user_id TEXT PRIMARY KEY,
 					FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS SeasonInfo (
+					year INTEGER PRIMARY KEY,
+					start INTEGER NOT NULL,
+					end INTEGER NOT NULL CHECK (start <= end),
+					active INTEGER NOT NULL CHECK (active IN (0, 1))
 			);
 			""");
 		};
