@@ -21,5 +21,9 @@ public class User {
 	public String getGoogleId() {
 		return googleId;
 	}
+
+	public UUID getId() {
+		return id;
+	}
 	
 }

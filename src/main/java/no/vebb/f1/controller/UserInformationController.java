@@ -1,6 +1,7 @@
 package no.vebb.f1.controller;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +20,18 @@ public class UserInformationController {
 	@GetMapping("/id")
 	public String id() {
 		Optional<User> user = userService.loadUser();
+		if (!user.isPresent()) {
+			return "No id found";
+		}
+		UUID id = user.get().getId();
+		return id.toString();
+	}
+
+	@GetMapping("/googleid")
+	public String googleId() {
+		Optional<User> user = userService.loadUser();
 		String id = user.map(User::getGoogleId).orElse("No id found");
-		return id;
+		return id.toString();
 	}
 
 	@GetMapping("/name")
