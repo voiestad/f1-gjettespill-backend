@@ -187,25 +187,30 @@ public class Importer {
 				AND r.year = ?
 				AND r.id NOT IN (SELECT race_number FROM RaceResult);
 				""";
-		Integer toCheck = jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year, year);
-		if (!racesToImportFrom.contains(toCheck)) {
-			return;
+		try {
+			Integer toCheck = jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year, year);
+			if (!racesToImportFrom.contains(toCheck)) {
+				return;
+			}
+			boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, toCheck) > 0;
+			if (isAlreadyAdded) {
+				return;
+			}
+			List<List<String>> raceResult = TableImporter.getSprintResult(toCheck);
+			if (raceResult.isEmpty()) {
+				return;
+			}
+			jdbcTemplate.update(insertSprint, toCheck);
+
+		} catch (EmptyResultDataAccessException e) {
 		}
-		boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, toCheck) > 0;
-		if (isAlreadyAdded) {
-			return;
-		}
-		List<List<String>> raceResult = TableImporter.getSprintResult(toCheck);
-		if (raceResult.isEmpty()) {
-			return;
-		}
-		jdbcTemplate.update(insertSprint, toCheck);
+
 	}
 
 	public void importRaceNames(List<Integer> racesToImportFrom, int year) {
 		int position = 1;
 		for (Integer raceId : racesToImportFrom) {
-			if(addRace(raceId, year, position)) {
+			if (addRace(raceId, year, position)) {
 				position++;
 			}
 		}
