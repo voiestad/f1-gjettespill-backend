@@ -54,7 +54,7 @@ public class AdminController {
 	}
 
 	@GetMapping("/season")
-	public String seasonAdministrate(Model model) {
+	public String seasonAdminOverview(Model model) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
@@ -66,6 +66,22 @@ public class AdminController {
 			linkMap.put(String.valueOf(year), "/admin/season/" + year);
 		}
 		linkMap.put("Legg til ny sesong", "/admin/season/add");
+		model.addAttribute("linkMap", linkMap);
+		return "linkList";
+	}
+
+	@GetMapping("/season/{year}")
+	public String seasonMenu(@PathVariable("year") int year, Model model) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		model.addAttribute("title", year);
+		Map<String, String> linkMap = new LinkedHashMap<>();
+		String basePath = "/admin/season/" + year;
+		linkMap.put("Endring av løp", basePath + "/manage");
+		linkMap.put("Frister", basePath + "/cutoff");
+		linkMap.put("F1 Deltakere", basePath + "/competitors");
+		
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
 	}
