@@ -71,7 +71,7 @@ public class AdminController {
 	}
 
 	@GetMapping("/season/{year}")
-	public String seasonMenu(@PathVariable("year") int year, Model model) {
+	public String seasonMenu(@RequestParam(value = "success") Boolean success, @PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
@@ -89,6 +89,69 @@ public class AdminController {
 		
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
+	}
+
+	@GetMapping("/season/{year}/manage")
+	public String manageRacesInSeason(@RequestParam(value = "success") Boolean success, @PathVariable("year") int year, Model model) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		if (success != null) {
+			if (success) {
+				model.addAttribute("successMessage", "Endringen ble lagret");
+			} else {
+				model.addAttribute("successMessage", "Endringen feilet");
+			}
+		}
+		List<Race> races = new ArrayList<>();
+		// Add races
+		model.addAttribute("races", races);
+		return "manageSeason";
+	}
+
+	@PostMapping("/season/{year}/manage/move")
+	public String changeRaceOrder(@PathVariable int year, @RequestParam("id") int raceId, @RequestParam("newPosition") int position) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+
+		return "redirect:/admin/season/" + year + "?success=true";
+	}
+
+	@PostMapping("/season/{year}/manage/delete")
+	public String deleteRace(@PathVariable int year, @RequestParam("id") int raceId) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		return "redirect:/admin/season/" + year + "?success=true";
+	}
+
+	@PostMapping("/season/{year}/manage/delete")
+	public String addRace(@PathVariable int year, @RequestParam("id") int raceId) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		return "redirect:/admin/season/" + year + "?success=true";
 	}
 
 	@GetMapping("/season/add")
@@ -222,6 +285,18 @@ public class AdminController {
 	private List<String> getFlags() {
 		final String sql = "SELECT name FROM Flag";
 		return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
+	}
+
+	class Race {
+		public final int position;
+		public final String name;
+		public final int id;
+		
+		public Race(int position, String name, int id) {
+			this.position = position;
+			this.name = name;
+			this.id = id;
+		}
 	}
 
 	class RegisteredFlag {
