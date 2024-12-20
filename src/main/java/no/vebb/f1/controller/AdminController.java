@@ -60,7 +60,7 @@ public class AdminController {
 		}
 		model.addAttribute("title", "Administrer sesonger");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		final String sql = "SELECT DISTINCT year FROM SeasonInfo ORDER BY year DESC";
+		final String sql = "SELECT DISTINCT year FROM Race ORDER BY year DESC";
 		List<Integer> years = jdbcTemplate.query(sql, (rs, rowNum) -> Integer.parseInt(rs.getString("year")));
 		for (Integer year : years) {
 			linkMap.put(String.valueOf(year), "/admin/season/" + year);
@@ -84,7 +84,7 @@ public class AdminController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String getRaceNameSql = "SELECT COUNT(*) FROM SeasonInfo WHERE year = ?";
+		final String getRaceNameSql = "SELECT COUNT(*) FROM Race WHERE year = ?";
 		boolean isAlreadyAdded = jdbcTemplate.queryForObject(getRaceNameSql, Integer.class, year) > 0;
 		if (isAlreadyAdded) {
 			model.addAttribute("error", String.format("Sesongen %d er allerede lagt til", year));
@@ -94,10 +94,13 @@ public class AdminController {
 			model.addAttribute("error", "Starten av året kan ikke være etter slutten av året");
 			return "addSeason";
 		}
-		
-		final String addSeasonInfoSql = "INSERT INTO SeasonInfo (year, start, end, active) VALUES (?, ?, ?, 1)";
-		jdbcTemplate.update(addSeasonInfoSql, year, start, end);
-		new Importer(jdbcTemplate).importData();
+
+		List<Integer> races = new ArrayList<>();
+		for (int i = start; i <= end; i++) {
+			races.add(i);
+		}
+
+		new Importer(jdbcTemplate).importRaceNames(races, year);
 		return "redirect:/admin/season";
 	}
 

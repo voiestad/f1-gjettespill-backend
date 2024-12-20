@@ -40,20 +40,21 @@ public class Importer {
 
 	private List<Map<Integer, Integer>> getActiveRaces() {
 		List<Map<Integer, Integer>> activeRaces = new ArrayList<>();
-		final String sql = "SELECT year, start, end FROM SeasonInfo WHERE active = 1";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
+		// TODO: Find another solution for this
+		// final String sql = "SELECT year, start, end FROM SeasonInfo WHERE active = 1";
+		// List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
 
-		for (Map<String, Object> row : sqlRes) {
-			Map<Integer, Integer> season = new LinkedHashMap<>();
-			int year = (int) row.get("year");
-			int start = (int) row.get("start");
-			int end = (int) row.get("end");
+		// for (Map<String, Object> row : sqlRes) {
+		// 	Map<Integer, Integer> season = new LinkedHashMap<>();
+		// 	int year = (int) row.get("year");
+		// 	int start = (int) row.get("start");
+		// 	int end = (int) row.get("end");
 
-			for (int i = start; i <= end; i++) {
-				season.put(i, year);
-			}
-			activeRaces.add(season);
-		}
+		// 	for (int i = start; i <= end; i++) {
+		// 		season.put(i, year);
+		// 	}
+		// 	activeRaces.add(season);
+		// }
 
 		return activeRaces;
 	}
