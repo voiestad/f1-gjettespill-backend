@@ -19,6 +19,9 @@ public class Importer {
 	private static final Logger logger = LoggerFactory.getLogger(Importer.class);
 	private final JdbcTemplate jdbcTemplate;
 
+	// TODO: Remove field
+	private int year = 2024;
+
 	public Importer(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
@@ -31,10 +34,10 @@ public class Importer {
 		for (Map<Integer, Integer> racesToImportFrom : racesToImportFromList) {
 			importStartingGrid(racesToImportFrom);
 			importRaceResults(racesToImportFrom);
-			importSprint(racesToImportFrom);
+			importSprint(racesToImportFrom, year);
 		}
-		importStandings();
-		refreshLatestImports();
+		importStandings(year);
+		refreshLatestImports(year);
 		logger.info("Finished import of data to database");
 	}
 
@@ -59,20 +62,23 @@ public class Importer {
 		return activeRaces;
 	}
 
-	private void refreshLatestImports() {
-		refreshLatestStartingGrid();
-		refreshLatestRaceResult();
+	private void refreshLatestImports(int year) {
+		refreshLatestStartingGrid(year);
+		refreshLatestRaceResult(year);
 	}
 
-	private void refreshLatestStartingGrid() {
+	private void refreshLatestStartingGrid(int year) {
 		try {
-			final String getStartingGridId = "SELECT MAX(race_number) FROM StartingGrid";
-			Integer raceId = jdbcTemplate.queryForObject(getStartingGridId, Integer.class);
+			final String getStartingGridId = """
+					SELECT MAX(r.position)
+					FROM StartingGrid s
+					JOIN Race r on r.id = s.race_number
+					WHERE r.year = ?
+					""";
+			Integer raceId = jdbcTemplate.queryForObject(getStartingGridId, Integer.class, year);
 			if (raceId == null) {
 				return;
 			}
-			final String getYear = "SELECT year FROM Race WHERE id = ?";
-			Integer year = jdbcTemplate.queryForObject(getYear, Integer.class, raceId);
 			List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
 			insertStartingGridData(raceId, year, startingGrid);
 		} catch (EmptyResultDataAccessException e) {
@@ -80,10 +86,15 @@ public class Importer {
 		}
 	}
 
-	private void refreshLatestRaceResult() {
+	private void refreshLatestRaceResult(int year) {
 		try {
-			final String getRaceResultId = "SELECT MAX(race_number) FROM RaceResult";
-			Integer raceId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class);
+			final String getRaceResultId = """
+				SELECT MAX(r.position)
+				FROM RaceResult rr
+				JOIN Race r on r.id = rr.race_number
+				WHERE r.year = ?
+				""";
+			Integer raceId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year);
 			if (raceId == null) {
 				return;
 			}
@@ -156,11 +167,16 @@ public class Importer {
 		}
 	}
 
-	private void importSprint(Map<Integer, Integer> racesToImportFrom) {
+	private void importSprint(Map<Integer, Integer> racesToImportFrom, int year) {
 		final String existCheck = "SELECT COUNT(*) FROM Sprint WHERE race_number = ?";
 		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
-		String sql = "SELECT MAX(race_number) FROM RaceResult";
-		Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class);
+		final String getRaceResultId = """
+				SELECT MAX(r.position)
+				FROM RaceResult rr
+				JOIN Race r on r.id = rr.race_number
+				WHERE r.year = ?
+				""";
+		Integer maxId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year);
 		int toCheck = maxId + 1;
 		if (!racesToImportFrom.containsKey(toCheck)) {
 			return;
@@ -204,11 +220,9 @@ public class Importer {
 		jdbcTemplate.update(insertRaceName, raceId, raceName, year, position);
 	}
 
-	private void importStandings() {
+	private void importStandings(int year) {
 		try {
-			int newestRace = getMaxRaceId();
-			final String getYear = "SELECT year FROM Race WHERE id = ?";
-			int year = jdbcTemplate.queryForObject(getYear, Integer.class, newestRace);
+			int newestRace = getMaxRaceId(year);
 			importDriverStandings(year, newestRace);
 			importConstructorStandings(year, newestRace);
 
@@ -243,9 +257,14 @@ public class Importer {
 		}
 	}
 
-	private int getMaxRaceId() {
-		String sql = "SELECT MAX(race_number) FROM Sprint";
-		Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class);
+	private int getMaxRaceId(int year) {
+		final String sql = """
+				SELECT MAX(r.position)
+				FROM Sprint s
+				JOIN Race r on r.id = s.race_number
+				WHERE r.year = ?
+				""";
+		Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class, year);
 		return maxId != null ? maxId : -1;
 	}
 
