@@ -22,9 +22,11 @@ public class SQLiteConfig {
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS Race (
-					id INTEGER PRIMARY KEY,
+					id INTEGER NOT NULL UNIQUE,
 					name TEXT NOT NULL,
-					year INTEGER NOT NULL
+					year INTEGER NOT NULL,
+					position INTEGER NOT NULL,
+					PRIMARY KEY (year, position)
 			);
 			""");
 			jdbcTemplate.execute("""

@@ -29,7 +29,6 @@ public class Importer {
 		List<Map<Integer, Integer>> racesToImportFromList = getActiveRaces();
 
 		for (Map<Integer, Integer> racesToImportFrom : racesToImportFromList) {
-			importRaceNames(racesToImportFrom);
 			importStartingGrid(racesToImportFrom);
 			importRaceResults(racesToImportFrom);
 			importSprint(racesToImportFrom);
@@ -176,22 +175,32 @@ public class Importer {
 		jdbcTemplate.update(insertSprint, toCheck);
 	}
 
-	private void importRaceNames(Map<Integer, Integer> racesToImportFrom) {
-		final String existCheck = "SELECT COUNT(*) FROM Race WHERE id = ?";
-		for (Entry<Integer, Integer> entry : racesToImportFrom.entrySet()) {
-			int raceId = entry.getKey();
-			int year = entry.getValue();
-			boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
-			if (isAlreadyAdded) {
-				continue;
-			}
-			String raceName = TableImporter.getGrandPrixName(raceId);
-			if (raceName.equals("")) {
-				break;
-			}
-			final String insertRaceName = "INSERT OR IGNORE INTO Race (id, name, year) VALUES (?, ?, ?)";
-			jdbcTemplate.update(insertRaceName, raceId, raceName, year);
+	public void importRaceNames(List<Integer> racesToImportFrom, int year) {
+		int position = 1;
+		for (Integer raceId : racesToImportFrom) {
+			addRace(raceId, year, position);
+			position++;
 		}
+	}
+
+	public void importRaceName(int raceId, int year) {
+		final String positionFinder = "SELECT MAX(position) FROM Race WHERE year = ?";
+		int position = jdbcTemplate.queryForObject(positionFinder, Integer.class, year) + 1;
+		addRace(raceId, year, position);
+	}
+
+	private void addRace(int raceId, int year, int position) {
+		final String existCheck = "SELECT COUNT(*) FROM Race WHERE id = ?";
+		boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
+		if (isAlreadyAdded) {
+			throw new RuntimeException("Race name was already added");
+		}
+		String raceName = TableImporter.getGrandPrixName(raceId);
+		if (raceName.equals("")) {
+			return;
+		}
+		final String insertRaceName = "INSERT OR IGNORE INTO Race (id, name, year, position) VALUES (?, ?, ?, ?)";
+		jdbcTemplate.update(insertRaceName, raceId, raceName, year, position);
 	}
 
 	private void importStandings() {
