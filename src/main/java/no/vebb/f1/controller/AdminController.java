@@ -75,6 +75,11 @@ public class AdminController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
+		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
 		model.addAttribute("title", year);
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		String basePath = "/admin/season/" + year;
