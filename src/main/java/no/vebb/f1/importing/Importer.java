@@ -29,35 +29,33 @@ public class Importer {
 	@Scheduled(fixedRate = 3600000, initialDelay = 1000)
 	public void importData() {
 		logger.info("Starting import of data to database");
-		List<Map<Integer, Integer>> racesToImportFromList = getActiveRaces();
+		Map<Integer, List<Integer>> racesToImportFromList = getActiveRaces();
 
-		for (Map<Integer, Integer> racesToImportFrom : racesToImportFromList) {
-			importStartingGrid(racesToImportFrom);
-			importRaceResults(racesToImportFrom);
-			importSprint(racesToImportFrom, year);
+		for (Entry<Integer, List<Integer>> racesToImportFrom : racesToImportFromList.entrySet()) {
+			int year = racesToImportFrom.getKey();
+			List<Integer> races = racesToImportFrom.getValue();
+			importStartingGrid(races, year);
+			importRaceResults(races);
+			importSprint(races, year);
 		}
 		importStandings(year);
 		refreshLatestImports(year);
 		logger.info("Finished import of data to database");
 	}
 
-	private List<Map<Integer, Integer>> getActiveRaces() {
-		List<Map<Integer, Integer>> activeRaces = new ArrayList<>();
-		// TODO: Find another solution for this
-		// final String sql = "SELECT year, start, end FROM SeasonInfo WHERE active = 1";
-		// List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
-
-		// for (Map<String, Object> row : sqlRes) {
-		// 	Map<Integer, Integer> season = new LinkedHashMap<>();
-		// 	int year = (int) row.get("year");
-		// 	int start = (int) row.get("start");
-		// 	int end = (int) row.get("end");
-
-		// 	for (int i = start; i <= end; i++) {
-		// 		season.put(i, year);
-		// 	}
-		// 	activeRaces.add(season);
-		// }
+	private Map<Integer, List<Integer>> getActiveRaces() {
+		Map<Integer, List<Integer>> activeRaces = new LinkedHashMap<>();
+		final String sql = "SELECT id, year, position FROM Race WHERE id NOT IN (SELECT race_number FROM RaceResult) ORDER BY year ASC, position ASC";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
+		for (Map<String, Object> row : sqlRes) {
+			int id = (int) row.get("id");
+			int year = (int) row.get("year");
+			if (!activeRaces.containsKey(year)) {
+				activeRaces.put(year, new ArrayList<>());
+			}
+			List<Integer> races = activeRaces.get(year);
+			races.add(id);
+		}
 
 		return activeRaces;
 	}
@@ -106,11 +104,9 @@ public class Importer {
 
 	}
 
-	private void importStartingGrid(Map<Integer, Integer> racesToImportFrom) {
+	private void importStartingGrid(List<Integer> racesToImportFrom, int year) {
 		final String existCheck = "SELECT COUNT(*) FROM StartingGrid WHERE race_number = ?";
-		for (Entry<Integer, Integer> entry : racesToImportFrom.entrySet()) {
-			int raceId = entry.getKey();
-			int year = entry.getValue();
+		for (int raceId : racesToImportFrom) {
 			boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 			if (isAlreadyAdded) {
 				continue;
@@ -136,11 +132,10 @@ public class Importer {
 		}
 	}
 
-	private void importRaceResults(Map<Integer, Integer> racesToImportFrom) {
+	private void importRaceResults(List<Integer> racesToImportFrom) {
 		final String existCheck = "SELECT COUNT(*) FROM RaceResult WHERE race_number = ?";
 		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
-		for (Entry<Integer, Integer> entry : racesToImportFrom.entrySet()) {
-			int raceId = entry.getKey();
+		for (int raceId : racesToImportFrom) {
 			boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 			if (isAlreadyAdded) {
 				continue;
@@ -167,7 +162,7 @@ public class Importer {
 		}
 	}
 
-	private void importSprint(Map<Integer, Integer> racesToImportFrom, int year) {
+	private void importSprint(List<Integer> racesToImportFrom, int year) {
 		final String existCheck = "SELECT COUNT(*) FROM Sprint WHERE race_number = ?";
 		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
 		final String getRaceResultId = """
@@ -178,7 +173,7 @@ public class Importer {
 				""";
 		Integer maxId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year);
 		int toCheck = maxId + 1;
-		if (!racesToImportFrom.containsKey(toCheck)) {
+		if (!racesToImportFrom.contains(toCheck)) {
 			return;
 		}
 		boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, toCheck) > 0;
