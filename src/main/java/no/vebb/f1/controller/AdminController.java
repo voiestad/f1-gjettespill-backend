@@ -100,7 +100,9 @@ public class AdminController {
 			races.add(i);
 		}
 
-		new Importer(jdbcTemplate).importRaceNames(races, year);
+		Importer importer = new Importer(jdbcTemplate);
+		importer.importRaceNames(races, year);
+		importer.importData();
 		return "redirect:/admin/season";
 	}
 

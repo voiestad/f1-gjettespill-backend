@@ -68,12 +68,17 @@ public class Importer {
 	private void refreshLatestStartingGrid(int year) {
 		try {
 			final String getStartingGridId = """
-					SELECT MAX(r.position)
-					FROM StartingGrid s
-					JOIN Race r on r.id = s.race_number
-					WHERE r.year = ?
+					SELECT DISTINCT r.id
+					FROM StartingGrid sg
+					JOIN Race r ON r.id = sg.race_number
+					WHERE r.position = (
+						SELECT MAX(r2.position)
+						FROM Race r2
+						WHERE r2.year = ?
+					)
+					AND r.year = ?;
 					""";
-			Integer raceId = jdbcTemplate.queryForObject(getStartingGridId, Integer.class, year);
+			Integer raceId = jdbcTemplate.queryForObject(getStartingGridId, Integer.class, year, year);
 			if (raceId == null) {
 				return;
 			}
@@ -87,12 +92,17 @@ public class Importer {
 	private void refreshLatestRaceResult(int year) {
 		try {
 			final String getRaceResultId = """
-				SELECT MAX(r.position)
-				FROM RaceResult rr
-				JOIN Race r on r.id = rr.race_number
-				WHERE r.year = ?
-				""";
-			Integer raceId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year);
+					SELECT DISTINCT r.id
+					FROM RaceResult rr
+					JOIN Race r on r.id = rr.race_number
+					WHERE r.position = (
+							SELECT MAX(r2.position)
+							FROM Race r2
+							WHERE r2.year = ?
+						)
+					AND r.year = ?;
+					""";
+			Integer raceId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year, year);
 			if (raceId == null) {
 				return;
 			}
@@ -254,12 +264,18 @@ public class Importer {
 
 	private int getMaxRaceId(int year) {
 		final String sql = """
-				SELECT MAX(r.position)
+				SELECT DISTINCT r.id
 				FROM Sprint s
-				JOIN Race r on r.id = s.race_number
-				WHERE r.year = ?
+				JOIN Race r ON r.id = s.race_number
+				WHERE r.position = (
+				    SELECT MAX(r2.position)
+				    FROM Race r2
+				    WHERE r2.year = ?
+				)
+				AND r.year = ?;
 				""";
-		Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class, year);
+
+		Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class, year, year);
 		return maxId != null ? maxId : -1;
 	}
 
