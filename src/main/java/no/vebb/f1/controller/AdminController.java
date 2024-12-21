@@ -71,7 +71,7 @@ public class AdminController {
 	}
 
 	@GetMapping("/season/{year}")
-	public String seasonMenu(@RequestParam(value = "success") Boolean success, @PathVariable("year") int year, Model model) {
+	public String seasonMenu(@RequestParam(value = "success", required = false) Boolean success, @PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
@@ -92,7 +92,7 @@ public class AdminController {
 	}
 
 	@GetMapping("/season/{year}/manage")
-	public String manageRacesInSeason(@RequestParam(value = "success") Boolean success, @PathVariable("year") int year, Model model) {
+	public String manageRacesInSeason(@RequestParam(value = "success", required = false) Boolean success, @PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
