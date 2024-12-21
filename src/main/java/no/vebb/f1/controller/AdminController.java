@@ -167,6 +167,24 @@ public class AdminController {
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
+		final String validateRaceId = "SELECT COUNT(*) FROM Race WHERE year = ? AND id = ?";
+		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
+		if (!isValidRaceId) {
+			return "redirect:/admin/season" + year + "?success=false";
+		}
+		final String deleteRace = "DELETE FROM Race WHERE id = ?";
+		jdbcTemplate.update(deleteRace, raceId);
+
+		final String getRacesSql = "SELECT * FROM Race WHERE year = ? ORDER BY position ASC";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRacesSql, year);
+		final String removeOldOrderSql = "DELETE FROM Race WHERE year = ?";
+		jdbcTemplate.update(removeOldOrderSql, year);
+		int currentPos = 1;
+		final String insertRaceSql = "INSERT INTO Race (id, name, year, position) VALUES (?, ?, ?, ?)";
+		for (Map<String, Object> row : sqlRes) {
+			jdbcTemplate.update(insertRaceSql, (int) row.get("id"), (String) row.get("name"), year, currentPos);
+			currentPos++;
+		}
 		return "redirect:/admin/season/" + year + "?success=true";
 	}
 
