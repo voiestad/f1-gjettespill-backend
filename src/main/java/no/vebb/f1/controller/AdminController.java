@@ -124,7 +124,36 @@ public class AdminController {
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-
+		final String validateRaceId = "SELECT COUNT(*) FROM Race WHERE year = ? AND id = ?";
+		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
+		if (!isValidRaceId) {
+			return "redirect:/admin/season" + year + "?success=false";
+		}
+		final String maxPosSql = "SELECT MAX(position) FROM Race WHERE year = ?";
+		int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year);
+		boolean isPosOutOfBounds = position < 1 || position > maxPos;
+		if (isPosOutOfBounds) {
+			return "redirect:/admin/season" + year + "?success=false";
+		}
+		final String getRacesSql = "SELECT * FROM Race WHERE year = ? AND id != ? ORDER BY position ASC";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRacesSql, year, raceId);
+		final String getRaceToMoveSql = "SELECT * FROM Race WHERE id = ?";
+		Map<String, Object> raceToMove = jdbcTemplate.queryForMap(getRaceToMoveSql, raceId);
+		final String removeOldOrderSql = "DELETE FROM Race WHERE year = ?";
+		jdbcTemplate.update(removeOldOrderSql, year);
+		int currentPos = 1;
+		final String insertRaceSql = "INSERT INTO Race (id, name, year, position) VALUES (?, ?, ?, ?)";
+		for (Map<String, Object> row : sqlRes) {
+			if (currentPos == position) {
+				jdbcTemplate.update(insertRaceSql, raceId, (String) raceToMove.get("name"), year, position);
+				currentPos++;
+			}
+			jdbcTemplate.update(insertRaceSql, (int) row.get("id"), (String) row.get("name"), year, currentPos);
+			currentPos++;
+		}
+		if (currentPos == position) {
+			jdbcTemplate.update(insertRaceSql, raceId, (String) raceToMove.get("name"), year, position);
+		}
 		return "redirect:/admin/season/" + year + "?success=true";
 	}
 
@@ -141,7 +170,7 @@ public class AdminController {
 		return "redirect:/admin/season/" + year + "?success=true";
 	}
 
-	@PostMapping("/season/{year}/manage/delete")
+	@PostMapping("/season/{year}/manage/add")
 	public String addRace(@PathVariable int year, @RequestParam("id") int raceId) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
@@ -213,7 +242,7 @@ public class AdminController {
 		}
 		model.addAttribute("title", "Velg løp");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		final String sql = "SELECT name, id FROM Race WHERE year = ? ORDER BY id ASC";
+		final String sql = "SELECT name, id FROM Race WHERE year = ? ORDER BY position ASC";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, year);
 		int i = 1;
 		for (Map<String, Object> row : sqlRes) {
