@@ -196,6 +196,14 @@ public class AdminController {
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
+		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE id = ?";
+		boolean isRaceIdInUse = jdbcTemplate.queryForObject(validateRaceId, Integer.class, raceId) > 0;
+		if (isRaceIdInUse) {
+			return "redirect:/admin/season" + year + "?success=false";
+		}
+		Importer importer = new Importer(jdbcTemplate);
+		importer.importRaceName(raceId, year);
+		importer.importData();
 		return "redirect:/admin/season/" + year + "?success=true";
 	}
 
