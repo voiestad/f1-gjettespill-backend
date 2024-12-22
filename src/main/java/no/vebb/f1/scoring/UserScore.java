@@ -104,9 +104,9 @@ public class UserScore {
 		SELECT f.name AS type, fg.amount AS guessed, COALESCE(COUNT(fs.flag), 0) AS actual
 		FROM Flag f
 		JOIN FlagGuess fg ON f.name = fg.flag
-		JOIN Race r ON fg.year = r.year
-		LEFT JOIN FlagStats fs ON fs.flag = f.name AND fs.race_number = r.id
-		WHERE r.year = ? AND fg.guesser = ?
+		JOIN RaceOrder ro ON fg.year = ro.year
+		LEFT JOIN FlagStats fs ON fs.flag = f.name AND fs.race_number = ro.id
+		WHERE ro.year = ? AND fg.guesser = ?
 		GROUP BY f.name
 		""";
 		
@@ -148,9 +148,10 @@ public class UserScore {
 		SELECT r.name AS race_name, dpg.driver AS driver, sg.position AS start, rr.finishing_position AS finish FROM
 		DriverPlaceGuess dpg
 		JOIN Race r ON r.id = dpg.race_number
+		JOIN RaceOrder ro ON r.id = ro.id
 		JOIN StartingGrid sg ON sg.race_number = r.id AND dpg.driver = sg.driver
 		JOIN RaceResult rr ON rr.race_number = r.id AND dpg.driver = rr.driver
-		WHERE dpg.category = ? AND dpg.guesser = ? AND r.year = ?
+		WHERE dpg.category = ? AND dpg.guesser = ? AND ro.year = ?
 		ORDER BY r.id ASC
 		""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, category, user.id, year);

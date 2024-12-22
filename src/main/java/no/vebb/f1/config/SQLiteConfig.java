@@ -23,8 +23,16 @@ public class SQLiteConfig {
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS Race (
 					id INTEGER PRIMARY KEY,
-					name TEXT NOT NULL,
-					year INTEGER NOT NULL
+					name TEXT NOT NULL
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS RaceOrder (
+					id INTEGER NOT NULL UNIQUE,
+					year INTEGER NOT NULL,
+					position INTEGER NOT NULL,
+					PRIMARY KEY (year, position),
+					FOREIGN KEY (id) REFERENCES Race(id) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -284,14 +292,6 @@ public class SQLiteConfig {
 				CREATE TABLE IF NOT EXISTS Admin (
 					user_id TEXT PRIMARY KEY,
 					FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
-			);
-			""");
-			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS SeasonInfo (
-					year INTEGER PRIMARY KEY,
-					start INTEGER NOT NULL,
-					end INTEGER NOT NULL CHECK (start <= end),
-					active INTEGER NOT NULL CHECK (active IN (0, 1))
 			);
 			""");
 		};

@@ -32,6 +32,7 @@ public class RankingController {
 	@Autowired
 	private UserService userService;
 
+	// TODO: Remove fields
 	private int year = 2024;
 	private int raceNumber = 1252;
 
