@@ -45,7 +45,12 @@ public class Importer {
 
 	private Map<Integer, List<Integer>> getActiveRaces() {
 		Map<Integer, List<Integer>> activeRaces = new LinkedHashMap<>();
-		final String sql = "SELECT id, year, position FROM Race WHERE id NOT IN (SELECT race_number FROM RaceResult) ORDER BY year ASC, position ASC";
+		final String sql = """
+					SELECT id, year, position
+					FROM RaceOrder
+					WHERE id NOT IN (SELECT race_number FROM RaceResult)
+					ORDER BY year ASC, position ASC
+				""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
 		for (Map<String, Object> row : sqlRes) {
 			int id = (int) row.get("id");
@@ -68,15 +73,15 @@ public class Importer {
 	private void refreshLatestStartingGrid(int year) {
 		try {
 			final String getStartingGridId = """
-					SELECT DISTINCT r.id
+					SELECT DISTINCT ro.id
 					FROM StartingGrid sg
-					JOIN Race r ON r.id = sg.race_number
-					WHERE r.position = (
-						SELECT MAX(r2.position)
-						FROM Race r2
-						WHERE r2.year = ?
+					JOIN RaceOrder ro ON ro.id = sg.race_number
+					WHERE ro.position = (
+						SELECT MAX(ro2.position)
+						FROM RaceOrder ro2
+						WHERE ro2.year = ?
 					)
-					AND r.year = ?;
+					AND ro.year = ?;
 					""";
 			Integer raceId = jdbcTemplate.queryForObject(getStartingGridId, Integer.class, year, year);
 			if (raceId == null) {
@@ -92,15 +97,15 @@ public class Importer {
 	private void refreshLatestRaceResult(int year) {
 		try {
 			final String getRaceResultId = """
-					SELECT DISTINCT r.id
+					SELECT DISTINCT ro.id
 					FROM RaceResult rr
-					JOIN Race r on r.id = rr.race_number
-					WHERE r.position = (
-							SELECT MAX(r2.position)
-							FROM Race r2
-							WHERE r2.year = ?
+					JOIN RaceOrder ro on ro.id = rr.race_number
+					WHERE ro.position = (
+							SELECT MAX(ro2.position)
+							FROM RaceOrder ro2
+							WHERE ro2.year = ?
 						)
-					AND r.year = ?;
+					AND ro.year = ?;
 					""";
 			Integer raceId = jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year, year);
 			if (raceId == null) {
@@ -176,16 +181,16 @@ public class Importer {
 		final String existCheck = "SELECT COUNT(*) FROM Sprint WHERE race_number = ?";
 		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
 		final String getRaceResultId = """
-				SELECT DISTINCT r.id
+				SELECT DISTINCT ro.id
 				FROM RaceResult rr
-				JOIN Race r on r.id = rr.race_number
-				WHERE r.position = (
-						SELECT MIN(r2.position)
-						FROM Race r2
-						WHERE r2.year = ?
+				JOIN RaceOrder ro ON ro.id = rr.race_number
+				WHERE ro.position = (
+						SELECT MIN(ro2.position)
+						FROM RaceOrder ro2
+						WHERE ro2.year = ?
 					)
-				AND r.year = ?
-				AND r.id NOT IN (SELECT race_number FROM RaceResult);
+				AND ro.year = ?
+				AND ro.id NOT IN (SELECT race_number FROM RaceResult);
 				""";
 		try {
 			Integer toCheck = jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year, year);
@@ -217,7 +222,7 @@ public class Importer {
 	}
 
 	public void importRaceName(int raceId, int year) {
-		final String positionFinder = "SELECT MAX(position) FROM Race WHERE year = ?";
+		final String positionFinder = "SELECT MAX(position) FROM RaceOrder WHERE year = ?";
 		int position = jdbcTemplate.queryForObject(positionFinder, Integer.class, year) + 1;
 		addRace(raceId, year, position);
 	}
@@ -232,8 +237,10 @@ public class Importer {
 		if (raceName.equals("")) {
 			return false;
 		}
-		final String insertRaceName = "INSERT OR IGNORE INTO Race (id, name, year, position) VALUES (?, ?, ?, ?)";
-		jdbcTemplate.update(insertRaceName, raceId, raceName, year, position);
+		final String insertRaceName = "INSERT OR IGNORE INTO Race (id, name) VALUES (?, ?)";
+		jdbcTemplate.update(insertRaceName, raceId, raceName);
+		final String insertRaceOrder = "INSERT OR IGNORE INTO RaceOrder (id, year, position) VALUES (?, ?, ?)";
+		jdbcTemplate.update(insertRaceOrder, raceId, year, position);
 		return true;
 	}
 
@@ -276,15 +283,15 @@ public class Importer {
 
 	private int getMaxRaceId(int year) {
 		final String sql = """
-				SELECT DISTINCT r.id
+				SELECT DISTINCT ro.id
 				FROM Sprint s
-				JOIN Race r ON r.id = s.race_number
-				WHERE r.position = (
-				    SELECT MAX(r2.position)
-				    FROM Race r2
-				    WHERE r2.year = ?
+				JOIN RaceOrder ro ON ro.id = s.race_number
+				WHERE ro.position = (
+				    SELECT MAX(ro2.position)
+				    FROM RaceOrder ro2
+				    WHERE ro2.year = ?
 				)
-				AND r.year = ?;
+				AND ro.year = ?;
 				""";
 
 		Integer maxId = jdbcTemplate.queryForObject(sql, Integer.class, year, year);

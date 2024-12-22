@@ -60,7 +60,7 @@ public class AdminController {
 		}
 		model.addAttribute("title", "Administrer sesonger");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		final String sql = "SELECT DISTINCT year FROM Race ORDER BY year DESC";
+		final String sql = "SELECT DISTINCT year FROM RaceOrder ORDER BY year DESC";
 		List<Integer> years = jdbcTemplate.query(sql, (rs, rowNum) -> Integer.parseInt(rs.getString("year")));
 		for (Integer year : years) {
 			linkMap.put(String.valueOf(year), "/admin/season/" + year);
@@ -75,7 +75,7 @@ public class AdminController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
 		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
 		if (!isValidYear) {
 			return "redirect:/admin/season";
@@ -96,7 +96,7 @@ public class AdminController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
 		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
 		if (!isValidYear) {
 			return "redirect:/admin/season";
@@ -119,40 +119,38 @@ public class AdminController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
 		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-		final String validateRaceId = "SELECT COUNT(*) FROM Race WHERE year = ? AND id = ?";
+		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
 		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
 		if (!isValidRaceId) {
 			return "redirect:/admin/season" + year + "?success=false";
 		}
-		final String maxPosSql = "SELECT MAX(position) FROM Race WHERE year = ?";
+		final String maxPosSql = "SELECT MAX(position) FROM RaceOrder WHERE year = ?";
 		int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year);
 		boolean isPosOutOfBounds = position < 1 || position > maxPos;
 		if (isPosOutOfBounds) {
 			return "redirect:/admin/season" + year + "?success=false";
 		}
-		final String getRacesSql = "SELECT * FROM Race WHERE year = ? AND id != ? ORDER BY position ASC";
+		final String getRacesSql = "SELECT * FROM RaceOrder WHERE year = ? AND id != ? ORDER BY position ASC";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRacesSql, year, raceId);
-		final String getRaceToMoveSql = "SELECT * FROM Race WHERE id = ?";
-		Map<String, Object> raceToMove = jdbcTemplate.queryForMap(getRaceToMoveSql, raceId);
-		final String removeOldOrderSql = "DELETE FROM Race WHERE year = ?";
+		final String removeOldOrderSql = "DELETE FROM RaceOrder WHERE year = ?";
 		jdbcTemplate.update(removeOldOrderSql, year);
 		int currentPos = 1;
-		final String insertRaceSql = "INSERT INTO Race (id, name, year, position) VALUES (?, ?, ?, ?)";
+		final String insertRaceSql = "INSERT INTO RaceOrder (id, year, position) VALUES (?, ?, ?)";
 		for (Map<String, Object> row : sqlRes) {
 			if (currentPos == position) {
-				jdbcTemplate.update(insertRaceSql, raceId, (String) raceToMove.get("name"), year, position);
+				jdbcTemplate.update(insertRaceSql, raceId, year, position);
 				currentPos++;
 			}
-			jdbcTemplate.update(insertRaceSql, (int) row.get("id"), (String) row.get("name"), year, currentPos);
+			jdbcTemplate.update(insertRaceSql, (int) row.get("id"), year, currentPos);
 			currentPos++;
 		}
 		if (currentPos == position) {
-			jdbcTemplate.update(insertRaceSql, raceId, (String) raceToMove.get("name"), year, position);
+			jdbcTemplate.update(insertRaceSql, raceId, year, position);
 		}
 		return "redirect:/admin/season/" + year + "?success=true";
 	}
@@ -162,12 +160,12 @@ public class AdminController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
 		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-		final String validateRaceId = "SELECT COUNT(*) FROM Race WHERE year = ? AND id = ?";
+		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
 		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
 		if (!isValidRaceId) {
 			return "redirect:/admin/season" + year + "?success=false";
@@ -175,14 +173,14 @@ public class AdminController {
 		final String deleteRace = "DELETE FROM Race WHERE id = ?";
 		jdbcTemplate.update(deleteRace, raceId);
 
-		final String getRacesSql = "SELECT * FROM Race WHERE year = ? ORDER BY position ASC";
+		final String getRacesSql = "SELECT * FROM RaceOrder WHERE year = ? ORDER BY position ASC";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRacesSql, year);
-		final String removeOldOrderSql = "DELETE FROM Race WHERE year = ?";
+		final String removeOldOrderSql = "DELETE FROM RaceOrder WHERE year = ?";
 		jdbcTemplate.update(removeOldOrderSql, year);
 		int currentPos = 1;
-		final String insertRaceSql = "INSERT INTO Race (id, name, year, position) VALUES (?, ?, ?, ?)";
+		final String insertRaceSql = "INSERT INTO RaceOrder (id, year, position) VALUES (?, ?, ?)";
 		for (Map<String, Object> row : sqlRes) {
-			jdbcTemplate.update(insertRaceSql, (int) row.get("id"), (String) row.get("name"), year, currentPos);
+			jdbcTemplate.update(insertRaceSql, (int) row.get("id"), year, currentPos);
 			currentPos++;
 		}
 		return "redirect:/admin/season/" + year + "?success=true";
@@ -193,7 +191,7 @@ public class AdminController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
 		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
 		if (!isValidYear) {
 			return "redirect:/admin/season";
@@ -215,7 +213,7 @@ public class AdminController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String getRaceNameSql = "SELECT COUNT(*) FROM Race WHERE year = ?";
+		final String getRaceNameSql = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
 		boolean isAlreadyAdded = jdbcTemplate.queryForObject(getRaceNameSql, Integer.class, year) > 0;
 		if (isAlreadyAdded) {
 			model.addAttribute("error", String.format("Sesongen %d er allerede lagt til", year));
@@ -244,7 +242,7 @@ public class AdminController {
 		}
 		model.addAttribute("title", "Velg år");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		final String sql = "SELECT DISTINCT year FROM Race ORDER BY year DESC";
+		final String sql = "SELECT DISTINCT year FROM RaceOrder ORDER BY year DESC";
 		List<Integer> years = jdbcTemplate.query(sql, (rs, rowNum) -> Integer.parseInt(rs.getString("year")));
 		for (Integer year : years) {
 			linkMap.put(String.valueOf(year), "/admin/flag/" + year);
@@ -260,7 +258,7 @@ public class AdminController {
 		}
 		model.addAttribute("title", "Velg løp");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		final String sql = "SELECT name, id FROM Race WHERE year = ? ORDER BY position ASC";
+		final String sql = "SELECT r.name AS name, r.id AS id FROM Race r JOIN RaceOrder ro ON ro.id = r.id WHERE year = ? ORDER BY position ASC";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, year);
 		int i = 1;
 		for (Map<String, Object> row : sqlRes) {
