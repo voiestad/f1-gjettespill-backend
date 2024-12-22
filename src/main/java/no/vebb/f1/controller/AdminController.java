@@ -71,7 +71,8 @@ public class AdminController {
 	}
 
 	@GetMapping("/season/{year}")
-	public String seasonMenu(@RequestParam(value = "success", required = false) Boolean success, @PathVariable("year") int year, Model model) {
+	public String seasonMenu(@RequestParam(value = "success", required = false) Boolean success,
+			@PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
@@ -86,13 +87,14 @@ public class AdminController {
 		linkMap.put("Endring av løp", basePath + "/manage");
 		linkMap.put("Frister", basePath + "/cutoff");
 		linkMap.put("F1 Deltakere", basePath + "/competitors");
-		
+
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
 	}
 
 	@GetMapping("/season/{year}/manage")
-	public String manageRacesInSeason(@RequestParam(value = "success", required = false) Boolean success, @PathVariable("year") int year, Model model) {
+	public String manageRacesInSeason(@RequestParam(value = "success", required = false) Boolean success,
+			@PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
@@ -109,13 +111,28 @@ public class AdminController {
 			}
 		}
 		List<Race> races = new ArrayList<>();
-		// Add races
+		final String getRaces = """
+				SELECT r.id AS id, r.name AS name, ro.position AS position
+				FROM Race r
+				JOIN RaceOrder ro ON r.id = ro.id
+				WHERE ro.year = ?
+				""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRaces, year);
+		for (Map<String, Object> row : sqlRes) {
+			int position = (int) row.get("position");
+			String name = (String) row.get("name");
+			int id = (int) row.get("id");
+			races.add(new Race(position, name, id));
+		}
 		model.addAttribute("races", races);
+		model.addAttribute("title", year);
+		model.addAttribute("year", year);
 		return "manageSeason";
 	}
 
 	@PostMapping("/season/{year}/manage/move")
-	public String changeRaceOrder(@PathVariable int year, @RequestParam("id") int raceId, @RequestParam("newPosition") int position) {
+	public String changeRaceOrder(@PathVariable int year, @RequestParam("id") int raceId,
+			@RequestParam("newPosition") int position) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
@@ -127,13 +144,13 @@ public class AdminController {
 		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
 		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
 		if (!isValidRaceId) {
-			return "redirect:/admin/season" + year + "?success=false";
+			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
 		final String maxPosSql = "SELECT MAX(position) FROM RaceOrder WHERE year = ?";
 		int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year);
 		boolean isPosOutOfBounds = position < 1 || position > maxPos;
 		if (isPosOutOfBounds) {
-			return "redirect:/admin/season" + year + "?success=false";
+			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
 		final String getRacesSql = "SELECT * FROM RaceOrder WHERE year = ? AND id != ? ORDER BY position ASC";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRacesSql, year, raceId);
@@ -152,7 +169,9 @@ public class AdminController {
 		if (currentPos == position) {
 			jdbcTemplate.update(insertRaceSql, raceId, year, position);
 		}
-		return "redirect:/admin/season/" + year + "?success=true";
+		Importer importer = new Importer(jdbcTemplate);
+		importer.importData();
+		return "redirect:/admin/season/" + year + "/manage?success=true";
 	}
 
 	@PostMapping("/season/{year}/manage/delete")
@@ -168,7 +187,7 @@ public class AdminController {
 		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
 		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
 		if (!isValidRaceId) {
-			return "redirect:/admin/season" + year + "?success=false";
+			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
 		final String deleteRace = "DELETE FROM Race WHERE id = ?";
 		jdbcTemplate.update(deleteRace, raceId);
@@ -183,7 +202,7 @@ public class AdminController {
 			jdbcTemplate.update(insertRaceSql, (int) row.get("id"), year, currentPos);
 			currentPos++;
 		}
-		return "redirect:/admin/season/" + year + "?success=true";
+		return "redirect:/admin/season/" + year + "/manage?success=true";
 	}
 
 	@PostMapping("/season/{year}/manage/add")
@@ -199,12 +218,12 @@ public class AdminController {
 		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE id = ?";
 		boolean isRaceIdInUse = jdbcTemplate.queryForObject(validateRaceId, Integer.class, raceId) > 0;
 		if (isRaceIdInUse) {
-			return "redirect:/admin/season" + year + "?success=false";
+			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
 		Importer importer = new Importer(jdbcTemplate);
 		importer.importRaceName(raceId, year);
 		importer.importData();
-		return "redirect:/admin/season/" + year + "?success=true";
+		return "redirect:/admin/season/" + year + "/manage?success=true";
 	}
 
 	@GetMapping("/season/add")
@@ -344,7 +363,7 @@ public class AdminController {
 		public final int position;
 		public final String name;
 		public final int id;
-		
+
 		public Race(int position, String name, int id) {
 			this.position = position;
 			this.name = name;
