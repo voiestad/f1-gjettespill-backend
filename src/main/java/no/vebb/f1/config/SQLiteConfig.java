@@ -49,6 +49,7 @@ public class SQLiteConfig {
 				CREATE TABLE IF NOT EXISTS DriverYear (
 					driver TEXT NOT NULL,
 					year INTEGER NOT NULL,
+					position INTEGER NOT NULL,
 					PRIMARY KEY (driver, year),
 					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE
 			);
@@ -57,6 +58,7 @@ public class SQLiteConfig {
 				CREATE TABLE IF NOT EXISTS ConstructorYear (
 					constructor TEXT NOT NULL,
 					year INTEGER NOT NULL,
+					position INTEGER NOT NULL,
 					PRIMARY KEY (constructor, year),
 					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE
 			);

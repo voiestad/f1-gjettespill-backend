@@ -262,6 +262,59 @@ public class AdminController {
 		return "redirect:/admin/season";
 	}
 
+	@GetMapping("/season/{year}/competitors")
+	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String getDrivers = "SELECT * FROM DriverYear WHERE year = ? ORDER BY position ASC";
+		final String getConstructors = "SELECT * FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
+
+		List<String> drivers = new ArrayList<>();
+		List<Map<String, Object>> sqlResDrivers = jdbcTemplate.queryForList(getDrivers, year);
+		for (Map<String, Object> row : sqlResDrivers) {
+			drivers.add((String) row.get("driver"));
+		}
+
+		List<String> constructors = new ArrayList<>();
+		List<Map<String, Object>> sqlResConstructors = jdbcTemplate.queryForList(getConstructors, year);
+		for (Map<String, Object> row : sqlResConstructors) {
+			constructors.add((String) row.get("constructor"));
+		}
+
+		model.addAttribute("drivers", drivers);
+		model.addAttribute("constructors", constructors);
+		return "addCompetitors";
+	}
+
+	@PostMapping("/season/{year}/competitors/addDriver")
+	public String addDriverToSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String insertDriverYear = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
+		jdbcTemplate.update(insertDriverYear, driver);
+		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM DriverYear WHERE year = ?";
+		int position = jdbcTemplate.queryForObject(getMaxPos, Integer.class, year) + 1;
+		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?)";
+		jdbcTemplate.update(addDriverYear, driver, year, position);
+		return "redirect:/admin/season/" + year + "/competitors";
+	}
+
+	@PostMapping("/season/{year}/competitors/addConstructor")
+	public String addConstructorToSeason(@PathVariable("year") int year, @RequestParam("constructor") String constructor) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String insertConstructor = "INSERT OR IGNORE INTO Constructor (name) VALUES (?)";
+		jdbcTemplate.update(insertConstructor, constructor);
+		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM ConstructorYear WHERE year = ?";
+		int position = jdbcTemplate.queryForObject(getMaxPos, Integer.class, year) + 1;
+		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?)";
+		jdbcTemplate.update(addConstructorYear, constructor, year, position);
+		return "redirect:/admin/season/" + year + "/competitors";
+	}
+
 	@GetMapping("/flag")
 	public String flagChooseYear(Model model) {
 		if (!userService.isAdmin()) {
