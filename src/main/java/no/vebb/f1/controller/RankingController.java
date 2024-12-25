@@ -33,7 +33,7 @@ public class RankingController {
 	private UserService userService;
 
 	// TODO: Remove fields
-	private int year = 2024;
+	private int year = 2025;
 	private int raceNumber = 1252;
 
 	public RankingController(JdbcTemplate jdbcTemplate) {
@@ -63,7 +63,7 @@ public class RankingController {
 
 	@GetMapping("/drivers")
 	public String rankDrivers(Model model) {
-		final String getDriversSql = "SELECT name FROM Driver";
+		final String getDriversSql = "SELECT driver, position, year FROM DriverYear WHERE year = ? ORDER BY position ASC";
 		final String getGuessedSql = "SELECT position, driver FROM DriverGuess WHERE guesser = ? ORDER BY position ASC";
 		final String competitorColName = "driver";
 		model.addAttribute("title", "Ranger sjåførene");
@@ -73,14 +73,15 @@ public class RankingController {
 
 	@PostMapping("/drivers")
 	public String rankDrivers(@RequestParam List<String> rankedCompetitors, Model model) {
-		final String getDriversSql = "SELECT name FROM Driver";
+		final String getDriversSql = "SELECT driver, year FROM DriverYear WHERE year = ?";
 		final String addRowDriver = "REPLACE INTO DriverGuess (guesser, driver, year, position) values (?, ?, ?, ?)";
-		return handleRankPost(model, rankedCompetitors, getDriversSql, addRowDriver);
+		final String competitorColName = "driver";
+		return handleRankPost(model, rankedCompetitors, getDriversSql, addRowDriver, competitorColName);
 	}
 
 	@GetMapping("/constructors")
 	public String rankConstructors(Model model) {
-		final String getConstructorsSql = "SELECT name FROM Constructor";
+		final String getConstructorsSql = "SELECT constructor, position, year FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
 		final String getGuessedSql = "SELECT position, constructor FROM ConstructorGuess WHERE guesser = ? ORDER BY position ASC";
 		final String competitorColName = "constructor";
 		model.addAttribute("title", "Ranger konstruktørene");
@@ -90,9 +91,10 @@ public class RankingController {
 
 	@PostMapping("/constructors")
 	public String rankConstructors(@RequestParam List<String> rankedCompetitors, Model model) {
-		final String getConstructorSql = "SELECT name FROM Constructor";
+		final String getConstructorSql = "SELECT constructor, year FROM ConstructorYear WHERE year = ?";
 		final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?)";
-		return handleRankPost(model, rankedCompetitors, getConstructorSql, addRowConstructor);
+		final String competitorColName = "constructor";
+		return handleRankPost(model, rankedCompetitors, getConstructorSql, addRowConstructor, competitorColName);
 	}
 
 	private String handleRankGet(Model model, String getCompetitorsSql, String getGuessedSql, String competitorColName) {
@@ -102,18 +104,18 @@ public class RankingController {
 		}
 		List<String> competitors = jdbcTemplate.query(getGuessedSql, (rs, rowNum) -> rs.getString(competitorColName), user.get().id);
 		if (competitors.size() == 0) {
-			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString("name"));
+			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), year);
 		}
 		model.addAttribute("competitors", competitors);
 		return "ranking";
 	}
 
-	private String handleRankPost(Model model, List<String> rankedCompetitors, String getCompetitorsSql, String addCompetitorsSql) {
+	private String handleRankPost(Model model, List<String> rankedCompetitors, String getCompetitorsSql, String addCompetitorsSql, String competitorColName) {
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString("name"))));
+		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), year)));
 		String error = validateGuessList(rankedCompetitors, competitors);
 		if (error != null) {
 			logger.warn(error);
