@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" th:href="@{/tables.css}">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<p th:if="${successMessage}" th:text="${successMessage}"></p>
+		<h2 th:text="${title}"></h2>
+		<div>
+			<div th:each="driver, iterStat : ${drivers}">
+				<p th:text="${iterStat.index + 1} + ' ' + ${driver}"></p>
+				<form th:action="@{/admin/season/{year}/competitors/moveDriver(year=${year})}" method="post">
+					<input type="hidden" name="driver" th:value="${driver}">
+					<input type="number" name="newPosition" placeholder="Ny plass" min="1" max="50" pattern="[0-9]*"
+						inputmode="numeric" required>
+					<input type="submit" value="Endre plass">
+				</form>
+				<form th:action="@{/admin/season/{year}/competitors/deleteDriver(year=${year})}" method="post">
+					<input type="hidden" name="driver" th:value="${driver}">
+					<input type="submit" value="&#128465;">
+				</form>
+			</div>
+
+			<form th:action="@{/admin/season/{year}/competitors/addDriver(year=${year})}" method="post">
+				<input type="text" name="driver" placeholder="Sjåførnavn" required>
+				<input type="submit" value="Legg til sjåfør">
+			</form>
+		</div>
+		<div>
+			<div th:each="constructor, iterStat : ${constructors}">
+				<p th:text="${iterStat.index + 1} + ' ' + ${constructor}"></p>
+				<form th:action="@{/admin/season/{year}/competitors/moveConstructor(year=${year})}" method="post">
+					<input type="hidden" name="constructor" th:value="${constructor}">
+					<input type="number" name="newPosition" placeholder="Ny plass" min="1" max="50" pattern="[0-9]*"
+						inputmode="numeric" required>
+					<input type="submit" value="Endre plass">
+				</form>
+				<form th:action="@{/admin/season/{year}/competitors/deleteConstructor(year=${year})}" method="post">
+					<input type="hidden" name="constructor" th:value="${constructor}">
+					<input type="submit" value="&#128465;">
+				</form>
+			</div>
+
+			<form th:action="@{/admin/season/{year}/competitors/addConstructor(year=${year})}" method="post">
+				<input type="text" name="constructor" placeholder="Konstruktørnavn" required>
+				<input type="submit" value="Legg til konstruktør">
+			</form>
+		</div>
+	</main>
+</body>
+
+</html>

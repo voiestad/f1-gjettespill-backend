@@ -282,6 +282,8 @@ public class AdminController {
 			constructors.add((String) row.get("constructor"));
 		}
 
+		model.addAttribute("title", year);
+		model.addAttribute("year", year);
 		model.addAttribute("drivers", drivers);
 		model.addAttribute("constructors", constructors);
 		return "addCompetitors";
