@@ -304,7 +304,8 @@ public class AdminController {
 	}
 
 	@PostMapping("/season/{year}/competitors/addConstructor")
-	public String addConstructorToSeason(@PathVariable("year") int year, @RequestParam("constructor") String constructor) {
+	public String addConstructorToSeason(@PathVariable("year") int year,
+			@RequestParam("constructor") String constructor) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
@@ -329,7 +330,7 @@ public class AdminController {
 		}
 		final String deleteDriver = "DELETE FROM DriverYear WHERE year = ? AND driver = ?";
 		jdbcTemplate.update(deleteDriver, year, driver);
-		
+
 		final String getAllDrivers = "SELECT * FROM DriverYear WHERE year = ? ORDER BY position ASC";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllDrivers, year);
 
@@ -347,7 +348,8 @@ public class AdminController {
 	}
 
 	@PostMapping("/season/{year}/competitors/deleteConstructor")
-	public String removeConstructorFromSeason(@PathVariable("year") int year, @RequestParam("constructor") String constructor) {
+	public String removeConstructorFromSeason(@PathVariable("year") int year,
+			@RequestParam("constructor") String constructor) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
@@ -358,7 +360,7 @@ public class AdminController {
 		}
 		final String deleteConstructor = "DELETE FROM ConstructorYear WHERE year = ? AND constructor = ?";
 		jdbcTemplate.update(deleteConstructor, year, constructor);
-		
+
 		final String getAllConstructors = "SELECT * FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllConstructors, year);
 
@@ -371,6 +373,92 @@ public class AdminController {
 			String currentConstructor = (String) row.get("constructor");
 			jdbcTemplate.update(addConstructorYear, currentConstructor, year, position);
 			position++;
+		}
+		return "redirect:/admin/season/" + year + "/competitors";
+	}
+
+	@PostMapping("/season/{year}/competitors/moveDriver")
+	public String moveDriverFromSeason(@PathVariable("year") int year, @RequestParam("driver") String driver,
+			@RequestParam("newPosition") int position) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String existCheck = "SELECT COUNT(*) FROM DriverYear WHERE year = ? AND driver = ?";
+		boolean driverExists = jdbcTemplate.queryForObject(existCheck, Integer.class, year, driver) > 0;
+		if (!driverExists) {
+			return "redirect:/admin/season/" + year + "/competitors";
+		}
+		final String maxPosSql = "SELECT MAX(position) FROM DriverYear WHERE year = ?";
+		int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year);
+		boolean isPosOutOfBounds = position < 1 || position > maxPos;
+		if (isPosOutOfBounds) {
+			return "redirect:/admin/season/" + year + "/competitors";
+		}
+		final String deleteDriver = "DELETE FROM DriverYear WHERE year = ? AND driver = ?";
+		jdbcTemplate.update(deleteDriver, year, driver);
+
+		final String getAllDrivers = "SELECT * FROM DriverYear WHERE year = ? ORDER BY position ASC";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllDrivers, year);
+
+		final String deleteAllDrivers = "DELETE FROM DriverYear WHERE year = ?";
+		jdbcTemplate.update(deleteAllDrivers, year);
+
+		int currentPos = 1;
+		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?)";
+		for (Map<String, Object> row : sqlRes) {
+			if (currentPos == position) {
+				jdbcTemplate.update(addDriverYear, driver, year, currentPos);
+				currentPos++;
+			}
+			String currentDriver = (String) row.get("driver");
+			jdbcTemplate.update(addDriverYear, currentDriver, year, currentPos);
+			currentPos++;
+		}
+		if (currentPos == position) {
+			jdbcTemplate.update(addDriverYear, driver, year, currentPos);
+		}
+		return "redirect:/admin/season/" + year + "/competitors";
+	}
+
+	@PostMapping("/season/{year}/competitors/moveConstructor")
+	public String moveConstructorFromSeason(@PathVariable("year") int year,
+			@RequestParam("constructor") String constructor, @RequestParam("newPosition") int position) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String existCheck = "SELECT COUNT(*) FROM ConstructorYear WHERE year = ? AND constructor = ?";
+		boolean constructorExists = jdbcTemplate.queryForObject(existCheck, Integer.class, year, constructor) > 0;
+		if (!constructorExists) {
+			return "redirect:/admin/season/" + year + "/competitors";
+		}
+		final String maxPosSql = "SELECT MAX(position) FROM ConstructorYear WHERE year = ?";
+		int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year);
+		boolean isPosOutOfBounds = position < 1 || position > maxPos;
+		if (isPosOutOfBounds) {
+			return "redirect:/admin/season/" + year + "/competitors";
+		}
+		final String deleteConstructor = "DELETE FROM ConstructorYear WHERE year = ? AND constructor = ?";
+		jdbcTemplate.update(deleteConstructor, year, constructor);
+
+		final String getAllConstructors = "SELECT * FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllConstructors, year);
+
+		final String deleteAllConstructors = "DELETE FROM ConstructorYear WHERE year = ?";
+		jdbcTemplate.update(deleteAllConstructors, year);
+
+		int currentPos = 1;
+		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?)";
+		for (Map<String, Object> row : sqlRes) {
+			if (currentPos == position) {
+				jdbcTemplate.update(addConstructorYear, constructor, year, currentPos);
+				currentPos++;
+			}
+			String currentConstructor = (String) row.get("constructor");
+			jdbcTemplate.update(addConstructorYear, currentConstructor, year, currentPos);
+			currentPos++;
+		}
+		if (currentPos == position) {
+			jdbcTemplate.update(addConstructorYear, constructor, year, currentPos);
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
