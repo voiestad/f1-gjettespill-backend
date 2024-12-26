@@ -317,6 +317,64 @@ public class AdminController {
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
 
+	@PostMapping("/season/{year}/competitors/deleteDriver")
+	public String removeDriverFromSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String existCheck = "SELECT COUNT(*) FROM DriverYear WHERE year = ? AND driver = ?";
+		boolean driverExists = jdbcTemplate.queryForObject(existCheck, Integer.class, year, driver) > 0;
+		if (!driverExists) {
+			return "redirect:/admin/season/" + year + "/competitors";
+		}
+		final String deleteDriver = "DELETE FROM DriverYear WHERE year = ? AND driver = ?";
+		jdbcTemplate.update(deleteDriver, year, driver);
+		
+		final String getAllDrivers = "SELECT * FROM DriverYear WHERE year = ? ORDER BY position ASC";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllDrivers, year);
+
+		final String deleteAllDrivers = "DELETE FROM DriverYear WHERE year = ?";
+		jdbcTemplate.update(deleteAllDrivers, year);
+
+		int position = 1;
+		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?)";
+		for (Map<String, Object> row : sqlRes) {
+			String currentDriver = (String) row.get("driver");
+			jdbcTemplate.update(addDriverYear, currentDriver, year, position);
+			position++;
+		}
+		return "redirect:/admin/season/" + year + "/competitors";
+	}
+
+	@PostMapping("/season/{year}/competitors/deleteConstructor")
+	public String removeConstructorFromSeason(@PathVariable("year") int year, @RequestParam("constructor") String constructor) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String existCheck = "SELECT COUNT(*) FROM ConstructorYear WHERE year = ? AND constructor = ?";
+		boolean constructorExists = jdbcTemplate.queryForObject(existCheck, Integer.class, year, constructor) > 0;
+		if (!constructorExists) {
+			return "redirect:/admin/season/" + year + "/competitors";
+		}
+		final String deleteConstructor = "DELETE FROM ConstructorYear WHERE year = ? AND constructor = ?";
+		jdbcTemplate.update(deleteConstructor, year, constructor);
+		
+		final String getAllConstructors = "SELECT * FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllConstructors, year);
+
+		final String deleteAllConstructors = "DELETE FROM ConstructorYear WHERE year = ?";
+		jdbcTemplate.update(deleteAllConstructors, year);
+
+		int position = 1;
+		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?)";
+		for (Map<String, Object> row : sqlRes) {
+			String currentConstructor = (String) row.get("constructor");
+			jdbcTemplate.update(addConstructorYear, currentConstructor, year, position);
+			position++;
+		}
+		return "redirect:/admin/season/" + year + "/competitors";
+	}
+
 	@GetMapping("/flag")
 	public String flagChooseYear(Model model) {
 		if (!userService.isAdmin()) {
