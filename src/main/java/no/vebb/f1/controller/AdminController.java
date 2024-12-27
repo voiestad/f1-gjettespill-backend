@@ -1,5 +1,6 @@
 package no.vebb.f1.controller;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -564,11 +565,17 @@ public class AdminController {
 		public final int position;
 		public final String name;
 		public final int id;
+		public final Instant cutoff;
 
 		public Race(int position, String name, int id) {
+			this(position, name, id, null);
+		}
+
+		public Race(int position, String name, int id, Instant cutoff) {
 			this.position = position;
 			this.name = name;
 			this.id = id;
+			this.cutoff = cutoff;
 		}
 	}
 
