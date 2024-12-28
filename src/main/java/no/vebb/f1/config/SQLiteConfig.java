@@ -296,6 +296,19 @@ public class SQLiteConfig {
 					FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
 			);
 			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS RaceCutoff (
+				race_number INTEGER PRIMARY KEY,
+				cutoff TEXT NOT NULL,
+				FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS YearCutoff (
+				year INTEGER PRIMARY KEY,
+				cutoff TEXT NOT NULL
+			);
+			""");
 		};
 	}
 }
