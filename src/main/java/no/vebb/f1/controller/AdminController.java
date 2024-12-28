@@ -6,12 +6,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
@@ -23,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.importing.Importer;
-import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 
 @Controller
@@ -34,8 +29,6 @@ public class AdminController {
 
 	@Autowired
 	private UserService userService;
-
-	private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
 	public AdminController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
