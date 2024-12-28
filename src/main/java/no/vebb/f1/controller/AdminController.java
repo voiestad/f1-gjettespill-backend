@@ -457,6 +457,21 @@ public class AdminController {
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
 
+	@GetMapping("/season/{year}/cutoff")
+	public String manageCutoff(@PathVariable("year") int year, Model model) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+
+		List<Race> races = new ArrayList<>();
+		Instant cutoffYear = Instant.now();
+
+		model.addAttribute("title", year);
+		model.addAttribute("races", races);
+		model.addAttribute("cutoffYear", cutoffYear.toString());
+		return "cutoff";
+	}
+
 	@GetMapping("/flag")
 	public String flagChooseYear(Model model) {
 		if (!userService.isAdmin()) {
