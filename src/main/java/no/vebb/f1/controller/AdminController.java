@@ -1,6 +1,7 @@
 package no.vebb.f1.controller;
 
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -470,6 +471,51 @@ public class AdminController {
 		model.addAttribute("races", races);
 		model.addAttribute("cutoffYear", cutoffYear.toString());
 		return "cutoff";
+	}
+
+	@PostMapping("/season/{year}/cutoff/setRace")
+	public String setCutoffRace(@PathVariable("year") int year, @RequestParam("id") int id, @RequestParam("cutoff") String cutoff) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
+		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, id) > 0;
+		if (!isValidRaceId) {
+			return "redirect:/admin/season/" + year + "/cutoff";
+		}
+		try {
+			Instant cutoffTime = Instant.parse(cutoff);
+			final String setCutoffTime = "INSERT OR REPLACE INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
+			jdbcTemplate.update(setCutoffTime, id, cutoffTime.toString());
+		} catch (DateTimeParseException e) {
+
+		}
+		return "redirect:/admin/season/" + year + "/cutoff";
+	}
+
+	@PostMapping("/season/{year}/cutoff/setYear")
+	public String setCutoffYear(@PathVariable("year") int year, @RequestParam("cutoff") String cutoff) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		try {
+			Instant cutoffTime = Instant.parse(cutoff);
+			final String setCutoffTime = "INSERT OR REPLACE INTO YearCutoff (year, cutoff) VALUES (?, ?)";
+			jdbcTemplate.update(setCutoffTime, year, cutoffTime.toString());
+		} catch (DateTimeParseException e) {
+
+		}
+		return "redirect:/admin/season/" + year + "/cutoff";
 	}
 
 	@GetMapping("/flag")
