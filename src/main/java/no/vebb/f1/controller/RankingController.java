@@ -1,5 +1,6 @@
 package no.vebb.f1.controller;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -248,6 +249,11 @@ public class RankingController {
 		logger.info("Guessed '{}' yellow flags, '{}' red flags and '{}' safety cars", flags.yellow, flags.red,
 				flags.safetyCar);
 		return "redirect:/guess?success=true";
+	}
+
+	private boolean isAbleToGuess(Instant cutoff) {
+		Instant now = Instant.now();
+		return cutoff.compareTo(now) > 0;
 	}
 
 	class PositionedItem implements Comparable<PositionedItem> {
