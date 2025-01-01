@@ -463,13 +463,37 @@ public class AdminController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
 
 		List<Race> races = new ArrayList<>();
-		Instant cutoffYear = Instant.now();
+		final String getCutoffRaces = """
+				SELECT r.id as id, r.name as name, rc.cutoff as cutoff, ro.year as year, ro.position as position 
+				FROM RaceCutoff rc
+				JOIN RaceOrder ro ON ro.id = rc.race_number
+				JOIN Race r ON ro.id = r.id
+				WHERE ro.year = ?
+				ORDER BY ro.position ASC
+		""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getCutoffRaces, year);
+		for (Map<String, Object> row : sqlRes) {
+			Instant cutoff = Instant.parse((String) row.get("cutoff"));
+			String name = (String) row.get("name");
+			int id = (int) row.get("id");
+			int position = (int) row.get("position");
+			Race race = new Race(position, name, id, cutoff);
+			races.add(race);
+		}
+
+		final String getCutoffYear = "SELECT cutoff FROM YearCutoff WHERE year = ?";
+		Instant cutoffYear = Instant.parse(jdbcTemplate.queryForObject(getCutoffYear, (rs, rowNum) -> rs.getString("cutoff"), year));
 
 		model.addAttribute("title", year);
 		model.addAttribute("races", races);
-		model.addAttribute("cutoffYear", cutoffYear.toString());
+		model.addAttribute("cutoffYear", cutoffYear);
 		return "cutoff";
 	}
 
