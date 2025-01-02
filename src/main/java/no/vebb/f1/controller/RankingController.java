@@ -1,6 +1,7 @@
 package no.vebb.f1.controller;
 
 import java.time.Instant;
+import java.time.Year;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -103,6 +104,9 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
+		if (!isAbleToGuessSeason()) {
+			return "redirect:/guess"; 
+		}
 		List<String> competitors = jdbcTemplate.query(getGuessedSql, (rs, rowNum) -> rs.getString(competitorColName), user.get().id);
 		if (competitors.size() == 0) {
 			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), year);
@@ -115,6 +119,9 @@ public class RankingController {
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
+		}
+		if (!isAbleToGuessSeason()) {
+			return "redirect:/guess?success=false"; 
 		}
 		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), year)));
 		String error = validateGuessList(rankedCompetitors, competitors);
@@ -208,6 +215,9 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
+		if (!isAbleToGuessSeason()) {
+			return "redirect:/guess"; 
+		}
 		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, year);
 		Flags flags = new Flags();
@@ -242,6 +252,9 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
+		if (!isAbleToGuessSeason()) {
+			return "redirect:/guess?success=false"; 
+		}
 		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
 		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", year, flags.yellow);
 		jdbcTemplate.update(sql, user.get().id, "Red Flag", year, flags.red);
@@ -249,6 +262,19 @@ public class RankingController {
 		logger.info("Guessed '{}' yellow flags, '{}' red flags and '{}' safety cars", flags.yellow, flags.red,
 				flags.safetyCar);
 		return "redirect:/guess?success=true";
+	}
+
+	private boolean isAbleToGuessSeason() {
+		Year year = Year.now();
+		final String existCheck = "SELECT COUNT(*) FROM YearCutoff WHERE year = ?";
+		boolean yearExist = jdbcTemplate.queryForObject(existCheck, Integer.class, year) > 0;
+		if (!yearExist) {
+			return false;
+		}
+		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), year.getValue()));
+
+		return isAbleToGuess(cutoff);
 	}
 
 	private boolean isAbleToGuess(Instant cutoff) {
