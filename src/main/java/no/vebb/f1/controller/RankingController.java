@@ -219,11 +219,31 @@ public class RankingController {
 	}
 
 	private int getRaceIdToGuess() throws NoAvailableRaceException {
-		return 0;
+		final String getRaceId = """
+				SELECT race_number
+				FROM StartingGrid sg
+				WHERE sg.race_number NOT IN (
+					SELECT rr.race_number 
+					FROM RaceResult rr
+				) 
+				""";
+		try {
+			int id = jdbcTemplate.queryForObject(getRaceId, Integer.class);
+			final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
+			Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, id));
+			if (!isAbleToGuess(cutoff)) {
+				throw new NoAvailableRaceException("Cutoff has been passed");
+			}
+			return id;
+		} catch (EmptyResultDataAccessException e) {
+			throw new NoAvailableRaceException("Currently there are no available races");
+		}
 	}
 
 	private class NoAvailableRaceException extends Exception {
-
+		public NoAvailableRaceException(String e) {
+			super(e);
+		}
 	}
 
 	@GetMapping("/flags")
