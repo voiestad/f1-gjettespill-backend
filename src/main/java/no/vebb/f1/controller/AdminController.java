@@ -3,6 +3,7 @@ package no.vebb.f1.controller;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -254,9 +255,38 @@ public class AdminController {
 		Importer importer = new Importer(jdbcTemplate);
 		importer.importRaceNames(races, year);
 		importer.importData();
+
+		setDefaultCutoffYear(year);
+		setDefaultCutoffRaces(year);
+				
 		return "redirect:/admin/season";
 	}
-
+	
+	private Instant getDefaultInstant(int year) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.YEAR, year);
+		calendar.set(Calendar.MONTH, Calendar.JANUARY);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		return calendar.toInstant();
+	}
+	
+	private void setDefaultCutoffRaces(int year) {
+		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ?";
+		final String insertCutoffRace = "INSERT INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
+		Instant time = getDefaultInstant(year);
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRaceIds, year);
+		for (Map<String, Object> row : sqlRes) {
+			int id = (int) row.get("id");
+			jdbcTemplate.update(insertCutoffRace, id, time);
+		}
+	}
+		
+	private void setDefaultCutoffYear(int year) {
+		final String insertCutoffYear = "INSERT INTO YearCutoff (year, cutoff) VALUES (?, ?)";
+		Instant time = getDefaultInstant(year);
+		jdbcTemplate.update(insertCutoffYear, year, time.toString());
+	}
+		
 	@GetMapping("/season/{year}/competitors")
 	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
