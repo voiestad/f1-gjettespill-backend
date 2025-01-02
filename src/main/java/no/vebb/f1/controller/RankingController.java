@@ -35,7 +35,6 @@ public class RankingController {
 	private UserService userService;
 
 	// TODO: Remove fields
-	private int year = 2025;
 	private int raceNumber = 1252;
 
 	public RankingController(JdbcTemplate jdbcTemplate) {
@@ -109,7 +108,7 @@ public class RankingController {
 		}
 		List<String> competitors = jdbcTemplate.query(getGuessedSql, (rs, rowNum) -> rs.getString(competitorColName), user.get().id);
 		if (competitors.size() == 0) {
-			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), year);
+			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), getCurrentYear());
 		}
 		model.addAttribute("competitors", competitors);
 		return "ranking";
@@ -123,7 +122,7 @@ public class RankingController {
 		if (!isAbleToGuessSeason()) {
 			return "redirect:/guess?success=false"; 
 		}
-		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), year)));
+		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), getCurrentYear())));
 		String error = validateGuessList(rankedCompetitors, competitors);
 		if (error != null) {
 			logger.warn(error);
@@ -131,7 +130,7 @@ public class RankingController {
 		}
 		int position = 1;
 		for (String competitor : rankedCompetitors) {
-			jdbcTemplate.update(addCompetitorsSql, user.get().id, competitor, year, position);
+			jdbcTemplate.update(addCompetitorsSql, user.get().id, competitor, getCurrentYear(), position);
 			position++;
 		}
 		return "redirect:/guess?success=true";
@@ -219,7 +218,7 @@ public class RankingController {
 			return "redirect:/guess"; 
 		}
 		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, year);
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, getCurrentYear());
 		Flags flags = new Flags();
 		for (Map<String, Object> row : sqlRes) {
 			String flag = (String) row.get("flag");
@@ -256,23 +255,26 @@ public class RankingController {
 			return "redirect:/guess?success=false"; 
 		}
 		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
-		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", year, flags.yellow);
-		jdbcTemplate.update(sql, user.get().id, "Red Flag", year, flags.red);
-		jdbcTemplate.update(sql, user.get().id, "Safety Car", year, flags.safetyCar);
+		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", getCurrentYear(), flags.yellow);
+		jdbcTemplate.update(sql, user.get().id, "Red Flag", getCurrentYear(), flags.red);
+		jdbcTemplate.update(sql, user.get().id, "Safety Car", getCurrentYear(), flags.safetyCar);
 		logger.info("Guessed '{}' yellow flags, '{}' red flags and '{}' safety cars", flags.yellow, flags.red,
 				flags.safetyCar);
 		return "redirect:/guess?success=true";
 	}
 
+	private int getCurrentYear() {
+		return Year.now().getValue();
+	}
+
 	private boolean isAbleToGuessSeason() {
-		Year year = Year.now();
 		final String existCheck = "SELECT COUNT(*) FROM YearCutoff WHERE year = ?";
-		boolean yearExist = jdbcTemplate.queryForObject(existCheck, Integer.class, year) > 0;
+		boolean yearExist = jdbcTemplate.queryForObject(existCheck, Integer.class, getCurrentYear()) > 0;
 		if (!yearExist) {
 			return false;
 		}
 		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
-		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), year.getValue()));
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), getCurrentYear()));
 
 		return isAbleToGuess(cutoff);
 	}
