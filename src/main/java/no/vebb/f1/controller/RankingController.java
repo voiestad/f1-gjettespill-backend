@@ -34,9 +34,6 @@ public class RankingController {
 	@Autowired
 	private UserService userService;
 
-	// TODO: Remove fields
-	private int raceNumber = 1252;
-
 	public RankingController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
@@ -157,55 +154,76 @@ public class RankingController {
 	public String guessTenth(Model model) {
 		model.addAttribute("title", "Tipp 10.plass");
 		model.addAttribute("type", "tenth");
-		return handleGetChooseDriver(model, raceNumber, "TENTH");
+		return handleGetChooseDriver(model, "TENTH");
 	}
 
 	@PostMapping("/tenth")
 	public String guessTenth(@RequestParam String driver, Model model) {
-		return handlePostChooseDriver(model, raceNumber, driver, "TENTH");
+		return handlePostChooseDriver(model, driver, "TENTH");
 	}
 
 	@GetMapping("/winner")
 	public String guessWinner(Model model) {
 		model.addAttribute("title", "Tipp Vinneren");
 		model.addAttribute("type", "winner");
-		return handleGetChooseDriver(model, raceNumber, "FIRST");
+		return handleGetChooseDriver(model, "FIRST");
 	}
 
 	@PostMapping("/winner")
 	public String guessWinner(@RequestParam String driver, Model model) {
-		return handlePostChooseDriver(model, raceNumber, driver, "FIRST");
+		return handlePostChooseDriver(model, driver, "FIRST");
 	}
 
-	private String handleGetChooseDriver(Model model, int raceNumber, String category) {
+	private String handleGetChooseDriver(Model model, String category) {
 		final String getPreviousGuessSql = "SELECT driver FROM DriverPlaceGuess WHERE race_number = ? AND category = ?";
-		final String sql = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
-		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber);
-		model.addAttribute("items", drivers);
+		final String getDriversFromGrid = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
 		try {
+			int raceNumber = getRaceIdToGuess();
+
+			List<String> drivers = jdbcTemplate.query(getDriversFromGrid, (rs, rowNum) -> rs.getString("driver"), raceNumber);
+			model.addAttribute("items", drivers);
+
 			String driver = jdbcTemplate.queryForObject(getPreviousGuessSql, (rs, rowNum) -> rs.getString("driver"), raceNumber, category);
 			model.addAttribute("guessedDriver", driver);
+		} catch (NoAvailableRaceException e) {
+			return "redirect:/guess";
 		} catch (EmptyResultDataAccessException e) {
 			model.addAttribute("guessedDriver", "");
 		}
+
 		return "chooseDriver";
 	}
 
-	private String handlePostChooseDriver(Model model, int raceNumber, String driver, String category) {
+	private String handlePostChooseDriver(Model model, String driver, String category) {
 		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?)";
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		String sql = "SELECT driver FROM StartingGrid WHERE race_number = ?";
-		Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber)));
-		if (!driversCheck.contains(driver)) {
-			logger.warn("'{}', invalid winner driver inputted by user.", driver);
-			return "redirect:/guess?success=false";
+		try {
+			int raceNumber = getRaceIdToGuess();
+
+			String sql = "SELECT driver FROM StartingGrid WHERE race_number = ?";
+			Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber)));
+			if (!driversCheck.contains(driver)) {
+				logger.warn("'{}', invalid winner driver inputted by user.", driver);
+				return "redirect:/guess?success=false";
+			}
+			jdbcTemplate.update(insertGuessSql, user.get().id, raceNumber, driver, category);
+			logger.info("Guessed '{}' on {}", driver, category);
+			return "redirect:/guess?success=true";
+
+		} catch (NoAvailableRaceException e) {
+			return "redirect:/guess";
 		}
-		jdbcTemplate.update(insertGuessSql, user.get().id, raceNumber, driver, category);
-		logger.info("Guessed '{}' on {}", driver, category);
-		return "redirect:/guess?success=true";
+	}
+
+	private int getRaceIdToGuess() throws NoAvailableRaceException {
+		return 0;
+	}
+
+	private class NoAvailableRaceException extends Exception {
+
 	}
 
 	@GetMapping("/flags")
