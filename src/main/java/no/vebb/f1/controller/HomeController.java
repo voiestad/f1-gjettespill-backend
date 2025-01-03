@@ -25,7 +25,7 @@ public class HomeController {
 	private UserService userService;
 	
 	private JdbcTemplate jdbcTemplate;
-	private int year = 2024;
+	private int year = 2025;
 
 	public HomeController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;

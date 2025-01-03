@@ -1,0 +1,43 @@
+<!-- fragments.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>Countdown Timer</title>
+</head>
+
+<body>
+	<div th:fragment="countdown(timeLeftToGuess)">
+		<div id="timer-display"></div>
+		<script th:inline="javascript">
+
+			function startCountdown(timeLeft) {
+				const display = document.getElementById('timer-display');
+				function setTime() {
+					if (timeLeft <= 0) {
+						clearInterval(interval);
+						display.innerHTML = "Tiden er gått ut";
+						return;
+					}
+
+					const days = Math.floor(timeLeft / (24 * 3600));
+					const hours = Math.floor((timeLeft % (24 * 3600)) / 3600);
+					const minutes = Math.floor((timeLeft % 3600) / 60);
+					const seconds = timeLeft % 60;
+
+					display.innerHTML = `Tiden går ut om:<br>${days}d ${hours}t ${minutes}m ${seconds}s`;
+					timeLeft--;
+				}
+				setTime();
+				const interval = setInterval(() => {
+					setTime();
+				}, 1000);
+			}
+			/*<![CDATA[*/
+			startCountdown(/*[[${timeLeftToGuess}]]*/ 0);
+			/*]]>*/
+		</script>
+	</div>
+</body>
+
+</html>

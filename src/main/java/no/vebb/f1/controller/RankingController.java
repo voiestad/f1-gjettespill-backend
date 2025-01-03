@@ -1,5 +1,6 @@
 package no.vebb.f1.controller;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.Year;
 import java.util.HashSet;
@@ -107,12 +108,21 @@ public class RankingController {
 		if (!isAbleToGuessSeason()) {
 			return "redirect:/guess"; 
 		}
+		long timeLeftToGuess = getTimeLeftToGuessYear();
+		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		List<String> competitors = jdbcTemplate.query(getGuessedSql, (rs, rowNum) -> rs.getString(competitorColName), user.get().id);
 		if (competitors.size() == 0) {
 			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), getCurrentYear());
 		}
 		model.addAttribute("competitors", competitors);
 		return "ranking";
+	}
+
+	private long getTimeLeftToGuessYear() {
+		Instant now = Instant.now();
+		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), getCurrentYear())); 
+		return Duration.between(now, cutoff).toSeconds();
 	}
 
 	private String handleRankPost(Model model, List<String> rankedCompetitors, String getCompetitorsSql, String addCompetitorsSql, String competitorColName) {
@@ -259,6 +269,8 @@ public class RankingController {
 		if (!isAbleToGuessSeason()) {
 			return "redirect:/guess"; 
 		}
+		long timeLeftToGuess = getTimeLeftToGuessYear();
+		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, getCurrentYear());
 		Flags flags = new Flags();

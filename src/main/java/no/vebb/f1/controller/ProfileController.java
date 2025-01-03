@@ -19,7 +19,7 @@ import no.vebb.f1.user.UserService;
 @RequestMapping("/user")
 public class ProfileController {
 
-	private int year = 2024;
+	private int year = 2025;
 
 	@Autowired
 	private UserService userService;

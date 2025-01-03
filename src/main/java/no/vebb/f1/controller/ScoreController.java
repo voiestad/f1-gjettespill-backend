@@ -20,7 +20,7 @@ import no.vebb.f1.util.Table;
 public class ScoreController {
 
 	private final JdbcTemplate jdbcTemplate;
-	private int year = 2024;
+	private int year = 2025;
 
 	@Autowired
 	private UserService userService;

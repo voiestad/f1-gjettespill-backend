@@ -20,7 +20,7 @@ public class Importer {
 	private final JdbcTemplate jdbcTemplate;
 
 	// TODO: Remove field
-	private int year = 2024;
+	private int year = 2025;
 
 	public Importer(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
