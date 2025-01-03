@@ -50,11 +50,15 @@ public class RankingController {
 		}
 		model.addAttribute("title", "Velg kategori");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		linkMap.put("Ranger sjåfører", "/guess/drivers");
-		linkMap.put("Ranger konstruktører", "/guess/constructors");
-		linkMap.put("Tipp antall", "/guess/flags");
-		linkMap.put("Tipp 1.plass", "/guess/winner");
-		linkMap.put("Tipp 10.plass", "/guess/tenth");
+		if (isAbleToGuessSeason()) {
+			linkMap.put("Ranger sjåfører", "/guess/drivers");
+			linkMap.put("Ranger konstruktører", "/guess/constructors");
+			linkMap.put("Tipp antall", "/guess/flags");
+		}
+		if (isRaceToGuess()) {
+			linkMap.put("Tipp 1.plass", "/guess/winner");
+			linkMap.put("Tipp 10.plass", "/guess/tenth");
+		}
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
 	}
@@ -315,6 +319,15 @@ public class RankingController {
 		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), getCurrentYear()));
 
 		return isAbleToGuess(cutoff);
+	}
+
+	private boolean isRaceToGuess() {
+		try {
+			getRaceIdToGuess();
+			return true;
+		} catch (NoAvailableRaceException e) {
+			return false;
+		}
 	}
 
 	private boolean isAbleToGuess(Instant cutoff) {
