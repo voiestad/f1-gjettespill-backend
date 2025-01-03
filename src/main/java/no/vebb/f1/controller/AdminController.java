@@ -1,6 +1,9 @@
 package no.vebb.f1.controller;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -510,7 +513,7 @@ public class AdminController {
 		""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getCutoffRaces, year);
 		for (Map<String, Object> row : sqlRes) {
-			Instant cutoff = Instant.parse((String) row.get("cutoff"));
+			LocalDateTime cutoff = instantToLocalTime(Instant.parse((String) row.get("cutoff")));
 			String name = (String) row.get("name");
 			int id = (int) row.get("id");
 			int position = (int) row.get("position");
@@ -519,8 +522,8 @@ public class AdminController {
 		}
 
 		final String getCutoffYear = "SELECT cutoff FROM YearCutoff WHERE year = ?";
-		Instant cutoffYear = Instant.parse(jdbcTemplate.queryForObject(getCutoffYear, (rs, rowNum) -> rs.getString("cutoff"), year));
-
+		String unparsedCutoffYear = jdbcTemplate.queryForObject(getCutoffYear, (rs, rowNum) -> rs.getString("cutoff"), year);
+		LocalDateTime cutoffYear = instantToLocalTime(Instant.parse(unparsedCutoffYear));
 		model.addAttribute("title", year);
 		model.addAttribute("races", races);
 		model.addAttribute("cutoffYear", cutoffYear);
@@ -543,7 +546,7 @@ public class AdminController {
 			return "redirect:/admin/season/" + year + "/cutoff";
 		}
 		try {
-			Instant cutoffTime = Instant.parse(cutoff);
+			Instant cutoffTime = parseTimeInput(cutoff);
 			final String setCutoffTime = "INSERT OR REPLACE INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
 			jdbcTemplate.update(setCutoffTime, id, cutoffTime.toString());
 		} catch (DateTimeParseException e) {
@@ -563,13 +566,26 @@ public class AdminController {
 			return "redirect:/admin/season";
 		}
 		try {
-			Instant cutoffTime = Instant.parse(cutoff);
+			Instant cutoffTime = parseTimeInput(cutoff);
 			final String setCutoffTime = "INSERT OR REPLACE INTO YearCutoff (year, cutoff) VALUES (?, ?)";
 			jdbcTemplate.update(setCutoffTime, year, cutoffTime.toString());
 		} catch (DateTimeParseException e) {
 
 		}
 		return "redirect:/admin/season/" + year + "/cutoff";
+	}
+
+	private Instant parseTimeInput(String inputTime) throws DateTimeParseException {
+		LocalDateTime localDateTime = LocalDateTime.parse(inputTime);
+		ZoneId zoneId = ZoneId.of("Europe/Paris");
+		ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);
+		return zonedDateTime.toInstant();
+	}
+
+	private LocalDateTime instantToLocalTime(Instant inputTime) {
+		ZoneId zoneId = ZoneId.of("Europe/Paris");
+		ZonedDateTime zonedDateTime = inputTime.atZone(zoneId);
+		return zonedDateTime.toLocalDateTime();
 	}
 
 	@GetMapping("/flag")
@@ -673,13 +689,13 @@ public class AdminController {
 		public final int position;
 		public final String name;
 		public final int id;
-		public final Instant cutoff;
+		public final LocalDateTime cutoff;
 
 		public Race(int position, String name, int id) {
 			this(position, name, id, null);
 		}
 
-		public Race(int position, String name, int id, Instant cutoff) {
+		public Race(int position, String name, int id, LocalDateTime cutoff) {
 			this.position = position;
 			this.name = name;
 			this.id = id;
