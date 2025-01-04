@@ -194,6 +194,9 @@ public class RankingController {
 		try {
 			int raceNumber = getRaceIdToGuess();
 
+			long timeLeftToGuess = getTimeLeftToGuessRace(raceNumber);
+			model.addAttribute("timeLeftToGuess", timeLeftToGuess);
+
 			List<String> drivers = jdbcTemplate.query(getDriversFromGrid, (rs, rowNum) -> rs.getString("driver"), raceNumber);
 			model.addAttribute("items", drivers);
 
@@ -206,6 +209,13 @@ public class RankingController {
 		}
 
 		return "chooseDriver";
+	}
+
+	private long getTimeLeftToGuessRace(int raceNumber) {
+		Instant now = Instant.now();
+		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), raceNumber)); 
+		return Duration.between(now, cutoff).toSeconds();
 	}
 
 	private String handlePostChooseDriver(Model model, String driver, String category) {
@@ -234,7 +244,7 @@ public class RankingController {
 
 	private int getRaceIdToGuess() throws NoAvailableRaceException {
 		final String getRaceId = """
-				SELECT race_number
+				SELECT DISTINCT race_number
 				FROM StartingGrid sg
 				WHERE sg.race_number NOT IN (
 					SELECT rr.race_number 
