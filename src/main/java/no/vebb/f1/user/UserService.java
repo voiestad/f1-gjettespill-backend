@@ -68,5 +68,14 @@ public class UserService {
 		
 		return false;
 	}
+
+	public boolean isLoggedInUser(User user) {
+		Optional<User> optUser = loadUser();
+		if (optUser.isEmpty()) {
+			return false;
+		}
+		User loggedInUser = optUser.get();
+		return loggedInUser.id.equals(user.id);
+	}
 	
 }

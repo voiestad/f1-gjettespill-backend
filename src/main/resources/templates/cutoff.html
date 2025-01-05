@@ -11,22 +11,24 @@
 
 <body>
 	<header th:insert="~{header}"></header>
-	<h2 th:text="${title}"></h2>
+	<main>
+		<h2 th:text="${title}"></h2>
 
-	<div th:each="race : ${races}">
-		<p th:text="${race.position} + ' ' + ${race.name} + ' ' + ${race.id}"></p>
-		<form th:action="@{/admin/season/{year}/cutoff/setRace(year=${year})}" method="post">
-			<input type="hidden" name="id" th:value="${race.id}">
-			<input type="datetime-local" name="cutoff" th:value="${race.cutoff.toString()}" required>
+		<form th:action="@{/admin/season/{year}/cutoff/setYear(year=${year})}" method="POST">
+			<p th:text="${year} + ' sesongen'"></p>
+			<input type="datetime-local" name="cutoff" th:value="${cutoffYear.toString()}" required>
 			<input type="submit" value="Sett cutoff">
 		</form>
-	</div>
 
-	<form th:action="@{/admin/season/{year}/cutoff/setYear(year=${year})}" method="POST">
-		<p th:text="${year} + ' sesongen'"></p>
-		<input type="datetime-local" name="cutoff" th:value="${cutoffYear.toString()}" required>
-		<input type="submit" value="Sett cutoff">
-	</form>
+		<div th:each="race : ${races}">
+			<p th:text="${race.position} + ' ' + ${race.name} + ' ' + ${race.id}"></p>
+			<form th:action="@{/admin/season/{year}/cutoff/setRace(year=${year})}" method="post">
+				<input type="hidden" name="id" th:value="${race.id}">
+				<input type="datetime-local" name="cutoff" th:value="${race.cutoff.toString()}" required>
+				<input type="submit" value="Sett cutoff">
+			</form>
+		</div>
+	</main>
 </body>
 
 </html>

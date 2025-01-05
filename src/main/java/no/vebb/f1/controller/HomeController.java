@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.Table;
 
 import org.springframework.ui.Model;
@@ -23,6 +24,9 @@ public class HomeController {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private Cutoff cutoff;
 	
 	private JdbcTemplate jdbcTemplate;
 	private int year = 2025;
@@ -46,7 +50,9 @@ public class HomeController {
 		List<String> header = Arrays.asList("Plass", "Navn", "Poeng");
 		List<List<String>> body = new ArrayList<>();
 		List<Guesser> leaderBoardUnsorted = new ArrayList<>();
-		
+		if (cutoff.isAbleToGuessCurrentYear()) {
+			return new Table("Sesongen starter snart", new ArrayList<>(), new ArrayList<>());
+		}
 		final String getAllUsersSql = "SELECT id FROM User";
 		List<UUID> userIds = jdbcTemplate.query(getAllUsersSql, (rs, rowNum) -> UUID.fromString(rs.getString("id")));
 		for (UUID id : userIds) {

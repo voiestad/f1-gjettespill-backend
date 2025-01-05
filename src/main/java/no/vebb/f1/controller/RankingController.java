@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Cutoff;
 
 @Controller
 @RequestMapping("/guess")
@@ -34,6 +35,9 @@ public class RankingController {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private Cutoff cutoff;
 
 	public RankingController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
@@ -51,7 +55,7 @@ public class RankingController {
 		}
 		model.addAttribute("title", "Velg kategori");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		if (isAbleToGuessSeason()) {
+		if (cutoff.isAbleToGuessCurrentYear()) {
 			linkMap.put("Ranger sjåfører", "/guess/drivers");
 			linkMap.put("Ranger konstruktører", "/guess/constructors");
 			linkMap.put("Tipp antall", "/guess/flags");
@@ -105,7 +109,7 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		if (!isAbleToGuessSeason()) {
+		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess"; 
 		}
 		long timeLeftToGuess = getTimeLeftToGuessYear();
@@ -130,7 +134,7 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		if (!isAbleToGuessSeason()) {
+		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false"; 
 		}
 		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), getCurrentYear())));
@@ -253,9 +257,7 @@ public class RankingController {
 				""";
 		try {
 			int id = jdbcTemplate.queryForObject(getRaceId, Integer.class);
-			final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
-			Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, id));
-			if (!isAbleToGuess(cutoff)) {
+			if (!cutoff.isAbleToGuessRace(id)) {
 				throw new NoAvailableRaceException("Cutoff has been passed");
 			}
 			return id;
@@ -276,7 +278,7 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		if (!isAbleToGuessSeason()) {
+		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess"; 
 		}
 		long timeLeftToGuess = getTimeLeftToGuessYear();
@@ -315,7 +317,7 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		if (!isAbleToGuessSeason()) {
+		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false"; 
 		}
 		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
@@ -331,18 +333,6 @@ public class RankingController {
 		return Year.now().getValue();
 	}
 
-	private boolean isAbleToGuessSeason() {
-		final String existCheck = "SELECT COUNT(*) FROM YearCutoff WHERE year = ?";
-		boolean yearExist = jdbcTemplate.queryForObject(existCheck, Integer.class, getCurrentYear()) > 0;
-		if (!yearExist) {
-			return false;
-		}
-		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
-		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), getCurrentYear()));
-
-		return isAbleToGuess(cutoff);
-	}
-
 	private boolean isRaceToGuess() {
 		try {
 			getRaceIdToGuess();
@@ -350,11 +340,6 @@ public class RankingController {
 		} catch (NoAvailableRaceException e) {
 			return false;
 		}
-	}
-
-	private boolean isAbleToGuess(Instant cutoff) {
-		Instant now = Instant.now();
-		return cutoff.compareTo(now) > 0;
 	}
 
 	class PositionedItem implements Comparable<PositionedItem> {

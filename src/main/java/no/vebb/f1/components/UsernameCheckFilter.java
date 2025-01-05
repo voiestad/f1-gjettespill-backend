@@ -31,6 +31,7 @@ public class UsernameCheckFilter extends OncePerRequestFilter {
 		if (principal != null) {
 			if (!userService.isLoggedIn()) {
 				response.sendRedirect("/username");
+				return;
 			}
 		}
 		filterChain.doFilter(request, response);

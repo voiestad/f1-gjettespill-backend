@@ -1,5 +1,7 @@
 package no.vebb.f1.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.util.Table;
 
 @Controller
 @RequestMapping("/user")
@@ -24,6 +28,9 @@ public class ProfileController {
 	@Autowired
 	private UserService userService;
 
+	@Autowired
+	private Cutoff cutoff;
+	
 	private JdbcTemplate jdbcTemplate;
 
 	public ProfileController(JdbcTemplate jdbcTemplate) {
@@ -51,11 +58,20 @@ public class ProfileController {
 	}
 
 	private String getGuesserProfile(Model model, User user) {
-		UserScore userScore = new UserScore(user, year, jdbcTemplate);
-
-		model.addAttribute("tables", userScore.getAllTables());
+		if (!cutoff.isAbleToGuessCurrentYear() || userService.isLoggedInUser(user)) {
+			UserScore userScore = new UserScore(user, year, jdbcTemplate);
+			model.addAttribute("tables", userScore.getAllTables());
+		} else {
+			List<Table> tables = new ArrayList<>();
+			String title = "Tippingen er tilgjenglig snart!";
+			Table table = new Table(title, new ArrayList<>(), new ArrayList<>());
+			tables.add(table);
+			model.addAttribute("tables", tables);
+		}
+		
 		model.addAttribute("title", user.username);
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
 		return "profile";
 	}
+
 }
