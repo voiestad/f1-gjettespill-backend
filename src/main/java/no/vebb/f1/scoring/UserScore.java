@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import no.vebb.f1.user.User;
@@ -18,7 +19,7 @@ public class UserScore {
 	private final int year;
 	private final JdbcTemplate jdbcTemplate;
 	private int score;
-	private int raceNumber = 1252;
+	private final int raceNumber;
 	public final Table driversTable;
 	public final Table constructorsTable;
 	public final Table flagsTable;
@@ -31,6 +32,7 @@ public class UserScore {
 		this.user = user;
 		this.year = year;
 		this.jdbcTemplate = jdbcTemplate;
+		this.raceNumber = getRaceNumber();
 		this.driversTable = initializeDriversTable();
 		this.constructorsTable = initializeConstructorsTable();
 		this.flagsTable = initializeFlagsTable();
@@ -39,28 +41,54 @@ public class UserScore {
 		this.summaryTable = initializeSummaryTable();
 	}
 
+	private int getRaceNumber() {
+		final String getRaceNumberSql = """
+			SELECT ro.id
+			FROM RaceOrder ro
+			JOIN Sprint s ON ro.id = s.race_number
+			WHERE ro.year = ?
+			ORDER BY ro.position DESC
+			LIMIT 1;
+		""";
+
+		try {
+			int raceNumber = jdbcTemplate.queryForObject(getRaceNumberSql, Integer.class, year);
+			return raceNumber;
+		} catch (EmptyResultDataAccessException e) {
+			return -1;
+		}
+	}
+
 	private Table initializeDriversTable() {
 		DiffPointsMap map = new DiffPointsMap("DRIVER", jdbcTemplate, year);
 		List<String> header = Arrays.asList("Plass", "Sjåfør", "Gjettet", "Diff", "Poeng");
+		final String driverYearSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
 		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
 		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guesser = ? ORDER BY position ASC";
 
-		return getGuessedToPos(map, driverStandingsSql, guessedSql, "driver", header);
+		return getGuessedToPos(map, driverYearSql, driverStandingsSql, guessedSql, "driver", header);
 	}
 
 	private Table initializeConstructorsTable() {
 		DiffPointsMap map = new DiffPointsMap("CONSTRUCTOR", jdbcTemplate, year);
 		List<String> header = Arrays.asList("Plass", "Konstruktør", "Gjettet", "Diff", "Poeng");
+		final String constructorYearSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
 		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
 		final String guessedSql = "SELECT constructor FROM ConstructorGuess WHERE year = ? AND guesser = ? ORDER BY position ASC";
 
-		return getGuessedToPos(map, constructorStandingsSql, guessedSql, "constructor", header);
+		return getGuessedToPos(map, constructorYearSql, constructorStandingsSql, guessedSql, "constructor", header);
 	}
 
-	private Table getGuessedToPos(DiffPointsMap map, final String standingsSql, final String guessedSql, String colname, List<String> header) {
+	private Table getGuessedToPos(DiffPointsMap map, final String competitorYearSql, final String standingsSql,
+			final String guessedSql, String colname, List<String> header) {
 		List<List<String>> body = new ArrayList<>();
 		int competitorScore = 0;
-		List<String> competitors = jdbcTemplate.query(standingsSql, (rs, rowNum) -> rs.getString(colname), raceNumber);
+		List<String> competitors;
+		if (raceNumber == -1) {
+			competitors = jdbcTemplate.query(competitorYearSql, (rs, rowNum) -> rs.getString(colname), year);
+		} else {
+			competitors = jdbcTemplate.query(standingsSql, (rs, rowNum) -> rs.getString(colname), raceNumber);
+		}
 		List<String> guessed = jdbcTemplate.query(guessedSql, (rs, rowNum) -> rs.getString(colname), year, user.id);
 		Map<String, Integer> guessedToPos = new HashMap<>();
 		for (int i = 0; i < guessed.size(); i++) {
