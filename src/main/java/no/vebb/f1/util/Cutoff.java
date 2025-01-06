@@ -38,7 +38,7 @@ public class Cutoff {
 		return isAbleToGuess(cutoff);
 	}
 
-	private int getCurrentYear() {
+	public int getCurrentYear() {
 		return Year.now().getValue();
 	}
 

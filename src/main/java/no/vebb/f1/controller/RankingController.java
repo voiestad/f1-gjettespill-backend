@@ -2,7 +2,6 @@ package no.vebb.f1.controller;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.Year;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -116,7 +115,7 @@ public class RankingController {
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		List<String> competitors = jdbcTemplate.query(getGuessedSql, (rs, rowNum) -> rs.getString(competitorColName), user.get().id);
 		if (competitors.size() == 0) {
-			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), getCurrentYear());
+			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), cutoff.getCurrentYear());
 		}
 		model.addAttribute("competitors", competitors);
 		return "ranking";
@@ -125,8 +124,8 @@ public class RankingController {
 	private long getTimeLeftToGuessYear() {
 		Instant now = Instant.now();
 		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
-		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), getCurrentYear())); 
-		return Duration.between(now, cutoff).toSeconds();
+		Instant cutoffYear = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), cutoff.getCurrentYear())); 
+		return Duration.between(now, cutoffYear).toSeconds();
 	}
 
 	private String handleRankPost(Model model, List<String> rankedCompetitors, String getCompetitorsSql, String addCompetitorsSql, String competitorColName) {
@@ -137,7 +136,7 @@ public class RankingController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false"; 
 		}
-		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), getCurrentYear())));
+		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), cutoff.getCurrentYear())));
 		String error = validateGuessList(rankedCompetitors, competitors);
 		if (error != null) {
 			logger.warn(error);
@@ -145,7 +144,7 @@ public class RankingController {
 		}
 		int position = 1;
 		for (String competitor : rankedCompetitors) {
-			jdbcTemplate.update(addCompetitorsSql, user.get().id, competitor, getCurrentYear(), position);
+			jdbcTemplate.update(addCompetitorsSql, user.get().id, competitor, cutoff.getCurrentYear(), position);
 			position++;
 		}
 		return "redirect:/guess?success=true";
@@ -284,7 +283,7 @@ public class RankingController {
 		long timeLeftToGuess = getTimeLeftToGuessYear();
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, getCurrentYear());
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, cutoff.getCurrentYear());
 		Flags flags = new Flags();
 		for (Map<String, Object> row : sqlRes) {
 			String flag = (String) row.get("flag");
@@ -321,16 +320,12 @@ public class RankingController {
 			return "redirect:/guess?success=false"; 
 		}
 		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
-		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", getCurrentYear(), flags.yellow);
-		jdbcTemplate.update(sql, user.get().id, "Red Flag", getCurrentYear(), flags.red);
-		jdbcTemplate.update(sql, user.get().id, "Safety Car", getCurrentYear(), flags.safetyCar);
+		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", cutoff.getCurrentYear(), flags.yellow);
+		jdbcTemplate.update(sql, user.get().id, "Red Flag", cutoff.getCurrentYear(), flags.red);
+		jdbcTemplate.update(sql, user.get().id, "Safety Car", cutoff.getCurrentYear(), flags.safetyCar);
 		logger.info("Guessed '{}' yellow flags, '{}' red flags and '{}' safety cars", flags.yellow, flags.red,
 				flags.safetyCar);
 		return "redirect:/guess?success=true";
-	}
-
-	private int getCurrentYear() {
-		return Year.now().getValue();
 	}
 
 	private boolean isRaceToGuess() {
