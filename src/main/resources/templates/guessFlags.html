@@ -14,7 +14,7 @@
 	<main>
 		<h2>Tipp Antall</h2>
 		<p th:if="${error}" th:text="${error}"></p>
-
+		<div th:insert="~{countdown :: countdown(timeLeftToGuess=${timeLeftToGuess})}"></div>
 		<form th:action="@{/guess/flags}" method="post">
 			<label>Antall gule flagg</label>
 			<input type="number" th:value="${flags.yellow}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="yellow"><br><br>

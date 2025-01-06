@@ -4,7 +4,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
 	<link rel="stylesheet" th:href="@{/list.css}">
 	<title th:text="${title}"></title>
@@ -12,17 +12,20 @@
 
 <body>
 	<header th:insert="~{header}"></header>
-	<h2 th:text="${title}"></h2>
-	<form th:action="@{/guess/{type}(type=${type})}" method="post">
-		<ul id="sortable" class="container">
-			<li class="item-wrapper" th:each="item, iterStat : ${competitors}" draggable="true">
-				<div class="number" th:text="${iterStat.index + 1}"></div>
-				<div class="item" th:text="${item}"></div>
-				<input type="hidden" name="rankedCompetitors" th:value="${item}" />
-			</li>
-		</ul>
-		<button type="submit">Send inn rangering</button>
-	</form>
+	<main>
+		<h2 th:text="${title}"></h2>
+		<div th:insert="~{countdown :: countdown(timeLeftToGuess=${timeLeftToGuess})}"></div>
+		<form th:action="@{/guess/{type}(type=${type})}" method="post">
+			<ul id="sortable" class="container">
+				<li class="item-wrapper" th:each="item, iterStat : ${competitors}" draggable="true">
+					<div class="number" th:text="${iterStat.index + 1}"></div>
+					<div class="item" th:text="${item}"></div>
+					<input type="hidden" name="rankedCompetitors" th:value="${item}" />
+				</li>
+			</ul>
+			<button type="submit">Send inn rangering</button>
+		</form>
+	</main>
 
 	<script>
 		const list = document.getElementById('sortable');

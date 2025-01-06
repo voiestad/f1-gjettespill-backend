@@ -1,16 +1,18 @@
 package no.vebb.f1.controller;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
@@ -22,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.importing.Importer;
-import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 
 @Controller
@@ -33,8 +34,6 @@ public class AdminController {
 
 	@Autowired
 	private UserService userService;
-
-	private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
 	public AdminController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
@@ -259,9 +258,42 @@ public class AdminController {
 		Importer importer = new Importer(jdbcTemplate);
 		importer.importRaceNames(races, year);
 		importer.importData();
+
+		setDefaultCutoffYear(year);
+		setDefaultCutoffRaces(year);
+				
 		return "redirect:/admin/season";
 	}
-
+	
+	private Instant getDefaultInstant(int year) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.YEAR, year);
+		calendar.set(Calendar.MONTH, Calendar.JANUARY);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		calendar.set(Calendar.HOUR, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.toInstant();
+	}
+	
+	private void setDefaultCutoffRaces(int year) {
+		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ?";
+		final String insertCutoffRace = "INSERT INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
+		Instant time = getDefaultInstant(year);
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRaceIds, year);
+		for (Map<String, Object> row : sqlRes) {
+			int id = (int) row.get("id");
+			jdbcTemplate.update(insertCutoffRace, id, time);
+		}
+	}
+		
+	private void setDefaultCutoffYear(int year) {
+		final String insertCutoffYear = "INSERT INTO YearCutoff (year, cutoff) VALUES (?, ?)";
+		Instant time = getDefaultInstant(year);
+		jdbcTemplate.update(insertCutoffYear, year, time.toString());
+	}
+		
 	@GetMapping("/season/{year}/competitors")
 	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
@@ -463,6 +495,103 @@ public class AdminController {
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
 
+	@GetMapping("/season/{year}/cutoff")
+	public String manageCutoff(@PathVariable("year") int year, Model model) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+
+		List<Race> races = new ArrayList<>();
+		final String getCutoffRaces = """
+				SELECT r.id as id, r.name as name, rc.cutoff as cutoff, ro.year as year, ro.position as position 
+				FROM RaceCutoff rc
+				JOIN RaceOrder ro ON ro.id = rc.race_number
+				JOIN Race r ON ro.id = r.id
+				WHERE ro.year = ?
+				ORDER BY ro.position ASC
+		""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getCutoffRaces, year);
+		for (Map<String, Object> row : sqlRes) {
+			LocalDateTime cutoff = instantToLocalTime(Instant.parse((String) row.get("cutoff")));
+			String name = (String) row.get("name");
+			int id = (int) row.get("id");
+			int position = (int) row.get("position");
+			Race race = new Race(position, name, id, cutoff);
+			races.add(race);
+		}
+
+		final String getCutoffYear = "SELECT cutoff FROM YearCutoff WHERE year = ?";
+		String unparsedCutoffYear = jdbcTemplate.queryForObject(getCutoffYear, (rs, rowNum) -> rs.getString("cutoff"), year);
+		LocalDateTime cutoffYear = instantToLocalTime(Instant.parse(unparsedCutoffYear));
+		model.addAttribute("title", year);
+		model.addAttribute("races", races);
+		model.addAttribute("cutoffYear", cutoffYear);
+		return "cutoff";
+	}
+
+	@PostMapping("/season/{year}/cutoff/setRace")
+	public String setCutoffRace(@PathVariable("year") int year, @RequestParam("id") int id, @RequestParam("cutoff") String cutoff) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
+		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, id) > 0;
+		if (!isValidRaceId) {
+			return "redirect:/admin/season/" + year + "/cutoff";
+		}
+		try {
+			Instant cutoffTime = parseTimeInput(cutoff);
+			final String setCutoffTime = "INSERT OR REPLACE INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
+			jdbcTemplate.update(setCutoffTime, id, cutoffTime.toString());
+		} catch (DateTimeParseException e) {
+
+		}
+		return "redirect:/admin/season/" + year + "/cutoff";
+	}
+
+	@PostMapping("/season/{year}/cutoff/setYear")
+	public String setCutoffYear(@PathVariable("year") int year, @RequestParam("cutoff") String cutoff) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		try {
+			Instant cutoffTime = parseTimeInput(cutoff);
+			final String setCutoffTime = "INSERT OR REPLACE INTO YearCutoff (year, cutoff) VALUES (?, ?)";
+			jdbcTemplate.update(setCutoffTime, year, cutoffTime.toString());
+		} catch (DateTimeParseException e) {
+
+		}
+		return "redirect:/admin/season/" + year + "/cutoff";
+	}
+
+	private Instant parseTimeInput(String inputTime) throws DateTimeParseException {
+		LocalDateTime localDateTime = LocalDateTime.parse(inputTime);
+		ZoneId zoneId = ZoneId.of("Europe/Paris");
+		ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);
+		return zonedDateTime.toInstant();
+	}
+
+	private LocalDateTime instantToLocalTime(Instant inputTime) {
+		ZoneId zoneId = ZoneId.of("Europe/Paris");
+		ZonedDateTime zonedDateTime = inputTime.atZone(zoneId);
+		return zonedDateTime.toLocalDateTime();
+	}
+
 	@GetMapping("/flag")
 	public String flagChooseYear(Model model) {
 		if (!userService.isAdmin()) {
@@ -564,11 +693,17 @@ public class AdminController {
 		public final int position;
 		public final String name;
 		public final int id;
+		public final LocalDateTime cutoff;
 
 		public Race(int position, String name, int id) {
+			this(position, name, id, null);
+		}
+
+		public Race(int position, String name, int id, LocalDateTime cutoff) {
 			this.position = position;
 			this.name = name;
 			this.id = id;
+			this.cutoff = cutoff;
 		}
 	}
 

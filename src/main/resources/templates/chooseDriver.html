@@ -13,18 +13,21 @@
 <body>
 	<header th:insert="~{header}"></header>
 	<h2 th:text="${title}"></h2>
-	<form th:action="@{/guess/{type}(type=${type})}" method="post">
-		<input type="hidden" name="driver" value="" id="guessedDriver" />
-		<ul class="container">
-			<li th:each="item, iterStat : ${items}" onclick="select(event)"
-			th:class="${item == guessedDriver ? 'selected item-wrapper' : 'item-wrapper'}">
+	<main>
+		<div th:insert="~{countdown :: countdown(timeLeftToGuess=${timeLeftToGuess})}"></div>
+		<form th:action="@{/guess/{type}(type=${type})}" method="post">
+			<input type="hidden" name="driver" value="" id="guessedDriver" />
+			<ul class="container">
+				<li th:each="item, iterStat : ${items}" onclick="select(event)"
+				th:class="${item == guessedDriver ? 'selected item-wrapper' : 'item-wrapper'}">
 				<div class="number" th:text="${iterStat.index + 1}"></div>
 				<div class="item" th:text="${item}" th:id="${item}"></div>
 			</li>
 		</ul>
-		<button type="submit">Send inn gjett</button>
-	</form>
-
+			<button type="submit">Send inn gjett</button>
+		</form>
+	</main>
+	
 	<script>
 		let selectedItem = null;
 		let guessedDriver = document.getElementById("guessedDriver");

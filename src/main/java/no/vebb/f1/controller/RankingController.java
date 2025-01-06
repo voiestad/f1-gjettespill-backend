@@ -1,5 +1,7 @@
 package no.vebb.f1.controller;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Cutoff;
 
 @Controller
 @RequestMapping("/guess")
@@ -32,9 +35,8 @@ public class RankingController {
 	@Autowired
 	private UserService userService;
 
-	// TODO: Remove fields
-	private int year = 2025;
-	private int raceNumber = 1252;
+	@Autowired
+	private Cutoff cutoff;
 
 	public RankingController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
@@ -52,11 +54,15 @@ public class RankingController {
 		}
 		model.addAttribute("title", "Velg kategori");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		linkMap.put("Ranger sjåfører", "/guess/drivers");
-		linkMap.put("Ranger konstruktører", "/guess/constructors");
-		linkMap.put("Tipp antall", "/guess/flags");
-		linkMap.put("Tipp 1.plass", "/guess/winner");
-		linkMap.put("Tipp 10.plass", "/guess/tenth");
+		if (cutoff.isAbleToGuessCurrentYear()) {
+			linkMap.put("Ranger sjåfører", "/guess/drivers");
+			linkMap.put("Ranger konstruktører", "/guess/constructors");
+			linkMap.put("Tipp antall", "/guess/flags");
+		}
+		if (isRaceToGuess()) {
+			linkMap.put("Tipp 1.plass", "/guess/winner");
+			linkMap.put("Tipp 10.plass", "/guess/tenth");
+		}
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
 	}
@@ -102,12 +108,24 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
+		if (!cutoff.isAbleToGuessCurrentYear()) {
+			return "redirect:/guess"; 
+		}
+		long timeLeftToGuess = getTimeLeftToGuessYear();
+		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		List<String> competitors = jdbcTemplate.query(getGuessedSql, (rs, rowNum) -> rs.getString(competitorColName), user.get().id);
 		if (competitors.size() == 0) {
-			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), year);
+			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), cutoff.getCurrentYear());
 		}
 		model.addAttribute("competitors", competitors);
 		return "ranking";
+	}
+
+	private long getTimeLeftToGuessYear() {
+		Instant now = Instant.now();
+		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
+		Instant cutoffYear = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), cutoff.getCurrentYear())); 
+		return Duration.between(now, cutoffYear).toSeconds();
 	}
 
 	private String handleRankPost(Model model, List<String> rankedCompetitors, String getCompetitorsSql, String addCompetitorsSql, String competitorColName) {
@@ -115,7 +133,10 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), year)));
+		if (!cutoff.isAbleToGuessCurrentYear()) {
+			return "redirect:/guess?success=false"; 
+		}
+		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), cutoff.getCurrentYear())));
 		String error = validateGuessList(rankedCompetitors, competitors);
 		if (error != null) {
 			logger.warn(error);
@@ -123,7 +144,7 @@ public class RankingController {
 		}
 		int position = 1;
 		for (String competitor : rankedCompetitors) {
-			jdbcTemplate.update(addCompetitorsSql, user.get().id, competitor, year, position);
+			jdbcTemplate.update(addCompetitorsSql, user.get().id, competitor, cutoff.getCurrentYear(), position);
 			position++;
 		}
 		return "redirect:/guess?success=true";
@@ -150,55 +171,104 @@ public class RankingController {
 	public String guessTenth(Model model) {
 		model.addAttribute("title", "Tipp 10.plass");
 		model.addAttribute("type", "tenth");
-		return handleGetChooseDriver(model, raceNumber, "TENTH");
+		return handleGetChooseDriver(model, "TENTH");
 	}
 
 	@PostMapping("/tenth")
 	public String guessTenth(@RequestParam String driver, Model model) {
-		return handlePostChooseDriver(model, raceNumber, driver, "TENTH");
+		return handlePostChooseDriver(model, driver, "TENTH");
 	}
 
 	@GetMapping("/winner")
 	public String guessWinner(Model model) {
 		model.addAttribute("title", "Tipp Vinneren");
 		model.addAttribute("type", "winner");
-		return handleGetChooseDriver(model, raceNumber, "FIRST");
+		return handleGetChooseDriver(model, "FIRST");
 	}
 
 	@PostMapping("/winner")
 	public String guessWinner(@RequestParam String driver, Model model) {
-		return handlePostChooseDriver(model, raceNumber, driver, "FIRST");
+		return handlePostChooseDriver(model, driver, "FIRST");
 	}
 
-	private String handleGetChooseDriver(Model model, int raceNumber, String category) {
+	private String handleGetChooseDriver(Model model, String category) {
 		final String getPreviousGuessSql = "SELECT driver FROM DriverPlaceGuess WHERE race_number = ? AND category = ?";
-		final String sql = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
-		List<String> drivers = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber);
-		model.addAttribute("items", drivers);
+		final String getDriversFromGrid = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
 		try {
+			int raceNumber = getRaceIdToGuess();
+
+			long timeLeftToGuess = getTimeLeftToGuessRace(raceNumber);
+			model.addAttribute("timeLeftToGuess", timeLeftToGuess);
+
+			List<String> drivers = jdbcTemplate.query(getDriversFromGrid, (rs, rowNum) -> rs.getString("driver"), raceNumber);
+			model.addAttribute("items", drivers);
+
 			String driver = jdbcTemplate.queryForObject(getPreviousGuessSql, (rs, rowNum) -> rs.getString("driver"), raceNumber, category);
 			model.addAttribute("guessedDriver", driver);
+		} catch (NoAvailableRaceException e) {
+			return "redirect:/guess";
 		} catch (EmptyResultDataAccessException e) {
 			model.addAttribute("guessedDriver", "");
 		}
+
 		return "chooseDriver";
 	}
 
-	private String handlePostChooseDriver(Model model, int raceNumber, String driver, String category) {
+	private long getTimeLeftToGuessRace(int raceNumber) {
+		Instant now = Instant.now();
+		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), raceNumber)); 
+		return Duration.between(now, cutoff).toSeconds();
+	}
+
+	private String handlePostChooseDriver(Model model, String driver, String category) {
 		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?)";
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
-		String sql = "SELECT driver FROM StartingGrid WHERE race_number = ?";
-		Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber)));
-		if (!driversCheck.contains(driver)) {
-			logger.warn("'{}', invalid winner driver inputted by user.", driver);
-			return "redirect:/guess?success=false";
+		try {
+			int raceNumber = getRaceIdToGuess();
+
+			String sql = "SELECT driver FROM StartingGrid WHERE race_number = ?";
+			Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber)));
+			if (!driversCheck.contains(driver)) {
+				logger.warn("'{}', invalid winner driver inputted by user.", driver);
+				return "redirect:/guess?success=false";
+			}
+			jdbcTemplate.update(insertGuessSql, user.get().id, raceNumber, driver, category);
+			logger.info("Guessed '{}' on {}", driver, category);
+			return "redirect:/guess?success=true";
+
+		} catch (NoAvailableRaceException e) {
+			return "redirect:/guess";
 		}
-		jdbcTemplate.update(insertGuessSql, user.get().id, raceNumber, driver, category);
-		logger.info("Guessed '{}' on {}", driver, category);
-		return "redirect:/guess?success=true";
+	}
+
+	private int getRaceIdToGuess() throws NoAvailableRaceException {
+		final String getRaceId = """
+				SELECT DISTINCT race_number
+				FROM StartingGrid sg
+				WHERE sg.race_number NOT IN (
+					SELECT rr.race_number 
+					FROM RaceResult rr
+				) 
+				""";
+		try {
+			int id = jdbcTemplate.queryForObject(getRaceId, Integer.class);
+			if (!cutoff.isAbleToGuessRace(id)) {
+				throw new NoAvailableRaceException("Cutoff has been passed");
+			}
+			return id;
+		} catch (EmptyResultDataAccessException e) {
+			throw new NoAvailableRaceException("Currently there are no available races");
+		}
+	}
+
+	private class NoAvailableRaceException extends Exception {
+		public NoAvailableRaceException(String e) {
+			super(e);
+		}
 	}
 
 	@GetMapping("/flags")
@@ -207,8 +277,13 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
+		if (!cutoff.isAbleToGuessCurrentYear()) {
+			return "redirect:/guess"; 
+		}
+		long timeLeftToGuess = getTimeLeftToGuessYear();
+		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, year);
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, cutoff.getCurrentYear());
 		Flags flags = new Flags();
 		for (Map<String, Object> row : sqlRes) {
 			String flag = (String) row.get("flag");
@@ -241,13 +316,25 @@ public class RankingController {
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
+		if (!cutoff.isAbleToGuessCurrentYear()) {
+			return "redirect:/guess?success=false"; 
+		}
 		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
-		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", year, flags.yellow);
-		jdbcTemplate.update(sql, user.get().id, "Red Flag", year, flags.red);
-		jdbcTemplate.update(sql, user.get().id, "Safety Car", year, flags.safetyCar);
+		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", cutoff.getCurrentYear(), flags.yellow);
+		jdbcTemplate.update(sql, user.get().id, "Red Flag", cutoff.getCurrentYear(), flags.red);
+		jdbcTemplate.update(sql, user.get().id, "Safety Car", cutoff.getCurrentYear(), flags.safetyCar);
 		logger.info("Guessed '{}' yellow flags, '{}' red flags and '{}' safety cars", flags.yellow, flags.red,
 				flags.safetyCar);
 		return "redirect:/guess?success=true";
+	}
+
+	private boolean isRaceToGuess() {
+		try {
+			getRaceIdToGuess();
+			return true;
+		} catch (NoAvailableRaceException e) {
+			return false;
+		}
 	}
 
 	class PositionedItem implements Comparable<PositionedItem> {
