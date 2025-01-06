@@ -136,13 +136,11 @@ public class Importer {
 
 	private void insertStartingGridData(int raceId, int year, List<List<String>> startingGrid) {
 		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
-		final String insertDriverYear = "INSERT OR IGNORE INTO DriverYear (driver, year) VALUES (?, ?)";
 		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
 		for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
 			String position = row.get(0);
 			String driver = parseDriver(row.get(2));
 			jdbcTemplate.update(insertDriver, driver);
-			jdbcTemplate.update(insertDriverYear, driver, year);
 			jdbcTemplate.update(insertStartingGrid, raceId, position, driver);
 		}
 	}
@@ -268,15 +266,13 @@ public class Importer {
 	private void importConstructorStandings(int year, int newestRace) {
 		List<List<String>> standings = TableImporter.getConstructorStandings(year);
 		final String insertConstructor = "INSERT OR IGNORE INTO Constructor (name) VALUES (?)";
-		final String insertConstructorYear = "INSERT OR IGNORE INTO ConstructorYear (constructor, year) VALUES (?, ?)";
 		final String insertConstructorStandings = "INSERT OR REPLACE INTO ConstructorStandings (race_number, constructor, position, points) VALUES (?, ?, ?, ?)";
 		for (List<String> row : standings.subList(1, standings.size())) {
 			String constructor = row.get(1);
 			int position = Integer.parseInt(row.get(0));
 			String points = row.get(2);
-
+			
 			jdbcTemplate.update(insertConstructor, constructor);
-			jdbcTemplate.update(insertConstructorYear, constructor, year);
 			jdbcTemplate.update(insertConstructorStandings, newestRace, constructor, position, points);
 		}
 	}
