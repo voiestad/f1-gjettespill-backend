@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,9 +42,28 @@ public class HomeController {
 		model.addAttribute("loggedOut", loggedOut);
 		Table leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
+		model.addAttribute("raceGuess", isRaceGuess());
 
 		model.addAttribute("isAdmin", userService.isAdmin());
 		return "public";
+	}
+
+	private boolean isRaceGuess() {
+		final String getRaceIdSql = """
+			SELECT ro.id AS id
+			FROM RaceOrder ro
+			JOIN StartingGrid sg ON ro.id = sg.race_number
+			WHERE ro.year = ?
+			ORDER BY ro.position DESC
+			LIMIT 1;
+		""";
+		int year = cutoff.getCurrentYear();
+		try {
+			int raceId = jdbcTemplate.queryForObject(getRaceIdSql, Integer.class, year);
+			return !cutoff.isAbleToGuessRace(raceId);
+		} catch (EmptyResultDataAccessException e) {
+			return false;
+		}
 	}
 
 	private Table getLeaderBoard() {

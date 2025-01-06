@@ -31,7 +31,10 @@
 				</tbody>
 			</table>
 		</div>
-		<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
+		<div class="linkList">
+			<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
+			<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
+		</div>
 	</main>
 </body>
 
