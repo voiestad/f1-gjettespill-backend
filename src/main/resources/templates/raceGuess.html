@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" th:href="@{/tables.css}">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<h2 th:text="${title}"></h2>
+	<div class="tables">
+		<table th:each="table : ${tables}">
+			<h3 th:text="${table.getName()}"></h3>
+			<thead>
+				<tr>
+					<th th:each="cell : ${table.getHeader()}" th:text="${cell}"></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="row : ${table.getBody()}">
+					<td th:each="cell : ${row}" th:text="${cell}"></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</body>
+
+</html>
