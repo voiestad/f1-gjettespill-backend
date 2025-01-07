@@ -147,7 +147,7 @@ public class AdminController {
 		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
 		int newDiff;
 		try {
-			newDiff = jdbcTemplate.queryForObject(getMaxDiff, Integer.class) + 1;
+			newDiff = jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year, category) + 1;
 		} catch (EmptyResultDataAccessException e) {
 			newDiff = 0;
 		}
@@ -178,13 +178,52 @@ public class AdminController {
 		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
 		int maxDiff;
 		try {
-			maxDiff = jdbcTemplate.queryForObject(getMaxDiff, Integer.class);
+			maxDiff = jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year, category);
 		} catch (EmptyResultDataAccessException e) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 		
 		final String deleteRowWithDiff = "DELETE FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
 		jdbcTemplate.update(deleteRowWithDiff, year, category, maxDiff);
+		return "redirect:/admin/season/" + year + "/points";
+	}
+
+	@PostMapping("/season/{year}/points/set")
+	public String setPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category, 
+		@RequestParam("diff") int diff, @RequestParam("points") int points) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+
+		final String validateCategory = "SELECT COUNT(*) FROM Category where name = ?";
+		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class) > 0;
+		if (!isValidCategory) {
+			return "redirect:/admin/season/" + year + "/points";
+		}
+
+		final String validateDiff = "SELECT COUNT(*) FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
+		boolean isValidDiff = jdbcTemplate.queryForObject(validateDiff, Integer.class, year, category, diff) > 0;
+		if (!isValidDiff) {
+			return "redirect:/admin/season/" + year + "/points";
+		}
+		
+		boolean isValidPoints = points >= 0;
+		if (!isValidPoints) {
+			return "redirect:/admin/season/" + year + "/points";
+		}
+
+		final String setNewPoints = """
+			UPDATE DiffPointsMap
+			SET points = ?
+			WHERE diff = ? AND year = ? AND category = ?
+			""";
+		jdbcTemplate.update(setNewPoints, points, diff, year, category);
 		return "redirect:/admin/season/" + year + "/points";
 	}
 
