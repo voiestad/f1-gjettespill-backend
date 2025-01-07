@@ -86,9 +86,26 @@ public class AdminController {
 		linkMap.put("Endring av løp", basePath + "/manage");
 		linkMap.put("Frister", basePath + "/cutoff");
 		linkMap.put("F1 Deltakere", basePath + "/competitors");
+		linkMap.put("Poengsystem", basePath + "/points");
 
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
+	}
+
+	@GetMapping("/season/{year}/points")
+	public String managePointsSystem(@PathVariable("year") int year, Model model) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		
+		model.addAttribute("title", year);
+		model.addAttribute("year", year);
+		return "manageSeason";
 	}
 
 	@GetMapping("/season/{year}/manage")
