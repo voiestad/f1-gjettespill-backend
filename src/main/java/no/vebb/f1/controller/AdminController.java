@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -116,13 +117,44 @@ public class AdminController {
 			for (Map<String, Object> row : sqlRes) {
 				int diff = (int) row.get("diff");
 				int points = (int) row.get("points");
-				
+
 			}
 		}
 
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
 		return "manageSeason";
+	}
+
+	@PostMapping("/season/{year}/points/add")
+	public String addPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+
+		final String validateCategory = "SELECT COUNT(*) FROM Category where name = ?";
+		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class) > 0;
+		if (!isValidCategory) {
+			return "redirect:/admin/season/" + year + "/points";
+		}
+
+		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
+		int newDiff;
+		try {
+			newDiff = jdbcTemplate.queryForObject(getMaxDiff, Integer.class) + 1;
+		} catch (EmptyResultDataAccessException e) {
+			newDiff = 0;
+		}
+		
+		final String addDiff = "INSERT INTO DiffPointsMap (category, diff, points, year) VALUES (?, ?, ?, ?)";
+		jdbcTemplate.update(addDiff, category, newDiff, 0, year);
+		return "redirect:/admin/season/" + year + "/points";
 	}
 
 	@GetMapping("/season/{year}/manage")
