@@ -103,6 +103,23 @@ public class AdminController {
 			return "redirect:/admin/season";
 		}
 		
+		final String getCategories = "SELECT name FROM Category";
+		List<String> categories = jdbcTemplate.queryForList(getCategories, String.class);
+		final String getPointsForCategory = """
+			SELECT diff, points
+			FROM DiffPointsMap
+			WHERE category = ? AND year = ?
+			ORDER BY diff ASC
+			""";
+		for (String category : categories) {
+			List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getPointsForCategory, category, year);
+			for (Map<String, Object> row : sqlRes) {
+				int diff = (int) row.get("diff");
+				int points = (int) row.get("points");
+				
+			}
+		}
+
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
 		return "manageSeason";
