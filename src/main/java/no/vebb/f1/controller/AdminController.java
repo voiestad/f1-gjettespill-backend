@@ -157,6 +157,37 @@ public class AdminController {
 		return "redirect:/admin/season/" + year + "/points";
 	}
 
+	@PostMapping("/season/{year}/points/delete")
+	public String deletePointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+
+		final String validateCategory = "SELECT COUNT(*) FROM Category where name = ?";
+		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class) > 0;
+		if (!isValidCategory) {
+			return "redirect:/admin/season/" + year + "/points";
+		}
+
+		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
+		int maxDiff;
+		try {
+			maxDiff = jdbcTemplate.queryForObject(getMaxDiff, Integer.class);
+		} catch (EmptyResultDataAccessException e) {
+			return "redirect:/admin/season/" + year + "/points";
+		}
+		
+		final String deleteRowWithDiff = "DELETE FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
+		jdbcTemplate.update(deleteRowWithDiff, year, category, maxDiff);
+		return "redirect:/admin/season/" + year + "/points";
+	}
+
 	@GetMapping("/season/{year}/manage")
 	public String manageRacesInSeason(@RequestParam(value = "success", required = false) Boolean success,
 			@PathVariable("year") int year, Model model) {
