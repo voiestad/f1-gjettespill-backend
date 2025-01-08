@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.importing.Importer;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Table;
 
 @Controller
 @RequestMapping("/admin")
@@ -106,24 +107,30 @@ public class AdminController {
 		
 		final String getCategories = "SELECT name FROM Category";
 		List<String> categories = jdbcTemplate.queryForList(getCategories, String.class);
-		final String getPointsForCategory = """
-			SELECT diff, points
-			FROM DiffPointsMap
-			WHERE category = ? AND year = ?
-			ORDER BY diff ASC
-			""";
+		Map<String, String> categoryMap = new LinkedHashMap<>();
 		for (String category : categories) {
-			List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getPointsForCategory, category, year);
-			for (Map<String, Object> row : sqlRes) {
-				int diff = (int) row.get("diff");
-				int points = (int) row.get("points");
-
-			}
+			String translation = translateCategory(category);
+			categoryMap.put(category, translation);
 		}
+		model.addAttribute("categories", categoryMap);
 
+		ScoreController scoreController = new ScoreController(jdbcTemplate);
+		List<Table> tables = scoreController.getScoreMappingTables(year);
+		model.addAttribute("tables", tables);
+		
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
-		return "manageSeason";
+		return "managePointsSystem";
+	}
+	
+	private String translateCategory(String category) {
+		final String translationSql = """
+				SELECT translation
+				FROM CategoryTranslation
+				WHERE category = ?
+				""";
+
+		return jdbcTemplate.queryForObject(translationSql, String.class, category);
 	}
 
 	@PostMapping("/season/{year}/points/add")
