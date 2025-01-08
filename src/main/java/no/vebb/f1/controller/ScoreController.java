@@ -31,13 +31,13 @@ public class ScoreController {
 
 	@GetMapping
 	public String scoreMappingTables(Model model) {
-		List<Table> scoreMappingTables = getScoreMappingTables();
+		List<Table> scoreMappingTables = getScoreMappingTables(year);
 		model.addAttribute("scoreMappingTables", scoreMappingTables);
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
 		return "score";
 	}
 
-	private List<Table> getScoreMappingTables() {
+	public List<Table> getScoreMappingTables(int year) {
 		List<Table> scoreMappingTables = new ArrayList<>();
 		final String sql = """
 				SELECT name
@@ -45,13 +45,13 @@ public class ScoreController {
 				""";
 		List<String> categories = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
 		for (String category : categories) {
-			scoreMappingTables.add(getTable(category));
+			scoreMappingTables.add(getTable(category, year));
 		}
 
 		return scoreMappingTables;
 	}
 
-	private Table getTable(String category) {
+	private Table getTable(String category, int year) {
 		List<String> header = Arrays.asList("Differanse", "Poeng");
 		final String sql = """
 				SELECT points, diff
