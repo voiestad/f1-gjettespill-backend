@@ -145,8 +145,8 @@ public class AdminController {
 			return "redirect:/admin/season";
 		}
 
-		final String validateCategory = "SELECT COUNT(*) FROM Category where name = ?";
-		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class) > 0;
+		final String validateCategory = "SELECT COUNT(*) FROM Category WHERE name = ?";
+		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
 		if (!isValidCategory) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
@@ -176,8 +176,8 @@ public class AdminController {
 			return "redirect:/admin/season";
 		}
 
-		final String validateCategory = "SELECT COUNT(*) FROM Category where name = ?";
-		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class) > 0;
+		final String validateCategory = "SELECT COUNT(*) FROM Category WHERE name = ?";
+		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
 		if (!isValidCategory) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
@@ -208,8 +208,8 @@ public class AdminController {
 			return "redirect:/admin/season";
 		}
 
-		final String validateCategory = "SELECT COUNT(*) FROM Category where name = ?";
-		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class) > 0;
+		final String validateCategory = "SELECT COUNT(*) FROM Category WHERE name = ?";
+		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
 		if (!isValidCategory) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
