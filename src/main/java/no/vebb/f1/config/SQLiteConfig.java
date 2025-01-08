@@ -215,57 +215,6 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-                INSERT INTO DiffPointsMap (category, diff, points, year) 
-                VALUES
-                    ('DRIVER', 0, 20, 2025),
-                    ('DRIVER', 1, 12, 2025),
-                    ('DRIVER', 2, 6, 2025),
-                    ('DRIVER', 3, 3, 2025),
-                    ('DRIVER', 4, 1, 2025),
-
-                    ('CONSTRUCTOR', 0, 30, 2025),
-                    ('CONSTRUCTOR', 1, 15, 2025),
-                    ('CONSTRUCTOR', 2, 5, 2025),
-
-                    ('FLAG', 0, 50, 2025),
-                    ('FLAG', 1, 40, 2025),
-                    ('FLAG', 2, 35, 2025),
-                    ('FLAG', 3, 30, 2025),
-					('FLAG', 4, 28, 2025),
-					('FLAG', 5, 26, 2025),
-					('FLAG', 6, 24, 2025),
-					('FLAG', 7, 22, 2025),
-					('FLAG', 8, 20, 2025),
-					('FLAG', 9, 18, 2025),
-					('FLAG', 10, 16, 2025),
-					('FLAG', 11, 14, 2025),
-					('FLAG', 12, 12, 2025),
-					('FLAG', 13, 10, 2025),
-					('FLAG', 14, 9, 2025),
-					('FLAG', 15, 8, 2025),
-					('FLAG', 16, 7, 2025),
-					('FLAG', 17, 6, 2025),
-					('FLAG', 18, 5, 2025),
-					('FLAG', 19, 4, 2025),
-					('FLAG', 20, 3, 2025),
-					('FLAG', 21, 2, 2025),
-					('FLAG', 22, 1, 2025),
-
-                    ('FIRST', 0, 5, 2025),
-                    ('FIRST', 1, 2, 2025),
-                    ('FIRST', 2, 1, 2025),
-
-                    ('TENTH', 0, 10, 2025),
-                    ('TENTH', 1, 8, 2025),
-                    ('TENTH', 2, 6, 2025),
-                    ('TENTH', 3, 5, 2025),
-                    ('TENTH', 4, 4, 2025),
-                    ('TENTH', 5, 3, 2025),
-                    ('TENTH', 6, 2, 2025),
-                    ('TENTH', 7, 1, 2025)
-                ON CONFLICT(category, diff, year) DO NOTHING;
-            """);
-			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS FlagStats (
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
 					flag TEXT NOT NULL,
