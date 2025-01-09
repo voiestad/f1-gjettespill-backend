@@ -58,5 +58,6 @@ td a {
 	th,
 	td {
 		width: 5px;
+		font-size: 14px;
 	}
 }
