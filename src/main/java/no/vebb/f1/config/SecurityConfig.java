@@ -14,7 +14,15 @@ public class SecurityConfig {
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http.authorizeHttpRequests(auth -> {
-			auth.requestMatchers("/", "/favicon.ico", "/**.css", "/user/**", "/score/**", "/race-guess/**").permitAll();
+			auth.requestMatchers(
+				"/",
+				"/favicon.ico",
+				"/**.css",
+				"/user/**",
+				"/score/**",
+				"/race-guess/**",
+				"/contact")
+				.permitAll();
 			auth.anyRequest().authenticated();	
 		})
 		.oauth2Login(Customizer.withDefaults())

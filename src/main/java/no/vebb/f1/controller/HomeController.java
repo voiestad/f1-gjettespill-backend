@@ -48,6 +48,11 @@ public class HomeController {
 		return "public";
 	}
 
+	@GetMapping("/contact")
+	public String contact() {
+		return "contact";
+	}
+
 	private boolean isRaceGuess() {
 		final String getRaceIdSql = """
 			SELECT ro.id AS id
