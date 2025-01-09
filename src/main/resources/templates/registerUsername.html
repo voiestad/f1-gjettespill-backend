@@ -26,17 +26,20 @@
 
 <body>
 	<header th:insert="~{header}"></header>
-	<div>
-		<h2>Velg brukernavn</h2>
-		<form th:action="@{/username}" method="post">
-			<div>
-				<input type="text" id="username" name="username" required placeholder="Brukernavn">
-			</div>
-			<button type="submit">Bekreft brukernavn</button>
-		</form>
+	<main>
+		<div>
+			<h2>Velg brukernavn</h2>
+			<form th:action="@{/username}" method="post">
+				<div>
+					<input type="text" id="username" name="username" required placeholder="Brukernavn">
+				</div>
+				<button type="submit">Bekreft brukernavn</button>
+			</form>
 
-		<p th:if="${error}" th:text="${error}"></p>
-	</div>
+			<p th:if="${error}" th:text="${error}"></p>
+		</div>
+	</main>
+	<footer th:insert="~{footer}"></footer>
 </body>
 
 </html>
