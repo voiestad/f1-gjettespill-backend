@@ -30,7 +30,6 @@ public class HomeController {
 	private Cutoff cutoff;
 	
 	private JdbcTemplate jdbcTemplate;
-	private int year = 2025;
 
 	public HomeController(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
@@ -42,6 +41,10 @@ public class HomeController {
 		model.addAttribute("loggedOut", loggedOut);
 		Table leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
+		if (leaderBoard.getHeader().size() == 0) {
+			List<String> guessers = getSeasonGuessers();
+			model.addAttribute("guessers", guessers);
+		}
 		model.addAttribute("raceGuess", isRaceGuess());
 
 		model.addAttribute("isAdmin", userService.isAdmin());
@@ -80,6 +83,7 @@ public class HomeController {
 		}
 		final String getAllUsersSql = "SELECT id FROM User";
 		List<UUID> userIds = jdbcTemplate.query(getAllUsersSql, (rs, rowNum) -> UUID.fromString(rs.getString("id")));
+		int year = cutoff.getCurrentYear();
 		for (UUID id : userIds) {
 			User user = userService.loadUser(id).get();
 			UserScore userScore = new UserScore(user, year, jdbcTemplate);
@@ -94,6 +98,21 @@ public class HomeController {
 			body.add(Arrays.asList(String.valueOf(i+1), guesser.username, String.valueOf(guesser.points), guesser.id.toString()));
 		}
 		return new Table("Rangering", header, body);
+	}
+
+	private List<String> getSeasonGuessers() {
+		final String getGussers = """
+			SELECT DISTINCT u.username as username
+			FROM User u
+			JOIN FlagGuess fg ON fg.guesser = u.id
+			JOIN DriverGuess dg ON dg.guesser = u.id
+			JOIN ConstructorGuess cg ON cg.guesser = u.id
+			WHERE fg.year = ? AND dg.year = ? AND cg.year = ?
+			ORDER BY u.username ASC
+			""";
+		
+		int year = cutoff.getCurrentYear();
+		return jdbcTemplate.queryForList(getGussers, String.class, year, year, year);
 	}
 
 	class Guesser implements Comparable<Guesser> {

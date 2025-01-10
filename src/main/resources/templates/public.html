@@ -30,6 +30,12 @@
 					</tr>
 				</tbody>
 			</table>
+			<div th:if="${guessers}">
+				<h3>Årets deltakere:</h3>
+				<ul>
+					<li th:each="guesser : ${guessers}" th:text="${guesser}"></li>
+				</ul>
+			</div>
 		</div>
 		<div class="linkList">
 			<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
