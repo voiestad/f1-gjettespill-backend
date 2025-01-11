@@ -6,6 +6,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -104,7 +105,7 @@ public class AdminController {
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-		
+
 		final String getCategories = "SELECT name FROM Category";
 		List<String> categories = jdbcTemplate.queryForList(getCategories, String.class);
 		Map<String, String> categoryMap = new LinkedHashMap<>();
@@ -117,12 +118,12 @@ public class AdminController {
 		ScoreController scoreController = new ScoreController(jdbcTemplate);
 		List<Table> tables = scoreController.getScoreMappingTables(year);
 		model.addAttribute("tables", tables);
-		
+
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
 		return "managePointsSystem";
 	}
-	
+
 	private String translateCategory(String category) {
 		final String translationSql = """
 				SELECT translation
@@ -158,7 +159,7 @@ public class AdminController {
 		} catch (EmptyResultDataAccessException e) {
 			newDiff = 0;
 		}
-		
+
 		final String addDiff = "INSERT INTO DiffPointsMap (category, diff, points, year) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(addDiff, category, newDiff, 0, year);
 		return "redirect:/admin/season/" + year + "/points";
@@ -189,15 +190,15 @@ public class AdminController {
 		} catch (EmptyResultDataAccessException e) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
-		
+
 		final String deleteRowWithDiff = "DELETE FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
 		jdbcTemplate.update(deleteRowWithDiff, year, category, maxDiff);
 		return "redirect:/admin/season/" + year + "/points";
 	}
 
 	@PostMapping("/season/{year}/points/set")
-	public String setPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category, 
-		@RequestParam("diff") int diff, @RequestParam("points") int points) {
+	public String setPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category,
+			@RequestParam("diff") int diff, @RequestParam("points") int points) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
@@ -219,17 +220,17 @@ public class AdminController {
 		if (!isValidDiff) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
-		
+
 		boolean isValidPoints = points >= 0;
 		if (!isValidPoints) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
 		final String setNewPoints = """
-			UPDATE DiffPointsMap
-			SET points = ?
-			WHERE diff = ? AND year = ? AND category = ?
-			""";
+				UPDATE DiffPointsMap
+				SET points = ?
+				WHERE diff = ? AND year = ? AND category = ?
+				""";
 		jdbcTemplate.update(setNewPoints, points, diff, year, category);
 		return "redirect:/admin/season/" + year + "/points";
 	}
@@ -270,6 +271,112 @@ public class AdminController {
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
 		return "manageSeason";
+	}
+
+	@GetMapping("/season/{year}/manage/{raceId}")
+	public String manageRacesInSeason(@PathVariable("raceId") int raceId, @PathVariable("year") int year, Model model) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
+		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
+		if (!isValidRaceId) {
+			return "redirect:/admin/season/" + year + "/manage?success=false";
+		}
+
+		List<Table> tables = new ArrayList<>();
+		tables.add(getStartingGridTable(raceId));
+		tables.add(getRaceResultTable(raceId));
+		tables.add(getDriverStandingsTable(raceId));
+		tables.add(getConstructorStandingsTable(raceId));
+
+		model.addAttribute("tables", tables);
+		model.addAttribute("title", year);
+		return "tables";
+	}
+
+	private Table getStartingGridTable(int raceId) {
+		final String getStartingGrid = """
+				SELECT position, driver
+				FROM StartingGrid
+				WHERE race_number = ?
+				ORDER BY position ASC
+				""";
+		List<String> header = Arrays.asList("Plass", "Sjåfør");
+		List<List<String>> body = new ArrayList<>();
+		List<Map<String, Object>> startingGrid = jdbcTemplate.queryForList(getStartingGrid, raceId);
+		for (Map<String, Object> row : startingGrid) {
+			String position = String.valueOf((int) row.get("position"));
+			String driver = (String) row.get("driver");
+			body.add(Arrays.asList(position, driver));
+		}
+
+		return new Table("Starting grid", header, body);
+	}
+
+	private Table getRaceResultTable(int raceId) {
+		final String getRaceResult = """
+			SELECT position, driver, points
+			FROM RaceResult
+			WHERE race_number = ?
+			ORDER BY finishing_position ASC
+			""";
+		List<String> header = Arrays.asList("Plass", "Sjåfør", "Poeng");
+		List<List<String>> body = new ArrayList<>();
+		List<Map<String, Object>> raceResult = jdbcTemplate.queryForList(getRaceResult, raceId);
+		for (Map<String, Object> row : raceResult) {
+			String position = (String) row.get("position");
+			String driver = (String) row.get("driver");
+			String points = (String) row.get("points");;
+			body.add(Arrays.asList(position, driver, points));
+		}
+
+		return new Table("Race result", header, body);
+	}
+
+	private Table getDriverStandingsTable(int raceId) {
+		final String getDriverStandings = """
+			SELECT position, driver, points
+			FROM DriverStandings
+			WHERE race_number = ?
+			ORDER BY position ASC
+			""";
+		List<String> header = Arrays.asList("Plass", "Sjåfør", "Poeng");
+		List<List<String>> body = new ArrayList<>();
+		List<Map<String, Object>> standings = jdbcTemplate.queryForList(getDriverStandings, raceId);
+		for (Map<String, Object> row : standings) {
+			String position = String.valueOf((int) row.get("position"));
+			String driver = (String) row.get("driver");
+			String points = (String) row.get("points");;
+			body.add(Arrays.asList(position, driver, points));
+		}
+
+		return new Table("Driver standings", header, body);
+	}
+
+	private Table getConstructorStandingsTable(int raceId) {
+		final String getConstructorStandings = """
+			SELECT position, constructor, points
+			FROM ConstructorStandings
+			WHERE race_number = ?
+			ORDER BY position ASC
+			""";
+		List<String> header = Arrays.asList("Plass", "Sjåfør", "Poeng");
+		List<List<String>> body = new ArrayList<>();
+		List<Map<String, Object>> standings = jdbcTemplate.queryForList(getConstructorStandings, raceId);
+		for (Map<String, Object> row : standings) {
+			String position = String.valueOf((int) row.get("position"));
+			String constructor = (String) row.get("constructor");
+			String points = (String) row.get("points");;
+			body.add(Arrays.asList(position, constructor, points));
+		}
+
+		return new Table("Constructor standings", header, body);
 	}
 
 	@PostMapping("/season/{year}/manage/move")
@@ -404,10 +511,10 @@ public class AdminController {
 
 		setDefaultCutoffYear(year);
 		setDefaultCutoffRaces(year);
-				
+
 		return "redirect:/admin/season";
 	}
-	
+
 	private Instant getDefaultInstant(int year) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.YEAR, year);
@@ -419,7 +526,7 @@ public class AdminController {
 		calendar.set(Calendar.MILLISECOND, 0);
 		return calendar.toInstant();
 	}
-	
+
 	private void setDefaultCutoffRaces(int year) {
 		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ?";
 		final String insertCutoffRace = "INSERT INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
@@ -430,13 +537,13 @@ public class AdminController {
 			jdbcTemplate.update(insertCutoffRace, id, time);
 		}
 	}
-		
+
 	private void setDefaultCutoffYear(int year) {
 		final String insertCutoffYear = "INSERT INTO YearCutoff (year, cutoff) VALUES (?, ?)";
 		Instant time = getDefaultInstant(year);
 		jdbcTemplate.update(insertCutoffYear, year, time.toString());
 	}
-		
+
 	@GetMapping("/season/{year}/competitors")
 	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
@@ -651,13 +758,13 @@ public class AdminController {
 
 		List<Race> races = new ArrayList<>();
 		final String getCutoffRaces = """
-				SELECT r.id as id, r.name as name, rc.cutoff as cutoff, ro.year as year, ro.position as position 
-				FROM RaceCutoff rc
-				JOIN RaceOrder ro ON ro.id = rc.race_number
-				JOIN Race r ON ro.id = r.id
-				WHERE ro.year = ?
-				ORDER BY ro.position ASC
-		""";
+						SELECT r.id as id, r.name as name, rc.cutoff as cutoff, ro.year as year, ro.position as position
+						FROM RaceCutoff rc
+						JOIN RaceOrder ro ON ro.id = rc.race_number
+						JOIN Race r ON ro.id = r.id
+						WHERE ro.year = ?
+						ORDER BY ro.position ASC
+				""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getCutoffRaces, year);
 		for (Map<String, Object> row : sqlRes) {
 			LocalDateTime cutoff = instantToLocalTime(Instant.parse((String) row.get("cutoff")));
@@ -669,7 +776,8 @@ public class AdminController {
 		}
 
 		final String getCutoffYear = "SELECT cutoff FROM YearCutoff WHERE year = ?";
-		String unparsedCutoffYear = jdbcTemplate.queryForObject(getCutoffYear, (rs, rowNum) -> rs.getString("cutoff"), year);
+		String unparsedCutoffYear = jdbcTemplate.queryForObject(getCutoffYear, (rs, rowNum) -> rs.getString("cutoff"),
+				year);
 		LocalDateTime cutoffYear = instantToLocalTime(Instant.parse(unparsedCutoffYear));
 		model.addAttribute("title", year);
 		model.addAttribute("races", races);
@@ -678,7 +786,8 @@ public class AdminController {
 	}
 
 	@PostMapping("/season/{year}/cutoff/setRace")
-	public String setCutoffRace(@PathVariable("year") int year, @RequestParam("id") int id, @RequestParam("cutoff") String cutoff) {
+	public String setCutoffRace(@PathVariable("year") int year, @RequestParam("id") int id,
+			@RequestParam("cutoff") String cutoff) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
