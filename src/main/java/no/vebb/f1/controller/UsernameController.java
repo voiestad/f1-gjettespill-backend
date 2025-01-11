@@ -73,7 +73,7 @@ public class UsernameController {
 			jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username, username_upper);
 		} catch (DataAccessException e) {
 			// Try again to ensure it could not be equal UUID
-			logger.info("Tried again.");
+			logger.warn("Failed to set UUID to new user. Tried again.");
 			jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username, username_upper);
 		}
 		return "redirect:/";

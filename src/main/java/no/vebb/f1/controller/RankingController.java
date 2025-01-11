@@ -147,6 +147,7 @@ public class RankingController {
 			jdbcTemplate.update(addCompetitorsSql, user.get().id, competitor, cutoff.getCurrentYear(), position);
 			position++;
 		}
+		logger.info("User '{}' guessed on '{}' on year '{}'", user.get().id, competitorColName, cutoff.getCurrentYear());
 		return "redirect:/guess?success=true";
 	}
 
@@ -237,7 +238,7 @@ public class RankingController {
 				return "redirect:/guess?success=false";
 			}
 			jdbcTemplate.update(insertGuessSql, user.get().id, raceNumber, driver, category);
-			logger.info("Guessed '{}' on {}", driver, category);
+			logger.info("User '{}' guessed on category '{}' on race '{}'", user.get().id, category, raceNumber);
 			return "redirect:/guess?success=true";
 
 		} catch (NoAvailableRaceException e) {
@@ -323,8 +324,7 @@ public class RankingController {
 		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", cutoff.getCurrentYear(), flags.yellow);
 		jdbcTemplate.update(sql, user.get().id, "Red Flag", cutoff.getCurrentYear(), flags.red);
 		jdbcTemplate.update(sql, user.get().id, "Safety Car", cutoff.getCurrentYear(), flags.safetyCar);
-		logger.info("Guessed '{}' yellow flags, '{}' red flags and '{}' safety cars", flags.yellow, flags.red,
-				flags.safetyCar);
+		logger.info("User '{}' guessed on flags on year '{}'", user.get().id, cutoff.getCurrentYear());
 		return "redirect:/guess?success=true";
 	}
 
