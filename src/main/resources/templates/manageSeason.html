@@ -27,6 +27,10 @@
 				<input type="hidden" name="id" th:value="${race.id}">
 				<input type="submit" value="&#128465;">
 			</form>
+			<form th:action="@{/admin/season/{year}/manage/reload(year=${year})}" method="post">
+				<input type="hidden" name="id" th:value="${race.id}">
+				<input type="submit" value="&#10227;">
+			</form>
 		</div>
 
 		<form th:action="@{/admin/season/{year}/manage/add(year=${year})}" method="post">

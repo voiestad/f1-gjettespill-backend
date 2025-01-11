@@ -379,6 +379,28 @@ public class AdminController {
 		return new Table("Constructor standings", header, body);
 	}
 
+	@PostMapping("/season/{year}/manage/reload")
+	public String reloadRace(@RequestParam("id") int raceId, @PathVariable("year") int year) {
+		if (!userService.isAdmin()) {
+			return "redirect:/";
+		}
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
+		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
+		if (!isValidRaceId) {
+			return "redirect:/admin/season/" + year + "/manage?success=false";
+		}
+
+		Importer importer = new Importer(jdbcTemplate);
+		importer.importRaceData(raceId);
+
+		return "redirect:/admin/season/" + year + "/manage/" + raceId;
+	}
+
 	@PostMapping("/season/{year}/manage/move")
 	public String changeRaceOrder(@PathVariable int year, @RequestParam("id") int raceId,
 			@RequestParam("newPosition") int position) {
