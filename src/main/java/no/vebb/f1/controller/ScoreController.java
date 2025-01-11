@@ -32,9 +32,10 @@ public class ScoreController {
 	@GetMapping
 	public String scoreMappingTables(Model model) {
 		List<Table> scoreMappingTables = getScoreMappingTables(year);
-		model.addAttribute("scoreMappingTables", scoreMappingTables);
+		model.addAttribute("tables", scoreMappingTables);
+		model.addAttribute("title", "Poengberegning");
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
-		return "score";
+		return "tables";
 	}
 
 	public List<Table> getScoreMappingTables(int year) {

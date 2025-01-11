@@ -34,7 +34,7 @@ public class Importer {
 		for (Entry<Integer, List<Integer>> racesToImportFrom : racesToImportFromList.entrySet()) {
 			int year = racesToImportFrom.getKey();
 			List<Integer> races = racesToImportFrom.getValue();
-			importStartingGrid(races, year);
+			importStartingGrid(races);
 			importRaceResults(races);
 			importSprint(races, year);
 		}
@@ -65,6 +65,27 @@ public class Importer {
 		return activeRaces;
 	}
 
+	public void importRaceData(int raceId) {
+		refreshStartingGrid(raceId);
+		refreshRaceResult(raceId);
+	}
+
+	private void refreshStartingGrid(int raceId) {
+		List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
+		if (startingGrid.isEmpty()) {
+			return;
+		}
+		insertStartingGridData(raceId, startingGrid);
+	}
+
+	private void refreshRaceResult(int raceId) {
+		List<List<String>> raceResult = TableImporter.getRaceResult(raceId);
+		if (raceResult.isEmpty()) {
+			return;
+		}
+		insertRaceResultData(raceId, raceResult);
+	}
+
 	private void refreshLatestImports(int year) {
 		refreshLatestStartingGrid(year);
 		refreshLatestRaceResult(year);
@@ -88,7 +109,7 @@ public class Importer {
 				return;
 			}
 			List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
-			insertStartingGridData(raceId, year, startingGrid);
+			insertStartingGridData(raceId, startingGrid);
 		} catch (EmptyResultDataAccessException e) {
 
 		}
@@ -119,7 +140,7 @@ public class Importer {
 
 	}
 
-	private void importStartingGrid(List<Integer> racesToImportFrom, int year) {
+	private void importStartingGrid(List<Integer> racesToImportFrom) {
 		final String existCheck = "SELECT COUNT(*) FROM StartingGrid WHERE race_number = ?";
 		for (int raceId : racesToImportFrom) {
 			boolean isAlreadyAdded = jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
@@ -130,11 +151,11 @@ public class Importer {
 			if (startingGrid.isEmpty()) {
 				break;
 			}
-			insertStartingGridData(raceId, year, startingGrid);
+			insertStartingGridData(raceId, startingGrid);
 		}
 	}
 
-	private void insertStartingGridData(int raceId, int year, List<List<String>> startingGrid) {
+	private void insertStartingGridData(int raceId, List<List<String>> startingGrid) {
 		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
 		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
 		for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
