@@ -16,7 +16,7 @@
 	<main>
 		<div th:insert="~{countdown :: countdown(timeLeftToGuess=${timeLeftToGuess})}"></div>
 		<form th:action="@{/guess/{type}(type=${type})}" method="post">
-			<input type="hidden" name="driver" value="" id="guessedDriver" />
+			<input type="hidden" name="driver" value="" id="guessedDriver">
 			<ul class="container">
 				<li th:each="item, iterStat : ${items}" onclick="select(event)"
 				th:class="${item == guessedDriver ? 'selected item-wrapper' : 'item-wrapper'}">

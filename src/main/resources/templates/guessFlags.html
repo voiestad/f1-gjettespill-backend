@@ -17,12 +17,12 @@
 		<div th:insert="~{countdown :: countdown(timeLeftToGuess=${timeLeftToGuess})}"></div>
 		<form th:action="@{/guess/flags}" method="post">
 			<label>Antall gule flagg</label>
-			<input type="number" th:value="${flags.yellow}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="yellow"><br><br>
+			<input type="number" th:value="${flags.yellow}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="yellow" required><br><br>
 			<label>Antall røde flagg</label>
-			<input type="number" th:value="${flags.red}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="red"><br><br>
+			<input type="number" th:value="${flags.red}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="red" required><br><br>
 			<label>Antall sikkerhetsbiler</label>
-			<input type="number" th:value="${flags.safetyCar}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="safetyCar"><br><br>
-			<button type="submit">Send inn gjett</button>
+			<input type="number" th:value="${flags.safetyCar}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="safetyCar" required><br><br>
+			<input type="submit" value="Send inn gjett">
 		</form>
 	</main>
 	<footer th:insert="~{footer}"></footer>
