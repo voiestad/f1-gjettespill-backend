@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<title>Velg Brukernavn</title>
+	<title>Slett bruker</title>
 	<style>
 		form {
 			text-align: center;
@@ -28,12 +28,13 @@
 	<header th:insert="~{header}"></header>
 	<main>
 		<div>
-			<h2>Velg brukernavn</h2>
-			<form th:action="@{{url}(url=${url})}" method="post">
+			<h2>Slett bruker</h2>
+			<p th:text="'Skriv inn brukernavnet ditt for å bekrefte: ' + ${username}"></p>
+			<form th:action="@{/settings/delete}" method="post">
 				<div>
-					<input type="text" id="username" name="username" required placeholder="Brukernavn">
+					<input type="text" name="username" placeholder="Brukernavn" required>
 				</div>
-				<input type="submit" value="Bekreft brukernavn">
+				<input type="submit" value="Bekreft sletting">
 			</form>
 
 			<p th:if="${error}" th:text="${error}"></p>
