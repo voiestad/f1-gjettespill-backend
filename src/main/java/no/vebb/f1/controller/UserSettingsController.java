@@ -6,12 +6,16 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.servlet.http.HttpServletRequest;
+import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 
 @Controller
@@ -65,6 +69,37 @@ public class UserSettingsController {
 
 		jdbcTemplate.update(updateUsername, username, usernameUpper, id);
 		return "redirect:/settings";
+	}
+
+	@GetMapping("/delete")
+	public String deleteAccount(Model model) {
+		String username = userService.loadUser().get().username;
+		model.addAttribute("username", username);
+		
+		return "deleteAccount";
+	}
+	
+	@PostMapping("/delete")
+	public String deleteAccount(Model model, @RequestParam("username") String username, HttpServletRequest request) {
+		User user = userService.loadUser().get();
+		String actualUsername = user.username;
+		if (!username.equals(actualUsername)) {
+			model.addAttribute("username", actualUsername);
+			model.addAttribute("error", "Brukernavn er feil");
+			return "deleteAccount";
+		}
+		final String deleteUser = """
+			UPDATE User
+			SET username = 'Anonym', username_upper = 'ANONYM', google_id = ?
+			WHERE id = ?
+			""";
+		UUID id = user.id;
+		jdbcTemplate.update(deleteUser, id, id);
+
+		request.getSession().invalidate();
+		SecurityContextHolder.clearContext();
+
+		return "redirect:/";
 	}
 
 }

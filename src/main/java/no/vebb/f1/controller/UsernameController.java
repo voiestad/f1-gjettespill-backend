@@ -83,6 +83,11 @@ public class UsernameController {
 		}
 
 		String username_upper = username.toUpperCase();
+		
+		if (username_upper.equals("ANONYM")) {
+			return "Brukernavn kan ikke være 'Anonym'";
+		}
+
 		final String sqlCheckUsername = "SELECT COUNT(*) FROM User WHERE username_upper = ?";
 		Integer usernameCount = jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, username_upper);
 

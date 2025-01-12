@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<title>Slett bruker</title>
+	<style>
+		form {
+			text-align: center;
+			border: 1px solid #ccc;
+			padding: 20px;
+			border-radius: 5px;
+		}
+
+		input {
+			width: 100%;
+			max-width: 300px;
+			padding: 10px;
+			margin-bottom: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<div>
+			<h2>Slett bruker</h2>
+			<p th:text="'Skriv inn brukernavnet ditt for å bekrefte: ' + ${username}"></p>
+			<form th:action="@{/settings/delete}" method="post">
+				<div>
+					<input type="text" name="username" placeholder="Brukernavn" required>
+				</div>
+				<input type="submit" value="Bekreft sletting">
+			</form>
+
+			<p th:if="${error}" th:text="${error}"></p>
+		</div>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+</body>
+
+</html>
