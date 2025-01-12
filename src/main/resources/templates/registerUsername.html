@@ -29,7 +29,7 @@
 	<main>
 		<div>
 			<h2>Velg brukernavn</h2>
-			<form th:action="@{/username}" method="post">
+			<form th:action="@{{url}(url=${url})}" method="post">
 				<div>
 					<input type="text" id="username" name="username" required placeholder="Brukernavn">
 				</div>

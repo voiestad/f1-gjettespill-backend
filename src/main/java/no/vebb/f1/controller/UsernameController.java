@@ -26,6 +26,9 @@ public class UsernameController {
 
 	private final JdbcTemplate jdbcTemplate;
 
+	private final String url = "/username";
+
+
 	@Autowired
 	private UserService userService;
 
@@ -34,10 +37,11 @@ public class UsernameController {
 	}
 
 	@GetMapping
-	public String registerUsernameForm() {
+	public String registerUsernameForm(Model model) {
 		if (userService.isLoggedIn()) {
 			return "redirect:/";
 		}
+		model.addAttribute("url", url);
 		return "registerUsername";
 	}
 
@@ -49,25 +53,15 @@ public class UsernameController {
 
 		username = username.strip();
 
-		if (username.equals("")) {
-			model.addAttribute("error", "Brukernavn kan ikke være blankt.");
-			return "registerUsername";
-		}
+		String error = validateUsername(username);
 
-		if (!username.matches("^[a-zA-ZÆØÅæøå ]+$")) {
-			model.addAttribute("error", "Brukernavn kan bare inneholde (a-å, A-Å).");
+		if (error != null) {
+			model.addAttribute("error", error);
+			model.addAttribute("url", url);
 			return "registerUsername";
 		}
 
 		String username_upper = username.toUpperCase();
-		final String sqlCheckUsername = "SELECT COUNT(*) FROM User WHERE username_upper = ?";
-		Integer usernameCount = jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, username_upper);
-
-		if (usernameCount != null && usernameCount > 0) {
-			model.addAttribute("error", "Brukernavnet er allerede i bruk. Vennligst velg et annet.");
-			return "registerUsername";
-		}
-
 		final String sqlInsertUsername = "INSERT INTO User (google_id, id,username, username_upper) VALUES (?, ?, ?, ?)";
 		try {
 			jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username, username_upper);
@@ -77,5 +71,25 @@ public class UsernameController {
 			jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username, username_upper);
 		}
 		return "redirect:/";
+	}
+
+	public String validateUsername(String username) {
+		if (username.equals("")) {
+			return "Brukernavn kan ikke være blankt.";
+		}
+
+		if (!username.matches("^[a-zA-ZÆØÅæøå ]+$")) {
+			return "Brukernavn kan bare inneholde (a-å, A-Å).";
+		}
+
+		String username_upper = username.toUpperCase();
+		final String sqlCheckUsername = "SELECT COUNT(*) FROM User WHERE username_upper = ?";
+		Integer usernameCount = jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, username_upper);
+
+		if (usernameCount != null && usernameCount > 0) {
+			return "Brukernavnet er allerede i bruk. Vennligst velg et annet.";
+		}
+		
+		return null;
 	}
 }
