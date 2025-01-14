@@ -6,20 +6,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import no.vebb.f1.user.User;
 import no.vebb.f1.util.Table;
 
 public class UserScore {
 	
-	private final User user;
+	private final UUID id;
 	private final int year;
 	private final JdbcTemplate jdbcTemplate;
 	private int score;
 	private final int raceNumber;
+	private final int racePos;
 	public final Table driversTable;
 	public final Table constructorsTable;
 	public final Table flagsTable;
@@ -28,11 +29,12 @@ public class UserScore {
 	public final Table summaryTable;
 	private final List<List<String>> summaryTableBody = new ArrayList<>();
 
-	public UserScore(User user, int year, JdbcTemplate jdbcTemplate) {
-		this.user = user;
+	public UserScore(UUID id, int year, JdbcTemplate jdbcTemplate, int raceNumber) {
+		this.id = id;
 		this.year = year;
 		this.jdbcTemplate = jdbcTemplate;
-		this.raceNumber = getRaceNumber();
+		this.raceNumber = raceNumber;
+		this.racePos = getRacePosition();
 		this.driversTable = initializeDriversTable();
 		this.constructorsTable = initializeConstructorsTable();
 		this.flagsTable = initializeFlagsTable();
@@ -41,7 +43,11 @@ public class UserScore {
 		this.summaryTable = initializeSummaryTable();
 	}
 
-	private int getRaceNumber() {
+	public UserScore(UUID id, int year, JdbcTemplate jdbcTemplate) {
+		this(id, year, jdbcTemplate, UserScore.getRaceNumber(jdbcTemplate, year));
+	}
+
+	private static int getRaceNumber(JdbcTemplate jdbcTemplate, int year) {
 		final String getRaceNumberSql = """
 			SELECT ro.id
 			FROM RaceOrder ro
@@ -57,6 +63,14 @@ public class UserScore {
 		} catch (EmptyResultDataAccessException e) {
 			return -1;
 		}
+	}
+
+	private int getRacePosition() {
+		if (raceNumber == -1) {
+			return 0;
+		}
+		final String getRacePosition = "SELECT position FROM RaceOrder WHERE id = ?";
+		return jdbcTemplate.queryForObject(getRacePosition, Integer.class, raceNumber);
 	}
 
 	private Table initializeDriversTable() {
@@ -89,7 +103,7 @@ public class UserScore {
 		} else {
 			competitors = jdbcTemplate.query(standingsSql, (rs, rowNum) -> rs.getString(colname), raceNumber);
 		}
-		List<String> guessed = jdbcTemplate.query(guessedSql, (rs, rowNum) -> rs.getString(colname), year, user.id);
+		List<String> guessed = jdbcTemplate.query(guessedSql, (rs, rowNum) -> rs.getString(colname), year, id);
 		Map<String, Integer> guessedToPos = new HashMap<>();
 		for (int i = 0; i < guessed.size(); i++) {
 			guessedToPos.put(guessed.get(i), i+1);
@@ -128,19 +142,30 @@ public class UserScore {
 		List<String> header = Arrays.asList("Type", "Gjettet", "Faktisk", "Diff", "Poeng");
 		List<List<String>> body = new ArrayList<>();
 		int flagScore = 0;
-		final String sql = """
-		SELECT f.name AS type, fg.amount AS guessed, COALESCE(COUNT(fs.flag), 0) AS actual
-		FROM Flag f
-		JOIN FlagGuess fg ON f.name = fg.flag
-		JOIN RaceOrder ro ON fg.year = ro.year
-		LEFT JOIN FlagStats fs ON fs.flag = f.name AND fs.race_number = ro.id
-		WHERE ro.year = ? AND fg.guesser = ?
-		GROUP BY f.name
-		""";
-		
 
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, year, user.id);
-
+		List<Map<String, Object>> sqlRes;
+		if (racePos == 0) {
+			final String sqlNoRace = """
+			SELECT f.name AS type, fg.amount AS guessed, 0 AS actual
+			FROM Flag f
+			JOIN FlagGuess fg ON f.name = fg.flag
+			JOIN RaceOrder ro ON fg.year = ro.year
+			WHERE ro.year = ? AND fg.guesser = ?
+			GROUP BY f.name
+			""";
+			sqlRes = jdbcTemplate.queryForList(sqlNoRace, year, id);
+		} else {
+			final String sql = """
+				SELECT f.name AS type, fg.amount AS guessed, COALESCE(COUNT(fs.flag), 0) AS actual
+				FROM Flag f
+				JOIN FlagGuess fg ON f.name = fg.flag
+				JOIN RaceOrder ro ON fg.year = ro.year
+				LEFT JOIN FlagStats fs ON fs.flag = f.name AND fs.race_number = ro.id
+				WHERE ro.year = ? AND fg.guesser = ? AND ro.position <= ?
+				GROUP BY f.name
+				""";
+			sqlRes = jdbcTemplate.queryForList(sql, year, id, racePos);
+		}
 		for (Map<String, Object> row : sqlRes) {
 			String flag = translateFlagName((String) row.get("type"));
 			int guessed = (int) row.get("guessed");
@@ -168,21 +193,25 @@ public class UserScore {
 	}
 
 	private Table getDriverPlaceGuessTable(String category, int targetPos) {
-		DiffPointsMap map = new DiffPointsMap(category, jdbcTemplate, year);
 		List<String> header = Arrays.asList("Løp", "Gjettet", "Startet", "Plass", "Poeng");
 		List<List<String>> body = new ArrayList<>();
+		String translation = translateCategory(category);
+		if (raceNumber == -1) {
+			return new Table(translation, header, body);
+		}
+		DiffPointsMap map = new DiffPointsMap(category, jdbcTemplate, year);
 		int driverPlaceScore = 0;
 		final String sql = """
-		SELECT r.name AS race_name, dpg.driver AS driver, sg.position AS start, rr.finishing_position AS finish FROM
-		DriverPlaceGuess dpg
+		SELECT r.name AS race_name, dpg.driver AS driver, sg.position AS start, rr.finishing_position AS finish
+		FROM DriverPlaceGuess dpg
 		JOIN Race r ON r.id = dpg.race_number
 		JOIN RaceOrder ro ON r.id = ro.id
 		JOIN StartingGrid sg ON sg.race_number = r.id AND dpg.driver = sg.driver
 		JOIN RaceResult rr ON rr.race_number = r.id AND dpg.driver = rr.driver
-		WHERE dpg.category = ? AND dpg.guesser = ? AND ro.year = ?
-		ORDER BY r.id ASC
+		WHERE dpg.category = ? AND dpg.guesser = ? AND ro.year = ? AND ro.position <= ?
+		ORDER BY ro.position ASC
 		""";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, category, user.id, year);
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, category, id, year, racePos);
 
 		for (Map<String, Object> row : sqlRes) {
 			String raceName = (String) row.get("race_name");
@@ -192,11 +221,10 @@ public class UserScore {
 			int diff = Math.abs(targetPos - finishPos);
 			int points = map.getPoints(diff);
 			driverPlaceScore += points;
-			body.add(Arrays.asList(raceName, driver, String.valueOf(startPos), String.valueOf(finishPos), String.valueOf(driverPlaceScore))); 
+			body.add(Arrays.asList(raceName, driver, String.valueOf(startPos), String.valueOf(finishPos), String.valueOf(points)));
 		}
 		score += driverPlaceScore;
 
-		String translation = translateCategory(category);
 		summaryTableBody.add(Arrays.asList(translation, String.valueOf(driverPlaceScore)));
 		return new Table(translation, header, body);
 	}
