@@ -221,7 +221,7 @@ public class UserScore {
 			int diff = Math.abs(targetPos - finishPos);
 			int points = map.getPoints(diff);
 			driverPlaceScore += points;
-			body.add(Arrays.asList(raceName, driver, String.valueOf(startPos), String.valueOf(finishPos), String.valueOf(driverPlaceScore)));
+			body.add(Arrays.asList(raceName, driver, String.valueOf(startPos), String.valueOf(finishPos), String.valueOf(points)));
 		}
 		score += driverPlaceScore;
 
