@@ -16,6 +16,7 @@ import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.Table;
 
 import org.springframework.ui.Model;
@@ -74,6 +75,8 @@ public class HomeController {
 			int raceId = jdbcTemplate.queryForObject(getRaceIdSql, Integer.class, year);
 			return !cutoff.isAbleToGuessRace(raceId);
 		} catch (EmptyResultDataAccessException e) {
+			return false;
+		} catch (NoAvailableRaceException e) {
 			return false;
 		}
 	}

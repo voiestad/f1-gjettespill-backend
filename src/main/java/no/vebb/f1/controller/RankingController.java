@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.util.NoAvailableRaceException;
 
 @Controller
 @RequestMapping("/guess")
@@ -263,12 +264,6 @@ public class RankingController {
 			return id;
 		} catch (EmptyResultDataAccessException e) {
 			throw new NoAvailableRaceException("Currently there are no available races");
-		}
-	}
-
-	private class NoAvailableRaceException extends Exception {
-		public NoAvailableRaceException(String e) {
-			super(e);
 		}
 	}
 

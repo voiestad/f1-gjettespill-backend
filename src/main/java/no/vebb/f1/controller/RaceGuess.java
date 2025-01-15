@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.Table;
 
 @Controller
@@ -82,6 +83,8 @@ public class RaceGuess {
 			model.addAttribute("tables", tables);
 			return "raceGuess";
 		} catch (EmptyResultDataAccessException e) {
+			return "redirect:/";
+		} catch (NoAvailableRaceException e) {
 			return "redirect:/";
 		}
 		

@@ -3,17 +3,16 @@ package no.vebb.f1.util;
 import java.time.Instant;
 import java.time.Year;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import no.vebb.f1.database.Database;
 
 @Service
 public class Cutoff {
 	
-	private JdbcTemplate jdbcTemplate;
-
-	public Cutoff(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
+	@Autowired
+	private Database db;
 
 
 	public boolean isAbleToGuessCurrentYear() {
@@ -21,20 +20,16 @@ public class Cutoff {
 	}
 
 	public boolean isAbleToGuessYear(int year) {
-		final String existCheck = "SELECT COUNT(*) FROM YearCutoff WHERE year = ?";
-		boolean yearExist = jdbcTemplate.queryForObject(existCheck, Integer.class, getCurrentYear()) > 0;
+		boolean yearExist = db.yearCutOffExist(year);
 		if (!yearExist) {
 			return false;
 		}
-		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
-		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), getCurrentYear()));
-
+		Instant cutoff = db.getCutoffYear(year);
 		return isAbleToGuess(cutoff);
 	}
 
-	public boolean isAbleToGuessRace(int raceNumber) {
-		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
-		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceNumber));
+	public boolean isAbleToGuessRace(int raceNumber) throws NoAvailableRaceException {
+		Instant cutoff = db.getCutoffRace(raceNumber);
 		return isAbleToGuess(cutoff);
 	}
 
