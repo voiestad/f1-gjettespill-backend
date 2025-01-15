@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import no.vebb.f1.database.Database;
 import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
@@ -29,6 +30,9 @@ public class HomeController {
 
 	@Autowired
 	private Cutoff cutoff;
+
+	@Autowired
+	private Database db;
 	
 	private JdbcTemplate jdbcTemplate;
 
@@ -92,7 +96,7 @@ public class HomeController {
 		List<UUID> userIds = jdbcTemplate.query(getAllUsersSql, (rs, rowNum) -> UUID.fromString(rs.getString("id")));
 		int year = cutoff.getCurrentYear();
 		for (UUID id : userIds) {
-			UserScore userScore = new UserScore(id, year, jdbcTemplate);
+			UserScore userScore = new UserScore(id, year, db);
 			User user = userService.loadUser(id).get();
 			leaderBoardUnsorted.add(new Guesser(user.username, userScore.getScore(), id));
 		}
@@ -164,7 +168,7 @@ public class HomeController {
 		for (UUID id : guessers) {
 			List<Integer> userScores = new ArrayList<>();
 			for (int raceId : raceIds) {
-				int score = new UserScore(id, year, jdbcTemplate, raceId).getScore();
+				int score = new UserScore(id, year, raceId, db).getScore();
 				userScores.add(score);
 			}
 			scores.add(userScores);

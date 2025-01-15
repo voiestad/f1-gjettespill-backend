@@ -6,13 +6,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import no.vebb.f1.database.Database;
 import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
@@ -31,11 +31,8 @@ public class ProfileController {
 	@Autowired
 	private Cutoff cutoff;
 	
-	private JdbcTemplate jdbcTemplate;
-
-	public ProfileController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
+	@Autowired
+	private Database db;
 
 	@GetMapping("/{id}")
 	public String guesserProfile(@PathVariable("id") UUID id, Model model) {
@@ -59,7 +56,7 @@ public class ProfileController {
 
 	private String getGuesserProfile(Model model, User user) {
 		if (!cutoff.isAbleToGuessCurrentYear() || userService.isLoggedInUser(user)) {
-			UserScore userScore = new UserScore(user.id, year, jdbcTemplate);
+			UserScore userScore = new UserScore(user.id, year, db);
 			model.addAttribute("tables", userScore.getAllTables());
 		} else {
 			List<Table> tables = new ArrayList<>();
