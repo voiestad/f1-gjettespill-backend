@@ -211,4 +211,29 @@ public class Database {
 		jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username, username_upper);
 	}
 
+	public List<Map<String, Object>> getUserGuessesDriverPlace(int raceNumber, String category) {
+		final String getGuessSql = """
+				SELECT u.username AS username, dpg.driver AS driver, sg.position AS position
+				FROM DriverPlaceGuess dpg
+				JOIN User u ON u.id = dpg.guesser
+				JOIN StartingGrid sg ON sg.race_number = dpg.race_number AND sg.driver = dpg.driver
+				WHERE dpg.race_number = ? AND dpg.category = ?
+				ORDER BY u.username ASC
+			""";
+		return jdbcTemplate.queryForList(getGuessSql, raceNumber, category);
+	}
+
+	public Map<String, Object> getLatestRaceForPlaceGuess(int year) {
+		final String getRaceIdSql = """
+			SELECT ro.id AS id, ro.position AS position, r.name AS name
+			FROM RaceOrder ro
+			JOIN StartingGrid sg ON ro.id = sg.race_number
+			JOIN Race r ON r.id = ro.id
+			WHERE ro.year = ?
+			ORDER BY ro.position DESC
+			LIMIT 1;
+		""";
+		return jdbcTemplate.queryForMap(getRaceIdSql, year);
+	}
+
 }
