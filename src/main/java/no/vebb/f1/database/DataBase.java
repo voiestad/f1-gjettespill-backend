@@ -153,21 +153,21 @@ public class Database {
 
 	public List<String> getGuessedYearDriver(int year, UUID guesserId) {
 		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guesser = ? ORDER BY position ASC";
-		return jdbcTemplate.query(guessedSql, (rs, rowNum) -> rs.getString("driver"), year, guesserId);
+		return jdbcTemplate.queryForList(guessedSql, String.class, year, guesserId);
 	}
 
 	public List<String> getGuessedYearConstructor(int year, UUID guesserId) {
 		final String guessedSql = "SELECT constructor FROM ConstructorGuess WHERE year = ? AND guesser = ? ORDER BY position ASC";
-		return jdbcTemplate.query(guessedSql, (rs, rowNum) -> rs.getString("constructor"), year, guesserId);
+		return jdbcTemplate.queryForList(guessedSql, String.class, year, guesserId);
 	}
 
 	public List<String> getDriverStandings(int raceNumber, int year) {
 		final String driverYearSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
 		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
 		if (raceNumber == -1) {
-			return jdbcTemplate.query(driverYearSql, (rs, rowNum) -> rs.getString("driver"), year);
+			return jdbcTemplate.queryForList(driverYearSql, String.class, year);
 		} else {
-			return jdbcTemplate.query(driverStandingsSql, (rs, rowNum) -> rs.getString("driver"), raceNumber);
+			return jdbcTemplate.queryForList(driverStandingsSql, String.class, raceNumber);
 		}
 	}
 
@@ -175,9 +175,9 @@ public class Database {
 		final String constructorYearSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
 		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
 		if (raceNumber == -1) {
-			return jdbcTemplate.query(constructorYearSql, (rs, rowNum) -> rs.getString("constructor"), year);
+			return jdbcTemplate.queryForList(constructorYearSql, String.class, year);
 		} else {
-			return jdbcTemplate.query(constructorStandingsSql, (rs, rowNum) -> rs.getString("constructor"), raceNumber);
+			return jdbcTemplate.queryForList(constructorStandingsSql, String.class, raceNumber);
 		}
 	}
 
