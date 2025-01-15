@@ -181,4 +181,34 @@ public class Database {
 		}
 	}
 
+	public boolean isUsernameInUse(String usernameUpper) {
+		final String sqlCheckUsername = "SELECT COUNT(*) FROM User WHERE username_upper = ?";
+		return jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, usernameUpper) > 0;
+	}
+
+	public void updateUsername(String username, UUID id) {
+		final String updateUsername = """
+			UPDATE User
+			SET username = ?, username_upper = ?
+			WHERE id = ?
+			""";
+		String usernameUpper = username.toUpperCase();
+		jdbcTemplate.update(updateUsername, username, usernameUpper, id);
+	}
+
+	public void deleteUser(UUID id) {
+		final String deleteUser = """
+			UPDATE User
+			SET username = 'Anonym', username_upper = 'ANONYM', google_id = ?
+			WHERE id = ?
+			""";
+		jdbcTemplate.update(deleteUser, id, id);
+	}
+
+	public void addUser(String username, String googleId) {
+		String username_upper = username.toUpperCase();
+		final String sqlInsertUsername = "INSERT INTO User (google_id, id,username, username_upper) VALUES (?, ?, ?, ?)";
+		jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username, username_upper);
+	}
+
 }
