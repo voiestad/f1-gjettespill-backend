@@ -29,9 +29,9 @@ import no.vebb.f1.util.Flags;
 
 @Controller
 @RequestMapping("/guess")
-public class RankingController {
+public class GuessController {
 
-	private static final Logger logger = LoggerFactory.getLogger(RankingController.class);
+	private static final Logger logger = LoggerFactory.getLogger(GuessController.class);
 
 	@Autowired
 	private Database db;
