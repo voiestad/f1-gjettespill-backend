@@ -1,5 +1,6 @@
 package no.vebb.f1.database;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.util.Flags;
 import no.vebb.f1.user.User;
 import no.vebb.f1.util.NoAvailableRaceException;
 
@@ -236,4 +239,145 @@ public class Database {
 		return jdbcTemplate.queryForMap(getRaceIdSql, year);
 	}
 
+	public int getCurrentRaceIdToGuess() {
+		final String getRaceId = """
+			SELECT DISTINCT race_number
+			FROM StartingGrid sg
+			WHERE sg.race_number NOT IN (
+				SELECT rr.race_number 
+				FROM RaceResult rr
+			) 
+			""";
+		return jdbcTemplate.queryForObject(getRaceId, Integer.class);
+	}
+
+	public void addFlagGuesses(UUID id, int year, Flags flags) {
+		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
+		jdbcTemplate.update(sql, id, "Yellow Flag", year, flags.yellow);
+		jdbcTemplate.update(sql, id, "Red Flag", year, flags.red);
+		jdbcTemplate.update(sql, id, "Safety Car", year, flags.safetyCar);
+	}
+
+	public Flags getFlagGuesses(UUID id, int year) {
+		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, id, year);
+		Flags flags = new Flags();
+		for (Map<String, Object> row : sqlRes) {
+			String flag = (String) row.get("flag");
+			int amount = (int) row.get("amount");
+			switch (flag) {
+				case "Yellow Flag":
+					flags.yellow = amount;
+					break;
+				case "Red Flag":
+					flags.red = amount;
+					break;
+				case "Safety Car":
+					flags.safetyCar = amount;
+					break;
+			}
+		}
+		return flags;
+	}
+
+	public long getTimeLeftToGuessRace(int raceNumber) {
+		Instant now = Instant.now();
+		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceNumber)); 
+		return Duration.between(now, cutoff).toSeconds();
+	}
+
+	public long getTimeLeftToGuessYear() {
+		Instant now = Instant.now();
+		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
+		Cutoff cutoff = new Cutoff();
+		Instant cutoffYear = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, cutoff.getCurrentYear())); 
+		return Duration.between(now, cutoffYear).toSeconds();
+	}
+
+	public List<String> getDriversFromStartingGrid(int raceNumber) {
+		final String getDriversFromGrid = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
+		return jdbcTemplate.queryForList(getDriversFromGrid, String.class, raceNumber);
+	}
+
+	public String getGuessedDriverPlace(int raceNumber, String category) {
+		final String getPreviousGuessSql = "SELECT driver FROM DriverPlaceGuess WHERE race_number = ? AND category = ?";
+		return jdbcTemplate.queryForObject(getPreviousGuessSql, String.class, raceNumber, category);
+	}
+
+	public void addDriverPlaceGuess(UUID id, int raceNumber, String driver, String category) {
+		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?)";
+		jdbcTemplate.update(insertGuessSql, id, raceNumber, driver, category);
+	}
+
+	public List<String> getCompetitorsGuess(String competitorType, UUID id, int year) {
+		if (competitorType.equals("driver")) {
+			return getDriversGuess(id, year);
+		}
+		if (competitorType.equals("constructor")) {
+			return getConstructorsGuess(id, year);
+		}
+		throw new IllegalArgumentException();
+	}
+
+	private List<String> getDriversGuess(UUID id, int year) {
+		final String getGuessedSql = "SELECT driver FROM DriverGuess WHERE guesser = ? ORDER BY position ASC";
+		final String getDriversSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
+		return getCompetitorGuess(id, year, getGuessedSql, getDriversSql);
+	}
+
+	private List<String> getConstructorsGuess(UUID id, int year) {
+		final String getGuessedSql = "SELECT constructor FROM ConstructorGuess WHERE guesser = ? ORDER BY position ASC";
+		final String getConstructorsSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
+		return getCompetitorGuess(id, year, getGuessedSql, getConstructorsSql);
+	}
+
+	private List<String> getCompetitorGuess(UUID id, int year, final String getGuessedSql, final String getCompetitorsSql) {
+		List<String> competitors = jdbcTemplate.queryForList(getGuessedSql, String.class, id);
+		if (competitors.size() == 0) {
+			return jdbcTemplate.queryForList(getCompetitorsSql, String.class, year);
+		}
+		return competitors;
+	}
+
+	public List<String> getCompetitorsYear(int year, String competitorType) {
+		if (competitorType.equals("driver")) {
+			return getDriversYear(year);
+		} else if (competitorType.equals("constructor")) {
+			return getConstructorsYear(year);
+		}
+		throw new IllegalArgumentException();
+	}
+
+	private List<String> getDriversYear(int year) {
+		final String getDriversSql = "SELECT driver FROM DriverYear WHERE year = ?";
+		return jdbcTemplate.queryForList(getDriversSql, String.class, year);
+	}
+
+	private List<String> getConstructorsYear(int year) {
+		final String getConstructorSql = "SELECT constructor FROM ConstructorYear WHERE year = ?";
+		return jdbcTemplate.queryForList(getConstructorSql, String.class, year);
+	}
+
+	public void insertCompetitorsYearGuess(String competitorType, UUID id, String competitor, int year, int position) {
+		if (competitorType.equals("driver")) {
+			insertDriversYearGuess(id, competitor, year, position);
+			return;
+		}
+		if (competitorType.equals("constructor")) {
+			insertConstructorsYearGuess(id, competitor, year, position);
+			return;
+		}
+		throw new IllegalArgumentException();
+	}
+
+	private void insertDriversYearGuess(UUID id, String competitor, int year, int position) {
+		final String addRowDriver = "REPLACE INTO DriverGuess (guesser, driver, year, position) values (?, ?, ?, ?)";
+		jdbcTemplate.update(addRowDriver, id, competitor, year, position);
+	}
+
+	private void insertConstructorsYearGuess(UUID id, String competitor, int year, int position) {
+		final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?)";
+		jdbcTemplate.update(addRowConstructor, id, competitor, year, position);
+	}
 }

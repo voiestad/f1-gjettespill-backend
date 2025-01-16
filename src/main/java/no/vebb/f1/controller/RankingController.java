@@ -1,19 +1,17 @@
 package no.vebb.f1.controller;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,27 +19,28 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import no.vebb.f1.database.Database;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.NoAvailableRaceException;
+import no.vebb.f1.util.Flags;
+
 
 @Controller
 @RequestMapping("/guess")
 public class RankingController {
 
-	private JdbcTemplate jdbcTemplate;
 	private static final Logger logger = LoggerFactory.getLogger(RankingController.class);
+
+	@Autowired
+	private Database db;
 
 	@Autowired
 	private UserService userService;
 
 	@Autowired
 	private Cutoff cutoff;
-
-	public RankingController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
 
 	@GetMapping()
 	public String guess(@RequestParam(value = "success", required = false) Boolean success, Model model) {
@@ -70,41 +69,29 @@ public class RankingController {
 
 	@GetMapping("/drivers")
 	public String rankDrivers(Model model) {
-		final String getDriversSql = "SELECT driver, position, year FROM DriverYear WHERE year = ? ORDER BY position ASC";
-		final String getGuessedSql = "SELECT position, driver FROM DriverGuess WHERE guesser = ? ORDER BY position ASC";
-		final String competitorColName = "driver";
 		model.addAttribute("title", "Ranger sjåførene");
 		model.addAttribute("type", "drivers");
-		return handleRankGet(model, getDriversSql, getGuessedSql, competitorColName);
+		return handleRankGet(model, "driver");
 	}
 
 	@PostMapping("/drivers")
 	public String rankDrivers(@RequestParam List<String> rankedCompetitors, Model model) {
-		final String getDriversSql = "SELECT driver, year FROM DriverYear WHERE year = ?";
-		final String addRowDriver = "REPLACE INTO DriverGuess (guesser, driver, year, position) values (?, ?, ?, ?)";
-		final String competitorColName = "driver";
-		return handleRankPost(model, rankedCompetitors, getDriversSql, addRowDriver, competitorColName);
+		return handleRankPost(model, rankedCompetitors, "driver");
 	}
 
 	@GetMapping("/constructors")
 	public String rankConstructors(Model model) {
-		final String getConstructorsSql = "SELECT constructor, position, year FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
-		final String getGuessedSql = "SELECT position, constructor FROM ConstructorGuess WHERE guesser = ? ORDER BY position ASC";
-		final String competitorColName = "constructor";
 		model.addAttribute("title", "Ranger konstruktørene");
 		model.addAttribute("type", "constructors");
-		return handleRankGet(model, getConstructorsSql, getGuessedSql, competitorColName);
+		return handleRankGet(model, "constructor");
 	}
 
 	@PostMapping("/constructors")
 	public String rankConstructors(@RequestParam List<String> rankedCompetitors, Model model) {
-		final String getConstructorSql = "SELECT constructor, year FROM ConstructorYear WHERE year = ?";
-		final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?)";
-		final String competitorColName = "constructor";
-		return handleRankPost(model, rankedCompetitors, getConstructorSql, addRowConstructor, competitorColName);
+		return handleRankPost(model, rankedCompetitors, "constructor");
 	}
 
-	private String handleRankGet(Model model, String getCompetitorsSql, String getGuessedSql, String competitorColName) {
+	private String handleRankGet(Model model, String type) {
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
@@ -112,24 +99,16 @@ public class RankingController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess"; 
 		}
-		long timeLeftToGuess = getTimeLeftToGuessYear();
+		UUID id = user.get().id;
+		int year = cutoff.getCurrentYear();
+		List<String> competitors = db.getCompetitorsGuess(type, id, year);
+		long timeLeftToGuess = db.getTimeLeftToGuessYear();
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
-		List<String> competitors = jdbcTemplate.query(getGuessedSql, (rs, rowNum) -> rs.getString(competitorColName), user.get().id);
-		if (competitors.size() == 0) {
-			competitors = jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), cutoff.getCurrentYear());
-		}
 		model.addAttribute("competitors", competitors);
 		return "ranking";
 	}
 
-	private long getTimeLeftToGuessYear() {
-		Instant now = Instant.now();
-		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
-		Instant cutoffYear = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), cutoff.getCurrentYear())); 
-		return Duration.between(now, cutoffYear).toSeconds();
-	}
-
-	private String handleRankPost(Model model, List<String> rankedCompetitors, String getCompetitorsSql, String addCompetitorsSql, String competitorColName) {
+	private String handleRankPost(Model model, List<String> rankedCompetitors, String competitorType) {
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
@@ -137,18 +116,20 @@ public class RankingController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false"; 
 		}
-		Set<String> competitors = new HashSet<>((jdbcTemplate.query(getCompetitorsSql, (rs, rowNum) -> rs.getString(competitorColName), cutoff.getCurrentYear())));
+		int year = cutoff.getCurrentYear();
+		Set<String> competitors = new HashSet<>(db.getCompetitorsYear(year, competitorType));
 		String error = validateGuessList(rankedCompetitors, competitors);
 		if (error != null) {
 			logger.warn(error);
 			return "redirect:/guess?success=false";
 		}
 		int position = 1;
+		UUID id = user.get().id;
 		for (String competitor : rankedCompetitors) {
-			jdbcTemplate.update(addCompetitorsSql, user.get().id, competitor, cutoff.getCurrentYear(), position);
+			db.insertCompetitorsYearGuess(competitorType, id, competitor, year, position);
 			position++;
 		}
-		logger.info("User '{}' guessed on '{}' on year '{}'", user.get().id, competitorColName, cutoff.getCurrentYear());
+		logger.info("User '{}' guessed on '{}' on year '{}'", user.get().id, competitorType, year);
 		return "redirect:/guess?success=true";
 	}
 
@@ -194,18 +175,16 @@ public class RankingController {
 	}
 
 	private String handleGetChooseDriver(Model model, String category) {
-		final String getPreviousGuessSql = "SELECT driver FROM DriverPlaceGuess WHERE race_number = ? AND category = ?";
-		final String getDriversFromGrid = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
 		try {
 			int raceNumber = getRaceIdToGuess();
 
-			long timeLeftToGuess = getTimeLeftToGuessRace(raceNumber);
+			long timeLeftToGuess = db.getTimeLeftToGuessRace(raceNumber);
 			model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 
-			List<String> drivers = jdbcTemplate.query(getDriversFromGrid, (rs, rowNum) -> rs.getString("driver"), raceNumber);
+			List<String> drivers = db.getDriversFromStartingGrid(raceNumber);
 			model.addAttribute("items", drivers);
 
-			String driver = jdbcTemplate.queryForObject(getPreviousGuessSql, (rs, rowNum) -> rs.getString("driver"), raceNumber, category);
+			String driver = db.getGuessedDriverPlace(raceNumber, category);
 			model.addAttribute("guessedDriver", driver);
 		} catch (NoAvailableRaceException e) {
 			return "redirect:/guess";
@@ -216,30 +195,21 @@ public class RankingController {
 		return "chooseDriver";
 	}
 
-	private long getTimeLeftToGuessRace(int raceNumber) {
-		Instant now = Instant.now();
-		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
-		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), raceNumber)); 
-		return Duration.between(now, cutoff).toSeconds();
-	}
-
 	private String handlePostChooseDriver(Model model, String driver, String category) {
-		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?)";
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
 		}
 		try {
 			int raceNumber = getRaceIdToGuess();
-
-			String sql = "SELECT driver FROM StartingGrid WHERE race_number = ?";
-			Set<String> driversCheck = new HashSet<>((jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("driver"), raceNumber)));
+			Set<String> driversCheck = new HashSet<>(db.getDriversFromStartingGrid(raceNumber));
 			if (!driversCheck.contains(driver)) {
 				logger.warn("'{}', invalid winner driver inputted by user.", driver);
 				return "redirect:/guess?success=false";
 			}
-			jdbcTemplate.update(insertGuessSql, user.get().id, raceNumber, driver, category);
-			logger.info("User '{}' guessed on category '{}' on race '{}'", user.get().id, category, raceNumber);
+			UUID id = user.get().id;
+			db.addDriverPlaceGuess(id, raceNumber, driver, category);
+			logger.info("User '{}' guessed on category '{}' on race '{}'", id, category, raceNumber);
 			return "redirect:/guess?success=true";
 
 		} catch (NoAvailableRaceException e) {
@@ -248,16 +218,8 @@ public class RankingController {
 	}
 
 	private int getRaceIdToGuess() throws NoAvailableRaceException {
-		final String getRaceId = """
-				SELECT DISTINCT race_number
-				FROM StartingGrid sg
-				WHERE sg.race_number NOT IN (
-					SELECT rr.race_number 
-					FROM RaceResult rr
-				) 
-				""";
 		try {
-			int id = jdbcTemplate.queryForObject(getRaceId, Integer.class);
+			int id = db.getCurrentRaceIdToGuess();
 			if (!cutoff.isAbleToGuessRace(id)) {
 				throw new NoAvailableRaceException("Cutoff has been passed");
 			}
@@ -276,26 +238,9 @@ public class RankingController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess"; 
 		}
-		long timeLeftToGuess = getTimeLeftToGuessYear();
+		long timeLeftToGuess = db.getTimeLeftToGuessYear();
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
-		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, user.get().id, cutoff.getCurrentYear());
-		Flags flags = new Flags();
-		for (Map<String, Object> row : sqlRes) {
-			String flag = (String) row.get("flag");
-			int amount = (int) row.get("amount");
-			switch (flag) {
-				case "Yellow Flag":
-					flags.yellow = amount;
-					break;
-				case "Red Flag":
-					flags.red = amount;
-					break;
-				case "Safety Car":
-					flags.safetyCar = amount;
-					break;
-			}
-		}
+		Flags flags = db.getFlagGuesses(user.get().id, cutoff.getCurrentYear());
 		model.addAttribute("flags", flags);
 		return "guessFlags";
 	}
@@ -315,11 +260,9 @@ public class RankingController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false"; 
 		}
-		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
-		jdbcTemplate.update(sql, user.get().id, "Yellow Flag", cutoff.getCurrentYear(), flags.yellow);
-		jdbcTemplate.update(sql, user.get().id, "Red Flag", cutoff.getCurrentYear(), flags.red);
-		jdbcTemplate.update(sql, user.get().id, "Safety Car", cutoff.getCurrentYear(), flags.safetyCar);
-		logger.info("User '{}' guessed on flags on year '{}'", user.get().id, cutoff.getCurrentYear());
+		int year = cutoff.getCurrentYear();
+		db.addFlagGuesses(user.get().id, year, flags);
+		logger.info("User '{}' guessed on flags on year '{}'", user.get().id, year);
 		return "redirect:/guess?success=true";
 	}
 
@@ -352,22 +295,4 @@ public class RankingController {
 		}
 	}
 
-	class Flags {
-		public int yellow;
-		public int red;
-		public int safetyCar;
-
-		public boolean hasValidValues() {
-			return yellow >= 0 && red >= 0 && safetyCar >= 0;
-		}
-
-		public Flags() {
-		}
-
-		public Flags(int yellow, int red, int safetyCar) {
-			this.yellow = yellow;
-			this.red = red;
-			this.safetyCar = safetyCar;
-		}
-	}
 }
