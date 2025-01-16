@@ -18,7 +18,7 @@ import no.vebb.f1.util.NoAvailableRaceException;
 
 @Service
 public class Database {
-	
+
 	private JdbcTemplate jdbcTemplate;
 
 	public Database(JdbcTemplate jdbcTemplate) {
@@ -67,15 +67,15 @@ public class Database {
 
 	public int getLatestRaceNumber(int year) throws EmptyResultDataAccessException {
 		final String getRaceNumberSql = """
-			SELECT ro.id
-			FROM RaceOrder ro
-			JOIN Sprint s ON ro.id = s.race_number
-			WHERE ro.year = ?
-			ORDER BY ro.position DESC
-			LIMIT 1;
-		""";
+					SELECT ro.id
+					FROM RaceOrder ro
+					JOIN Sprint s ON ro.id = s.race_number
+					WHERE ro.year = ?
+					ORDER BY ro.position DESC
+					LIMIT 1;
+				""";
 
-		return jdbcTemplate.queryForObject(getRaceNumberSql, Integer.class, year);	
+		return jdbcTemplate.queryForObject(getRaceNumberSql, Integer.class, year);
 	}
 
 	public int getPositionOfRace(int raceNumber) {
@@ -118,39 +118,39 @@ public class Database {
 	public List<Map<String, Object>> getDataForFlagTable(int racePos, int year, UUID guesserId) {
 		if (racePos == 0) {
 			final String sqlNoRace = """
-			SELECT f.name AS type, fg.amount AS guessed, 0 AS actual
-			FROM Flag f
-			JOIN FlagGuess fg ON f.name = fg.flag
-			JOIN RaceOrder ro ON fg.year = ro.year
-			WHERE ro.year = ? AND fg.guesser = ?
-			GROUP BY f.name
-			""";
+					SELECT f.name AS type, fg.amount AS guessed, 0 AS actual
+					FROM Flag f
+					JOIN FlagGuess fg ON f.name = fg.flag
+					JOIN RaceOrder ro ON fg.year = ro.year
+					WHERE ro.year = ? AND fg.guesser = ?
+					GROUP BY f.name
+					""";
 			return jdbcTemplate.queryForList(sqlNoRace, year, guesserId);
 		} else {
 			final String sql = """
-				SELECT f.name AS type, fg.amount AS guessed, COALESCE(COUNT(fs.flag), 0) AS actual
-				FROM Flag f
-				JOIN FlagGuess fg ON f.name = fg.flag
-				JOIN RaceOrder ro ON fg.year = ro.year
-				LEFT JOIN FlagStats fs ON fs.flag = f.name AND fs.race_number = ro.id
-				WHERE ro.year = ? AND fg.guesser = ? AND ro.position <= ?
-				GROUP BY f.name
-				""";
+					SELECT f.name AS type, fg.amount AS guessed, COALESCE(COUNT(fs.flag), 0) AS actual
+					FROM Flag f
+					JOIN FlagGuess fg ON f.name = fg.flag
+					JOIN RaceOrder ro ON fg.year = ro.year
+					LEFT JOIN FlagStats fs ON fs.flag = f.name AND fs.race_number = ro.id
+					WHERE ro.year = ? AND fg.guesser = ? AND ro.position <= ?
+					GROUP BY f.name
+					""";
 			return jdbcTemplate.queryForList(sql, year, guesserId, racePos);
 		}
 	}
 
 	public List<Map<String, Object>> getDataForPlaceGuessTable(String category, UUID guesserId, int year, int racePos) {
 		final String sql = """
-		SELECT r.name AS race_name, dpg.driver AS driver, sg.position AS start, rr.finishing_position AS finish
-		FROM DriverPlaceGuess dpg
-		JOIN Race r ON r.id = dpg.race_number
-		JOIN RaceOrder ro ON r.id = ro.id
-		JOIN StartingGrid sg ON sg.race_number = r.id AND dpg.driver = sg.driver
-		JOIN RaceResult rr ON rr.race_number = r.id AND dpg.driver = rr.driver
-		WHERE dpg.category = ? AND dpg.guesser = ? AND ro.year = ? AND ro.position <= ?
-		ORDER BY ro.position ASC
-		""";
+				SELECT r.name AS race_name, dpg.driver AS driver, sg.position AS start, rr.finishing_position AS finish
+				FROM DriverPlaceGuess dpg
+				JOIN Race r ON r.id = dpg.race_number
+				JOIN RaceOrder ro ON r.id = ro.id
+				JOIN StartingGrid sg ON sg.race_number = r.id AND dpg.driver = sg.driver
+				JOIN RaceResult rr ON rr.race_number = r.id AND dpg.driver = rr.driver
+				WHERE dpg.category = ? AND dpg.guesser = ? AND ro.year = ? AND ro.position <= ?
+				ORDER BY ro.position ASC
+				""";
 		return jdbcTemplate.queryForList(sql, category, guesserId, year, racePos);
 	}
 
@@ -191,20 +191,20 @@ public class Database {
 
 	public void updateUsername(String username, UUID id) {
 		final String updateUsername = """
-			UPDATE User
-			SET username = ?, username_upper = ?
-			WHERE id = ?
-			""";
+				UPDATE User
+				SET username = ?, username_upper = ?
+				WHERE id = ?
+				""";
 		String usernameUpper = username.toUpperCase();
 		jdbcTemplate.update(updateUsername, username, usernameUpper, id);
 	}
 
 	public void deleteUser(UUID id) {
 		final String deleteUser = """
-			UPDATE User
-			SET username = 'Anonym', username_upper = 'ANONYM', google_id = ?
-			WHERE id = ?
-			""";
+				UPDATE User
+				SET username = 'Anonym', username_upper = 'ANONYM', google_id = ?
+				WHERE id = ?
+				""";
 		jdbcTemplate.update(deleteUser, id, id);
 	}
 
@@ -216,38 +216,38 @@ public class Database {
 
 	public List<Map<String, Object>> getUserGuessesDriverPlace(int raceNumber, String category) {
 		final String getGuessSql = """
-				SELECT u.username AS username, dpg.driver AS driver, sg.position AS position
-				FROM DriverPlaceGuess dpg
-				JOIN User u ON u.id = dpg.guesser
-				JOIN StartingGrid sg ON sg.race_number = dpg.race_number AND sg.driver = dpg.driver
-				WHERE dpg.race_number = ? AND dpg.category = ?
-				ORDER BY u.username ASC
-			""";
+					SELECT u.username AS username, dpg.driver AS driver, sg.position AS position
+					FROM DriverPlaceGuess dpg
+					JOIN User u ON u.id = dpg.guesser
+					JOIN StartingGrid sg ON sg.race_number = dpg.race_number AND sg.driver = dpg.driver
+					WHERE dpg.race_number = ? AND dpg.category = ?
+					ORDER BY u.username ASC
+				""";
 		return jdbcTemplate.queryForList(getGuessSql, raceNumber, category);
 	}
 
 	public Map<String, Object> getLatestRaceForPlaceGuess(int year) {
 		final String getRaceIdSql = """
-			SELECT ro.id AS id, ro.position AS position, r.name AS name
-			FROM RaceOrder ro
-			JOIN StartingGrid sg ON ro.id = sg.race_number
-			JOIN Race r ON r.id = ro.id
-			WHERE ro.year = ?
-			ORDER BY ro.position DESC
-			LIMIT 1;
-		""";
+					SELECT ro.id AS id, ro.position AS position, r.name AS name
+					FROM RaceOrder ro
+					JOIN StartingGrid sg ON ro.id = sg.race_number
+					JOIN Race r ON r.id = ro.id
+					WHERE ro.year = ?
+					ORDER BY ro.position DESC
+					LIMIT 1;
+				""";
 		return jdbcTemplate.queryForMap(getRaceIdSql, year);
 	}
 
 	public int getCurrentRaceIdToGuess() {
 		final String getRaceId = """
-			SELECT DISTINCT race_number
-			FROM StartingGrid sg
-			WHERE sg.race_number NOT IN (
-				SELECT rr.race_number 
-				FROM RaceResult rr
-			) 
-			""";
+				SELECT DISTINCT race_number
+				FROM StartingGrid sg
+				WHERE sg.race_number NOT IN (
+					SELECT rr.race_number
+					FROM RaceResult rr
+				)
+				""";
 		return jdbcTemplate.queryForObject(getRaceId, Integer.class);
 	}
 
@@ -283,7 +283,7 @@ public class Database {
 	public long getTimeLeftToGuessRace(int raceNumber) {
 		Instant now = Instant.now();
 		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
-		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceNumber)); 
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceNumber));
 		return Duration.between(now, cutoff).toSeconds();
 	}
 
@@ -291,7 +291,8 @@ public class Database {
 		Instant now = Instant.now();
 		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
 		Cutoff cutoff = new Cutoff();
-		Instant cutoffYear = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, cutoff.getCurrentYear())); 
+		Instant cutoffYear = Instant
+				.parse(jdbcTemplate.queryForObject(getCutoff, String.class, cutoff.getCurrentYear()));
 		return Duration.between(now, cutoffYear).toSeconds();
 	}
 
@@ -332,7 +333,8 @@ public class Database {
 		return getCompetitorGuess(id, year, getGuessedSql, getConstructorsSql);
 	}
 
-	private List<String> getCompetitorGuess(UUID id, int year, final String getGuessedSql, final String getCompetitorsSql) {
+	private List<String> getCompetitorGuess(UUID id, int year, final String getGuessedSql,
+			final String getCompetitorsSql) {
 		List<String> competitors = jdbcTemplate.queryForList(getGuessedSql, String.class, id);
 		if (competitors.size() == 0) {
 			return jdbcTemplate.queryForList(getCompetitorsSql, String.class, year);
@@ -380,4 +382,24 @@ public class Database {
 		final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?)";
 		jdbcTemplate.update(addRowConstructor, id, competitor, year, position);
 	}
+
+	public List<String> getCategories() {
+		final String sql = """
+				SELECT name
+				FROM Category
+				""";
+		return jdbcTemplate.queryForList(sql, String.class);
+	}
+
+	public List<Map<String, Object>> getPointsDiffMap(int year, String category) {
+		final String sql = """
+			SELECT points, diff
+			FROM DiffPointsMap
+			WHERE year = ? AND category = ?
+			ORDER BY diff ASC
+			""";
+
+		return jdbcTemplate.queryForList(sql, year, category);
+	}
+
 }

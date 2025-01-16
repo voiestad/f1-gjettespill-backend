@@ -6,76 +6,55 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.Table;
 
 @Controller
 @RequestMapping("/score")
 public class ScoreController {
 
-	private final JdbcTemplate jdbcTemplate;
-	private int year = 2025;
+	@Autowired
+	private Database db;
 
 	@Autowired
 	private UserService userService;
 
-	public ScoreController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
-
 	@GetMapping
 	public String scoreMappingTables(Model model) {
-		List<Table> scoreMappingTables = getScoreMappingTables(year);
+		List<Table> scoreMappingTables = getScoreMappingTables(new Cutoff().getCurrentYear(), db);
 		model.addAttribute("tables", scoreMappingTables);
 		model.addAttribute("title", "Poengberegning");
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
 		return "tables";
 	}
 
-	public List<Table> getScoreMappingTables(int year) {
+	public static List<Table> getScoreMappingTables(int year, Database db) {
 		List<Table> scoreMappingTables = new ArrayList<>();
-		final String sql = """
-				SELECT name
-				FROM Category
-				""";
-		List<String> categories = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("name"));
+		List<String> categories = db.getCategories();
 		for (String category : categories) {
-			scoreMappingTables.add(getTable(category, year));
+			scoreMappingTables.add(getTable(category, year, db));
 		}
 
 		return scoreMappingTables;
 	}
 
-	private Table getTable(String category, int year) {
+	private static Table getTable(String category, int year, Database db) {
 		List<String> header = Arrays.asList("Differanse", "Poeng");
-		final String sql = """
-				SELECT points, diff
-				FROM DiffPointsMap
-				WHERE year = ? AND category = ?
-				ORDER BY diff ASC
-				""";
-
-		final String translationSql = """
-				SELECT translation
-				FROM CategoryTranslation
-				WHERE category = ?
-				""";
-
-		String translation = jdbcTemplate.queryForObject(translationSql, String.class, category);
 		List<List<String>> body = new ArrayList<>();
-
-		List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, year, category);
+		List<Map<String, Object>> rows = db.getPointsDiffMap(year, category);
 		for (Map<String, Object> row : rows) {
 			int diff = (int) row.get("diff");
 			int points = (int) row.get("points");
 			body.add(Arrays.asList(String.valueOf(diff), String.valueOf(points)));
 		}
+		String translation = db.translateCategory(category);
 		return new Table(translation, header, body);
 	}
 

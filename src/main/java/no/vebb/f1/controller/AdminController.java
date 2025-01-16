@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Table;
@@ -34,6 +35,9 @@ import no.vebb.f1.util.Table;
 public class AdminController {
 
 	private JdbcTemplate jdbcTemplate;
+
+	@Autowired
+	private Database db;
 
 	@Autowired
 	private UserService userService;
@@ -115,8 +119,7 @@ public class AdminController {
 		}
 		model.addAttribute("categories", categoryMap);
 
-		ScoreController scoreController = new ScoreController(jdbcTemplate);
-		List<Table> tables = scoreController.getScoreMappingTables(year);
+		List<Table> tables = ScoreController.getScoreMappingTables(year, db);
 		model.addAttribute("tables", tables);
 
 		model.addAttribute("title", year);
