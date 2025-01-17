@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -33,21 +32,16 @@ public class HomeController {
 
 	@Autowired
 	private Database db;
-	
-	private JdbcTemplate jdbcTemplate;
-
-	public HomeController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
 
 	@GetMapping("/")
 	public String home(Model model) {
+		int year = cutoff.getCurrentYear();
 		boolean loggedOut = !userService.isLoggedIn();
 		model.addAttribute("loggedOut", loggedOut);
 		Table leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
 		if (leaderBoard.getHeader().size() == 0) {
-			List<String> guessers = getSeasonGuessers();
+			List<String> guessers = db.getSeasonGuessers(year);
 			model.addAttribute("guessers", guessers);
 			model.addAttribute("guessersNames", new String[0]);
 			model.addAttribute("scores", new int[0]);
@@ -66,17 +60,9 @@ public class HomeController {
 	}
 
 	private boolean isRaceGuess() {
-		final String getRaceIdSql = """
-			SELECT ro.id AS id
-			FROM RaceOrder ro
-			JOIN StartingGrid sg ON ro.id = sg.race_number
-			WHERE ro.year = ?
-			ORDER BY ro.position DESC
-			LIMIT 1;
-		""";
 		int year = cutoff.getCurrentYear();
 		try {
-			int raceId = jdbcTemplate.queryForObject(getRaceIdSql, Integer.class, year);
+			int raceId = (int) db.getLatestRaceForPlaceGuess(year).get("id");
 			return !cutoff.isAbleToGuessRace(raceId);
 		} catch (EmptyResultDataAccessException e) {
 			return false;
@@ -92,8 +78,7 @@ public class HomeController {
 		if (cutoff.isAbleToGuessCurrentYear()) {
 			return new Table("Sesongen starter snart", new ArrayList<>(), new ArrayList<>());
 		}
-		final String getAllUsersSql = "SELECT id FROM User";
-		List<UUID> userIds = jdbcTemplate.query(getAllUsersSql, (rs, rowNum) -> UUID.fromString(rs.getString("id")));
+		List<UUID> userIds = db.getAllUsers();
 		int year = cutoff.getCurrentYear();
 		for (UUID id : userIds) {
 			UserScore userScore = new UserScore(id, year, db);
@@ -111,60 +96,23 @@ public class HomeController {
 		return new Table("Rangering", header, body);
 	}
 
-	private List<String> getSeasonGuessers() {
-		final String getGussers = """
-			SELECT DISTINCT u.username as username
-			FROM User u
-			JOIN FlagGuess fg ON fg.guesser = u.id
-			JOIN DriverGuess dg ON dg.guesser = u.id
-			JOIN ConstructorGuess cg ON cg.guesser = u.id
-			WHERE fg.year = ? AND dg.year = ? AND cg.year = ?
-			ORDER BY u.username ASC
-			""";
-		
-		int year = cutoff.getCurrentYear();
-		return jdbcTemplate.queryForList(getGussers, String.class, year, year, year);
-	}
-
-	private List<UUID> getSeasonGuesserIds() {
-		final String getGussers = """
-			SELECT DISTINCT u.id as id
-			FROM User u
-			JOIN FlagGuess fg ON fg.guesser = u.id
-			JOIN DriverGuess dg ON dg.guesser = u.id
-			JOIN ConstructorGuess cg ON cg.guesser = u.id
-			WHERE fg.year = ? AND dg.year = ? AND cg.year = ?
-			ORDER BY u.username ASC
-			""";
-		
-		int year = cutoff.getCurrentYear();
-		return jdbcTemplate.queryForList(getGussers, UUID.class, year, year, year);
-	}
-
 	private List<Integer> getSeasonRaceIds() {
-		final String getRaceIds = """
-			SELECT ro.id
-			FROM RaceOrder ro
-			JOIN Sprint s ON ro.id = s.race_number
-			WHERE ro.year = ?
-			ORDER BY ro.position ASC
-			""";
 		List<Integer> raceIds = new ArrayList<>();
 		raceIds.add(-1);
 		int year = cutoff.getCurrentYear();
-		List<Integer> queriedIds = jdbcTemplate.queryForList(getRaceIds, Integer.class, year);
+		List<Integer> queriedIds = db.getRaceIdsFinished(year);
 		queriedIds.forEach(id -> raceIds.add(id));
 
 		return raceIds;
 	}
 
 	private void setGraph(Model model) {
-		List<UUID> guessers = getSeasonGuesserIds(); 
-		List<String> guessersNames = getSeasonGuessers();
+		int year = cutoff.getCurrentYear();
+		List<UUID> guessers = db.getSeasonGuesserIds(year); 
+		List<String> guessersNames = db.getSeasonGuessers(year);
 		model.addAttribute("guessersNames", guessersNames);
 		List<Integer> raceIds = getSeasonRaceIds();
 		List<List<Integer>> scores = new ArrayList<>();
-		int year = cutoff.getCurrentYear();
 		for (UUID id : guessers) {
 			List<Integer> userScores = new ArrayList<>();
 			for (int raceId : raceIds) {

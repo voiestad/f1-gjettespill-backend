@@ -402,4 +402,48 @@ public class Database {
 		return jdbcTemplate.queryForList(sql, year, category);
 	}
 
+	public List<UUID> getAllUsers() {
+		final String getAllUsersSql = "SELECT id FROM User";
+		return jdbcTemplate.queryForList(getAllUsersSql, UUID.class);
+	}
+
+	public List<String> getSeasonGuessers(int year) {
+		final String getGussers = """
+			SELECT DISTINCT u.username as username
+			FROM User u
+			JOIN FlagGuess fg ON fg.guesser = u.id
+			JOIN DriverGuess dg ON dg.guesser = u.id
+			JOIN ConstructorGuess cg ON cg.guesser = u.id
+			WHERE fg.year = ? AND dg.year = ? AND cg.year = ?
+			ORDER BY u.username ASC
+			""";
+		
+		return jdbcTemplate.queryForList(getGussers, String.class, year, year, year);
+	}
+
+	public List<UUID> getSeasonGuesserIds(int year) {
+		final String getGussers = """
+			SELECT DISTINCT u.id as id
+			FROM User u
+			JOIN FlagGuess fg ON fg.guesser = u.id
+			JOIN DriverGuess dg ON dg.guesser = u.id
+			JOIN ConstructorGuess cg ON cg.guesser = u.id
+			WHERE fg.year = ? AND dg.year = ? AND cg.year = ?
+			ORDER BY u.username ASC
+			""";
+		
+		return jdbcTemplate.queryForList(getGussers, UUID.class, year, year, year);
+	}
+
+	public List<Integer> getRaceIdsFinished(int year) {
+		final String getRaceIds = """
+			SELECT ro.id
+			FROM RaceOrder ro
+			JOIN Sprint s ON ro.id = s.race_number
+			WHERE ro.year = ?
+			ORDER BY ro.position ASC
+			""";
+		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year);
+	}
+
 }
