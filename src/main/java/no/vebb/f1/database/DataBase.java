@@ -11,10 +11,10 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.Flags;
 import no.vebb.f1.user.User;
 import no.vebb.f1.util.NoAvailableRaceException;
+import no.vebb.f1.util.TimeUtil;
 
 @Service
 public class Database {
@@ -290,9 +290,8 @@ public class Database {
 	public long getTimeLeftToGuessYear() {
 		Instant now = Instant.now();
 		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
-		Cutoff cutoff = new Cutoff();
 		Instant cutoffYear = Instant
-				.parse(jdbcTemplate.queryForObject(getCutoff, String.class, cutoff.getCurrentYear()));
+				.parse(jdbcTemplate.queryForObject(getCutoff, String.class, TimeUtil.getCurrentYear()));
 		return Duration.between(now, cutoffYear).toSeconds();
 	}
 
@@ -444,6 +443,135 @@ public class Database {
 			ORDER BY ro.position ASC
 			""";
 		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year);
+	}
+
+	public int getMaxRaceId(int year) {
+		final String sql = """
+			SELECT DISTINCT ro.id
+			FROM Sprint s
+			JOIN RaceOrder ro ON ro.id = s.race_number
+			WHERE ro.year = ?
+			ORDER BY ro.position DESC
+			LIMIT 1
+			""";
+		return jdbcTemplate.queryForObject(sql, Integer.class, year);
+	}
+
+	public List<Map<String, Object>> getActiveRaces() {
+		final String sql = """
+			SELECT id, year, position
+			FROM RaceOrder
+			WHERE id NOT IN (SELECT race_number FROM RaceResult)
+			ORDER BY year ASC, position ASC
+			""";
+		return jdbcTemplate.queryForList(sql);
+	}
+
+	public int getLatestStartingGridRaceId(int year) {
+		final String getStartingGridId = """
+			SELECT DISTINCT ro.id
+			FROM StartingGrid sg
+			JOIN RaceOrder ro on ro.id = sg.race_number
+			AND ro.year = ?
+			ORDER BY ro.position DESC
+			LIMIT 1
+			""";
+		return jdbcTemplate.queryForObject(getStartingGridId, Integer.class, year);
+	}
+
+	public int getLatestRaceResultId(int year) {
+		final String getRaceResultId = """
+			SELECT ro.id
+			FROM RaceResult rr
+			JOIN RaceOrder ro on ro.id = rr.race_number
+			AND ro.year = ?
+			ORDER BY ro.position DESC
+			LIMIT 1
+			""";
+		return jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year);
+	}
+
+	public int getRaceIdForSprint(int year) {
+		final String getRaceResultId = """
+			SELECT ro.id
+			FROM RaceOrder ro
+			WHERE ro.year = ?
+			AND ro.id NOT IN (SELECT race_number FROM RaceResult)
+			ORDER BY ro.position ASC
+			LIMIT 1
+			""";
+		return jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year);
+	}
+
+	public boolean isStartingGridAdded(int raceNumber) {
+		final String existCheck = "SELECT COUNT(*) FROM StartingGrid WHERE race_number = ?";
+		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceNumber) > 0;
+	}
+
+	public boolean isRaceResultAdded(int raceNumber) {
+		final String existCheck = "SELECT COUNT(*) FROM RaceResult WHERE race_number = ?";
+		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceNumber) > 0;
+	}
+
+	public boolean isSprintAdded(int raceNumber) {
+		final String existCheck = "SELECT COUNT(*) FROM Sprint WHERE race_number = ?";
+		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceNumber) > 0;
+	}
+
+	public boolean isRaceAdded(int raceNumber) {
+		final String existCheck = "SELECT COUNT(*) FROM Race WHERE id = ?";
+		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceNumber) > 0;
+	}
+
+	public void addDriver(String driver) {
+		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
+		jdbcTemplate.update(insertDriver, driver);
+	}
+
+	public void addConstructor(String constructor) {
+		final String insertConstructor = "INSERT OR IGNORE INTO Constructor (name) VALUES (?)";
+		jdbcTemplate.update(insertConstructor, constructor);
+		
+	}
+
+	public void insertDriverStartingGrid(int raceNumber, int position, String driver) {
+		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
+		jdbcTemplate.update(insertStartingGrid, raceNumber, position, driver);
+	}
+
+	public void addSprint(int raceNumber) {
+		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
+		jdbcTemplate.update(insertSprint, raceNumber);
+	}
+
+	public void insertDriverRaceResult(int raceNumber, String position, String driver, int points, int finishingPosition) {
+		final String insertRaceResult = "INSERT OR REPLACE INTO RaceResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
+		jdbcTemplate.update(insertRaceResult, raceNumber, position, driver, points, finishingPosition);
+	}
+
+	public void insertDriverIntoStandings(int race, String driver, int position, int points) {
+		final String insertDriverStandings = "INSERT OR REPLACE INTO DriverStandings (race_number, driver, position, points) VALUES (?, ?, ?, ?)";
+		jdbcTemplate.update(insertDriverStandings, race, driver, position, points);
+	}
+	
+	public void insertConstructorIntoStandings(int race, String constructor, int position, int points) {
+		final String insertConstructorStandings = "INSERT OR REPLACE INTO ConstructorStandings (race_number, constructor, position, points) VALUES (?, ?, ?, ?)";
+		jdbcTemplate.update(insertConstructorStandings, race, constructor, position, points);
+	}
+
+	public void insertRace(int raceNumber, String raceName) {
+		final String insertRaceName = "INSERT OR IGNORE INTO Race (id, name) VALUES (?, ?)";
+		jdbcTemplate.update(insertRaceName, raceNumber, raceName);
+	}
+
+	public int maxRaceOrderPosition(int year) {
+		final String sql = "SELECT MAX(position) FROM RaceOrder WHERE year = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, year);
+	}
+
+	public void insertRaceOrder(int raceNumber, int year, int position) {
+		final String insertRaceOrder = "INSERT OR IGNORE INTO RaceOrder (id, year, position) VALUES (?, ?, ?)";
+		jdbcTemplate.update(insertRaceOrder, raceNumber, year, position);
 	}
 
 }

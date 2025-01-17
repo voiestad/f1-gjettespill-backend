@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.Table;
+import no.vebb.f1.util.TimeUtil;
 
 @Controller
 @RequestMapping("/score")
@@ -28,7 +28,7 @@ public class ScoreController {
 
 	@GetMapping
 	public String scoreMappingTables(Model model) {
-		List<Table> scoreMappingTables = getScoreMappingTables(new Cutoff().getCurrentYear(), db);
+		List<Table> scoreMappingTables = getScoreMappingTables(TimeUtil.getCurrentYear(), db);
 		model.addAttribute("tables", scoreMappingTables);
 		model.addAttribute("title", "Poengberegning");
 		model.addAttribute("loggedOut", !userService.isLoggedIn());

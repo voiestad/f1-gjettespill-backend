@@ -1,7 +1,6 @@
 package no.vebb.f1.util;
 
 import java.time.Instant;
-import java.time.Year;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,7 @@ public class Cutoff {
 
 
 	public boolean isAbleToGuessCurrentYear() {
-		return isAbleToGuessYear(getCurrentYear());	
+		return isAbleToGuessYear(TimeUtil.getCurrentYear());	
 	}
 
 	public boolean isAbleToGuessYear(int year) {
@@ -31,10 +30,6 @@ public class Cutoff {
 	public boolean isAbleToGuessRace(int raceNumber) throws NoAvailableRaceException {
 		Instant cutoff = db.getCutoffRace(raceNumber);
 		return isAbleToGuess(cutoff);
-	}
-
-	public int getCurrentYear() {
-		return Year.now().getValue();
 	}
 
 	private boolean isAbleToGuess(Instant cutoff) {

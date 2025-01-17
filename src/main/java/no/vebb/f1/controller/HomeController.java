@@ -18,6 +18,7 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.Table;
+import no.vebb.f1.util.TimeUtil;
 
 import org.springframework.ui.Model;
 
@@ -35,7 +36,7 @@ public class HomeController {
 
 	@GetMapping("/")
 	public String home(Model model) {
-		int year = cutoff.getCurrentYear();
+		int year = TimeUtil.getCurrentYear();
 		boolean loggedOut = !userService.isLoggedIn();
 		model.addAttribute("loggedOut", loggedOut);
 		Table leaderBoard = getLeaderBoard();
@@ -60,7 +61,7 @@ public class HomeController {
 	}
 
 	private boolean isRaceGuess() {
-		int year = cutoff.getCurrentYear();
+		int year = TimeUtil.getCurrentYear();
 		try {
 			int raceId = (int) db.getLatestRaceForPlaceGuess(year).get("id");
 			return !cutoff.isAbleToGuessRace(raceId);
@@ -79,7 +80,7 @@ public class HomeController {
 			return new Table("Sesongen starter snart", new ArrayList<>(), new ArrayList<>());
 		}
 		List<UUID> userIds = db.getAllUsers();
-		int year = cutoff.getCurrentYear();
+		int year = TimeUtil.getCurrentYear();
 		for (UUID id : userIds) {
 			UserScore userScore = new UserScore(id, year, db);
 			User user = userService.loadUser(id).get();
@@ -99,7 +100,7 @@ public class HomeController {
 	private List<Integer> getSeasonRaceIds() {
 		List<Integer> raceIds = new ArrayList<>();
 		raceIds.add(-1);
-		int year = cutoff.getCurrentYear();
+		int year = TimeUtil.getCurrentYear();
 		List<Integer> queriedIds = db.getRaceIdsFinished(year);
 		queriedIds.forEach(id -> raceIds.add(id));
 
@@ -107,7 +108,7 @@ public class HomeController {
 	}
 
 	private void setGraph(Model model) {
-		int year = cutoff.getCurrentYear();
+		int year = TimeUtil.getCurrentYear();
 		List<UUID> guessers = db.getSeasonGuesserIds(year); 
 		List<String> guessersNames = db.getSeasonGuessers(year);
 		model.addAttribute("guessersNames", guessersNames);

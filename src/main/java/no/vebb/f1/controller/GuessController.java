@@ -24,6 +24,7 @@ import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.NoAvailableRaceException;
+import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.Flags;
 
 
@@ -100,7 +101,7 @@ public class GuessController {
 			return "redirect:/guess"; 
 		}
 		UUID id = user.get().id;
-		int year = cutoff.getCurrentYear();
+		int year = TimeUtil.getCurrentYear();
 		List<String> competitors = db.getCompetitorsGuess(type, id, year);
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
@@ -116,7 +117,7 @@ public class GuessController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false"; 
 		}
-		int year = cutoff.getCurrentYear();
+		int year = TimeUtil.getCurrentYear();
 		Set<String> competitors = new HashSet<>(db.getCompetitorsYear(year, competitorType));
 		String error = validateGuessList(rankedCompetitors, competitors);
 		if (error != null) {
@@ -240,7 +241,7 @@ public class GuessController {
 		}
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
-		Flags flags = db.getFlagGuesses(user.get().id, cutoff.getCurrentYear());
+		Flags flags = db.getFlagGuesses(user.get().id, TimeUtil.getCurrentYear());
 		model.addAttribute("flags", flags);
 		return "guessFlags";
 	}
@@ -260,7 +261,7 @@ public class GuessController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false"; 
 		}
-		int year = cutoff.getCurrentYear();
+		int year = TimeUtil.getCurrentYear();
 		db.addFlagGuesses(user.get().id, year, flags);
 		logger.info("User '{}' guessed on flags on year '{}'", user.get().id, year);
 		return "redirect:/guess?success=true";

@@ -16,6 +16,7 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.Table;
+import no.vebb.f1.util.TimeUtil;
 
 @Controller
 @RequestMapping("/race-guess")
@@ -29,7 +30,7 @@ public class RaceGuess {
 
 	@GetMapping()
 	public String guessOverview(Model model) {
-		int year = cutoff.getCurrentYear();
+		int year = TimeUtil.getCurrentYear();
 		try {
 			Map<String, Object> res = db.getLatestRaceForPlaceGuess(year);
 			int raceId = (int) res.get("id");

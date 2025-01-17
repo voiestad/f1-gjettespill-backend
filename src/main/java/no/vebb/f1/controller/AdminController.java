@@ -398,7 +398,7 @@ public class AdminController {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
 
-		Importer importer = new Importer(jdbcTemplate);
+		Importer importer = new Importer(db);
 		importer.importRaceData(raceId);
 
 		return "redirect:/admin/season/" + year + "/manage/" + raceId;
@@ -443,7 +443,7 @@ public class AdminController {
 		if (currentPos == position) {
 			jdbcTemplate.update(insertRaceSql, raceId, year, position);
 		}
-		Importer importer = new Importer(jdbcTemplate);
+		Importer importer = new Importer(db);
 		importer.importData();
 		return "redirect:/admin/season/" + year + "/manage?success=true";
 	}
@@ -494,7 +494,7 @@ public class AdminController {
 		if (isRaceIdInUse) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
-		Importer importer = new Importer(jdbcTemplate);
+		Importer importer = new Importer(db);
 		importer.importRaceName(raceId, year);
 		importer.importData();
 		return "redirect:/admin/season/" + year + "/manage?success=true";
@@ -530,7 +530,7 @@ public class AdminController {
 			races.add(i);
 		}
 
-		Importer importer = new Importer(jdbcTemplate);
+		Importer importer = new Importer(db);
 		importer.importRaceNames(races, year);
 		importer.importData();
 
