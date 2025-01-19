@@ -574,4 +574,14 @@ public class Database {
 		jdbcTemplate.update(insertRaceOrder, raceNumber, year, position);
 	}
 
+	public boolean isValidSeason(int year) {
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		return jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+	}
+
+	public List<Integer> getAllValidYears() {
+		final String sql = "SELECT DISTINCT year FROM RaceOrder ORDER BY year DESC";
+		return jdbcTemplate.queryForList(sql, Integer.class);
+	}
+
 }
