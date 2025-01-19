@@ -1,4 +1,4 @@
-package no.vebb.f1.controller;
+package no.vebb.f1.controller.admin;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import no.vebb.f1.controller.ScoreController;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
 import no.vebb.f1.user.UserService;
