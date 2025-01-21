@@ -2,6 +2,8 @@ package no.vebb.f1.database;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.Flags;
 import no.vebb.f1.user.User;
 import no.vebb.f1.util.NoAvailableRaceException;
@@ -579,9 +582,50 @@ public class Database {
 		return jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
 	}
 
+	public boolean isValidRaceInSeason(int id, int year) {
+		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
+		return jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, id) > 0;
+	}
+
 	public List<Integer> getAllValidYears() {
 		final String sql = "SELECT DISTINCT year FROM RaceOrder ORDER BY year DESC";
 		return jdbcTemplate.queryForList(sql, Integer.class);
+	}
+
+	public List<CutoffRace> getCutoffRaces(int year) {
+		List<CutoffRace> races = new ArrayList<>();
+		final String getCutoffRaces = """
+						SELECT r.id as id, r.name as name, rc.cutoff as cutoff, ro.year as year, ro.position as position
+						FROM RaceCutoff rc
+						JOIN RaceOrder ro ON ro.id = rc.race_number
+						JOIN Race r ON ro.id = r.id
+						WHERE ro.year = ?
+						ORDER BY ro.position ASC
+				""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getCutoffRaces, year);
+		for (Map<String, Object> row : sqlRes) {
+			LocalDateTime cutoff = TimeUtil.instantToLocalTime(Instant.parse((String) row.get("cutoff")));
+			String name = (String) row.get("name");
+			int id = (int) row.get("id");
+			int position = (int) row.get("position");
+			CutoffRace race = new CutoffRace(position, name, id, cutoff);
+			races.add(race);
+		}
+		return races;
+	}
+
+	public LocalDateTime getCutoffYearLocalTime(int year) {
+		return TimeUtil.instantToLocalTime(getCutoffYear(year));
+	}
+
+	public void setCutoffRace(Instant cutoffTime, int raceId) {
+		final String setCutoffTime = "INSERT OR REPLACE INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
+		jdbcTemplate.update(setCutoffTime, raceId, cutoffTime.toString());
+	}
+
+	public void setCutoffYear(Instant cutoffTime, int year) {
+		final String setCutoffTime = "INSERT OR REPLACE INTO YearCutoff (year, cutoff) VALUES (?, ?)";
+		jdbcTemplate.update(setCutoffTime, year, cutoffTime.toString());
 	}
 
 }
