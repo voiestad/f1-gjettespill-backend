@@ -393,6 +393,11 @@ public class Database {
 		return jdbcTemplate.queryForList(sql, String.class);
 	}
 
+	public boolean isValidCategory(String category) {
+		final String validateCategory = "SELECT COUNT(*) FROM Category WHERE name = ?";
+		return jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
+	}
+
 	public List<Map<String, Object>> getPointsDiffMap(int year, String category) {
 		final String sql = """
 			SELECT points, diff
@@ -402,6 +407,35 @@ public class Database {
 			""";
 
 		return jdbcTemplate.queryForList(sql, year, category);
+	}
+
+	public int getMaxDiffInPointsMap(int year, String category) {
+		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
+		return jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year, category);
+	}
+
+	public void addDiffToPointsMap(String category, int diff, int year) {
+		final String addDiff = "INSERT INTO DiffPointsMap (category, diff, points, year) VALUES (?, ?, ?, ?)";
+		jdbcTemplate.update(addDiff, category, diff, 0, year);
+	}
+	
+	public void removeDiffToPointsMap(String category, int diff, int year) {
+		final String deleteRowWithDiff = "DELETE FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
+		jdbcTemplate.update(deleteRowWithDiff, year, category, diff);
+	}
+
+	public void setNewDiffInPointsMap(String category, int diff, int year, int points) {
+		final String setNewPoints = """
+			UPDATE DiffPointsMap
+			SET points = ?
+			WHERE diff = ? AND year = ? AND category = ?
+			""";
+		jdbcTemplate.update(setNewPoints, points, diff, year, category);
+	}
+
+	public boolean isValidDiffInPointsMap(String category, int diff, int year) {
+		final String validateDiff = "SELECT COUNT(*) FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
+		return jdbcTemplate.queryForObject(validateDiff, Integer.class, year, category, diff) > 0;
 	}
 
 	public List<UUID> getAllUsers() {

@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,26 +28,18 @@ public class ManagePointsSystemController {
 	
 	@Autowired
 	private Database db;
-	
-	private JdbcTemplate jdbcTemplate;
-
-	public ManagePointsSystemController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
 
 	@GetMapping
 	public String managePointsSystem(@PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
 
-		final String getCategories = "SELECT name FROM Category";
-		List<String> categories = jdbcTemplate.queryForList(getCategories, String.class);
+		List<String> categories = db.getCategories();
 		Map<String, String> categoryMap = new LinkedHashMap<>();
 		for (String category : categories) {
 			String translation = db.translateCategory(category);
@@ -70,28 +61,23 @@ public class ManagePointsSystemController {
 			return "redirect:/";
 		}
 
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
 
-		final String validateCategory = "SELECT COUNT(*) FROM Category WHERE name = ?";
-		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
+		boolean isValidCategory = db.isValidCategory(category);
 		if (!isValidCategory) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
-		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
 		int newDiff;
 		try {
-			newDiff = jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year, category) + 1;
+			newDiff = db.getMaxDiffInPointsMap(year, category) + 1;
 		} catch (EmptyResultDataAccessException e) {
 			newDiff = 0;
 		}
-
-		final String addDiff = "INSERT INTO DiffPointsMap (category, diff, points, year) VALUES (?, ?, ?, ?)";
-		jdbcTemplate.update(addDiff, category, newDiff, 0, year);
+		db.addDiffToPointsMap(category, newDiff, year);
 		return "redirect:/admin/season/" + year + "/points";
 	}
 
@@ -101,28 +87,24 @@ public class ManagePointsSystemController {
 			return "redirect:/";
 		}
 
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
 
-		final String validateCategory = "SELECT COUNT(*) FROM Category WHERE name = ?";
-		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
+		boolean isValidCategory = db.isValidCategory(category);
 		if (!isValidCategory) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
-		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
 		int maxDiff;
 		try {
-			maxDiff = jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year, category);
+			maxDiff = db.getMaxDiffInPointsMap(year, category);
 		} catch (EmptyResultDataAccessException e) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
-		final String deleteRowWithDiff = "DELETE FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
-		jdbcTemplate.update(deleteRowWithDiff, year, category, maxDiff);
+		db.removeDiffToPointsMap(category, maxDiff, year);
 		return "redirect:/admin/season/" + year + "/points";
 	}
 
@@ -133,20 +115,17 @@ public class ManagePointsSystemController {
 			return "redirect:/";
 		}
 
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
 
-		final String validateCategory = "SELECT COUNT(*) FROM Category WHERE name = ?";
-		boolean isValidCategory = jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
+		boolean isValidCategory = db.isValidCategory(category);
 		if (!isValidCategory) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
-		final String validateDiff = "SELECT COUNT(*) FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
-		boolean isValidDiff = jdbcTemplate.queryForObject(validateDiff, Integer.class, year, category, diff) > 0;
+		boolean isValidDiff = db.isValidDiffInPointsMap(category, diff, year);
 		if (!isValidDiff) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
@@ -156,12 +135,7 @@ public class ManagePointsSystemController {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
-		final String setNewPoints = """
-				UPDATE DiffPointsMap
-				SET points = ?
-				WHERE diff = ? AND year = ? AND category = ?
-				""";
-		jdbcTemplate.update(setNewPoints, points, diff, year, category);
+		db.setNewDiffInPointsMap(category, diff, year, points);
 		return "redirect:/admin/season/" + year + "/points";
 	}
 }
