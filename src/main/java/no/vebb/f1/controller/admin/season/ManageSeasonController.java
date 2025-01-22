@@ -43,8 +43,7 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
@@ -55,20 +54,7 @@ public class ManageSeasonController {
 				model.addAttribute("successMessage", "Endringen feilet");
 			}
 		}
-		List<CutoffRace> races = new ArrayList<>();
-		final String getRaces = """
-				SELECT r.id AS id, r.name AS name, ro.position AS position
-				FROM Race r
-				JOIN RaceOrder ro ON r.id = ro.id
-				WHERE ro.year = ?
-				""";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRaces, year);
-		for (Map<String, Object> row : sqlRes) {
-			int position = (int) row.get("position");
-			String name = (String) row.get("name");
-			int id = (int) row.get("id");
-			races.add(new CutoffRace(position, name, id));
-		}
+		List<CutoffRace> races = db.getCutoffRaces(year);
 		model.addAttribute("races", races);
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
@@ -80,13 +66,11 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
-		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
@@ -186,13 +170,11 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
-		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
@@ -209,18 +191,15 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
-		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
-		final String maxPosSql = "SELECT MAX(position) FROM RaceOrder WHERE year = ?";
-		int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year);
+		int maxPos = db.getMaxRaceOrderPosition(year);
 		boolean isPosOutOfBounds = position < 1 || position > maxPos;
 		if (isPosOutOfBounds) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
@@ -252,13 +231,11 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
-		boolean isValidRaceId = jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
@@ -283,13 +260,11 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isValidYear = jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
+		boolean isValidYear = db.isValidSeason(year);
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE id = ?";
-		boolean isRaceIdInUse = jdbcTemplate.queryForObject(validateRaceId, Integer.class, raceId) > 0;
+		boolean isRaceIdInUse = db.isValidRaceInSeason(raceId, year);
 		if (isRaceIdInUse) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}

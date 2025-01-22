@@ -602,7 +602,7 @@ public class Database {
 		jdbcTemplate.update(insertRaceName, raceNumber, raceName);
 	}
 
-	public int maxRaceOrderPosition(int year) {
+	public int getMaxRaceOrderPosition(int year) {
 		final String sql = "SELECT MAX(position) FROM RaceOrder WHERE year = ?";
 		return jdbcTemplate.queryForObject(sql, Integer.class, year);
 	}

@@ -199,7 +199,7 @@ public class Importer {
 	}
 
 	public void importRaceName(int raceId, int year) {
-		int position = db.maxRaceOrderPosition(year) + 1;
+		int position = db.getMaxRaceOrderPosition(year) + 1;
 		addRace(raceId, year, position);
 	}
 
