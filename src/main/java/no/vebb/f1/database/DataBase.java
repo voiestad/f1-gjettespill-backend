@@ -17,6 +17,7 @@ import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.Flags;
 import no.vebb.f1.user.User;
 import no.vebb.f1.util.NoAvailableRaceException;
+import no.vebb.f1.util.RegisteredFlag;
 import no.vebb.f1.util.TimeUtil;
 
 @Service
@@ -665,6 +666,40 @@ public class Database {
 	public void setCutoffYear(Instant cutoffTime, int year) {
 		final String setCutoffTime = "INSERT OR REPLACE INTO YearCutoff (year, cutoff) VALUES (?, ?)";
 		jdbcTemplate.update(setCutoffTime, year, cutoffTime.toString());
+	}
+
+	public List<RegisteredFlag> getRegisteredFlags(int raceId) {
+		List<RegisteredFlag> registeredFlags = new ArrayList<>();
+		final String getRegisteredFlags = "SELECT flag, round, id FROM FlagStats WHERE race_number = ?";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRegisteredFlags, raceId);
+		for (Map<String, Object> row : sqlRes) {
+			String type = (String) row.get("flag");
+			int round = (int) row.get("round");
+			int id = (int) row.get("id");
+
+			registeredFlags.add(new RegisteredFlag(type, round, id));
+		}
+		return registeredFlags;
+	}
+
+	public void insertFlagStats(String flag, int round, int raceId) {
+		final String sql = "INSERT INTO FlagStats (flag, race_number, round) VALUES (?, ?, ?)";
+		jdbcTemplate.update(sql, flag, raceId, round);
+	}
+
+	public void deleteFlagStatsById(int id) {
+		final String sql = "DELETE FROM FlagStats WHERE id = ?";
+		jdbcTemplate.update(sql, id);
+	}
+
+	public String getRaceName(int raceId) {
+		final String getRaceNameSql = "SELECT name FROM Race WHERE id = ?";
+		return jdbcTemplate.queryForObject(getRaceNameSql, String.class, raceId);
+	}
+
+	public List<String> getFlags() {
+		final String sql = "SELECT name FROM Flag";
+		return jdbcTemplate.queryForList(sql, String.class);
 	}
 
 }
