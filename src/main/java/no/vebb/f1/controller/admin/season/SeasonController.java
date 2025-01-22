@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,12 +29,6 @@ public class SeasonController {
 
 	@Autowired
 	private UserService userService;
-
-	private JdbcTemplate jdbcTemplate;
-
-	public SeasonController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
 
 	@GetMapping
 	public String seasonAdminOverview(Model model) {
@@ -89,8 +82,7 @@ public class SeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String getRaceNameSql = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
-		boolean isAlreadyAdded = jdbcTemplate.queryForObject(getRaceNameSql, Integer.class, year) > 0;
+		boolean isAlreadyAdded = db.isValidSeason(year);
 		if (isAlreadyAdded) {
 			model.addAttribute("error", String.format("Sesongen %d er allerede lagt til", year));
 			return "addSeason";
@@ -128,19 +120,15 @@ public class SeasonController {
 	}
 
 	private void setDefaultCutoffRaces(int year) {
-		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ?";
-		final String insertCutoffRace = "INSERT INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
 		Instant time = getDefaultInstant(year);
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRaceIds, year);
-		for (Map<String, Object> row : sqlRes) {
-			int id = (int) row.get("id");
-			jdbcTemplate.update(insertCutoffRace, id, time);
+		List<Integer> races = db.getRacesFromSeason(year);
+		for (int id : races) {
+			db.setCutoffRace(time, id);
 		}
 	}
 
 	private void setDefaultCutoffYear(int year) {
-		final String insertCutoffYear = "INSERT INTO YearCutoff (year, cutoff) VALUES (?, ?)";
 		Instant time = getDefaultInstant(year);
-		jdbcTemplate.update(insertCutoffYear, year, time.toString());
+		db.setCutoffYear(time, year);
 	}
 }

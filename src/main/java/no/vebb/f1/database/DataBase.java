@@ -626,6 +626,11 @@ public class Database {
 		return jdbcTemplate.queryForList(sql, Integer.class);
 	}
 
+	public List<Integer> getRacesFromSeason(int year) {
+		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ?";
+		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year);
+	}
+
 	public List<CutoffRace> getCutoffRaces(int year) {
 		List<CutoffRace> races = new ArrayList<>();
 		final String getCutoffRaces = """
