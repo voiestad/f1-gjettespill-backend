@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -356,13 +355,13 @@ public class Database {
 		throw new IllegalArgumentException();
 	}
 
-	private List<String> getDriversYear(int year) {
-		final String getDriversSql = "SELECT driver FROM DriverYear WHERE year = ?";
+	public List<String> getDriversYear(int year) {
+		final String getDriversSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
 		return jdbcTemplate.queryForList(getDriversSql, String.class, year);
 	}
 
-	private List<String> getConstructorsYear(int year) {
-		final String getConstructorSql = "SELECT constructor FROM ConstructorYear WHERE year = ?";
+	public List<String> getConstructorsYear(int year) {
+		final String getConstructorSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
 		return jdbcTemplate.queryForList(getConstructorSql, String.class, year);
 	}
 
@@ -568,10 +567,61 @@ public class Database {
 		jdbcTemplate.update(insertDriver, driver);
 	}
 
+	public void addDriverYear(String driver, int year) {
+		addDriver(driver);
+		int position = getMaxPosDriverYear(year) + 1;
+		addDriverYear(driver, year, position);
+	}
+
+	public int getMaxPosDriverYear(int year) {
+		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM DriverYear WHERE year = ?";
+		return jdbcTemplate.queryForObject(getMaxPos, Integer.class, year);
+	}
+
+	public void addDriverYear(String driver, int year, int position) {
+		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?)";
+		jdbcTemplate.update(addDriverYear, driver, year, position);
+	}
+
+	public void deleteDriverYear(String driver, int year) {
+		final String deleteDriver = "DELETE FROM DriverYear WHERE year = ? AND driver = ?";
+		jdbcTemplate.update(deleteDriver, year, driver);
+	}
+
+	public void deleteAllDriverYear(int year) {
+		final String deleteAllDrivers = "DELETE FROM DriverYear WHERE year = ?";
+		jdbcTemplate.update(deleteAllDrivers, year);
+	}
+	
 	public void addConstructor(String constructor) {
 		final String insertConstructor = "INSERT OR IGNORE INTO Constructor (name) VALUES (?)";
 		jdbcTemplate.update(insertConstructor, constructor);
-		
+	}
+	
+	public void addConstructorYear(String constructor, int year) {
+		addConstructor(constructor);
+		int position = getMaxPosConstructorYear(year) + 1;
+		addConstructorYear(constructor, year, position);
+	}
+
+	public int getMaxPosConstructorYear(int year) {
+		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM ConstructorYear WHERE year = ?";
+		return jdbcTemplate.queryForObject(getMaxPos, Integer.class, year);
+	}
+
+	public void addConstructorYear(String constructor, int year, int position) {
+		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?)";
+		jdbcTemplate.update(addConstructorYear, constructor, year, position);
+	}
+
+	public void deleteConstructorYear(String constructor, int year) {
+		final String deleteConstructor = "DELETE FROM ConstructorYear WHERE year = ? AND constructor = ?";
+		jdbcTemplate.update(deleteConstructor, year, constructor);
+	}
+
+	public void deleteAllConstructorYear(int year) {
+		final String deleteAllConstructors = "DELETE FROM ConstructorYear WHERE year = ?";
+		jdbcTemplate.update(deleteAllConstructors, year);
 	}
 
 	public void insertDriverStartingGrid(int raceNumber, int position, String driver) {
@@ -783,5 +833,15 @@ public class Database {
 			standings.add(new PositionedCompetitor(position, constructor, points));
 		}
 		return standings;
+	}
+
+	public boolean isValidDriverYear(String driver, int year) {
+		final String existCheck = "SELECT COUNT(*) FROM DriverYear WHERE year = ? AND driver = ?";
+		return jdbcTemplate.queryForObject(existCheck, Integer.class, year, driver) > 0;
+	}
+	
+	public boolean isValidConstructorYear(String constructor, int year) {
+		final String existCheck = "SELECT COUNT(*) FROM ConstructorYear WHERE year = ? AND constructor = ?";
+		return jdbcTemplate.queryForObject(existCheck, Integer.class, year, constructor) > 0;
 	}
 }

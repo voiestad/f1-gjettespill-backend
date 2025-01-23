@@ -1,11 +1,8 @@
 package no.vebb.f1.controller.admin.season;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 
 @Controller
@@ -23,31 +21,20 @@ public class SeasonCompetitorsController {
 	@Autowired
 	private UserService userService;
 
-	private JdbcTemplate jdbcTemplate;
-
-	public SeasonCompetitorsController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
+	@Autowired
+	private Database db;
 	
 	@GetMapping
 	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String getDrivers = "SELECT * FROM DriverYear WHERE year = ? ORDER BY position ASC";
-		final String getConstructors = "SELECT * FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
-
-		List<String> drivers = new ArrayList<>();
-		List<Map<String, Object>> sqlResDrivers = jdbcTemplate.queryForList(getDrivers, year);
-		for (Map<String, Object> row : sqlResDrivers) {
-			drivers.add((String) row.get("driver"));
+		boolean isValidYear = db.isValidSeason(year);
+		if (!isValidYear) {
+			return "redirect:/admin/season";
 		}
-
-		List<String> constructors = new ArrayList<>();
-		List<Map<String, Object>> sqlResConstructors = jdbcTemplate.queryForList(getConstructors, year);
-		for (Map<String, Object> row : sqlResConstructors) {
-			constructors.add((String) row.get("constructor"));
-		}
+		List<String> drivers = db.getDriversYear(year);
+		List<String> constructors = db.getConstructorsYear(year);
 
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
@@ -61,12 +48,12 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String insertDriverYear = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
-		jdbcTemplate.update(insertDriverYear, driver);
-		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM DriverYear WHERE year = ?";
-		int position = jdbcTemplate.queryForObject(getMaxPos, Integer.class, year) + 1;
-		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?)";
-		jdbcTemplate.update(addDriverYear, driver, year, position);
+		boolean isValidYear = db.isValidSeason(year);
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		db.addDriverYear(driver, year);
+		
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
 
@@ -76,12 +63,11 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String insertConstructor = "INSERT OR IGNORE INTO Constructor (name) VALUES (?)";
-		jdbcTemplate.update(insertConstructor, constructor);
-		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM ConstructorYear WHERE year = ?";
-		int position = jdbcTemplate.queryForObject(getMaxPos, Integer.class, year) + 1;
-		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?)";
-		jdbcTemplate.update(addConstructorYear, constructor, year, position);
+		boolean isValidYear = db.isValidSeason(year);
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		db.addConstructorYear(constructor, year);
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
 
@@ -90,25 +76,22 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String existCheck = "SELECT COUNT(*) FROM DriverYear WHERE year = ? AND driver = ?";
-		boolean driverExists = jdbcTemplate.queryForObject(existCheck, Integer.class, year, driver) > 0;
+		boolean isValidYear = db.isValidSeason(year);
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		boolean driverExists = db.isValidDriverYear(driver, year);
 		if (!driverExists) {
 			return "redirect:/admin/season/" + year + "/competitors";
 		}
-		final String deleteDriver = "DELETE FROM DriverYear WHERE year = ? AND driver = ?";
-		jdbcTemplate.update(deleteDriver, year, driver);
 
-		final String getAllDrivers = "SELECT * FROM DriverYear WHERE year = ? ORDER BY position ASC";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllDrivers, year);
-
-		final String deleteAllDrivers = "DELETE FROM DriverYear WHERE year = ?";
-		jdbcTemplate.update(deleteAllDrivers, year);
+		db.deleteDriverYear(driver, year);
+		List<String> drivers = db.getDriversYear(year);
+		db.deleteAllDriverYear(year);
 
 		int position = 1;
-		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?)";
-		for (Map<String, Object> row : sqlRes) {
-			String currentDriver = (String) row.get("driver");
-			jdbcTemplate.update(addDriverYear, currentDriver, year, position);
+		for (String currentDriver : drivers) {
+			db.addDriverYear(currentDriver, year, position);
 			position++;
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
@@ -120,25 +103,22 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String existCheck = "SELECT COUNT(*) FROM ConstructorYear WHERE year = ? AND constructor = ?";
-		boolean constructorExists = jdbcTemplate.queryForObject(existCheck, Integer.class, year, constructor) > 0;
+		boolean isValidYear = db.isValidSeason(year);
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		boolean constructorExists = db.isValidConstructorYear(constructor, year);
 		if (!constructorExists) {
 			return "redirect:/admin/season/" + year + "/competitors";
 		}
-		final String deleteConstructor = "DELETE FROM ConstructorYear WHERE year = ? AND constructor = ?";
-		jdbcTemplate.update(deleteConstructor, year, constructor);
 
-		final String getAllConstructors = "SELECT * FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllConstructors, year);
-
-		final String deleteAllConstructors = "DELETE FROM ConstructorYear WHERE year = ?";
-		jdbcTemplate.update(deleteAllConstructors, year);
+		db.deleteConstructorYear(constructor, year);
+		List<String> constructors = db.getConstructorsYear(year);
+		db.deleteAllConstructorYear(year);
 
 		int position = 1;
-		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?)";
-		for (Map<String, Object> row : sqlRes) {
-			String currentConstructor = (String) row.get("constructor");
-			jdbcTemplate.update(addConstructorYear, currentConstructor, year, position);
+		for (String currentConstructor : constructors) {
+			db.addConstructorYear(currentConstructor, year, position);
 			position++;
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
@@ -150,39 +130,35 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String existCheck = "SELECT COUNT(*) FROM DriverYear WHERE year = ? AND driver = ?";
-		boolean driverExists = jdbcTemplate.queryForObject(existCheck, Integer.class, year, driver) > 0;
+		boolean isValidYear = db.isValidSeason(year);
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		boolean driverExists = db.isValidDriverYear(driver, year);
 		if (!driverExists) {
 			return "redirect:/admin/season/" + year + "/competitors";
 		}
-		final String maxPosSql = "SELECT MAX(position) FROM DriverYear WHERE year = ?";
-		int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year);
+		int maxPos = db.getMaxPosDriverYear(year);
 		boolean isPosOutOfBounds = position < 1 || position > maxPos;
 		if (isPosOutOfBounds) {
 			return "redirect:/admin/season/" + year + "/competitors";
 		}
-		final String deleteDriver = "DELETE FROM DriverYear WHERE year = ? AND driver = ?";
-		jdbcTemplate.update(deleteDriver, year, driver);
 
-		final String getAllDrivers = "SELECT * FROM DriverYear WHERE year = ? ORDER BY position ASC";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllDrivers, year);
-
-		final String deleteAllDrivers = "DELETE FROM DriverYear WHERE year = ?";
-		jdbcTemplate.update(deleteAllDrivers, year);
+		db.deleteDriverYear(driver, year);
+		List<String> drivers = db.getDriversYear(year);
+		db.deleteAllDriverYear(year);
 
 		int currentPos = 1;
-		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?)";
-		for (Map<String, Object> row : sqlRes) {
+		for (String currentDriver : drivers) {
 			if (currentPos == position) {
-				jdbcTemplate.update(addDriverYear, driver, year, currentPos);
+				db.addDriverYear(driver, year, position);
 				currentPos++;
 			}
-			String currentDriver = (String) row.get("driver");
-			jdbcTemplate.update(addDriverYear, currentDriver, year, currentPos);
+			db.addDriverYear(currentDriver, year, position);
 			currentPos++;
 		}
 		if (currentPos == position) {
-			jdbcTemplate.update(addDriverYear, driver, year, currentPos);
+			db.addDriverYear(driver, year, position);
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
@@ -193,39 +169,35 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		final String existCheck = "SELECT COUNT(*) FROM ConstructorYear WHERE year = ? AND constructor = ?";
-		boolean constructorExists = jdbcTemplate.queryForObject(existCheck, Integer.class, year, constructor) > 0;
+		boolean isValidYear = db.isValidSeason(year);
+		if (!isValidYear) {
+			return "redirect:/admin/season";
+		}
+		boolean constructorExists = db.isValidConstructorYear(constructor, year);
 		if (!constructorExists) {
 			return "redirect:/admin/season/" + year + "/competitors";
 		}
-		final String maxPosSql = "SELECT MAX(position) FROM ConstructorYear WHERE year = ?";
-		int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year);
+		int maxPos = db.getMaxPosConstructorYear(year);
 		boolean isPosOutOfBounds = position < 1 || position > maxPos;
 		if (isPosOutOfBounds) {
 			return "redirect:/admin/season/" + year + "/competitors";
 		}
-		final String deleteConstructor = "DELETE FROM ConstructorYear WHERE year = ? AND constructor = ?";
-		jdbcTemplate.update(deleteConstructor, year, constructor);
 
-		final String getAllConstructors = "SELECT * FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getAllConstructors, year);
-
-		final String deleteAllConstructors = "DELETE FROM ConstructorYear WHERE year = ?";
-		jdbcTemplate.update(deleteAllConstructors, year);
+		db.deleteConstructorYear(constructor, year);
+		List<String> constructors = db.getConstructorsYear(year);
+		db.deleteAllConstructorYear(year);
 
 		int currentPos = 1;
-		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?)";
-		for (Map<String, Object> row : sqlRes) {
+		for (String currentConstructor : constructors) {
 			if (currentPos == position) {
-				jdbcTemplate.update(addConstructorYear, constructor, year, currentPos);
+				db.addConstructorYear(constructor, year, position);
 				currentPos++;
 			}
-			String currentConstructor = (String) row.get("constructor");
-			jdbcTemplate.update(addConstructorYear, currentConstructor, year, currentPos);
+			db.addConstructorYear(currentConstructor, year, position);
 			currentPos++;
 		}
 		if (currentPos == position) {
-			jdbcTemplate.update(addConstructorYear, constructor, year, currentPos);
+			db.addConstructorYear(constructor, year, position);
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
