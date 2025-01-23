@@ -3,10 +3,8 @@ package no.vebb.f1.controller.admin.season;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +17,7 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.CutoffRace;
+import no.vebb.f1.util.PositionedCompetitor;
 import no.vebb.f1.util.Table;
 
 @Controller
@@ -30,12 +29,6 @@ public class ManageSeasonController {
 
 	@Autowired
 	private Database db;
-
-	private JdbcTemplate jdbcTemplate;
-
-	public ManageSeasonController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
 
 	@GetMapping
 	public String manageRacesInSeason(@RequestParam(value = "success", required = false) Boolean success,
@@ -87,79 +80,44 @@ public class ManageSeasonController {
 	}
 
 	private Table getStartingGridTable(int raceId) {
-		final String getStartingGrid = """
-				SELECT position, driver
-				FROM StartingGrid
-				WHERE race_number = ?
-				ORDER BY position ASC
-				""";
+
 		List<String> header = Arrays.asList("Plass", "Sjåfør");
 		List<List<String>> body = new ArrayList<>();
-		List<Map<String, Object>> startingGrid = jdbcTemplate.queryForList(getStartingGrid, raceId);
-		for (Map<String, Object> row : startingGrid) {
-			String position = String.valueOf((int) row.get("position"));
-			String driver = (String) row.get("driver");
-			body.add(Arrays.asList(position, driver));
+		List<PositionedCompetitor> startingGrid = db.getStartingGrid(raceId);
+		for (PositionedCompetitor driver : startingGrid) {
+			body.add(Arrays.asList(driver.position, driver.name));
 		}
 
 		return new Table("Starting grid", header, body);
 	}
 
 	private Table getRaceResultTable(int raceId) {
-		final String getRaceResult = """
-			SELECT position, driver, points
-			FROM RaceResult
-			WHERE race_number = ?
-			ORDER BY finishing_position ASC
-			""";
 		List<String> header = Arrays.asList("Plass", "Sjåfør", "Poeng");
 		List<List<String>> body = new ArrayList<>();
-		List<Map<String, Object>> raceResult = jdbcTemplate.queryForList(getRaceResult, raceId);
-		for (Map<String, Object> row : raceResult) {
-			String position = (String) row.get("position");
-			String driver = (String) row.get("driver");
-			String points = (String) row.get("points");;
-			body.add(Arrays.asList(position, driver, points));
+		List<PositionedCompetitor> raceResult = db.getRaceResult(raceId);
+		for (PositionedCompetitor driver : raceResult) {
+			body.add(Arrays.asList(driver.position, driver.name, driver.points));
 		}
-
 		return new Table("Race result", header, body);
 	}
 
 	private Table getDriverStandingsTable(int raceId) {
-		final String getDriverStandings = """
-			SELECT position, driver, points
-			FROM DriverStandings
-			WHERE race_number = ?
-			ORDER BY position ASC
-			""";
 		List<String> header = Arrays.asList("Plass", "Sjåfør", "Poeng");
 		List<List<String>> body = new ArrayList<>();
-		List<Map<String, Object>> standings = jdbcTemplate.queryForList(getDriverStandings, raceId);
-		for (Map<String, Object> row : standings) {
-			String position = String.valueOf((int) row.get("position"));
-			String driver = (String) row.get("driver");
-			String points = (String) row.get("points");;
-			body.add(Arrays.asList(position, driver, points));
+		List<PositionedCompetitor> standings = db.getDriverStandings(raceId);
+		for (PositionedCompetitor driver : standings) {
+			body.add(Arrays.asList(driver.position, driver.name, driver.points));
 		}
 
 		return new Table("Driver standings", header, body);
 	}
 
 	private Table getConstructorStandingsTable(int raceId) {
-		final String getConstructorStandings = """
-			SELECT position, constructor, points
-			FROM ConstructorStandings
-			WHERE race_number = ?
-			ORDER BY position ASC
-			""";
-		List<String> header = Arrays.asList("Plass", "Sjåfør", "Poeng");
+		List<String> header = Arrays.asList("Plass", "Konstruktør", "Poeng");
 		List<List<String>> body = new ArrayList<>();
-		List<Map<String, Object>> standings = jdbcTemplate.queryForList(getConstructorStandings, raceId);
-		for (Map<String, Object> row : standings) {
-			String position = String.valueOf((int) row.get("position"));
-			String constructor = (String) row.get("constructor");
-			String points = (String) row.get("points");;
-			body.add(Arrays.asList(position, constructor, points));
+		List<PositionedCompetitor> standings = db.getConstructorStandings(raceId);
+		for (PositionedCompetitor constructor : standings) {
+			body.add(Arrays.asList(constructor.position, constructor.name, constructor.points));
 		}
 
 		return new Table("Constructor standings", header, body);
@@ -204,22 +162,22 @@ public class ManageSeasonController {
 		if (isPosOutOfBounds) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
-		final String getRacesSql = "SELECT * FROM RaceOrder WHERE year = ? AND id != ? ORDER BY position ASC";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRacesSql, year, raceId);
-		final String removeOldOrderSql = "DELETE FROM RaceOrder WHERE year = ?";
-		jdbcTemplate.update(removeOldOrderSql, year);
+		List<Integer> races = db.getRacesFromSeason(year);
+		db.removeRaceOrderFromSeason(year);
 		int currentPos = 1;
-		final String insertRaceSql = "INSERT INTO RaceOrder (id, year, position) VALUES (?, ?, ?)";
-		for (Map<String, Object> row : sqlRes) {
+		for (int id : races) {
+			if (id == raceId) {
+				continue;
+			}
 			if (currentPos == position) {
-				jdbcTemplate.update(insertRaceSql, raceId, year, position);
+				db.insertRaceOrder(raceId, year, currentPos);
 				currentPos++;
 			}
-			jdbcTemplate.update(insertRaceSql, (int) row.get("id"), year, currentPos);
+			db.insertRaceOrder(id, year, currentPos);
 			currentPos++;
 		}
 		if (currentPos == position) {
-			jdbcTemplate.update(insertRaceSql, raceId, year, position);
+			db.insertRaceOrder(raceId, year, currentPos);
 		}
 		Importer importer = new Importer(db);
 		importer.importData();
@@ -239,17 +197,13 @@ public class ManageSeasonController {
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
-		final String deleteRace = "DELETE FROM Race WHERE id = ?";
-		jdbcTemplate.update(deleteRace, raceId);
+		db.deleteRace(raceId);
 
-		final String getRacesSql = "SELECT * FROM RaceOrder WHERE year = ? ORDER BY position ASC";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRacesSql, year);
-		final String removeOldOrderSql = "DELETE FROM RaceOrder WHERE year = ?";
-		jdbcTemplate.update(removeOldOrderSql, year);
+		List<Integer> races = db.getRacesFromSeason(year);
+		db.removeRaceOrderFromSeason(year);
 		int currentPos = 1;
-		final String insertRaceSql = "INSERT INTO RaceOrder (id, year, position) VALUES (?, ?, ?)";
-		for (Map<String, Object> row : sqlRes) {
-			jdbcTemplate.update(insertRaceSql, (int) row.get("id"), year, currentPos);
+		for (int id : races) {
+			db.insertRaceOrder(id, year, currentPos);
 			currentPos++;
 		}
 		return "redirect:/admin/season/" + year + "/manage?success=true";

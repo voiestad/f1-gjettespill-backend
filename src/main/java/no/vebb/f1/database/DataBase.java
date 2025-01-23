@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.Flags;
 import no.vebb.f1.user.User;
 import no.vebb.f1.util.NoAvailableRaceException;
+import no.vebb.f1.util.PositionedCompetitor;
 import no.vebb.f1.util.RegisteredFlag;
 import no.vebb.f1.util.TimeUtil;
 
@@ -612,6 +614,11 @@ public class Database {
 		jdbcTemplate.update(insertRaceOrder, raceNumber, year, position);
 	}
 
+	public void deleteRace(int raceId) {
+		final String deleteRace = "DELETE FROM Race WHERE id = ?";
+		jdbcTemplate.update(deleteRace, raceId);
+	}
+
 	public boolean isValidSeason(int year) {
 		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
 		return jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
@@ -628,8 +635,13 @@ public class Database {
 	}
 
 	public List<Integer> getRacesFromSeason(int year) {
-		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ?";
+		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ? ORDER BY position ASC";
 		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year);
+	}
+
+	public void removeRaceOrderFromSeason(int year) {
+		final String removeOldOrderSql = "DELETE FROM RaceOrder WHERE year = ?";
+		jdbcTemplate.update(removeOldOrderSql, year);
 	}
 
 	public List<CutoffRace> getCutoffRaces(int year) {
@@ -702,4 +714,74 @@ public class Database {
 		return jdbcTemplate.queryForList(sql, String.class);
 	}
 
+	public List<PositionedCompetitor> getStartingGrid(int raceId) {
+		final String getStartingGrid = """
+				SELECT position, driver
+				FROM StartingGrid
+				WHERE race_number = ?
+				ORDER BY position ASC
+				""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getStartingGrid, raceId);
+		List<PositionedCompetitor> startingGrid = new ArrayList<>();
+		for (Map<String, Object> row : sqlRes) {
+			String position = String.valueOf((int) row.get("position"));
+			String driver = (String) row.get("driver");
+			startingGrid.add(new PositionedCompetitor(position, driver, ""));
+		}
+		return startingGrid;
+	}
+
+	public List<PositionedCompetitor> getRaceResult(int raceId) {
+		final String getRaceResult = """
+			SELECT position, driver, points
+			FROM RaceResult
+			WHERE race_number = ?
+			ORDER BY finishing_position ASC
+			""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRaceResult, raceId);
+		List<PositionedCompetitor> raceResult = new ArrayList<>();
+		for (Map<String, Object> row : sqlRes) {
+			String position = (String) row.get("position");
+			String driver = (String) row.get("driver");
+			String points = (String) row.get("points");
+			raceResult.add(new PositionedCompetitor(position, driver, points));
+		}
+		return raceResult;
+	}
+
+	public List<PositionedCompetitor> getDriverStandings(int raceId) {
+		final String getDriverStandings = """
+			SELECT position, driver, points
+			FROM DriverStandings
+			WHERE race_number = ?
+			ORDER BY position ASC
+			""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getDriverStandings, raceId);
+		List<PositionedCompetitor> standings = new ArrayList<>();
+		for (Map<String, Object> row : sqlRes) {
+			String position = String.valueOf((int) row.get("position"));
+			String driver = (String) row.get("driver");
+			String points = (String) row.get("points");;
+			standings.add(new PositionedCompetitor(position, driver, points));
+		}
+		return standings;
+	}
+	
+	public List<PositionedCompetitor> getConstructorStandings(int raceId) {
+		final String getConstructorStandings = """
+			SELECT position, constructor, points
+			FROM ConstructorStandings
+			WHERE race_number = ?
+			ORDER BY position ASC
+			""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getConstructorStandings, raceId);
+		List<PositionedCompetitor> standings = new ArrayList<>();
+		for (Map<String, Object> row : sqlRes) {
+			String position = String.valueOf((int) row.get("position"));
+			String constructor = (String) row.get("constructor");
+			String points = (String) row.get("points");;
+			standings.add(new PositionedCompetitor(position, constructor, points));
+		}
+		return standings;
+	}
 }
