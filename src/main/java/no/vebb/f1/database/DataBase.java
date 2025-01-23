@@ -22,6 +22,7 @@ import no.vebb.f1.util.RegisteredFlag;
 import no.vebb.f1.util.TimeUtil;
 
 @Service
+@SuppressWarnings("null")
 public class Database {
 
 	private JdbcTemplate jdbcTemplate;

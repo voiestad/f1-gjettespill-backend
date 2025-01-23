@@ -20,6 +20,7 @@ public class UsernameCheckFilter extends OncePerRequestFilter {
     private UserService userService;
 
 	@Override
+	@SuppressWarnings("null")
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		final String path = request.getRequestURI();
