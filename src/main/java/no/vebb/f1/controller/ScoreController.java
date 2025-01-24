@@ -1,9 +1,9 @@
 package no.vebb.f1.controller;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -36,24 +36,20 @@ public class ScoreController {
 	}
 
 	public static List<Table> getScoreMappingTables(int year, Database db) {
-		List<Table> scoreMappingTables = new ArrayList<>();
 		List<String> categories = db.getCategories();
-		for (String category : categories) {
-			scoreMappingTables.add(getTable(category, year, db));
-		}
-
-		return scoreMappingTables;
+		return categories.stream()
+			.map(category -> getTable(category, year, db))
+			.collect(Collectors.toList());
 	}
 
 	private static Table getTable(String category, int year, Database db) {
 		List<String> header = Arrays.asList("Differanse", "Poeng");
-		List<List<String>> body = new ArrayList<>();
 		List<Map<String, Object>> rows = db.getPointsDiffMap(year, category);
-		for (Map<String, Object> row : rows) {
-			int diff = (int) row.get("diff");
-			int points = (int) row.get("points");
-			body.add(Arrays.asList(String.valueOf(diff), String.valueOf(points)));
-		}
+		List<List<String>> body = rows.stream()
+			.map(row -> Arrays.asList(
+				String.valueOf((int) row.get("diff")), 
+				String.valueOf((int) row.get("points"))))
+			.collect(Collectors.toList());
 		String translation = db.translateCategory(category);
 		return new Table(translation, header, body);
 	}
