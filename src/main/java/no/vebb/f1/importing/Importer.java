@@ -170,19 +170,19 @@ public class Importer {
 
 	private void importSprint(List<Integer> racesToImportFrom, int year) {
 		try {
-			int toCheck = db.getRaceIdForSprint(year);
-			if (!racesToImportFrom.contains(toCheck)) {
+			int raceNumber = db.getRaceIdForSprint(year);
+			if (!racesToImportFrom.contains(raceNumber)) {
 				return;
 			}
-			boolean isAlreadyAdded = db.isSprintAdded(year);
+			boolean isAlreadyAdded = db.isSprintAdded(raceNumber);
 			if (isAlreadyAdded) {
 				return;
 			}
-			List<List<String>> raceResult = TableImporter.getSprintResult(toCheck);
+			List<List<String>> raceResult = TableImporter.getSprintResult(raceNumber);
 			if (raceResult.isEmpty()) {
 				return;
 			}
-			db.addSprint(year);
+			db.addSprint(raceNumber);
 
 		} catch (EmptyResultDataAccessException e) {
 		}
