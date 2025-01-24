@@ -3,7 +3,6 @@ package no.vebb.f1.controller;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -39,7 +38,7 @@ public class ScoreController {
 		List<String> categories = db.getCategories();
 		return categories.stream()
 			.map(category -> getTable(category, year, db))
-			.collect(Collectors.toList());
+			.toList();
 	}
 
 	private static Table getTable(String category, int year, Database db) {
@@ -49,7 +48,7 @@ public class ScoreController {
 			.map(row -> Arrays.asList(
 				String.valueOf((int) row.get("diff")), 
 				String.valueOf((int) row.get("points"))))
-			.collect(Collectors.toList());
+			.toList();
 		String translation = db.translateCategory(category);
 		return new Table(translation, header, body);
 	}

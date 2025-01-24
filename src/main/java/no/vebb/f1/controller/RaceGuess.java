@@ -3,7 +3,6 @@ package no.vebb.f1.controller;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
@@ -28,18 +28,15 @@ public class RaceGuess {
 	@Autowired
 	private Database db;
 
-	@GetMapping()
+	@GetMapping
 	public String guessOverview(Model model) {
 		int year = TimeUtil.getCurrentYear();
 		try {
-			Map<String, Object> res = db.getLatestRaceForPlaceGuess(year);
-			int raceId = (int) res.get("id");
-			if (cutoff.isAbleToGuessRace(raceId)) {
+			CutoffRace race = db.getLatestRaceForPlaceGuess(year);
+			if (cutoff.isAbleToGuessRace(race.id)) {
 				return "redirect:/";
 			}
-			int raceNumberSeason = (int) res.get("position");
-			String raceName = (String) res.get("name");
-			String title = String.format("%d. %s %d", raceNumberSeason, raceName, year);
+			String title = String.format("%d. %s %d", race.position, race.name, year);
 			model.addAttribute("title", title);
 			
 			List<Table> tables = new ArrayList<>();
@@ -47,20 +44,14 @@ public class RaceGuess {
 			String[] categories = {"FIRST", "TENTH"};
 			List<String> header = Arrays.asList("Navn", "Tippet", "Startet");
 			for (String category : categories) {
-				List<Map<String, Object>> sqlRes = db.getUserGuessesDriverPlace(raceId, category);
-				List<List<String>> body = new ArrayList<>();
-				for (Map<String, Object> row : sqlRes) {
-					String username = (String) row.get("username");
-					String driver = (String) row.get("driver");
-					int position = (int) row.get("position");
-					body.add(Arrays.asList(username, driver, String.valueOf(position)));
-				}
+				List<List<String>> body = db.getUserGuessesDriverPlace(race.id, category).stream()
+					.map(userGuess -> Arrays.asList(userGuess.user, userGuess.driver, userGuess.position))
+					.toList();
 				String name = db.translateCategory(category);
 				Table table = new Table(name, header, body);
 				tables.add(table);
 			}
 
-			
 			model.addAttribute("tables", tables);
 			return "raceGuess";
 		} catch (EmptyResultDataAccessException e) {

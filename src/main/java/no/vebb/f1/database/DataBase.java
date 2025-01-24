@@ -13,13 +13,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import no.vebb.f1.util.CutoffRace;
-import no.vebb.f1.util.Flags;
+import no.vebb.f1.util.*;
 import no.vebb.f1.user.User;
-import no.vebb.f1.util.NoAvailableRaceException;
-import no.vebb.f1.util.PositionedCompetitor;
-import no.vebb.f1.util.RegisteredFlag;
-import no.vebb.f1.util.TimeUtil;
 
 @Service
 @SuppressWarnings("null")
@@ -220,7 +215,7 @@ public class Database {
 		jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username, username_upper);
 	}
 
-	public List<Map<String, Object>> getUserGuessesDriverPlace(int raceNumber, String category) {
+	public List<UserRaceGuess> getUserGuessesDriverPlace(int raceNumber, String category) {
 		final String getGuessSql = """
 					SELECT u.username AS username, dpg.driver AS driver, sg.position AS position
 					FROM DriverPlaceGuess dpg
@@ -229,10 +224,16 @@ public class Database {
 					WHERE dpg.race_number = ? AND dpg.category = ?
 					ORDER BY u.username ASC
 				""";
-		return jdbcTemplate.queryForList(getGuessSql, raceNumber, category);
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getGuessSql, raceNumber, category);
+		return sqlRes.stream()
+			.map(row -> new UserRaceGuess(
+				(String) row.get("username"),
+				(String) row.get("driver"),
+				(int) row.get("position")))
+			.toList();
 	}
 
-	public Map<String, Object> getLatestRaceForPlaceGuess(int year) {
+	public CutoffRace getLatestRaceForPlaceGuess(int year) {
 		final String getRaceIdSql = """
 					SELECT ro.id AS id, ro.position AS position, r.name AS name
 					FROM RaceOrder ro
@@ -242,7 +243,8 @@ public class Database {
 					ORDER BY ro.position DESC
 					LIMIT 1;
 				""";
-		return jdbcTemplate.queryForMap(getRaceIdSql, year);
+		Map<String, Object> res = jdbcTemplate.queryForMap(getRaceIdSql, year);
+		return new CutoffRace((int) res.get("position"), (String) res.get("name"), (int) res.get("id"));
 	}
 
 	public int getCurrentRaceIdToGuess() {

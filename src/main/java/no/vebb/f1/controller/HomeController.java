@@ -63,7 +63,7 @@ public class HomeController {
 	private boolean isRaceGuess() {
 		int year = TimeUtil.getCurrentYear();
 		try {
-			int raceId = (int) db.getLatestRaceForPlaceGuess(year).get("id");
+			int raceId = db.getLatestRaceForPlaceGuess(year).id;
 			return !cutoff.isAbleToGuessRace(raceId);
 		} catch (EmptyResultDataAccessException e) {
 			return false;
