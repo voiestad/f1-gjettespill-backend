@@ -1,6 +1,7 @@
 package no.vebb.f1.controller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -59,10 +60,9 @@ public class ProfileController {
 			UserScore userScore = new UserScore(user.id, year, db);
 			model.addAttribute("tables", userScore.getAllTables());
 		} else {
-			List<Table> tables = new ArrayList<>();
 			String title = "Tippingen er tilgjenglig snart!";
 			Table table = new Table(title, new ArrayList<>(), new ArrayList<>());
-			tables.add(table);
+			List<Table> tables = Arrays.asList(table);
 			model.addAttribute("tables", tables);
 		}
 		

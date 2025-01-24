@@ -2,7 +2,6 @@ package no.vebb.f1.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -75,24 +74,28 @@ public class HomeController {
 	private Table getLeaderBoard() {
 		List<String> header = Arrays.asList("Plass", "Navn", "Poeng");
 		List<List<String>> body = new ArrayList<>();
-		List<Guesser> leaderBoardUnsorted = new ArrayList<>();
 		if (cutoff.isAbleToGuessCurrentYear()) {
 			return new Table("Sesongen starter snart", new ArrayList<>(), new ArrayList<>());
 		}
-		List<UUID> userIds = db.getAllUsers();
 		int year = TimeUtil.getCurrentYear();
-		for (UUID id : userIds) {
-			UserScore userScore = new UserScore(id, year, db);
-			User user = userService.loadUser(id).get();
-			leaderBoardUnsorted.add(new Guesser(user.username, userScore.getScore(), id));
-		}
+		List<Guesser> leaderBoard = db.getAllUsers().stream()
+			.map(id -> {
+				UserScore userScore = new UserScore(id, year, db);
+				User user = userService.loadUser(id).get();
+				return new Guesser(user.username, userScore.getScore(), id);
+			})
+			.filter(guesser -> guesser.points > 0)
+			.sorted()
+			.toList();
 
-		leaderBoardUnsorted.removeIf(guesser -> guesser.points == 0);
-		Collections.sort(leaderBoardUnsorted);
-		
-		for (int i = 0; i < leaderBoardUnsorted.size(); i++) {
-			Guesser guesser = leaderBoardUnsorted.get(i);
-			body.add(Arrays.asList(String.valueOf(i+1), guesser.username, String.valueOf(guesser.points), guesser.id.toString()));
+		for (int i = 0; i < leaderBoard.size(); i++) {
+			Guesser guesser = leaderBoard.get(i);
+			body.add(Arrays.asList(
+				String.valueOf(i+1),
+				guesser.username,
+				String.valueOf(guesser.points),
+				guesser.id.toString()
+			));
 		}
 		return new Table("Rangering", header, body);
 	}
@@ -101,26 +104,24 @@ public class HomeController {
 		List<Integer> raceIds = new ArrayList<>();
 		raceIds.add(-1);
 		int year = TimeUtil.getCurrentYear();
-		List<Integer> queriedIds = db.getRaceIdsFinished(year);
-		queriedIds.forEach(id -> raceIds.add(id));
+		db.getRaceIdsFinished(year).forEach(id -> raceIds.add(id));
 
 		return raceIds;
 	}
 
 	private void setGraph(Model model) {
 		int year = TimeUtil.getCurrentYear();
-		List<UUID> guessers = db.getSeasonGuesserIds(year); 
+		List<UUID> guessers = db.getSeasonGuesserIds(year);
 		List<String> guessersNames = db.getSeasonGuessers(year);
 		model.addAttribute("guessersNames", guessersNames);
 		List<Integer> raceIds = getSeasonRaceIds();
 		List<List<Integer>> scores = new ArrayList<>();
 		for (UUID id : guessers) {
-			List<Integer> userScores = new ArrayList<>();
-			for (int raceId : raceIds) {
-				int score = new UserScore(id, year, raceId, db).getScore();
-				userScores.add(score);
-			}
-			scores.add(userScores);
+			scores.add(
+				raceIds.stream()
+					.map(raceId -> new UserScore(id, year, raceId, db).getScore())
+					.toList()
+			);
 		}
 		model.addAttribute("scores", scores);
 	}
