@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.util.PositionedCompetitor;
 import no.vebb.f1.util.TimeUtil;
 
 @Component
@@ -30,22 +31,28 @@ public class Importer {
 		this.db = db;
 	}
 
-	@Scheduled(fixedRate = 3600000, initialDelay = 1000)
+	@Scheduled(fixedRate = 3600000, initialDelay = 5000)
 	public void importData() {
 		int year = TimeUtil.getCurrentYear();
 		logger.info("Starting import of data to database");
 		Map<Integer, List<Integer>> racesToImportFromList = getActiveRaces();
+		boolean shouldImportStandings = false;
 
 		for (Entry<Integer, List<Integer>> racesToImportFrom : racesToImportFromList.entrySet()) {
-			// TODO: Verify line of code
 			int raceYear = racesToImportFrom.getKey(); 
 			List<Integer> races = racesToImportFrom.getValue();
 			importStartingGrids(races);
-			importRaceResults(races);
+			if (importRaceResults(races) && year == raceYear) {
+				shouldImportStandings = true;
+			}
 			importSprints(races, raceYear);
 		}
-		importStandings(year);
-		refreshLatestImports(year);
+		if (refreshLatestImports(year)) {
+			shouldImportStandings = true;
+		}
+		if (shouldImportStandings) {
+			importStandings(year);
+		}
 		logger.info("Finished import of data to database");
 	}
 
@@ -78,17 +85,30 @@ public class Importer {
 		insertStartingGridData(raceId, startingGrid);
 	}
 
-	private void importRaceResultData(int raceId) {
+	private boolean importRaceResultData(int raceId) {
 		List<List<String>> raceResult = TableImporter.getRaceResult(raceId);
 		if (raceResult.isEmpty()) {
-			return;
+			return false;
 		}
+		List<PositionedCompetitor> preList = db.getRaceResult(raceId);
 		insertRaceResultData(raceId, raceResult);
+		List<PositionedCompetitor> postList = db.getRaceResult(raceId);
+		if (preList.size() != postList.size()) {
+			return true;
+		}
+		for (int i = 0; i < preList.size(); i++) {
+			PositionedCompetitor pre = preList.get(i);
+			PositionedCompetitor post = postList.get(i);
+			if (!pre.equals(post)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	private void refreshLatestImports(int year) {
+	private boolean refreshLatestImports(int year) {
 		refreshLatestStartingGrid(year);
-		refreshLatestRaceResult(year);
+		return refreshLatestRaceResult(year);
 	}
 
 	private void refreshLatestStartingGrid(int year) {
@@ -100,14 +120,13 @@ public class Importer {
 		}
 	}
 
-	private void refreshLatestRaceResult(int year) {
+	private boolean refreshLatestRaceResult(int year) {
 		try {
 			int raceId = db.getLatestRaceResultId(year);
-			importRaceResultData(raceId);
+			return importRaceResultData(raceId);
 		} catch (EmptyResultDataAccessException e) {
-
+			return false;
 		}
-
 	}
 
 	private void importStartingGrids(List<Integer> racesToImportFrom) {
@@ -133,7 +152,8 @@ public class Importer {
 		}
 	}
 
-	private void importRaceResults(List<Integer> racesToImportFrom) {
+	private boolean importRaceResults(List<Integer> racesToImportFrom) {
+		boolean addedNewRace = false;
 		for (int raceId : racesToImportFrom) {
 			boolean isAlreadyAdded = db.isRaceResultAdded(raceId);
 			if (isAlreadyAdded) {
@@ -145,7 +165,9 @@ public class Importer {
 			}
 			db.addSprint(raceId);
 			insertRaceResultData(raceId, raceResult);
+			addedNewRace = true;
 		}
+		return addedNewRace;
 	}
 
 	private void insertRaceResultData(int raceId, List<List<String>> raceResult) {
