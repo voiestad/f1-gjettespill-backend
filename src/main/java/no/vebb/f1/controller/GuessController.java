@@ -176,6 +176,10 @@ public class GuessController {
 	}
 
 	private String handleGetChooseDriver(Model model, String category) {
+		Optional<User> user = userService.loadUser();
+		if (!user.isPresent()) {
+			return "redirect:/";
+		}
 		try {
 			int raceNumber = getRaceIdToGuess();
 
@@ -185,7 +189,7 @@ public class GuessController {
 			List<String> drivers = db.getDriversFromStartingGrid(raceNumber);
 			model.addAttribute("items", drivers);
 
-			String driver = db.getGuessedDriverPlace(raceNumber, category);
+			String driver = db.getGuessedDriverPlace(raceNumber, category, user.get().id);
 			model.addAttribute("guessedDriver", driver);
 		} catch (NoAvailableRaceException e) {
 			return "redirect:/guess";

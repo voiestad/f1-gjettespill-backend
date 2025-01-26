@@ -50,7 +50,7 @@ public class UserScore {
 
 	private static int getRaceNumber(int year, Database db) {
 		try {
-			return db.getLatestRaceNumber(year);
+			return db.getLatestRaceId(year);
 		} catch (EmptyResultDataAccessException e) {
 			return -1;
 		}

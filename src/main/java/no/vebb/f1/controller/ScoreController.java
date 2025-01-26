@@ -43,11 +43,11 @@ public class ScoreController {
 
 	private static Table getTable(String category, int year, Database db) {
 		List<String> header = Arrays.asList("Differanse", "Poeng");
-		List<Map<String, Object>> rows = db.getPointsDiffMap(year, category);
-		List<List<String>> body = rows.stream()
-			.map(row -> Arrays.asList(
-				String.valueOf((int) row.get("diff")), 
-				String.valueOf((int) row.get("points"))))
+		Map<Integer, Integer> map = db.getDiffPointsMap(year, category);
+		List<List<String>> body = map.entrySet().stream()
+			.map(entry -> Arrays.asList(
+				String.valueOf(entry.getKey()), 
+				String.valueOf(entry.getValue())))
 			.toList();
 		String translation = db.translateCategory(category);
 		return new Table(translation, header, body);

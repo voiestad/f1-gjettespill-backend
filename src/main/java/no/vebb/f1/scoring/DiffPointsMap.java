@@ -9,7 +9,7 @@ public class DiffPointsMap {
 	private Map<Integer, Integer> map;
 
 	public DiffPointsMap(String category, int year, Database db) {
-		map = db.getDiffMap(category, year);
+		map = db.getDiffPointsMap(year, category);
 	}
 
 	public int getPoints(int diff) {

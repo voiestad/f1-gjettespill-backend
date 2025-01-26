@@ -234,7 +234,7 @@ public class Importer {
 
 	private void importStandings(int year) {
 		try {
-			int newestRace = db.getMaxRaceId(year);
+			int newestRace = db.getLatestRaceId(year);
 			importDriverStandings(year, newestRace);
 			importConstructorStandings(year, newestRace);
 		} catch (EmptyResultDataAccessException e) {

@@ -135,7 +135,7 @@ public class ManagePointsSystemController {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
-		db.setNewDiffInPointsMap(category, diff, year, points);
+		db.setNewDiffToPointsInPointsMap(category, diff, year, points);
 		return "redirect:/admin/season/" + year + "/points";
 	}
 }
