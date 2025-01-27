@@ -15,6 +15,7 @@ import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.util.Guesser;
 import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
@@ -124,28 +125,5 @@ public class HomeController {
 			);
 		}
 		model.addAttribute("scores", scores);
-	}
-
-	class Guesser implements Comparable<Guesser> {
-
-		public final String username;
-		public final int points;
-		public final UUID id;
-
-		public Guesser(String username, int points, UUID id) {
-			this.username = username;
-			this.points = points;
-			this.id = id;
-		}
-
-		@Override
-		public int compareTo(Guesser other) {
-			if (points < other.points) {
-				return 1;
-			} else if (points > other.points) {
-				return -1;
-			}
-			return 0;
-		}
 	}
 }
