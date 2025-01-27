@@ -22,6 +22,9 @@ import no.vebb.f1.util.TimeUtil;
 
 import org.springframework.ui.Model;
 
+/**
+ * Controller for home and contact page.
+ */
 @Controller
 public class HomeController {
 
@@ -34,6 +37,12 @@ public class HomeController {
 	@Autowired
 	private Database db;
 
+	/**
+	 * Handles GET request for home page.
+	 * 
+	 * @param model
+	 * @return home page
+	 */
 	@GetMapping("/")
 	public String home(Model model) {
 		int year = TimeUtil.getCurrentYear();
@@ -55,6 +64,11 @@ public class HomeController {
 		return "public";
 	}
 
+	/**
+	 * Handles GET request for contact page.
+	 * 
+	 * @return file for contact page
+	 */
 	@GetMapping("/contact")
 	public String contact() {
 		return "contact";
