@@ -38,7 +38,7 @@ public class RaceGuess {
 			if (cutoff.isAbleToGuessRace(race.id)) {
 				return "redirect:/";
 			}
-			String title = String.format("%d. %s %d", race.position, race.name, year);
+			String title = String.format("%d. %s %d", race.position, race.name, year.value);
 			model.addAttribute("title", title);
 			
 			List<Table> tables = new ArrayList<>();
