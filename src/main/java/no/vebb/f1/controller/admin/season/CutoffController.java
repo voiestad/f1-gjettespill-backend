@@ -19,6 +19,9 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.TimeUtil;
 
+/**
+ * CutoffController is responsible for changing cutoff for races and season.
+ */
 @Controller
 @RequestMapping("/admin/season/{year}/cutoff")
 public class CutoffController {
@@ -29,6 +32,15 @@ public class CutoffController {
 	@Autowired
 	private Database db;
 
+	/**
+	 * Handles GET requests for managing cutoff for the given season. Gives a list
+	 * of cutoffs for each race of the season and the cutoff for the season. Will
+	 * redirect to / if user is not admin and /admin/season if year is invalid.
+	 * 
+	 * @param year  of season
+	 * @param model
+	 * @return cutoff template
+	 */
 	@GetMapping
 	public String manageCutoff(@PathVariable("year") int year, Model model) {
 		if (!userService.isAdmin()) {
@@ -41,15 +53,25 @@ public class CutoffController {
 
 		List<CutoffRace> races = db.getCutoffRaces(year);
 		LocalDateTime cutoffYear = db.getCutoffYearLocalTime(year);
-		
+
 		model.addAttribute("title", year);
 		model.addAttribute("races", races);
 		model.addAttribute("cutoffYear", cutoffYear);
 		return "cutoff";
 	}
 
+	/**
+	 * Handels POST mapping for setting the cutoff for a race. Will
+	 * redirect to / if user is not admin and /admin/season if year is invalid. If
+	 * race ID is or time has invalid format, nothing will change in the database.
+	 * 
+	 * @param year   of season
+	 * @param raceId of race
+	 * @param cutoff to set for the race in local time
+	 * @return redirect to origin if user is admin and season valid
+	 */
 	@PostMapping("/setRace")
-	public String setCutoffRace(@PathVariable("year") int year, @RequestParam("id") int id,
+	public String setCutoffRace(@PathVariable("year") int year, @RequestParam("id") int raceId,
 			@RequestParam("cutoff") String cutoff) {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
@@ -58,19 +80,29 @@ public class CutoffController {
 		if (!isValidYear) {
 			return "redirect:/admin/season";
 		}
-		boolean isValidRaceId = db.isValidRaceInSeason(id, year);
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/cutoff";
 		}
 		try {
 			Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
-			db.setCutoffRace(cutoffTime, id);
+			db.setCutoffRace(cutoffTime, raceId);
 		} catch (DateTimeParseException e) {
 
 		}
 		return "redirect:/admin/season/" + year + "/cutoff";
 	}
 
+	/**
+	 * Handels POST mapping for setting the cutoff for a season. Will
+	 * redirect to / if user is not admin and /admin/season if year is invalid. If
+	 * time has invalid format, nothing will change in the database.
+	 * 
+	 * @param year   of season
+	 * @param raceId of race
+	 * @param cutoff to set for the race in local time
+	 * @return redirect to origin if user is admin and season valid
+	 */
 	@PostMapping("/setYear")
 	public String setCutoffYear(@PathVariable("year") int year, @RequestParam("cutoff") String cutoff) {
 		if (!userService.isAdmin()) {
