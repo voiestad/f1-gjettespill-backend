@@ -18,6 +18,7 @@ import no.vebb.f1.controller.ScoreController;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Table;
+import no.vebb.f1.util.Year;
 
 @Controller
 @RequestMapping("/admin/season/{year}/points")
@@ -34,10 +35,7 @@ public class ManagePointsSystemController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 
 		List<String> categories = db.getCategories();
 		Map<String, String> categoryMap = new LinkedHashMap<>();
@@ -61,10 +59,7 @@ public class ManagePointsSystemController {
 			return "redirect:/";
 		}
 
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 
 		boolean isValidCategory = db.isValidCategory(category);
 		if (!isValidCategory) {
@@ -87,10 +82,7 @@ public class ManagePointsSystemController {
 			return "redirect:/";
 		}
 
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 
 		boolean isValidCategory = db.isValidCategory(category);
 		if (!isValidCategory) {
@@ -115,10 +107,7 @@ public class ManagePointsSystemController {
 			return "redirect:/";
 		}
 
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 
 		boolean isValidCategory = db.isValidCategory(category);
 		if (!isValidCategory) {

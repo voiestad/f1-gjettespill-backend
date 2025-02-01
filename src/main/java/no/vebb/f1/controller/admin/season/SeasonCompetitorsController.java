@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Year;
 
 @Controller
 @RequestMapping("/admin/season/{year}/competitors")
@@ -29,10 +30,7 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 		List<String> drivers = db.getDriversYear(year);
 		List<String> constructors = db.getConstructorsYear(year);
 
@@ -48,10 +46,7 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 		db.addDriverYear(driver, year);
 		
 		return "redirect:/admin/season/" + year + "/competitors";
@@ -63,10 +58,7 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 		db.addConstructorYear(constructor, year);
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
@@ -76,10 +68,7 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 		boolean driverExists = db.isValidDriverYear(driver, year);
 		if (!driverExists) {
 			return "redirect:/admin/season/" + year + "/competitors";
@@ -103,10 +92,7 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 		boolean constructorExists = db.isValidConstructorYear(constructor, year);
 		if (!constructorExists) {
 			return "redirect:/admin/season/" + year + "/competitors";
@@ -130,10 +116,7 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 		boolean driverExists = db.isValidDriverYear(driver, year);
 		if (!driverExists) {
 			return "redirect:/admin/season/" + year + "/competitors";
@@ -169,10 +152,7 @@ public class SeasonCompetitorsController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 		boolean constructorExists = db.isValidConstructorYear(constructor, year);
 		if (!constructorExists) {
 			return "redirect:/admin/season/" + year + "/competitors";

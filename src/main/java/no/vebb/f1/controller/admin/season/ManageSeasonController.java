@@ -19,6 +19,7 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.PositionedCompetitor;
 import no.vebb.f1.util.Table;
+import no.vebb.f1.util.Year;
 
 @Controller
 @RequestMapping("/admin/season/{year}/manage")
@@ -36,10 +37,7 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 		if (success != null) {
 			if (success) {
 				model.addAttribute("successMessage", "Endringen ble lagret");
@@ -59,11 +57,8 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
-		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
+		Year seasonYear = new Year(year, db);
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
@@ -128,11 +123,8 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
-		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
+		Year seasonYear = new Year(year, db);
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
@@ -149,11 +141,8 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
-		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
+		Year seasonYear = new Year(year, db);
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
@@ -162,7 +151,7 @@ public class ManageSeasonController {
 		if (isPosOutOfBounds) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
-		List<Integer> races = db.getRacesFromSeason(year);
+		List<Integer> races = db.getRacesFromSeason(new Year(year, db));
 		db.removeRaceOrderFromSeason(year);
 		int currentPos = 1;
 		for (int id : races) {
@@ -189,17 +178,14 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
-		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
+		Year seasonYear = new Year(year, db);
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
 		db.deleteRace(raceId);
 
-		List<Integer> races = db.getRacesFromSeason(year);
+		List<Integer> races = db.getRacesFromSeason(seasonYear);
 		db.removeRaceOrderFromSeason(year);
 		int currentPos = 1;
 		for (int id : races) {
@@ -214,11 +200,8 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
-		boolean isRaceIdInUse = db.isValidRaceInSeason(raceId, year);
+		Year seasonYear = new Year(year, db);
+		boolean isRaceIdInUse = db.isValidRaceInSeason(raceId, seasonYear);
 		if (isRaceIdInUse) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}

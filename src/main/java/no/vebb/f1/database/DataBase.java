@@ -1194,7 +1194,7 @@ public class Database {
 	 * @param year of season
 	 * @return true if race is valid
 	 */
-	public boolean isValidRaceInSeason(int raceId, int year) {
+	public boolean isValidRaceInSeason(int raceId, Year year) {
 		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
 		return jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
 	}
@@ -1217,7 +1217,7 @@ public class Database {
 	 * @param year of season
 	 * @return id of races
 	 */
-	public List<Integer> getRacesFromSeason(int year) {
+	public List<Integer> getRacesFromSeason(Year year) {
 		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ? ORDER BY position ASC";
 		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year);
 	}
@@ -1288,9 +1288,9 @@ public class Database {
 	 * @param cutoffTime for guessing
 	 * @param year of season
 	 */
-	public void setCutoffYear(Instant cutoffTime, int year) {
+	public void setCutoffYear(Instant cutoffTime, Year year) {
 		final String setCutoffTime = "INSERT OR REPLACE INTO YearCutoff (year, cutoff) VALUES (?, ?)";
-		jdbcTemplate.update(setCutoffTime, year, cutoffTime.toString());
+		jdbcTemplate.update(setCutoffTime, year, cutoffTime);
 	}
 
 	/**

@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.InvalidYearException;
+import no.vebb.f1.util.Year;
 
 @Controller
 @RequestMapping("/admin/season")
@@ -52,10 +54,7 @@ public class SeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 		model.addAttribute("title", year);
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		String basePath = "/admin/season/" + year;
@@ -82,10 +81,11 @@ public class SeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isAlreadyAdded = db.isValidSeason(year);
-		if (isAlreadyAdded) {
+		try {
+			new Year(year, db);
 			model.addAttribute("error", String.format("Sesongen %d er allerede lagt til", year));
 			return "addSeason";
+		} catch (InvalidYearException e) {
 		}
 		if (start > end) {
 			model.addAttribute("error", "Starten av året kan ikke være etter slutten av året");
@@ -101,15 +101,16 @@ public class SeasonController {
 		importer.importRaceNames(races, year);
 		importer.importData();
 
-		setDefaultCutoffYear(year);
-		setDefaultCutoffRaces(year);
+		Year seasonYear = new Year(year, db);
+		setDefaultCutoffYear(seasonYear);
+		setDefaultCutoffRaces(seasonYear);
 
 		return "redirect:/admin/season";
 	}
 
-	private Instant getDefaultInstant(int year) {
+	private Instant getDefaultInstant(Year year) {
 		Calendar calendar = Calendar.getInstance();
-		calendar.set(Calendar.YEAR, year);
+		calendar.set(Calendar.YEAR, year.value);
 		calendar.set(Calendar.MONTH, Calendar.JANUARY);
 		calendar.set(Calendar.DAY_OF_MONTH, 1);
 		calendar.set(Calendar.AM_PM, Calendar.AM);
@@ -120,7 +121,7 @@ public class SeasonController {
 		return calendar.toInstant();
 	}
 
-	private void setDefaultCutoffRaces(int year) {
+	private void setDefaultCutoffRaces(Year year) {
 		Instant time = getDefaultInstant(year);
 		List<Integer> races = db.getRacesFromSeason(year);
 		for (int id : races) {
@@ -128,7 +129,7 @@ public class SeasonController {
 		}
 	}
 
-	private void setDefaultCutoffYear(int year) {
+	private void setDefaultCutoffYear(Year year) {
 		Instant time = getDefaultInstant(year);
 		db.setCutoffYear(time, year);
 	}

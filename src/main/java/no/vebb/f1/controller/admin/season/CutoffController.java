@@ -18,6 +18,7 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.TimeUtil;
+import no.vebb.f1.util.Year;
 
 /**
  * CutoffController is responsible for changing cutoff for races and season.
@@ -46,10 +47,7 @@ public class CutoffController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		new Year(year, db);
 
 		List<CutoffRace> races = db.getCutoffRaces(year);
 		LocalDateTime cutoffYear = db.getCutoffYearLocalTime(year);
@@ -76,11 +74,8 @@ public class CutoffController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
-		boolean isValidRaceId = db.isValidRaceInSeason(raceId, year);
+		Year seasonYear = new Year(year, db);
+		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/cutoff";
 		}
@@ -108,13 +103,10 @@ public class CutoffController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		boolean isValidYear = db.isValidSeason(year);
-		if (!isValidYear) {
-			return "redirect:/admin/season";
-		}
+		Year seasonYear = new Year(year, db);
 		try {
 			Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
-			db.setCutoffYear(cutoffTime, year);
+			db.setCutoffYear(cutoffTime, seasonYear);
 		} catch (DateTimeParseException e) {
 
 		}
