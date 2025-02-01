@@ -18,13 +18,14 @@ import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.util.InvalidYearException;
 import no.vebb.f1.util.Table;
+import no.vebb.f1.util.TimeUtil;
+import no.vebb.f1.util.Year;
 
 @Controller
 @RequestMapping("/user")
 public class ProfileController {
-
-	private int year = 2025;
 
 	@Autowired
 	private UserService userService;
@@ -57,8 +58,12 @@ public class ProfileController {
 
 	private String getGuesserProfile(Model model, User user) {
 		if (!cutoff.isAbleToGuessCurrentYear() || userService.isLoggedInUser(user)) {
-			UserScore userScore = new UserScore(user.id, year, db);
-			model.addAttribute("tables", userScore.getAllTables());
+			try {
+				Year year = new Year(TimeUtil.getCurrentYear(), db);
+				UserScore userScore = new UserScore(user.id, year, db);
+				model.addAttribute("tables", userScore.getAllTables());
+			} catch (InvalidYearException e) {
+			}
 		} else {
 			String title = "Tippingen er tilgjenglig snart!";
 			Table table = new Table(title, new ArrayList<>(), new ArrayList<>());

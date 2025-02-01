@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.CutoffRace;
+import no.vebb.f1.util.InvalidYearException;
 import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
+import no.vebb.f1.util.Year;
 
 @Controller
 @RequestMapping("/race-guess")
@@ -30,8 +32,8 @@ public class RaceGuess {
 
 	@GetMapping
 	public String guessOverview(Model model) {
-		int year = TimeUtil.getCurrentYear();
 		try {
+			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			CutoffRace race = db.getLatestRaceForPlaceGuess(year);
 			if (cutoff.isAbleToGuessRace(race.id)) {
 				return "redirect:/";
@@ -54,6 +56,8 @@ public class RaceGuess {
 
 			model.addAttribute("tables", tables);
 			return "raceGuess";
+		} catch (InvalidYearException e) {
+			return "redirect:/";
 		} catch (EmptyResultDataAccessException e) {
 			return "redirect:/";
 		} catch (NoAvailableRaceException e) {

@@ -35,7 +35,7 @@ public class ManagePointsSystemController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		new Year(year, db);
+		Year seasonYear = new Year(year, db);
 
 		List<String> categories = db.getCategories();
 		Map<String, String> categoryMap = new LinkedHashMap<>();
@@ -45,7 +45,7 @@ public class ManagePointsSystemController {
 		}
 		model.addAttribute("categories", categoryMap);
 
-		List<Table> tables = ScoreController.getScoreMappingTables(year, db);
+		List<Table> tables = ScoreController.getScoreMappingTables(seasonYear, db);
 		model.addAttribute("tables", tables);
 
 		model.addAttribute("title", year);
@@ -59,7 +59,7 @@ public class ManagePointsSystemController {
 			return "redirect:/";
 		}
 
-		new Year(year, db);
+		Year seasonYear = new Year(year, db);
 
 		boolean isValidCategory = db.isValidCategory(category);
 		if (!isValidCategory) {
@@ -68,11 +68,11 @@ public class ManagePointsSystemController {
 
 		int newDiff;
 		try {
-			newDiff = db.getMaxDiffInPointsMap(year, category) + 1;
+			newDiff = db.getMaxDiffInPointsMap(seasonYear, category) + 1;
 		} catch (EmptyResultDataAccessException e) {
 			newDiff = 0;
 		}
-		db.addDiffToPointsMap(category, newDiff, year);
+		db.addDiffToPointsMap(category, newDiff, seasonYear);
 		return "redirect:/admin/season/" + year + "/points";
 	}
 
@@ -82,7 +82,7 @@ public class ManagePointsSystemController {
 			return "redirect:/";
 		}
 
-		new Year(year, db);
+		Year seasonYear = new Year(year, db);
 
 		boolean isValidCategory = db.isValidCategory(category);
 		if (!isValidCategory) {
@@ -91,12 +91,12 @@ public class ManagePointsSystemController {
 
 		int maxDiff;
 		try {
-			maxDiff = db.getMaxDiffInPointsMap(year, category);
+			maxDiff = db.getMaxDiffInPointsMap(seasonYear, category);
 		} catch (EmptyResultDataAccessException e) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
-		db.removeDiffToPointsMap(category, maxDiff, year);
+		db.removeDiffToPointsMap(category, maxDiff, seasonYear);
 		return "redirect:/admin/season/" + year + "/points";
 	}
 
@@ -107,14 +107,14 @@ public class ManagePointsSystemController {
 			return "redirect:/";
 		}
 
-		new Year(year, db);
+		Year seasonYear = new Year(year, db);
 
 		boolean isValidCategory = db.isValidCategory(category);
 		if (!isValidCategory) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
-		boolean isValidDiff = db.isValidDiffInPointsMap(category, diff, year);
+		boolean isValidDiff = db.isValidDiffInPointsMap(category, diff, seasonYear);
 		if (!isValidDiff) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
@@ -124,7 +124,7 @@ public class ManagePointsSystemController {
 			return "redirect:/admin/season/" + year + "/points";
 		}
 
-		db.setNewDiffToPointsInPointsMap(category, diff, year, points);
+		db.setNewDiffToPointsInPointsMap(category, diff, seasonYear, points);
 		return "redirect:/admin/season/" + year + "/points";
 	}
 }

@@ -16,9 +16,11 @@ import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.Guesser;
+import no.vebb.f1.util.InvalidYearException;
 import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
+import no.vebb.f1.util.Year;
 
 import org.springframework.ui.Model;
 
@@ -45,12 +47,12 @@ public class HomeController {
 	 */
 	@GetMapping("/")
 	public String home(Model model) {
-		int year = TimeUtil.getCurrentYear();
 		boolean loggedOut = !userService.isLoggedIn();
 		model.addAttribute("loggedOut", loggedOut);
 		Table leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
 		if (leaderBoard.getHeader().size() == 0) {
+			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			List<String> guessers = db.getSeasonGuessers(year);
 			model.addAttribute("guessers", guessers);
 			model.addAttribute("guessersNames", new String[0]);
@@ -75,10 +77,12 @@ public class HomeController {
 	}
 
 	private boolean isRaceGuess() {
-		int year = TimeUtil.getCurrentYear();
 		try {
+			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			int raceId = db.getLatestRaceForPlaceGuess(year).id;
 			return !cutoff.isAbleToGuessRace(raceId);
+		} catch (InvalidYearException e) {
+			return false;
 		} catch (EmptyResultDataAccessException e) {
 			return false;
 		} catch (NoAvailableRaceException e) {
@@ -92,7 +96,7 @@ public class HomeController {
 		if (cutoff.isAbleToGuessCurrentYear()) {
 			return new Table("Sesongen starter snart", new ArrayList<>(), new ArrayList<>());
 		}
-		int year = TimeUtil.getCurrentYear();
+		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		List<Guesser> leaderBoard = db.getAllUsers().stream()
 			.map(id -> {
 				UserScore userScore = new UserScore(id, year, db);
@@ -115,21 +119,20 @@ public class HomeController {
 		return new Table("Rangering", header, body);
 	}
 
-	private List<Integer> getSeasonRaceIds() {
+	private List<Integer> getSeasonRaceIds(Year year) {
 		List<Integer> raceIds = new ArrayList<>();
 		raceIds.add(-1);
-		int year = TimeUtil.getCurrentYear();
 		db.getRaceIdsFinished(year).forEach(id -> raceIds.add(id));
 
 		return raceIds;
 	}
 
 	private void setGraph(Model model) {
-		int year = TimeUtil.getCurrentYear();
+		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		List<UUID> guessers = db.getSeasonGuesserIds(year);
 		List<String> guessersNames = db.getSeasonGuessers(year);
 		model.addAttribute("guessersNames", guessersNames);
-		List<Integer> raceIds = getSeasonRaceIds();
+		List<Integer> raceIds = getSeasonRaceIds(year);
 		List<List<Integer>> scores = new ArrayList<>();
 		for (UUID id : guessers) {
 			scores.add(

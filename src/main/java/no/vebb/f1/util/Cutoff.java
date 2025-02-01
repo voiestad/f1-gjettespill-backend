@@ -15,16 +15,20 @@ public class Cutoff {
 
 
 	public boolean isAbleToGuessCurrentYear() {
-		return isAbleToGuessYear(TimeUtil.getCurrentYear());	
-	}
-
-	public boolean isAbleToGuessYear(int year) {
-		boolean yearExist = db.yearCutOffExist(year);
-		if (!yearExist) {
+		try {
+			return isAbleToGuessYear(new Year(TimeUtil.getCurrentYear(), db));	
+		} catch (InvalidYearException e) {
 			return false;
 		}
-		Instant cutoff = db.getCutoffYear(year);
-		return isAbleToGuess(cutoff);
+	}
+
+	public boolean isAbleToGuessYear(Year year) {
+			boolean yearExist = db.yearCutOffExist(year);
+			if (!yearExist) {
+				return false;
+			}
+			Instant cutoff = db.getCutoffYear(year);
+			return isAbleToGuess(cutoff);
 	}
 
 	public boolean isAbleToGuessRace(int raceNumber) throws NoAvailableRaceException {

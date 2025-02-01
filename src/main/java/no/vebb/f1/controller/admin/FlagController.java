@@ -19,11 +19,12 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.RegisteredFlag;
+import no.vebb.f1.util.Year;
 
 @Controller
 @RequestMapping("/admin/flag")
 public class FlagController {
-	
+
 	@Autowired
 	private UserService userService;
 
@@ -50,9 +51,10 @@ public class FlagController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
+		Year seasonYear = new Year(year, db);
 		model.addAttribute("title", "Velg løp");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		List<CutoffRace> races = db.getCutoffRaces(year);
+		List<CutoffRace> races = db.getCutoffRaces(seasonYear);
 		for (CutoffRace race : races) {
 			linkMap.put(race.position + ". " + race.name, "/admin/flag/" + year + "/" + race.id);
 		}

@@ -12,13 +12,14 @@ import org.springframework.dao.EmptyResultDataAccessException;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.Table;
+import no.vebb.f1.util.Year;
 
 public class UserScore {
 
 	private Database db;
 
 	private final UUID id;
-	private final int year;
+	private final Year year;
 	private int score;
 	private final int raceNumber;
 	private final int racePos;
@@ -30,7 +31,7 @@ public class UserScore {
 	public final Table summaryTable;
 	private final List<List<String>> summaryTableBody = new ArrayList<>();
 
-	public UserScore(UUID id, int year, int raceNumber, Database db) {
+	public UserScore(UUID id, Year year, int raceNumber, Database db) {
 		this.id = id;
 		this.year = year;
 		this.raceNumber = raceNumber;
@@ -44,11 +45,11 @@ public class UserScore {
 		this.summaryTable = initializeSummaryTable();
 	}
 
-	public UserScore(UUID id, int year, Database db) {
+	public UserScore(UUID id, Year year, Database db) {
 		this(id, year, UserScore.getRaceNumber(year, db), db);
 	}
 
-	private static int getRaceNumber(int year, Database db) {
+	private static int getRaceNumber(Year year, Database db) {
 		try {
 			return db.getLatestRaceId(year);
 		} catch (EmptyResultDataAccessException e) {

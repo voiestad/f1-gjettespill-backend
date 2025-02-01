@@ -14,8 +14,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.util.InvalidYearException;
 import no.vebb.f1.util.PositionedCompetitor;
 import no.vebb.f1.util.TimeUtil;
+import no.vebb.f1.util.Year;
 
 @Component
 public class Importer {
@@ -213,9 +215,9 @@ public class Importer {
 		}
 	}
 
-	public void importRaceName(int raceId, int year) {
+	public void importRaceName(int raceId, Year year) {
 		int position = db.getMaxRaceOrderPosition(year) + 1;
-		addRace(raceId, year, position);
+		addRace(raceId, year.value, position);
 	}
 
 	private boolean addRace(int raceId, int year, int position) {
@@ -234,10 +236,11 @@ public class Importer {
 
 	private void importStandings(int year) {
 		try {
-			int newestRace = db.getLatestRaceId(year);
+			int newestRace = db.getLatestRaceId(new Year(year, db));
 			importDriverStandings(year, newestRace);
 			importConstructorStandings(year, newestRace);
 		} catch (EmptyResultDataAccessException e) {
+		} catch (InvalidYearException e) {
 		}
 	}
 

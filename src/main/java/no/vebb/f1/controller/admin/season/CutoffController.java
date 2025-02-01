@@ -47,10 +47,10 @@ public class CutoffController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		new Year(year, db);
+		Year seasonYear = new Year(year, db);
 
-		List<CutoffRace> races = db.getCutoffRaces(year);
-		LocalDateTime cutoffYear = db.getCutoffYearLocalTime(year);
+		List<CutoffRace> races = db.getCutoffRaces(seasonYear);
+		LocalDateTime cutoffYear = db.getCutoffYearLocalTime(seasonYear);
 
 		model.addAttribute("title", year);
 		model.addAttribute("races", races);

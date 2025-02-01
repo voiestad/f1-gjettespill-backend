@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.InvalidYearException;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
+import no.vebb.f1.util.Year;
 
 @Controller
 @RequestMapping("/score")
@@ -27,21 +29,26 @@ public class ScoreController {
 
 	@GetMapping
 	public String scoreMappingTables(Model model) {
-		List<Table> scoreMappingTables = getScoreMappingTables(TimeUtil.getCurrentYear(), db);
-		model.addAttribute("tables", scoreMappingTables);
+		List<Table> scoreMappingTables;
+		try {
+			scoreMappingTables = getScoreMappingTables(new Year(TimeUtil.getCurrentYear(), db), db);
+		} catch (InvalidYearException e) {
+			scoreMappingTables = Arrays.asList();
+		}
+	model.addAttribute("tables", scoreMappingTables);
 		model.addAttribute("title", "Poengberegning");
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
 		return "tables";
 	}
 
-	public static List<Table> getScoreMappingTables(int year, Database db) {
+	public static List<Table> getScoreMappingTables(Year year, Database db) {
 		List<String> categories = db.getCategories();
 		return categories.stream()
 			.map(category -> getTable(category, year, db))
 			.toList();
 	}
 
-	private static Table getTable(String category, int year, Database db) {
+	private static Table getTable(String category, Year year, Database db) {
 		List<String> header = Arrays.asList("Differanse", "Poeng");
 		Map<Integer, Integer> map = db.getDiffPointsMap(year, category);
 		List<List<String>> body = map.entrySet().stream()

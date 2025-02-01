@@ -37,7 +37,7 @@ public class ManageSeasonController {
 		if (!userService.isAdmin()) {
 			return "redirect:/";
 		}
-		new Year(year, db);
+		Year seasonYear = new Year(year, db);
 		if (success != null) {
 			if (success) {
 				model.addAttribute("successMessage", "Endringen ble lagret");
@@ -45,7 +45,7 @@ public class ManageSeasonController {
 				model.addAttribute("successMessage", "Endringen feilet");
 			}
 		}
-		List<CutoffRace> races = db.getCutoffRaces(year);
+		List<CutoffRace> races = db.getCutoffRaces(seasonYear);
 		model.addAttribute("races", races);
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
@@ -146,13 +146,13 @@ public class ManageSeasonController {
 		if (!isValidRaceId) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
-		int maxPos = db.getMaxRaceOrderPosition(year);
+		int maxPos = db.getMaxRaceOrderPosition(seasonYear);
 		boolean isPosOutOfBounds = position < 1 || position > maxPos;
 		if (isPosOutOfBounds) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
 		List<Integer> races = db.getRacesFromSeason(new Year(year, db));
-		db.removeRaceOrderFromSeason(year);
+		db.removeRaceOrderFromSeason(seasonYear);
 		int currentPos = 1;
 		for (int id : races) {
 			if (id == raceId) {
@@ -186,7 +186,7 @@ public class ManageSeasonController {
 		db.deleteRace(raceId);
 
 		List<Integer> races = db.getRacesFromSeason(seasonYear);
-		db.removeRaceOrderFromSeason(year);
+		db.removeRaceOrderFromSeason(seasonYear);
 		int currentPos = 1;
 		for (int id : races) {
 			db.insertRaceOrder(id, year, currentPos);
@@ -206,7 +206,7 @@ public class ManageSeasonController {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
 		Importer importer = new Importer(db);
-		importer.importRaceName(raceId, year);
+		importer.importRaceName(raceId, seasonYear);
 		importer.importData();
 		return "redirect:/admin/season/" + year + "/manage?success=true";
 	}
