@@ -33,9 +33,7 @@ public class FlagController {
 
 	@GetMapping
 	public String flagChooseYear(Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		model.addAttribute("title", "Velg år");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		List<Integer> years = db.getAllValidYears();
@@ -48,9 +46,7 @@ public class FlagController {
 
 	@GetMapping("/{year}")
 	public String flagChooseRace(@PathVariable("year") int year, Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		model.addAttribute("title", "Velg løp");
 		Map<String, String> linkMap = new LinkedHashMap<>();
@@ -64,9 +60,7 @@ public class FlagController {
 
 	@GetMapping("/{year}/{id}")
 	public String registrerFlags(@PathVariable("year") int year, @PathVariable("id") int raceId, Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		List<String> flags = db.getFlags();
 		model.addAttribute("flags", flags);
 		model.addAttribute("raceId", raceId);
@@ -80,12 +74,10 @@ public class FlagController {
 	@PostMapping("/add")
 	public String registerFlag(@RequestParam("flag") String flag, @RequestParam("round") int round,
 			@RequestParam("raceId") int raceId, @RequestParam("origin") String origin) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Set<String> flags = new HashSet<>(db.getFlags());
 		if (!flags.contains(flag)) {
-			return "redirect:/";
+			return "redirect:" + origin;
 		}
 
 		db.insertFlagStats(flag, round, raceId);
@@ -95,9 +87,7 @@ public class FlagController {
 
 	@PostMapping("/delete")
 	public String deleteFlag(@RequestParam("id") int id, @RequestParam("origin") String origin) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 
 		db.deleteFlagStatsById(id);
 

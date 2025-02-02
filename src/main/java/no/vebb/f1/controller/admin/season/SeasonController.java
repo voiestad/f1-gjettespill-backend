@@ -34,9 +34,7 @@ public class SeasonController {
 
 	@GetMapping
 	public String seasonAdminOverview(Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		model.addAttribute("title", "Administrer sesonger");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		List<Integer> years = db.getAllValidYears();
@@ -51,9 +49,7 @@ public class SeasonController {
 	@GetMapping("/{year}")
 	public String seasonMenu(@RequestParam(value = "success", required = false) Boolean success,
 			@PathVariable("year") int year, Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		new Year(year, db);
 		model.addAttribute("title", year);
 		Map<String, String> linkMap = new LinkedHashMap<>();
@@ -69,18 +65,14 @@ public class SeasonController {
 
 	@GetMapping("/add")
 	public String addSeasonForm() {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		return "addSeason";
 	}
 
 	@PostMapping("/add")
 	public String addSeason(@RequestParam("year") int year, @RequestParam("start") int start,
 			@RequestParam("end") int end, Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		try {
 			new Year(year, db);
 			model.addAttribute("error", String.format("Sesongen %d er allerede lagt til", year));

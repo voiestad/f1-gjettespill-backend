@@ -34,9 +34,7 @@ public class ManageSeasonController {
 	@GetMapping
 	public String manageRacesInSeason(@RequestParam(value = "success", required = false) Boolean success,
 			@PathVariable("year") int year, Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		if (success != null) {
 			if (success) {
@@ -54,9 +52,7 @@ public class ManageSeasonController {
 
 	@GetMapping("/{raceId}")
 	public String manageRacesInSeason(@PathVariable("raceId") int raceId, @PathVariable("year") int year, Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
@@ -120,9 +116,7 @@ public class ManageSeasonController {
 
 	@PostMapping("/reload")
 	public String reloadRace(@RequestParam("id") int raceId, @PathVariable("year") int year) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
@@ -138,9 +132,7 @@ public class ManageSeasonController {
 	@PostMapping("/move")
 	public String changeRaceOrder(@PathVariable int year, @RequestParam("id") int raceId,
 			@RequestParam("newPosition") int position) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
@@ -175,9 +167,7 @@ public class ManageSeasonController {
 
 	@PostMapping("/delete")
 	public String deleteRace(@PathVariable int year, @RequestParam("id") int raceId) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
@@ -197,9 +187,7 @@ public class ManageSeasonController {
 
 	@PostMapping("/add")
 	public String addRace(@PathVariable int year, @RequestParam("id") int raceId) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean isRaceIdInUse = db.isValidRaceInSeason(raceId, seasonYear);
 		if (isRaceIdInUse) {

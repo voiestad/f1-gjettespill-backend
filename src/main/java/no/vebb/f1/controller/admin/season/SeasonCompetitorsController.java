@@ -27,9 +27,7 @@ public class SeasonCompetitorsController {
 	
 	@GetMapping
 	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		List<String> drivers = db.getDriversYear(seasonYear);
 		List<String> constructors = db.getConstructorsYear(seasonYear);
@@ -43,9 +41,7 @@ public class SeasonCompetitorsController {
 
 	@PostMapping("/addDriver")
 	public String addDriverToSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		db.addDriverYear(driver, seasonYear);
 		
@@ -55,9 +51,7 @@ public class SeasonCompetitorsController {
 	@PostMapping("/addConstructor")
 	public String addConstructorToSeason(@PathVariable("year") int year,
 			@RequestParam("constructor") String constructor) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		db.addConstructorYear(constructor, seasonYear);
 		return "redirect:/admin/season/" + year + "/competitors";
@@ -65,9 +59,7 @@ public class SeasonCompetitorsController {
 
 	@PostMapping("/deleteDriver")
 	public String removeDriverFromSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean driverExists = db.isValidDriverYear(driver, seasonYear);
 		if (!driverExists) {
@@ -89,9 +81,7 @@ public class SeasonCompetitorsController {
 	@PostMapping("/deleteConstructor")
 	public String removeConstructorFromSeason(@PathVariable("year") int year,
 			@RequestParam("constructor") String constructor) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean constructorExists = db.isValidConstructorYear(constructor, seasonYear);
 		if (!constructorExists) {
@@ -113,9 +103,7 @@ public class SeasonCompetitorsController {
 	@PostMapping("/moveDriver")
 	public String moveDriverFromSeason(@PathVariable("year") int year, @RequestParam("driver") String driver,
 			@RequestParam("newPosition") int position) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean driverExists = db.isValidDriverYear(driver, seasonYear);
 		if (!driverExists) {
@@ -149,9 +137,7 @@ public class SeasonCompetitorsController {
 	@PostMapping("/moveConstructor")
 	public String moveConstructorFromSeason(@PathVariable("year") int year,
 			@RequestParam("constructor") String constructor, @RequestParam("newPosition") int position) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean constructorExists = db.isValidConstructorYear(constructor, seasonYear);
 		if (!constructorExists) {

@@ -44,9 +44,7 @@ public class CutoffController {
 	 */
 	@GetMapping
 	public String manageCutoff(@PathVariable("year") int year, Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 
 		List<CutoffRace> races = db.getCutoffRaces(seasonYear);
@@ -71,9 +69,7 @@ public class CutoffController {
 	@PostMapping("/setRace")
 	public String setCutoffRace(@PathVariable("year") int year, @RequestParam("id") int raceId,
 			@RequestParam("cutoff") String cutoff) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
 		if (!isValidRaceId) {
@@ -100,9 +96,7 @@ public class CutoffController {
 	 */
 	@PostMapping("/setYear")
 	public String setCutoffYear(@PathVariable("year") int year, @RequestParam("cutoff") String cutoff) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);

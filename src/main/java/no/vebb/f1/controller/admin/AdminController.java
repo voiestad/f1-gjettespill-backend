@@ -20,9 +20,7 @@ public class AdminController {
 
 	@GetMapping
 	public String adminHome(Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		model.addAttribute("title", "Admin Portal");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		linkMap.put("Registrer flagg", "/admin/flag");

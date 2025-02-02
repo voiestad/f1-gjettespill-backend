@@ -32,9 +32,7 @@ public class ManagePointsSystemController {
 
 	@GetMapping
 	public String managePointsSystem(@PathVariable("year") int year, Model model) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 
 		List<String> categories = db.getCategories();
@@ -55,10 +53,7 @@ public class ManagePointsSystemController {
 
 	@PostMapping("/add")
 	public String addPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
-
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 
 		boolean isValidCategory = db.isValidCategory(category);
@@ -78,10 +73,7 @@ public class ManagePointsSystemController {
 
 	@PostMapping("/delete")
 	public String deletePointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
-
+		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 
 		boolean isValidCategory = db.isValidCategory(category);
@@ -103,9 +95,7 @@ public class ManagePointsSystemController {
 	@PostMapping("/set")
 	public String setPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category,
 			@RequestParam("diff") int diff, @RequestParam("points") int points) {
-		if (!userService.isAdmin()) {
-			return "redirect:/";
-		}
+		userService.adminCheck();
 
 		Year seasonYear = new Year(year, db);
 
