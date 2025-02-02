@@ -104,7 +104,7 @@ public class HomeController {
 				User user = userService.loadUser(id).get();
 				return new Guesser(user.username, userScore.getScore(), id);
 			})
-			.filter(guesser -> guesser.points > 0)
+			.filter(guesser -> guesser.points.value > 0)
 			.sorted()
 			.toList();
 
@@ -138,7 +138,7 @@ public class HomeController {
 		for (UUID id : guessers) {
 			scores.add(
 				raceIds.stream()
-					.map(raceId -> new UserScore(id, year, raceId, db).getScore())
+					.map(raceId -> new UserScore(id, year, raceId, db).getScore().value)
 					.toList()
 			);
 		}

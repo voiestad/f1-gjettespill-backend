@@ -14,6 +14,7 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Flag;
+import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 
@@ -23,7 +24,7 @@ public class UserScore {
 
 	private final UUID id;
 	private final Year year;
-	private int score;
+	private Points score = new Points();
 	private final RaceId raceId;
 	private final int racePos;
 	public final Table driversTable;
@@ -90,7 +91,7 @@ public class UserScore {
 
 	private Table getGuessedToPos(DiffPointsMap map, Category category, List<String> header, List<String> guessed, List<String> competitors) {
 		List<List<String>> body = new ArrayList<>();
-		int competitorScore = 0;
+		Points competitorScore = new Points();
 		Map<String, Integer> guessedToPos = new HashMap<>();
 		for (int i = 0; i < guessed.size(); i++) {
 			guessedToPos.put(guessed.get(i), i+1);
@@ -108,8 +109,8 @@ public class UserScore {
 				row.add("0");
 			} else {
 				int diff = Math.abs(actualPos - pos); 
-				int points = map.getPoints(diff);
-				competitorScore += points;
+				Points points = map.getPoints(diff);
+				competitorScore = competitorScore.add(points);
 				row.add(pos.toString());
 				row.add(String.valueOf(diff));
 				row.add(String.valueOf(points));
@@ -117,7 +118,7 @@ public class UserScore {
 			}
 			body.add(row);
 		}
-		score += competitorScore;
+		score = score.add(competitorScore);
 		String translation = db.translateCategory(category);
 		summaryTableBody.add(Arrays.asList(translation, String.valueOf(competitorScore)));
 		return new Table(translation, header, body);
@@ -128,7 +129,7 @@ public class UserScore {
 		DiffPointsMap map = new DiffPointsMap(category, year, db);
 		List<String> header = Arrays.asList("Type", "Gjettet", "Faktisk", "Diff", "Poeng");
 		List<List<String>> body = new ArrayList<>();
-		int flagScore = 0;
+		Points flagScore = new Points();
 
 		List<Map<String, Object>> sqlRes = db.getDataForFlagTable(racePos, year, id);
 
@@ -138,14 +139,14 @@ public class UserScore {
 			int guessed = (int) row.get("guessed");
 			int actual = (int) row.get("actual");
 			int diff = Math.abs(guessed - actual);
-			int points = map.getPoints(diff);
-			flagScore += points;
+			Points points = map.getPoints(diff);
+			flagScore = flagScore.add(points);
 			body.add(Arrays.asList(translatedFlag, String.valueOf(guessed), String.valueOf(actual), String.valueOf(diff), String.valueOf(points))); 
 		}
 
 		Collections.sort(body, (a, b) -> a.get(0).compareTo(b.get(0)));
 
-		score += flagScore;
+		score = score.add(flagScore);
 		String translation = db.translateCategory(category);
 		summaryTableBody.add(Arrays.asList(translation, String.valueOf(flagScore)));
 		return new Table(translation, header, body);
@@ -169,7 +170,7 @@ public class UserScore {
 			return new Table(translation, header, body);
 		}
 		DiffPointsMap map = new DiffPointsMap(category, year, db);
-		int driverPlaceScore = 0;
+		Points driverPlaceScore = new Points();
 		List<Map<String, Object>> sqlRes = db.getDataForPlaceGuessTable(category, id, year, racePos);
 
 		for (Map<String, Object> row : sqlRes) {
@@ -178,11 +179,11 @@ public class UserScore {
 			int startPos = (int) row.get("start");
 			int finishPos = (int) row.get("finish");
 			int diff = Math.abs(targetPos - finishPos);
-			int points = map.getPoints(diff);
-			driverPlaceScore += points;
+			Points points = map.getPoints(diff);
+			driverPlaceScore = driverPlaceScore.add(points);
 			body.add(Arrays.asList(raceName, driver, String.valueOf(startPos), String.valueOf(finishPos), String.valueOf(points)));
 		}
-		score += driverPlaceScore;
+		score = score.add(driverPlaceScore);
 
 		summaryTableBody.add(Arrays.asList(translation, String.valueOf(driverPlaceScore)));
 		return new Table(translation, header, body);
@@ -193,7 +194,7 @@ public class UserScore {
 		return new Table("Oppsummering", header, summaryTableBody);
 	}
 
-	public int getScore() {
+	public Points getScore() {
 		return score;
 	}
 

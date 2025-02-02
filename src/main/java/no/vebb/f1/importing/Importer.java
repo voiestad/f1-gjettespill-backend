@@ -17,6 +17,7 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.PositionedCompetitor;
+import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -183,7 +184,8 @@ public class Importer {
 		for (List<String> row : raceResult.subList(1, raceResult.size())) {
 			String position = row.get(0);
 			String driver = parseDriver(row.get(2));
-			int points = Integer.parseInt(row.get(6));
+
+			Points points = new Points(Integer.parseInt(row.get(6)));
 			
 			db.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
 			finishingPosition++;
@@ -259,7 +261,7 @@ public class Importer {
 		for (List<String> row : standings.subList(1, standings.size())) {
 			String driver = parseDriver(row.get(1));
 			int position = Integer.parseInt(row.get(0));
-			int points = Integer.parseInt(row.get(4));
+			Points points = new Points(Integer.parseInt(row.get(4)));
 			db.insertDriverIntoStandings(newestRace, driver, position, points);
 		}
 	}
@@ -272,7 +274,7 @@ public class Importer {
 		for (List<String> row : standings.subList(1, standings.size())) {
 			String constructor = row.get(1);
 			int position = Integer.parseInt(row.get(0));
-			int points = Integer.parseInt(row.get(2));
+			Points points = new Points(Integer.parseInt(row.get(2)));
 			
 			db.addConstructor(constructor);
 			db.insertConstructorIntoStandings(newestRace, constructor, position, points);

@@ -19,8 +19,10 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidCategoryException;
+import no.vebb.f1.util.exception.InvalidPointsException;
 
 @Controller
 @RequestMapping("/admin/season/{year}/points")
@@ -98,14 +100,13 @@ public class ManagePointsSystemController {
 				return "redirect:/admin/season/" + year + "/points";
 			}
 
-			boolean isValidPoints = points >= 0;
-			if (!isValidPoints) {
-				return "redirect:/admin/season/" + year + "/points";
-			}
+			Points validPoints = new Points(points);
+			
 
-			db.setNewDiffToPointsInPointsMap(validCategory, diff, seasonYear, points);
+			db.setNewDiffToPointsInPointsMap(validCategory, diff, seasonYear, validPoints);
 		} catch (EmptyResultDataAccessException e) {
 		} catch (InvalidCategoryException e) {
+		} catch (InvalidPointsException e) {
 		}
 		return "redirect:/admin/season/" + year + "/points";
 	}

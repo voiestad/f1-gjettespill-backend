@@ -21,6 +21,7 @@ import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.collection.UserRaceGuess;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Flag;
+import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
@@ -679,7 +680,7 @@ public class Database {
 	 * @param year of season
 	 * @return map from diff to points
 	 */
-	public Map<Integer, Integer> getDiffPointsMap(Year year, Category category) {
+	public Map<Integer, Points> getDiffPointsMap(Year year, Category category) {
 		final String sql = """
 			SELECT points, diff
 			FROM DiffPointsMap
@@ -688,10 +689,10 @@ public class Database {
 			""";
 
 		List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, year, category);
-		Map<Integer, Integer> map = new LinkedHashMap<>();
+		Map<Integer, Points> map = new LinkedHashMap<>();
 		for (Map<String, Object> entry : result) {
-			Integer diff = (Integer) entry.get("diff");
-			Integer points = (Integer) entry.get("points");
+			Integer diff = (int) entry.get("diff");
+			Points points = new Points((int) entry.get("points"));
 			map.put(diff, points);
 		}
 		return map;
@@ -742,7 +743,7 @@ public class Database {
 	 * @param year of season
 	 * @param points
 	 */
-	public void setNewDiffToPointsInPointsMap(Category category, int diff, Year year, int points) {
+	public void setNewDiffToPointsInPointsMap(Category category, int diff, Year year, Points points) {
 		final String setNewPoints = """
 			UPDATE DiffPointsMap
 			SET points = ?
@@ -1121,7 +1122,7 @@ public class Database {
 	 * @param points
 	 * @param finishingPosition the position that driver finished race in
 	 */
-	public void insertDriverRaceResult(RaceId raceId, String position, String driver, int points, int finishingPosition) {
+	public void insertDriverRaceResult(RaceId raceId, String position, String driver, Points points, int finishingPosition) {
 		final String insertRaceResult = "INSERT OR REPLACE INTO RaceResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
 		jdbcTemplate.update(insertRaceResult, raceId, position, driver, points, finishingPosition);
 	}
@@ -1134,7 +1135,7 @@ public class Database {
 	 * @param position of driver
 	 * @param points of driver
 	 */
-	public void insertDriverIntoStandings(RaceId raceId, String driver, int position, int points) {
+	public void insertDriverIntoStandings(RaceId raceId, String driver, int position, Points points) {
 		final String insertDriverStandings = "INSERT OR REPLACE INTO DriverStandings (race_number, driver, position, points) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(insertDriverStandings, raceId, driver, position, points);
 	}
@@ -1147,7 +1148,7 @@ public class Database {
 	 * @param position of constructor
 	 * @param points of constructor
 	 */
-	public void insertConstructorIntoStandings(RaceId raceId, String constructor, int position, int points) {
+	public void insertConstructorIntoStandings(RaceId raceId, String constructor, int position, Points points) {
 		final String insertConstructorStandings = "INSERT OR REPLACE INTO ConstructorStandings (race_number, constructor, position, points) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(insertConstructorStandings, raceId, constructor, position, points);
 	}
