@@ -8,7 +8,7 @@ public class Category {
 	public final String value;
 	private Database db;
 
-	public Category(String value, Database db) {
+	public Category(String value, Database db) throws InvalidCategoryException {
 		this.value = value;
 		this.db = db;
 		validate();
