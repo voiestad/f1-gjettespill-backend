@@ -18,8 +18,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.CutoffRace;
+import no.vebb.f1.util.RaceId;
 import no.vebb.f1.util.RegisteredFlag;
 import no.vebb.f1.util.Year;
+import no.vebb.f1.util.exception.InvalidRaceException;
+import no.vebb.f1.util.exception.InvalidYearException;
 
 @Controller
 @RequestMapping("/admin/flag")
@@ -59,15 +62,25 @@ public class FlagController {
 	}
 
 	@GetMapping("/{year}/{id}")
-	public String registrerFlags(@PathVariable("year") int year, @PathVariable("id") int raceId, Model model) {
+	public String registerFlags(@PathVariable("year") int year, @PathVariable("id") int raceId, Model model) {
 		userService.adminCheck();
-		List<String> flags = db.getFlags();
-		model.addAttribute("flags", flags);
-		model.addAttribute("raceId", raceId);
-
-		List<RegisteredFlag> registeredFlags = db.getRegisteredFlags(raceId);
-		model.addAttribute("registeredFlags", registeredFlags);
-		model.addAttribute("title", "Flagg " + db.getRaceName(raceId));
+		try {
+			Year seasonYear = new Year(year, db);
+			RaceId validRaceId = new RaceId(raceId, db);
+			boolean isRaceInSeason = db.isRaceInSeason(validRaceId, seasonYear);
+			if (!isRaceInSeason) {
+				return "redirect:/admin/flag";
+			}
+			List<String> flags = db.getFlags();
+			model.addAttribute("flags", flags);
+			model.addAttribute("raceId", raceId);
+			
+			List<RegisteredFlag> registeredFlags = db.getRegisteredFlags(validRaceId);
+			model.addAttribute("registeredFlags", registeredFlags);
+			model.addAttribute("title", "Flagg " + db.getRaceName(validRaceId));
+		} catch (InvalidRaceException e) {
+		} catch (InvalidYearException e) {
+		}
 		return "noteFlags";
 	}
 
@@ -75,13 +88,15 @@ public class FlagController {
 	public String registerFlag(@RequestParam("flag") String flag, @RequestParam("round") int round,
 			@RequestParam("raceId") int raceId, @RequestParam("origin") String origin) {
 		userService.adminCheck();
-		Set<String> flags = new HashSet<>(db.getFlags());
-		if (!flags.contains(flag)) {
-			return "redirect:" + origin;
+		try {
+			RaceId validRaceId = new RaceId(raceId, db);
+			Set<String> flags = new HashSet<>(db.getFlags());
+			if (!flags.contains(flag)) {
+				return "redirect:" + origin;
+			}
+			db.insertFlagStats(flag, round, validRaceId);
+		} catch (InvalidRaceException e) {
 		}
-
-		db.insertFlagStats(flag, round, raceId);
-
 		return "redirect:" + origin;
 	}
 

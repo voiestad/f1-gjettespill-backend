@@ -28,6 +28,7 @@ import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.Year;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.util.Flags;
+import no.vebb.f1.util.RaceId;
 
 
 @Controller
@@ -187,15 +188,15 @@ public class GuessController {
 			return "redirect:/";
 		}
 		try {
-			int raceNumber = getRaceIdToGuess();
+			RaceId raceId = getRaceIdToGuess();
 
-			long timeLeftToGuess = db.getTimeLeftToGuessRace(raceNumber);
+			long timeLeftToGuess = db.getTimeLeftToGuessRace(raceId);
 			model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 
-			List<String> drivers = db.getDriversFromStartingGrid(raceNumber);
+			List<String> drivers = db.getDriversFromStartingGrid(raceId);
 			model.addAttribute("items", drivers);
 
-			String driver = db.getGuessedDriverPlace(raceNumber, category, user.get().id);
+			String driver = db.getGuessedDriverPlace(raceId, category, user.get().id);
 			model.addAttribute("guessedDriver", driver);
 		} catch (NoAvailableRaceException e) {
 			return "redirect:/guess";
@@ -212,15 +213,15 @@ public class GuessController {
 			return "redirect:/";
 		}
 		try {
-			int raceNumber = getRaceIdToGuess();
-			Set<String> driversCheck = new HashSet<>(db.getDriversFromStartingGrid(raceNumber));
+			RaceId raceId = getRaceIdToGuess();
+			Set<String> driversCheck = new HashSet<>(db.getDriversFromStartingGrid(raceId));
 			if (!driversCheck.contains(driver)) {
 				logger.warn("'{}', invalid winner driver inputted by user.", driver);
 				return "redirect:/guess?success=false";
 			}
 			UUID id = user.get().id;
-			db.addDriverPlaceGuess(id, raceNumber, driver, category);
-			logger.info("User '{}' guessed on category '{}' on race '{}'", id, category, raceNumber);
+			db.addDriverPlaceGuess(id, raceId, driver, category);
+			logger.info("User '{}' guessed on category '{}' on race '{}'", id, category, raceId);
 			return "redirect:/guess?success=true";
 
 		} catch (NoAvailableRaceException e) {
@@ -228,9 +229,9 @@ public class GuessController {
 		}
 	}
 
-	private int getRaceIdToGuess() throws NoAvailableRaceException {
+	private RaceId getRaceIdToGuess() throws NoAvailableRaceException {
 		try {
-			int id = db.getCurrentRaceIdToGuess();
+			RaceId id = db.getCurrentRaceIdToGuess();
 			if (!cutoff.isAbleToGuessRace(id)) {
 				throw new NoAvailableRaceException("Cutoff has been passed");
 			}

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.RaceId;
 import no.vebb.f1.util.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
@@ -115,8 +116,8 @@ public class SeasonController {
 
 	private void setDefaultCutoffRaces(Year year) {
 		Instant time = getDefaultInstant(year);
-		List<Integer> races = db.getRacesFromSeason(year);
-		for (int id : races) {
+		List<RaceId> races = db.getRacesFromSeason(year);
+		for (RaceId id : races) {
 			db.setCutoffRace(time, id);
 		}
 	}

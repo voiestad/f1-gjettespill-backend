@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.CutoffRace;
+import no.vebb.f1.util.RaceId;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.Year;
+import no.vebb.f1.util.exception.InvalidRaceException;
 
 /**
  * CutoffController is responsible for changing cutoff for races and season.
@@ -71,15 +73,16 @@ public class CutoffController {
 			@RequestParam("cutoff") String cutoff) {
 		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
-		boolean isValidRaceId = db.isValidRaceInSeason(raceId, seasonYear);
-		if (!isValidRaceId) {
-			return "redirect:/admin/season/" + year + "/cutoff";
-		}
 		try {
+			RaceId validRaceId = new RaceId(raceId, db);
+			boolean isRaceInSeason = db.isRaceInSeason(validRaceId, seasonYear);
+			if (!isRaceInSeason) {
+				return "redirect:/admin/season/" + year + "/cutoff";
+			}
 			Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
-			db.setCutoffRace(cutoffTime, raceId);
+			db.setCutoffRace(cutoffTime, validRaceId);
 		} catch (DateTimeParseException e) {
-
+		} catch (InvalidRaceException e) {
 		}
 		return "redirect:/admin/season/" + year + "/cutoff";
 	}

@@ -58,7 +58,7 @@ public class Database {
 	 * @return time as Instant
 	 * @throws NoAvailableRaceException if race does not have a cutoff set
 	 */
-	public Instant getCutoffRace(int raceId) throws NoAvailableRaceException {
+	public Instant getCutoffRace(RaceId raceId) throws NoAvailableRaceException {
 		try {
 			final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
 			return Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceId));
@@ -114,7 +114,7 @@ public class Database {
 	 * @param year of season
 	 * @return race number of race
 	 */
-	public int getLatestRaceId(Year year) throws EmptyResultDataAccessException {
+	public RaceId getLatestRaceId(Year year) throws EmptyResultDataAccessException {
 		final String getRaceIdSql = """
 			SELECT ro.id
 			FROM RaceOrder ro
@@ -124,7 +124,7 @@ public class Database {
 			LIMIT 1;
 			""";
 
-		return jdbcTemplate.queryForObject(getRaceIdSql, Integer.class, year);
+		return new RaceId(jdbcTemplate.queryForObject(getRaceIdSql, Integer.class, year));
 	}
 
 	/**
@@ -133,7 +133,7 @@ public class Database {
 	 * @param raceId of race
 	 * @return position of race
 	 */
-	public int getPositionOfRace(int raceId) {
+	public int getPositionOfRace(RaceId raceId) {
 		final String getRacePosition = "SELECT position FROM RaceOrder WHERE id = ?";
 		return jdbcTemplate.queryForObject(getRacePosition, Integer.class, raceId);
 	}
@@ -264,10 +264,10 @@ public class Database {
 	 * @param year of season
 	 * @return drivers ascendingly
 	 */
-	public List<String> getDriverStandings(int raceId, Year year) {
+	public List<String> getDriverStandings(RaceId raceId, Year year) {
 		final String driverYearSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
 		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
-		if (raceId == -1) {
+		if (raceId == null) {
 			return jdbcTemplate.queryForList(driverYearSql, String.class, year);
 		} else {
 			return jdbcTemplate.queryForList(driverStandingsSql, String.class, raceId);
@@ -284,10 +284,10 @@ public class Database {
 	 * @param year of season
 	 * @return constructors ascendingly
 	 */
-	public List<String> getConstructorStandings(int raceId, Year year) {
+	public List<String> getConstructorStandings(RaceId raceId, Year year) {
 		final String constructorYearSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
 		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
-		if (raceId == -1) {
+		if (raceId == null) {
 			return jdbcTemplate.queryForList(constructorYearSql, String.class, year);
 		} else {
 			return jdbcTemplate.queryForList(constructorStandingsSql, String.class, raceId);
@@ -357,7 +357,7 @@ public class Database {
 	 * @param category
 	 * @return list of guesses
 	 */
-	public List<UserRaceGuess> getUserGuessesDriverPlace(int raceId, Category category) {
+	public List<UserRaceGuess> getUserGuessesDriverPlace(RaceId raceId, Category category) {
 		final String getGuessSql = """
 			SELECT u.username AS username, dpg.driver AS driver, sg.position AS position
 			FROM DriverPlaceGuess dpg
@@ -380,8 +380,9 @@ public class Database {
 	 * 
 	 * @param year of season
 	 * @return race
+	 * @throws EmptyResultDataAccessException if there is no race within the criteria
 	 */
-	public CutoffRace getLatestRaceForPlaceGuess(Year year) {
+	public CutoffRace getLatestRaceForPlaceGuess(Year year) throws EmptyResultDataAccessException {
 		final String getRaceIdSql = """
 			SELECT ro.id AS id, ro.position AS position, r.name AS name
 			FROM RaceOrder ro
@@ -392,7 +393,8 @@ public class Database {
 			LIMIT 1;
 			""";
 		Map<String, Object> res = jdbcTemplate.queryForMap(getRaceIdSql, year);
-		return new CutoffRace((int) res.get("position"), (String) res.get("name"), (int) res.get("id"));
+		RaceId raceId = new RaceId((int) res.get("id"));
+		return new CutoffRace((int) res.get("position"), (String) res.get("name"), raceId);
 	}
 
 	/**
@@ -402,7 +404,7 @@ public class Database {
 	 * @return race id
 	 * @throws EmptyResultDataAccessException if there is no race within the criteria
 	 */
-	public int getCurrentRaceIdToGuess() throws EmptyResultDataAccessException {
+	public RaceId getCurrentRaceIdToGuess() throws EmptyResultDataAccessException {
 		final String getRaceId = """
 			SELECT DISTINCT race_number
 			FROM StartingGrid sg
@@ -411,7 +413,7 @@ public class Database {
 				FROM RaceResult rr
 			)
 			""";
-		return jdbcTemplate.queryForObject(getRaceId, Integer.class);
+		return new RaceId(jdbcTemplate.queryForObject(getRaceId, Integer.class));
 	}
 
 	/**
@@ -464,7 +466,7 @@ public class Database {
 	 * @param raceId of race
 	 * @return time left in seconds
 	 */
-	public long getTimeLeftToGuessRace(int raceId) {
+	public long getTimeLeftToGuessRace(RaceId raceId) {
 		Instant now = Instant.now();
 		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
 		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceId));
@@ -491,7 +493,7 @@ public class Database {
 	 * @param raceId of race
 	 * @return drivers ascendingly
 	 */
-	public List<String> getDriversFromStartingGrid(int raceId) {
+	public List<String> getDriversFromStartingGrid(RaceId raceId) {
 		final String getDriversFromGrid = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
 		return jdbcTemplate.queryForList(getDriversFromGrid, String.class, raceId);
 	}
@@ -504,7 +506,7 @@ public class Database {
 	 * @param userId of the user
 	 * @return name of driver guessed
 	 */
-	public String getGuessedDriverPlace(int raceId, Category category, UUID userId) {
+	public String getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
 		final String getPreviousGuessSql = """
 			SELECT driver
 			FROM DriverPlaceGuess
@@ -521,7 +523,7 @@ public class Database {
 	 * @param driver name guessed
 	 * @param category which the user guessed on
 	 */
-	public void addDriverPlaceGuess(UUID userId, int raceId, String driver, Category category) {
+	public void addDriverPlaceGuess(UUID userId, RaceId raceId, String driver, Category category) {
 		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?)";
 		jdbcTemplate.update(insertGuessSql, userId, raceId, driver, category);
 	}
@@ -812,7 +814,7 @@ public class Database {
 	 * @param year of season
 	 * @return id of races
 	 */
-	public List<Integer> getRaceIdsFinished(Year year) {
+	public List<RaceId> getRaceIdsFinished(Year year) {
 		final String getRaceIds = """
 			SELECT ro.id
 			FROM RaceOrder ro
@@ -820,7 +822,9 @@ public class Database {
 			WHERE ro.year = ?
 			ORDER BY ro.position ASC
 			""";
-		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year);
+		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year).stream()
+			.map(id -> new RaceId(id))
+			.toList();
 	}
 
 	/**
@@ -830,14 +834,21 @@ public class Database {
 	 * 
 	 * @return list of rows with id, year and position
 	 */
-	public List<Map<String, Object>> getActiveRaces() {
+	public List<CutoffRace> getActiveRaces() {
 		final String sql = """
 			SELECT id, year, position
 			FROM RaceOrder
 			WHERE id NOT IN (SELECT race_number FROM RaceResult)
 			ORDER BY year ASC, position ASC
 			""";
-		return jdbcTemplate.queryForList(sql);
+		
+		return jdbcTemplate.queryForList(sql).stream()
+			.map(row -> new CutoffRace(
+				(int) row.get("position"),
+				new RaceId((int) row.get("id")),
+				new Year((int) row.get("year"))
+			))
+			.toList();
 	}
 
 	/**
@@ -846,7 +857,7 @@ public class Database {
 	 * @param year of season
 	 * @return race id
 	 */
-	public int getLatestStartingGridRaceId(int year) {
+	public RaceId getLatestStartingGridRaceId(Year year) {
 		final String getStartingGridId = """
 			SELECT DISTINCT ro.id
 			FROM StartingGrid sg
@@ -855,7 +866,7 @@ public class Database {
 			ORDER BY ro.position DESC
 			LIMIT 1
 			""";
-		return jdbcTemplate.queryForObject(getStartingGridId, Integer.class, year);
+		return new RaceId(jdbcTemplate.queryForObject(getStartingGridId, Integer.class, year));
 	}
 
 	/**
@@ -864,7 +875,7 @@ public class Database {
 	 * @param year of season
 	 * @return race id
 	 */
-	public int getLatestRaceResultId(int year) {
+	public RaceId getLatestRaceResultId(Year year) {
 		final String getRaceResultId = """
 			SELECT ro.id
 			FROM RaceResult rr
@@ -873,7 +884,7 @@ public class Database {
 			ORDER BY ro.position DESC
 			LIMIT 1
 			""";
-		return jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year);
+		return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year));
 	}
 
 	/**
@@ -882,7 +893,7 @@ public class Database {
 	 * @param year of season
 	 * @return race id
 	 */
-	public int getRaceIdForSprint(int year) {
+	public RaceId getRaceIdForSprint(Year year) {
 		final String getRaceResultId = """
 			SELECT ro.id
 			FROM RaceOrder ro
@@ -891,7 +902,7 @@ public class Database {
 			ORDER BY ro.position ASC
 			LIMIT 1
 			""";
-		return jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year);
+		return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year));
 	}
 
 	/**
@@ -900,7 +911,7 @@ public class Database {
 	 * @param raceId
 	 * @return true if exists
 	 */
-	public boolean isStartingGridAdded(int raceId) {
+	public boolean isStartingGridAdded(RaceId raceId) {
 		final String existCheck = "SELECT COUNT(*) FROM StartingGrid WHERE race_number = ?";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 	}
@@ -911,7 +922,7 @@ public class Database {
 	 * @param raceId
 	 * @return true if exists
 	 */
-	public boolean isRaceResultAdded(int raceId) {
+	public boolean isRaceResultAdded(RaceId raceId) {
 		final String existCheck = "SELECT COUNT(*) FROM RaceResult WHERE race_number = ?";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 	}
@@ -922,7 +933,7 @@ public class Database {
 	 * @param raceId
 	 * @return true if exists
 	 */
-	public boolean isSprintAdded(int raceId) {
+	public boolean isSprintAdded(RaceId raceId) {
 		final String existCheck = "SELECT COUNT(*) FROM Sprint WHERE race_number = ?";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 	}
@@ -1077,7 +1088,7 @@ public class Database {
 	 * @param position of driver
 	 * @param name of driver
 	 */
-	public void insertDriverStartingGrid(int raceId, int position, String driver) {
+	public void insertDriverStartingGrid(RaceId raceId, int position, String driver) {
 		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
 		jdbcTemplate.update(insertStartingGrid, raceId, position, driver);
 	}
@@ -1087,7 +1098,7 @@ public class Database {
 	 * 
 	 * @param raceId
 	 */
-	public void addSprint(int raceId) {
+	public void addSprint(RaceId raceId) {
 		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
 		jdbcTemplate.update(insertSprint, raceId);
 	}
@@ -1101,7 +1112,7 @@ public class Database {
 	 * @param points
 	 * @param finishingPosition the position that driver finished race in
 	 */
-	public void insertDriverRaceResult(int raceId, String position, String driver, int points, int finishingPosition) {
+	public void insertDriverRaceResult(RaceId raceId, String position, String driver, int points, int finishingPosition) {
 		final String insertRaceResult = "INSERT OR REPLACE INTO RaceResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
 		jdbcTemplate.update(insertRaceResult, raceId, position, driver, points, finishingPosition);
 	}
@@ -1114,7 +1125,7 @@ public class Database {
 	 * @param position of driver
 	 * @param points of driver
 	 */
-	public void insertDriverIntoStandings(int raceId, String driver, int position, int points) {
+	public void insertDriverIntoStandings(RaceId raceId, String driver, int position, int points) {
 		final String insertDriverStandings = "INSERT OR REPLACE INTO DriverStandings (race_number, driver, position, points) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(insertDriverStandings, raceId, driver, position, points);
 	}
@@ -1127,7 +1138,7 @@ public class Database {
 	 * @param position of constructor
 	 * @param points of constructor
 	 */
-	public void insertConstructorIntoStandings(int raceId, String constructor, int position, int points) {
+	public void insertConstructorIntoStandings(RaceId raceId, String constructor, int position, int points) {
 		final String insertConstructorStandings = "INSERT OR REPLACE INTO ConstructorStandings (race_number, constructor, position, points) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(insertConstructorStandings, raceId, constructor, position, points);
 	}
@@ -1162,7 +1173,7 @@ public class Database {
 	 * @param year of season
 	 * @param position of race
 	 */
-	public void insertRaceOrder(int raceId, int year, int position) {
+	public void insertRaceOrder(RaceId raceId, int year, int position) {
 		final String insertRaceOrder = "INSERT OR IGNORE INTO RaceOrder (id, year, position) VALUES (?, ?, ?)";
 		jdbcTemplate.update(insertRaceOrder, raceId, year, position);
 	}
@@ -1172,7 +1183,7 @@ public class Database {
 	 * 
 	 * @param raceId to delete
 	 */
-	public void deleteRace(int raceId) {
+	public void deleteRace(RaceId raceId) {
 		final String deleteRace = "DELETE FROM Race WHERE id = ?";
 		jdbcTemplate.update(deleteRace, raceId);
 	}
@@ -1197,7 +1208,7 @@ public class Database {
 	 * @param year of season
 	 * @return true if race is valid
 	 */
-	public boolean isValidRaceInSeason(int raceId, Year year) {
+	public boolean isRaceInSeason(RaceId raceId, Year year) {
 		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
 		return jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
 	}
@@ -1220,9 +1231,11 @@ public class Database {
 	 * @param year of season
 	 * @return id of races
 	 */
-	public List<Integer> getRacesFromSeason(Year year) {
+	public List<RaceId> getRacesFromSeason(Year year) {
 		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ? ORDER BY position ASC";
-		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year);
+		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year).stream()
+			.map(id -> new RaceId(id))
+			.toList();
 	}
 
 	/**
@@ -1258,7 +1271,8 @@ public class Database {
 			String name = (String) row.get("name");
 			int id = (int) row.get("id");
 			int position = (int) row.get("position");
-			CutoffRace race = new CutoffRace(position, name, id, cutoff);
+			RaceId raceId = new RaceId(id);
+			CutoffRace race = new CutoffRace(position, name, raceId, cutoff, year);
 			races.add(race);
 		}
 		return races;
@@ -1280,7 +1294,7 @@ public class Database {
 	 * @param cutoffTime for guessing
 	 * @param raceId of race
 	 */
-	public void setCutoffRace(Instant cutoffTime, int raceId) {
+	public void setCutoffRace(Instant cutoffTime, RaceId raceId) {
 		final String setCutoffTime = "INSERT OR REPLACE INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
 		jdbcTemplate.update(setCutoffTime, raceId, cutoffTime.toString());
 	}
@@ -1302,7 +1316,7 @@ public class Database {
 	 * @param raceId of race
 	 * @return registered flags
 	 */
-	public List<RegisteredFlag> getRegisteredFlags(int raceId) {
+	public List<RegisteredFlag> getRegisteredFlags(RaceId raceId) {
 		List<RegisteredFlag> registeredFlags = new ArrayList<>();
 		final String getRegisteredFlags = "SELECT flag, round, id FROM FlagStats WHERE race_number = ?";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRegisteredFlags, raceId);
@@ -1324,7 +1338,7 @@ public class Database {
 	 * @param round the round flag happened in
 	 * @param raceId of race
 	 */
-	public void insertFlagStats(String flag, int round, int raceId) {
+	public void insertFlagStats(String flag, int round, RaceId raceId) {
 		final String sql = "INSERT INTO FlagStats (flag, race_number, round) VALUES (?, ?, ?)";
 		jdbcTemplate.update(sql, flag, raceId, round);
 	}
@@ -1345,7 +1359,7 @@ public class Database {
 	 * @param raceId of race
 	 * @return name of race
 	 */
-	public String getRaceName(int raceId) {
+	public String getRaceName(RaceId raceId) {
 		final String getRaceNameSql = "SELECT name FROM Race WHERE id = ?";
 		return jdbcTemplate.queryForObject(getRaceNameSql, String.class, raceId);
 	}
@@ -1367,7 +1381,7 @@ public class Database {
 	 * @param raceId of race
 	 * @return starting grid
 	 */
-	public List<PositionedCompetitor> getStartingGrid(int raceId) {
+	public List<PositionedCompetitor> getStartingGrid(RaceId raceId) {
 		final String getStartingGrid = """
 			SELECT position, driver
 			FROM StartingGrid
@@ -1390,7 +1404,7 @@ public class Database {
 	 * @param raceId of race
 	 * @return race result
 	 */
-	public List<PositionedCompetitor> getRaceResult(int raceId) {
+	public List<PositionedCompetitor> getRaceResult(RaceId raceId) {
 		final String getRaceResult = """
 			SELECT position, driver, points
 			FROM RaceResult
@@ -1414,7 +1428,7 @@ public class Database {
 	 * @param raceId of race
 	 * @return driver standings
 	 */
-	public List<PositionedCompetitor> getDriverStandings(int raceId) {
+	public List<PositionedCompetitor> getDriverStandings(RaceId raceId) {
 		final String getDriverStandings = """
 			SELECT position, driver, points
 			FROM DriverStandings
@@ -1438,7 +1452,7 @@ public class Database {
 	 * @param raceId of race
 	 * @return constructor standings
 	 */
-	public List<PositionedCompetitor> getConstructorStandings(int raceId) {
+	public List<PositionedCompetitor> getConstructorStandings(RaceId raceId) {
 		final String getConstructorStandings = """
 			SELECT position, constructor, points
 			FROM ConstructorStandings

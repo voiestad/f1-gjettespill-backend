@@ -14,7 +14,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.PositionedCompetitor;
+import no.vebb.f1.util.RaceId;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -35,60 +37,64 @@ public class Importer {
 
 	@Scheduled(fixedRate = 3600000, initialDelay = 5000)
 	public void importData() {
-		int year = TimeUtil.getCurrentYear();
 		logger.info("Starting import of data to database");
-		Map<Integer, List<Integer>> racesToImportFromList = getActiveRaces();
-		boolean shouldImportStandings = false;
+		try {
+			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			Map<Year, List<RaceId>> racesToImportFromList = getActiveRaces();
+			boolean shouldImportStandings = false;
 
-		for (Entry<Integer, List<Integer>> racesToImportFrom : racesToImportFromList.entrySet()) {
-			int raceYear = racesToImportFrom.getKey(); 
-			List<Integer> races = racesToImportFrom.getValue();
-			importStartingGrids(races);
-			if (importRaceResults(races) && year == raceYear) {
+			for (Entry<Year, List<RaceId>> racesToImportFrom : racesToImportFromList.entrySet()) {
+				Year raceYear = racesToImportFrom.getKey(); 
+				List<RaceId> races = racesToImportFrom.getValue();
+				importStartingGrids(races);
+				
+				if (importRaceResults(races) && year.equals(raceYear)) {
+					shouldImportStandings = true;
+				}
+				importSprints(races, raceYear);
+			}
+			if (refreshLatestImports(year)) {
 				shouldImportStandings = true;
 			}
-			importSprints(races, raceYear);
+			if (shouldImportStandings) {
+				importStandings(year);
+			}
+			logger.info("Finished import of data to database");
+		} catch (InvalidYearException e) {
+			e.printStackTrace();
+			logger.error("Could not import data to the database because current year is not valid");
 		}
-		if (refreshLatestImports(year)) {
-			shouldImportStandings = true;
-		}
-		if (shouldImportStandings) {
-			importStandings(year);
-		}
-		logger.info("Finished import of data to database");
 	}
 
-	private Map<Integer, List<Integer>> getActiveRaces() {
-		Map<Integer, List<Integer>> activeRaces = new LinkedHashMap<>();
-		List<Map<String, Object>> sqlRes = db.getActiveRaces();
-		for (Map<String, Object> row : sqlRes) {
-			int id = (int) row.get("id");
-			int year = (int) row.get("year");
-			if (!activeRaces.containsKey(year)) {
-				activeRaces.put(year, new ArrayList<>());
+	private Map<Year, List<RaceId>> getActiveRaces() {
+		Map<Year, List<RaceId>> activeRaces = new LinkedHashMap<>();
+		List<CutoffRace> sqlRes = db.getActiveRaces();
+		for (CutoffRace race : sqlRes) {
+			if (!activeRaces.containsKey(race.year)) {
+				activeRaces.put(race.year, new ArrayList<>());
 			}
-			List<Integer> races = activeRaces.get(year);
-			races.add(id);
+			List<RaceId> races = activeRaces.get(race.year);
+			races.add(race.id);
 		}
 
 		return activeRaces;
 	}
 
-	public void importRaceData(int raceId) {
+	public void importRaceData(RaceId raceId) {
 		importStartingGridData(raceId);
 		importRaceResultData(raceId);
 	}
 
-	private void importStartingGridData(int raceId) {
-		List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
+	private void importStartingGridData(RaceId raceId) {
+		List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId.value);
 		if (startingGrid.isEmpty()) {
 			return;
 		}
 		insertStartingGridData(raceId, startingGrid);
 	}
 
-	private boolean importRaceResultData(int raceId) {
-		List<List<String>> raceResult = TableImporter.getRaceResult(raceId);
+	private boolean importRaceResultData(RaceId raceId) {
+		List<List<String>> raceResult = TableImporter.getRaceResult(raceId.value);
 		if (raceResult.isEmpty()) {
 			return false;
 		}
@@ -108,36 +114,36 @@ public class Importer {
 		return false;
 	}
 
-	private boolean refreshLatestImports(int year) {
+	private boolean refreshLatestImports(Year year) {
 		refreshLatestStartingGrid(year);
 		return refreshLatestRaceResult(year);
 	}
 
-	private void refreshLatestStartingGrid(int year) {
+	private void refreshLatestStartingGrid(Year year) {
 		try {
-			int raceId = db.getLatestStartingGridRaceId(year);
+			RaceId raceId = db.getLatestStartingGridRaceId(year);
 			importStartingGridData(raceId);
 		} catch (EmptyResultDataAccessException e) {
 
 		}
 	}
 
-	private boolean refreshLatestRaceResult(int year) {
+	private boolean refreshLatestRaceResult(Year year) {
 		try {
-			int raceId = db.getLatestRaceResultId(year);
+			RaceId raceId = db.getLatestRaceResultId(year);
 			return importRaceResultData(raceId);
 		} catch (EmptyResultDataAccessException e) {
 			return false;
 		}
 	}
 
-	private void importStartingGrids(List<Integer> racesToImportFrom) {
-		for (int raceId : racesToImportFrom) {
+	private void importStartingGrids(List<RaceId> racesToImportFrom) {
+		for (RaceId raceId : racesToImportFrom) {
 			boolean isAlreadyAdded = db.isStartingGridAdded(raceId);
 			if (isAlreadyAdded) {
 				continue;
 			}
-			List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
+			List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId.value);
 			if (startingGrid.isEmpty()) {
 				break;
 			}
@@ -145,7 +151,7 @@ public class Importer {
 		}
 	}
 
-	private void insertStartingGridData(int raceId, List<List<String>> startingGrid) {
+	private void insertStartingGridData(RaceId raceId, List<List<String>> startingGrid) {
 		for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
 			int position = Integer.parseInt(row.get(0));
 			String driver = parseDriver(row.get(2));
@@ -154,14 +160,14 @@ public class Importer {
 		}
 	}
 
-	private boolean importRaceResults(List<Integer> racesToImportFrom) {
+	private boolean importRaceResults(List<RaceId> racesToImportFrom) {
 		boolean addedNewRace = false;
-		for (int raceId : racesToImportFrom) {
+		for (RaceId raceId : racesToImportFrom) {
 			boolean isAlreadyAdded = db.isRaceResultAdded(raceId);
 			if (isAlreadyAdded) {
 				throw new RuntimeException("Race is already added and was attempted added again");
 			}
-			List<List<String>> raceResult = TableImporter.getRaceResult(raceId);
+			List<List<String>> raceResult = TableImporter.getRaceResult(raceId.value);
 			if (raceResult.isEmpty()) {
 				break;
 			}
@@ -172,7 +178,7 @@ public class Importer {
 		return addedNewRace;
 	}
 
-	private void insertRaceResultData(int raceId, List<List<String>> raceResult) {
+	private void insertRaceResultData(RaceId raceId, List<List<String>> raceResult) {
 		int finishingPosition = 1;
 		for (List<String> row : raceResult.subList(1, raceResult.size())) {
 			String position = row.get(0);
@@ -184,21 +190,21 @@ public class Importer {
 		}
 	}
 
-	private void importSprints(List<Integer> racesToImportFrom, int year) {
+	private void importSprints(List<RaceId> racesToImportFrom, Year year) {
 		try {
-			int raceNumber = db.getRaceIdForSprint(year);
-			if (!racesToImportFrom.contains(raceNumber)) {
+			RaceId raceId = db.getRaceIdForSprint(year);
+			if (!racesToImportFrom.contains(raceId)) {
 				return;
 			}
-			boolean isAlreadyAdded = db.isSprintAdded(raceNumber);
+			boolean isAlreadyAdded = db.isSprintAdded(raceId);
 			if (isAlreadyAdded) {
 				return;
 			}
-			List<List<String>> raceResult = TableImporter.getSprintResult(raceNumber);
+			List<List<String>> raceResult = TableImporter.getSprintResult(raceId.value);
 			if (raceResult.isEmpty()) {
 				return;
 			}
-			db.addSprint(raceNumber);
+			db.addSprint(raceId);
 
 		} catch (EmptyResultDataAccessException e) {
 
@@ -208,7 +214,7 @@ public class Importer {
 
 	public void importRaceNames(List<Integer> racesToImportFrom, int year) {
 		int position = 1;
-		for (Integer raceId : racesToImportFrom) {
+		for (int raceId : racesToImportFrom) {
 			if (addRace(raceId, year, position)) {
 				position++;
 			}
@@ -230,13 +236,14 @@ public class Importer {
 			return false;
 		}
 		db.insertRace(raceId, raceName);
-		db.insertRaceOrder(raceId, year, position);
+		RaceId validRaceId = new RaceId(raceId, db);
+		db.insertRaceOrder(validRaceId, year, position);
 		return true;
 	}
 
-	private void importStandings(int year) {
+	private void importStandings(Year year) {
 		try {
-			int newestRace = db.getLatestRaceId(new Year(year, db));
+			RaceId newestRace = db.getLatestRaceId(year);
 			importDriverStandings(year, newestRace);
 			importConstructorStandings(year, newestRace);
 		} catch (EmptyResultDataAccessException e) {
@@ -244,8 +251,8 @@ public class Importer {
 		}
 	}
 
-	private void importDriverStandings(int year, int newestRace) {
-		List<List<String>> standings = TableImporter.getDriverStandings(year);
+	private void importDriverStandings(Year year, RaceId newestRace) {
+		List<List<String>> standings = TableImporter.getDriverStandings(year.value);
 		if (standings.size() == 0) {
 			return;
 		}
@@ -257,8 +264,8 @@ public class Importer {
 		}
 	}
 
-	private void importConstructorStandings(int year, int newestRace) {
-		List<List<String>> standings = TableImporter.getConstructorStandings(year);
+	private void importConstructorStandings(Year year, RaceId newestRace) {
+		List<List<String>> standings = TableImporter.getConstructorStandings(year.value);
 		if (standings.size() == 0) {
 			return;
 		}

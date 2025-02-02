@@ -33,8 +33,8 @@ public class Cutoff {
 			return isAbleToGuess(cutoff);
 	}
 
-	public boolean isAbleToGuessRace(int raceNumber) throws NoAvailableRaceException {
-		Instant cutoff = db.getCutoffRace(raceNumber);
+	public boolean isAbleToGuessRace(RaceId raceId) throws NoAvailableRaceException {
+		Instant cutoff = db.getCutoffRace(raceId);
 		return isAbleToGuess(cutoff);
 	}
 

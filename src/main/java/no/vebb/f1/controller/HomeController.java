@@ -16,6 +16,7 @@ import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.Guesser;
+import no.vebb.f1.util.RaceId;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.Year;
@@ -79,7 +80,7 @@ public class HomeController {
 	private boolean isRaceGuess() {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			int raceId = db.getLatestRaceForPlaceGuess(year).id;
+			RaceId raceId = db.getLatestRaceForPlaceGuess(year).id;
 			return !cutoff.isAbleToGuessRace(raceId);
 		} catch (InvalidYearException e) {
 			return false;
@@ -119,9 +120,9 @@ public class HomeController {
 		return new Table("Rangering", header, body);
 	}
 
-	private List<Integer> getSeasonRaceIds(Year year) {
-		List<Integer> raceIds = new ArrayList<>();
-		raceIds.add(-1);
+	private List<RaceId> getSeasonRaceIds(Year year) {
+		List<RaceId> raceIds = new ArrayList<>();
+		raceIds.add(null);
 		db.getRaceIdsFinished(year).forEach(id -> raceIds.add(id));
 
 		return raceIds;
@@ -132,7 +133,7 @@ public class HomeController {
 		List<UUID> guessers = db.getSeasonGuesserIds(year);
 		List<String> guessersNames = db.getSeasonGuessers(year);
 		model.addAttribute("guessersNames", guessersNames);
-		List<Integer> raceIds = getSeasonRaceIds(year);
+		List<RaceId> raceIds = getSeasonRaceIds(year);
 		List<List<Integer>> scores = new ArrayList<>();
 		for (UUID id : guessers) {
 			scores.add(

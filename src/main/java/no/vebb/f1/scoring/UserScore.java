@@ -12,6 +12,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.Category;
+import no.vebb.f1.util.RaceId;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.Year;
 
@@ -22,7 +23,7 @@ public class UserScore {
 	private final UUID id;
 	private final Year year;
 	private int score;
-	private final int raceNumber;
+	private final RaceId raceId;
 	private final int racePos;
 	public final Table driversTable;
 	public final Table constructorsTable;
@@ -32,10 +33,10 @@ public class UserScore {
 	public final Table summaryTable;
 	private final List<List<String>> summaryTableBody = new ArrayList<>();
 
-	public UserScore(UUID id, Year year, int raceNumber, Database db) {
+	public UserScore(UUID id, Year year, RaceId raceId, Database db) {
 		this.id = id;
 		this.year = year;
-		this.raceNumber = raceNumber;
+		this.raceId = raceId;
 		this.db = db;
 		this.racePos = getRacePosition();
 		this.driversTable = initializeDriversTable();
@@ -47,22 +48,22 @@ public class UserScore {
 	}
 
 	public UserScore(UUID id, Year year, Database db) {
-		this(id, year, UserScore.getRaceNumber(year, db), db);
+		this(id, year, UserScore.getRaceId(year, db), db);
 	}
 
-	private static int getRaceNumber(Year year, Database db) {
+	private static RaceId getRaceId(Year year, Database db) {
 		try {
 			return db.getLatestRaceId(year);
 		} catch (EmptyResultDataAccessException e) {
-			return -1;
+			return null;
 		}
 	}
 
 	private int getRacePosition() {
-		if (raceNumber == -1) {
+		if (raceId == null) {
 			return 0;
 		}
-		return db.getPositionOfRace(raceNumber);
+		return db.getPositionOfRace(raceId);
 	}
 
 	private Table initializeDriversTable() {
@@ -71,7 +72,7 @@ public class UserScore {
 		List<String> header = Arrays.asList("Plass", "Sjåfør", "Gjettet", "Diff", "Poeng");
 
 		List<String> guessedDriver = db.getGuessedYearDriver(year, id);
-		List<String> drivers = db.getDriverStandings(raceNumber, year);
+		List<String> drivers = db.getDriverStandings(raceId, year);
 		return getGuessedToPos(map, category, header, guessedDriver, drivers);
 	}
 
@@ -81,7 +82,7 @@ public class UserScore {
 		List<String> header = Arrays.asList("Plass", "Konstruktør", "Gjettet", "Diff", "Poeng");
 
 		List<String> guessedConstructor = db.getGuessedYearConstructor(year, id);
-		List<String> constructors = db.getConstructorStandings(raceNumber, year);
+		List<String> constructors = db.getConstructorStandings(raceId, year);
 
 		return getGuessedToPos(map, category, header, guessedConstructor, constructors);
 	}
@@ -162,7 +163,7 @@ public class UserScore {
 		List<String> header = Arrays.asList("Løp", "Gjettet", "Startet", "Plass", "Poeng");
 		List<List<String>> body = new ArrayList<>();
 		String translation = db.translateCategory(category);
-		if (raceNumber == -1) {
+		if (raceId == null) {
 			return new Table(translation, header, body);
 		}
 		DiffPointsMap map = new DiffPointsMap(category, year, db);
