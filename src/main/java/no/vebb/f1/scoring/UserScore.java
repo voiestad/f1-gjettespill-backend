@@ -11,11 +11,11 @@ import java.util.UUID;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.Category;
-import no.vebb.f1.util.Flag;
-import no.vebb.f1.util.RaceId;
-import no.vebb.f1.util.Table;
-import no.vebb.f1.util.Year;
+import no.vebb.f1.util.collection.Table;
+import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Flag;
+import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 public class UserScore {
 

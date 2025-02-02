@@ -1,4 +1,4 @@
-package no.vebb.f1.util;
+package no.vebb.f1.util.collection;
 
 public class Flags {
 	public int yellow;

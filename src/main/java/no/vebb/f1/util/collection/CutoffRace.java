@@ -1,6 +1,9 @@
-package no.vebb.f1.util;
+package no.vebb.f1.util.collection;
 
 import java.time.LocalDateTime;
+
+import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 public 	class CutoffRace {
 	public final int position;

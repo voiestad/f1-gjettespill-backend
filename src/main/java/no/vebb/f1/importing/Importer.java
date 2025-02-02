@@ -14,11 +14,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.CutoffRace;
-import no.vebb.f1.util.PositionedCompetitor;
-import no.vebb.f1.util.RaceId;
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.Year;
+import no.vebb.f1.util.collection.CutoffRace;
+import no.vebb.f1.util.collection.PositionedCompetitor;
+import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
 @Component

@@ -22,13 +22,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.Category;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.Year;
+import no.vebb.f1.util.collection.Flags;
+import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
-import no.vebb.f1.util.Flags;
-import no.vebb.f1.util.RaceId;
 
 
 @Controller

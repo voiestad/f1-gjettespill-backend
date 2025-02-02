@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.Year;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 @Controller
 @RequestMapping("/admin/season/{year}/competitors")

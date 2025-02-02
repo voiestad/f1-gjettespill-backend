@@ -1,4 +1,4 @@
-package no.vebb.f1.util;
+package no.vebb.f1.util.domainPrimitive;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.exception.InvalidFlagException;

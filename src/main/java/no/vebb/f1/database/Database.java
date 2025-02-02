@@ -14,6 +14,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.util.*;
+import no.vebb.f1.util.collection.CutoffRace;
+import no.vebb.f1.util.collection.Flags;
+import no.vebb.f1.util.collection.PositionedCompetitor;
+import no.vebb.f1.util.collection.RegisteredFlag;
+import no.vebb.f1.util.collection.UserRaceGuess;
+import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Flag;
+import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.user.User;
 

@@ -15,11 +15,11 @@ import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
-import no.vebb.f1.util.Guesser;
-import no.vebb.f1.util.RaceId;
-import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.Year;
+import no.vebb.f1.util.collection.Guesser;
+import no.vebb.f1.util.collection.Table;
+import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 

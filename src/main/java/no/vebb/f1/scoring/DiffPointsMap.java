@@ -3,8 +3,8 @@ package no.vebb.f1.scoring;
 import java.util.Map;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.Category;
-import no.vebb.f1.util.Year;
+import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 public class DiffPointsMap {
 	  

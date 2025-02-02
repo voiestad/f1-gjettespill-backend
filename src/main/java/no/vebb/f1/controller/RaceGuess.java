@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.Category;
 import no.vebb.f1.util.Cutoff;
-import no.vebb.f1.util.CutoffRace;
-import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.Year;
+import no.vebb.f1.util.collection.CutoffRace;
+import no.vebb.f1.util.collection.Table;
+import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 

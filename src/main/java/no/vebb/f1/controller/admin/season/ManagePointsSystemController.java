@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.controller.ScoreController;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.Category;
-import no.vebb.f1.util.Table;
-import no.vebb.f1.util.Year;
+import no.vebb.f1.util.collection.Table;
+import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidCategoryException;
 
 @Controller
