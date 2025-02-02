@@ -38,8 +38,8 @@ public class SeasonController {
 		userService.adminCheck();
 		model.addAttribute("title", "Administrer sesonger");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		List<Integer> years = db.getAllValidYears();
-		for (Integer year : years) {
+		List<Year> years = db.getAllValidYears();
+		for (Year year : years) {
 			linkMap.put(String.valueOf(year), "/admin/season/" + year);
 		}
 		linkMap.put("Legg til ny sesong", "/admin/season/add");

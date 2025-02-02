@@ -12,6 +12,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.Category;
+import no.vebb.f1.util.Flag;
 import no.vebb.f1.util.RaceId;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.Year;
@@ -132,13 +133,14 @@ public class UserScore {
 		List<Map<String, Object>> sqlRes = db.getDataForFlagTable(racePos, year, id);
 
 		for (Map<String, Object> row : sqlRes) {
-			String flag = db.translateFlagName((String) row.get("type"));
+			Flag flag = new Flag((String) row.get("type"), db);
+			String translatedFlag = db.translateFlagName(flag);
 			int guessed = (int) row.get("guessed");
 			int actual = (int) row.get("actual");
 			int diff = Math.abs(guessed - actual);
 			int points = map.getPoints(diff);
 			flagScore += points;
-			body.add(Arrays.asList(flag, String.valueOf(guessed), String.valueOf(actual), String.valueOf(diff), String.valueOf(points))); 
+			body.add(Arrays.asList(translatedFlag, String.valueOf(guessed), String.valueOf(actual), String.valueOf(diff), String.valueOf(points))); 
 		}
 
 		Collections.sort(body, (a, b) -> a.get(0).compareTo(b.get(0)));

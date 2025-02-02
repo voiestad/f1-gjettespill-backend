@@ -160,7 +160,7 @@ public class Database {
 	 * @param flag to translate
 	 * @return translation of flag
 	 */
-	public String translateFlagName(String flag) {
+	public String translateFlagName(Flag flag) {
 		final String translationSql = """
 			SELECT translation
 			FROM FlagTranslation
@@ -1219,9 +1219,11 @@ public class Database {
 	 * 
 	 * @return valid years
 	 */
-	public List<Integer> getAllValidYears() {
+	public List<Year> getAllValidYears() {
 		final String sql = "SELECT DISTINCT year FROM RaceOrder ORDER BY year DESC";
-		return jdbcTemplate.queryForList(sql, Integer.class);
+		return jdbcTemplate.queryForList(sql, Integer.class).stream()
+			.map(year -> new Year(year))
+			.toList();
 	}
 
 	/**
@@ -1338,7 +1340,7 @@ public class Database {
 	 * @param round the round flag happened in
 	 * @param raceId of race
 	 */
-	public void insertFlagStats(String flag, int round, RaceId raceId) {
+	public void insertFlagStats(Flag flag, int round, RaceId raceId) {
 		final String sql = "INSERT INTO FlagStats (flag, race_number, round) VALUES (?, ?, ?)";
 		jdbcTemplate.update(sql, flag, raceId, round);
 	}
@@ -1492,5 +1494,10 @@ public class Database {
 	public boolean isValidConstructorYear(String constructor, Year year) {
 		final String existCheck = "SELECT COUNT(*) FROM ConstructorYear WHERE year = ? AND constructor = ?";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, year, constructor) > 0;
+	}
+
+	public boolean isValidFlag(String value) {
+		final String existCheck = "SELECT COUNT(*) FROM Flag WHERE name = ?";
+		return jdbcTemplate.queryForObject(existCheck, Integer.class, value) > 0;
 	}
 }

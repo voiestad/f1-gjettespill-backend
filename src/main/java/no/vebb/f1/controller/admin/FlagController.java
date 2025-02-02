@@ -1,10 +1,8 @@
 package no.vebb.f1.controller.admin;
 
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -18,9 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.CutoffRace;
+import no.vebb.f1.util.Flag;
 import no.vebb.f1.util.RaceId;
 import no.vebb.f1.util.RegisteredFlag;
 import no.vebb.f1.util.Year;
+import no.vebb.f1.util.exception.InvalidFlagException;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import no.vebb.f1.util.exception.InvalidYearException;
 
@@ -39,8 +39,8 @@ public class FlagController {
 		userService.adminCheck();
 		model.addAttribute("title", "Velg år");
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		List<Integer> years = db.getAllValidYears();
-		for (Integer year : years) {
+		List<Year> years = db.getAllValidYears();
+		for (Year year : years) {
 			linkMap.put(String.valueOf(year), "/admin/flag/" + year);
 		}
 		model.addAttribute("linkMap", linkMap);
@@ -90,12 +90,14 @@ public class FlagController {
 		userService.adminCheck();
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
-			Set<String> flags = new HashSet<>(db.getFlags());
-			if (!flags.contains(flag)) {
-				return "redirect:" + origin;
+			Flag validFlag = new Flag(flag, db);
+			if (round < 1 || round > 100) {
+				throw new IllegalArgumentException("Round : '" + round + "' out of bounds. Range: 1-100.");
 			}
-			db.insertFlagStats(flag, round, validRaceId);
+			db.insertFlagStats(validFlag, round, validRaceId);
 		} catch (InvalidRaceException e) {
+		} catch (InvalidFlagException e) {
+		} catch (IllegalArgumentException e) {
 		}
 		return "redirect:" + origin;
 	}
