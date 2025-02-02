@@ -19,9 +19,11 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidCategoryException;
+import no.vebb.f1.util.exception.InvalidDiffException;
 import no.vebb.f1.util.exception.InvalidPointsException;
 
 @Controller
@@ -59,13 +61,13 @@ public class ManagePointsSystemController {
 	public String addPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
 		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
-		int newDiff;
+		Diff newDiff;
 		try {
 			Category validCategory = new Category(category, db);
 			try {
-			newDiff = db.getMaxDiffInPointsMap(seasonYear, validCategory) + 1;
+				newDiff = db.getMaxDiffInPointsMap(seasonYear, validCategory).add(new Diff(1));
 			} catch (EmptyResultDataAccessException e) {
-			newDiff = 0;
+				newDiff = new Diff();;
 			} 
 			db.addDiffToPointsMap(validCategory, newDiff, seasonYear);
 		} catch (InvalidCategoryException e) {
@@ -80,7 +82,7 @@ public class ManagePointsSystemController {
 		Year seasonYear = new Year(year, db);
 		try {
 			Category validCategory = new Category(category, db);
-			int maxDiff = db.getMaxDiffInPointsMap(seasonYear, validCategory);
+			Diff maxDiff = db.getMaxDiffInPointsMap(seasonYear, validCategory);
 			db.removeDiffToPointsMap(validCategory, maxDiff, seasonYear);
 		} catch (EmptyResultDataAccessException e) {
 		} catch (InvalidCategoryException e) {
@@ -95,7 +97,8 @@ public class ManagePointsSystemController {
 		Year seasonYear = new Year(year, db);
 		try {
 			Category validCategory = new Category(category, db);
-			boolean isValidDiff = db.isValidDiffInPointsMap(validCategory, diff, seasonYear);
+			Diff validDiff = new Diff(diff);
+			boolean isValidDiff = db.isValidDiffInPointsMap(validCategory, validDiff, seasonYear);
 			if (!isValidDiff) {
 				return "redirect:/admin/season/" + year + "/points";
 			}
@@ -103,10 +106,11 @@ public class ManagePointsSystemController {
 			Points validPoints = new Points(points);
 			
 
-			db.setNewDiffToPointsInPointsMap(validCategory, diff, seasonYear, validPoints);
+			db.setNewDiffToPointsInPointsMap(validCategory, validDiff, seasonYear, validPoints);
 		} catch (EmptyResultDataAccessException e) {
 		} catch (InvalidCategoryException e) {
 		} catch (InvalidPointsException e) {
+		} catch (InvalidDiffException e) {
 		}
 		return "redirect:/admin/season/" + year + "/points";
 	}

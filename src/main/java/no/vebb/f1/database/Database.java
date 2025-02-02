@@ -20,6 +20,7 @@ import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.collection.UserRaceGuess;
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
@@ -680,7 +681,7 @@ public class Database {
 	 * @param year of season
 	 * @return map from diff to points
 	 */
-	public Map<Integer, Points> getDiffPointsMap(Year year, Category category) {
+	public Map<Diff, Points> getDiffPointsMap(Year year, Category category) {
 		final String sql = """
 			SELECT points, diff
 			FROM DiffPointsMap
@@ -689,9 +690,9 @@ public class Database {
 			""";
 
 		List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, year, category);
-		Map<Integer, Points> map = new LinkedHashMap<>();
+		Map<Diff, Points> map = new LinkedHashMap<>();
 		for (Map<String, Object> entry : result) {
-			Integer diff = (int) entry.get("diff");
+			Diff diff = new Diff((int) entry.get("diff"));
 			Points points = new Points((int) entry.get("points"));
 			map.put(diff, points);
 		}
@@ -706,9 +707,9 @@ public class Database {
 	 * @param category name
 	 * @return max diff
 	 */
-	public int getMaxDiffInPointsMap(Year year, Category category) {
+	public Diff getMaxDiffInPointsMap(Year year, Category category) {
 		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
-		return jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year, category);
+		return new Diff(jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year, category));
 	}
 
 	/**
@@ -718,7 +719,7 @@ public class Database {
 	 * @param diff to add mapping for
 	 * @param year of season
 	 */
-	public void addDiffToPointsMap(Category category, int diff, Year year) {
+	public void addDiffToPointsMap(Category category, Diff diff, Year year) {
 		final String addDiff = "INSERT INTO DiffPointsMap (category, diff, points, year) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(addDiff, category, diff, 0, year);
 	}
@@ -730,7 +731,7 @@ public class Database {
 	 * @param diff to remove mapping for
 	 * @param year of season
 	 */
-	public void removeDiffToPointsMap(Category category, int diff, Year year) {
+	public void removeDiffToPointsMap(Category category, Diff diff, Year year) {
 		final String deleteRowWithDiff = "DELETE FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
 		jdbcTemplate.update(deleteRowWithDiff, year, category, diff);
 	}
@@ -743,7 +744,7 @@ public class Database {
 	 * @param year of season
 	 * @param points
 	 */
-	public void setNewDiffToPointsInPointsMap(Category category, int diff, Year year, Points points) {
+	public void setNewDiffToPointsInPointsMap(Category category, Diff diff, Year year, Points points) {
 		final String setNewPoints = """
 			UPDATE DiffPointsMap
 			SET points = ?
@@ -759,7 +760,7 @@ public class Database {
 	 * @param diff to check
 	 * @param year of season
 	 */
-	public boolean isValidDiffInPointsMap(Category category, int diff, Year year) {
+	public boolean isValidDiffInPointsMap(Category category, Diff diff, Year year) {
 		final String validateDiff = "SELECT COUNT(*) FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
 		return jdbcTemplate.queryForObject(validateDiff, Integer.class, year, category, diff) > 0;
 	}

@@ -15,6 +15,7 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -52,7 +53,7 @@ public class ScoreController {
 
 	private static Table getTable(Category category, Year year, Database db) {
 		List<String> header = Arrays.asList("Differanse", "Poeng");
-		Map<Integer, Points> map = db.getDiffPointsMap(year, category);
+		Map<Diff, Points> map = db.getDiffPointsMap(year, category);
 		List<List<String>> body = map.entrySet().stream()
 			.map(entry -> Arrays.asList(
 				String.valueOf(entry.getKey()), 

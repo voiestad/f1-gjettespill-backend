@@ -13,6 +13,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
@@ -108,7 +109,7 @@ public class UserScore {
 				row.add("N/A");
 				row.add("0");
 			} else {
-				int diff = Math.abs(actualPos - pos); 
+				Diff diff = new Diff(Math.abs(actualPos - pos)); 
 				Points points = map.getPoints(diff);
 				competitorScore = competitorScore.add(points);
 				row.add(pos.toString());
@@ -138,7 +139,7 @@ public class UserScore {
 			String translatedFlag = db.translateFlagName(flag);
 			int guessed = (int) row.get("guessed");
 			int actual = (int) row.get("actual");
-			int diff = Math.abs(guessed - actual);
+			Diff diff = new Diff(Math.abs(guessed - actual));
 			Points points = map.getPoints(diff);
 			flagScore = flagScore.add(points);
 			body.add(Arrays.asList(translatedFlag, String.valueOf(guessed), String.valueOf(actual), String.valueOf(diff), String.valueOf(points))); 
@@ -178,7 +179,7 @@ public class UserScore {
 			String driver = (String) row.get("driver");
 			int startPos = (int) row.get("start");
 			int finishPos = (int) row.get("finish");
-			int diff = Math.abs(targetPos - finishPos);
+			Diff diff = new Diff(Math.abs(targetPos - finishPos));
 			Points points = map.getPoints(diff);
 			driverPlaceScore = driverPlaceScore.add(points);
 			body.add(Arrays.asList(raceName, driver, String.valueOf(startPos), String.valueOf(finishPos), String.valueOf(points)));
