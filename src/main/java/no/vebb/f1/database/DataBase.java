@@ -143,7 +143,7 @@ public class Database {
 	 * @param category to translate
 	 * @return translation of category
 	 */
-	public String translateCategory(String category) {
+	public String translateCategory(Category category) {
 		final String translationSql = """
 			SELECT translation
 			FROM CategoryTranslation
@@ -213,7 +213,7 @@ public class Database {
 	 * @param racePos position within a season
 	 * @return "table" of guesses
 	 */
-	public List<Map<String, Object>> getDataForPlaceGuessTable(String category, UUID userId, Year year, int racePos) {
+	public List<Map<String, Object>> getDataForPlaceGuessTable(Category category, UUID userId, Year year, int racePos) {
 		final String sql = """
 			SELECT r.name AS race_name, dpg.driver AS driver, sg.position AS start, rr.finishing_position AS finish
 			FROM DriverPlaceGuess dpg
@@ -356,7 +356,7 @@ public class Database {
 	 * @param category
 	 * @return list of guesses
 	 */
-	public List<UserRaceGuess> getUserGuessesDriverPlace(int raceId, String category) {
+	public List<UserRaceGuess> getUserGuessesDriverPlace(int raceId, Category category) {
 		final String getGuessSql = """
 			SELECT u.username AS username, dpg.driver AS driver, sg.position AS position
 			FROM DriverPlaceGuess dpg
@@ -503,7 +503,7 @@ public class Database {
 	 * @param userId of the user
 	 * @return name of driver guessed
 	 */
-	public String getGuessedDriverPlace(int raceId, String category, UUID userId) {
+	public String getGuessedDriverPlace(int raceId, Category category, UUID userId) {
 		final String getPreviousGuessSql = """
 			SELECT driver
 			FROM DriverPlaceGuess
@@ -520,7 +520,7 @@ public class Database {
 	 * @param driver name guessed
 	 * @param category which the user guessed on
 	 */
-	public void addDriverPlaceGuess(UUID userId, int raceId, String driver, String category) {
+	public void addDriverPlaceGuess(UUID userId, int raceId, String driver, Category category) {
 		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?)";
 		jdbcTemplate.update(insertGuessSql, userId, raceId, driver, category);
 	}
@@ -638,12 +638,14 @@ public class Database {
 	 * 
 	 * @return categories 
 	 */
-	public List<String> getCategories() {
+	public List<Category> getCategories() {
 		final String sql = """
 			SELECT name
 			FROM Category
 			""";
-		return jdbcTemplate.queryForList(sql, String.class);
+		return jdbcTemplate.queryForList(sql, String.class).stream()
+			.map(name -> new Category(name, this))
+			.toList();
 	}
 
 	/**
@@ -665,7 +667,7 @@ public class Database {
 	 * @param year of season
 	 * @return map from diff to points
 	 */
-	public Map<Integer, Integer> getDiffPointsMap(Year year, String category) {
+	public Map<Integer, Integer> getDiffPointsMap(Year year, Category category) {
 		final String sql = """
 			SELECT points, diff
 			FROM DiffPointsMap
@@ -691,7 +693,7 @@ public class Database {
 	 * @param category name
 	 * @return max diff
 	 */
-	public int getMaxDiffInPointsMap(Year year, String category) {
+	public int getMaxDiffInPointsMap(Year year, Category category) {
 		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
 		return jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year, category);
 	}
@@ -703,7 +705,7 @@ public class Database {
 	 * @param diff to add mapping for
 	 * @param year of season
 	 */
-	public void addDiffToPointsMap(String category, int diff, Year year) {
+	public void addDiffToPointsMap(Category category, int diff, Year year) {
 		final String addDiff = "INSERT INTO DiffPointsMap (category, diff, points, year) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(addDiff, category, diff, 0, year);
 	}
@@ -715,7 +717,7 @@ public class Database {
 	 * @param diff to remove mapping for
 	 * @param year of season
 	 */
-	public void removeDiffToPointsMap(String category, int diff, Year year) {
+	public void removeDiffToPointsMap(Category category, int diff, Year year) {
 		final String deleteRowWithDiff = "DELETE FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
 		jdbcTemplate.update(deleteRowWithDiff, year, category, diff);
 	}
@@ -728,7 +730,7 @@ public class Database {
 	 * @param year of season
 	 * @param points
 	 */
-	public void setNewDiffToPointsInPointsMap(String category, int diff, Year year, int points) {
+	public void setNewDiffToPointsInPointsMap(Category category, int diff, Year year, int points) {
 		final String setNewPoints = """
 			UPDATE DiffPointsMap
 			SET points = ?
@@ -744,7 +746,7 @@ public class Database {
 	 * @param diff to check
 	 * @param year of season
 	 */
-	public boolean isValidDiffInPointsMap(String category, int diff, Year year) {
+	public boolean isValidDiffInPointsMap(Category category, int diff, Year year) {
 		final String validateDiff = "SELECT COUNT(*) FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
 		return jdbcTemplate.queryForObject(validateDiff, Integer.class, year, category, diff) > 0;
 	}

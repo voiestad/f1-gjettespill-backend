@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Category;
 import no.vebb.f1.util.InvalidYearException;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
@@ -42,13 +43,13 @@ public class ScoreController {
 	}
 
 	public static List<Table> getScoreMappingTables(Year year, Database db) {
-		List<String> categories = db.getCategories();
+		List<Category> categories = db.getCategories();
 		return categories.stream()
 			.map(category -> getTable(category, year, db))
 			.toList();
 	}
 
-	private static Table getTable(String category, Year year, Database db) {
+	private static Table getTable(Category category, Year year, Database db) {
 		List<String> header = Arrays.asList("Differanse", "Poeng");
 		Map<Integer, Integer> map = db.getDiffPointsMap(year, category);
 		List<List<String>> body = map.entrySet().stream()

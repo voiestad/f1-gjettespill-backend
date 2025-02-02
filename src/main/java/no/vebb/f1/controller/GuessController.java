@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.Category;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.TimeUtil;
@@ -156,27 +157,31 @@ public class GuessController {
 	public String guessTenth(Model model) {
 		model.addAttribute("title", "Tipp 10.plass");
 		model.addAttribute("type", "tenth");
-		return handleGetChooseDriver(model, "TENTH");
+		Category category = new Category("TENTH", db);
+		return handleGetChooseDriver(model, category);
 	}
 
 	@PostMapping("/tenth")
 	public String guessTenth(@RequestParam String driver, Model model) {
-		return handlePostChooseDriver(model, driver, "TENTH");
+		Category category = new Category("TENTH", db);
+		return handlePostChooseDriver(model, driver, category);
 	}
 
 	@GetMapping("/winner")
 	public String guessWinner(Model model) {
 		model.addAttribute("title", "Tipp Vinneren");
 		model.addAttribute("type", "winner");
-		return handleGetChooseDriver(model, "FIRST");
+		Category category = new Category("FIRST", db);
+		return handleGetChooseDriver(model, category);
 	}
 
 	@PostMapping("/winner")
 	public String guessWinner(@RequestParam String driver, Model model) {
-		return handlePostChooseDriver(model, driver, "FIRST");
+		Category category = new Category("FIRST", db);
+		return handlePostChooseDriver(model, driver, category);
 	}
 
-	private String handleGetChooseDriver(Model model, String category) {
+	private String handleGetChooseDriver(Model model, Category category) {
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
@@ -201,7 +206,7 @@ public class GuessController {
 		return "chooseDriver";
 	}
 
-	private String handlePostChooseDriver(Model model, String driver, String category) {
+	private String handlePostChooseDriver(Model model, String driver, Category category) {
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";

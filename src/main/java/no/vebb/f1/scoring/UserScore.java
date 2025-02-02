@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.util.Category;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.Year;
 
@@ -65,25 +66,27 @@ public class UserScore {
 	}
 
 	private Table initializeDriversTable() {
-		DiffPointsMap map = new DiffPointsMap("DRIVER", year, db);
+		Category category = new Category("DRIVER", db);
+		DiffPointsMap map = new DiffPointsMap(category, year, db);
 		List<String> header = Arrays.asList("Plass", "Sjåfør", "Gjettet", "Diff", "Poeng");
 
 		List<String> guessedDriver = db.getGuessedYearDriver(year, id);
 		List<String> drivers = db.getDriverStandings(raceNumber, year);
-		return getGuessedToPos(map, "driver", header, guessedDriver, drivers);
+		return getGuessedToPos(map, category, header, guessedDriver, drivers);
 	}
 
 	private Table initializeConstructorsTable() {
-		DiffPointsMap map = new DiffPointsMap("CONSTRUCTOR", year, db);
+		Category category = new Category("CONSTRUCTOR", db);
+		DiffPointsMap map = new DiffPointsMap(category, year, db);
 		List<String> header = Arrays.asList("Plass", "Konstruktør", "Gjettet", "Diff", "Poeng");
 
 		List<String> guessedConstructor = db.getGuessedYearConstructor(year, id);
 		List<String> constructors = db.getConstructorStandings(raceNumber, year);
 
-		return getGuessedToPos(map, "constructor", header, guessedConstructor, constructors);
+		return getGuessedToPos(map, category, header, guessedConstructor, constructors);
 	}
 
-	private Table getGuessedToPos(DiffPointsMap map, String category, List<String> header, List<String> guessed, List<String> competitors) {
+	private Table getGuessedToPos(DiffPointsMap map, Category category, List<String> header, List<String> guessed, List<String> competitors) {
 		List<List<String>> body = new ArrayList<>();
 		int competitorScore = 0;
 		Map<String, Integer> guessedToPos = new HashMap<>();
@@ -113,13 +116,13 @@ public class UserScore {
 			body.add(row);
 		}
 		score += competitorScore;
-		String translation = db.translateCategory(category.toUpperCase());
+		String translation = db.translateCategory(category);
 		summaryTableBody.add(Arrays.asList(translation, String.valueOf(competitorScore)));
 		return new Table(translation, header, body);
 	}
 
 	private Table initializeFlagsTable() {
-		String category = "FLAG";
+		Category category = new Category("FLAG", db);
 		DiffPointsMap map = new DiffPointsMap(category, year, db);
 		List<String> header = Arrays.asList("Type", "Gjettet", "Faktisk", "Diff", "Poeng");
 		List<List<String>> body = new ArrayList<>();
@@ -146,14 +149,16 @@ public class UserScore {
 	}
 	
 	private Table initializeWinnerTable() {
-		return getDriverPlaceGuessTable("FIRST", 1);
+		Category category = new Category("FIRST", db);
+		return getDriverPlaceGuessTable(category, 1);
 	}
 	
 	private Table initializeTenthTable() {
-		return getDriverPlaceGuessTable("TENTH", 10);
+		Category category = new Category("TENTH", db);
+		return getDriverPlaceGuessTable(category, 10);
 	}
 
-	private Table getDriverPlaceGuessTable(String category, int targetPos) {
+	private Table getDriverPlaceGuessTable(Category category, int targetPos) {
 		List<String> header = Arrays.asList("Løp", "Gjettet", "Startet", "Plass", "Poeng");
 		List<List<String>> body = new ArrayList<>();
 		String translation = db.translateCategory(category);

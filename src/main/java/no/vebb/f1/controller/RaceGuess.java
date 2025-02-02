@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.util.Category;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.CutoffRace;
 import no.vebb.f1.util.InvalidYearException;
@@ -43,9 +44,9 @@ public class RaceGuess {
 			
 			List<Table> tables = new ArrayList<>();
 
-			String[] categories = {"FIRST", "TENTH"};
+			Category[] categories = {new Category("FIRST", db), new Category("TENTH", db)};
 			List<String> header = Arrays.asList("Navn", "Tippet", "Startet");
-			for (String category : categories) {
+			for (Category category : categories) {
 				List<List<String>> body = db.getUserGuessesDriverPlace(race.id, category).stream()
 					.map(userGuess -> Arrays.asList(userGuess.user, userGuess.driver, userGuess.position))
 					.toList();
