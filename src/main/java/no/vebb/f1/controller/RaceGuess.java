@@ -15,11 +15,11 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.util.Category;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.CutoffRace;
-import no.vebb.f1.util.InvalidYearException;
-import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.Table;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.Year;
+import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.util.exception.NoAvailableRaceException;
 
 @Controller
 @RequestMapping("/race-guess")

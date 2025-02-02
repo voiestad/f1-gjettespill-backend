@@ -14,10 +14,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.InvalidYearException;
 import no.vebb.f1.util.PositionedCompetitor;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.Year;
+import no.vebb.f1.util.exception.InvalidYearException;
 
 @Component
 public class Importer {

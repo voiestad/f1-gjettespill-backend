@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.util.exception.NoAvailableRaceException;
 
 @Service
 public class Cutoff {

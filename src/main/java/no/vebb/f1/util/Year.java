@@ -1,6 +1,7 @@
 package no.vebb.f1.util;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.util.exception.InvalidYearException;
 
 public class Year {
 

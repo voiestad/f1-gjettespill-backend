@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.InvalidYearException;
 import no.vebb.f1.util.Year;
+import no.vebb.f1.util.exception.InvalidYearException;
 
 @Controller
 @RequestMapping("/admin/season")

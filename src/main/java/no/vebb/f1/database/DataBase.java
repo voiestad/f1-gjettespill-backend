@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.util.*;
+import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.user.User;
 
 @Service

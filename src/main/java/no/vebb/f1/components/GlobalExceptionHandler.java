@@ -3,8 +3,8 @@ package no.vebb.f1.components;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import no.vebb.f1.util.InvalidYearException;
-import no.vebb.f1.util.NotAdminException;
+import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.util.exception.NotAdminException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {

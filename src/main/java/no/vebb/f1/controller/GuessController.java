@@ -24,9 +24,9 @@ import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Category;
 import no.vebb.f1.util.Cutoff;
-import no.vebb.f1.util.NoAvailableRaceException;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.Year;
+import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.util.Flags;
 
 

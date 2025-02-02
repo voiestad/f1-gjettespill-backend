@@ -10,7 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.NotAdminException;
+import no.vebb.f1.util.exception.NotAdminException;
 
 @Service
 public class UserService {
