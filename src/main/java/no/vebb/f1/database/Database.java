@@ -26,6 +26,7 @@ import no.vebb.f1.util.domainPrimitive.Driver;
 import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.user.User;
@@ -333,14 +334,13 @@ public class Database {
 	 * @param username to set as new username
 	 * @param userId of user
 	 */
-	public void updateUsername(String username, UUID userId) {
+	public void updateUsername(Username username, UUID userId) {
 		final String updateUsername = """
 			UPDATE User
 			SET username = ?, username_upper = ?
 			WHERE id = ?
 			""";
-		String usernameUpper = username.toUpperCase();
-		jdbcTemplate.update(updateUsername, username, usernameUpper, userId);
+		jdbcTemplate.update(updateUsername, username.username, username.usernameUpper, userId);
 	}
 
 	/**
@@ -365,10 +365,9 @@ public class Database {
 	 * @param username
 	 * @param googleId the ID provided by OAUTH
 	 */
-	public void addUser(String username, String googleId) {
-		String username_upper = username.toUpperCase();
+	public void addUser(Username username, String googleId) {
 		final String sqlInsertUsername = "INSERT INTO User (google_id, id,username, username_upper) VALUES (?, ?, ?, ?)";
-		jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username, username_upper);
+		jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username.username, username.usernameUpper);
 	}
 
 	/**

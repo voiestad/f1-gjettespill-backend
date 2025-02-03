@@ -17,6 +17,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.domainPrimitive.Username;
+import no.vebb.f1.util.exception.InvalidUsernameException;
 
 @Controller
 @RequestMapping("/settings")
@@ -48,17 +50,16 @@ public class UserSettingsController {
 
 	@PostMapping("/username")
 	public String changeUsername(String username, Model model) {
-		username = username.strip();
-		String error = UserUtil.validateUsername(username, db);
-		if (error != null) {
-			model.addAttribute("error", error);
+		try {
+			Username validUsername = new Username(username, db);
+			final UUID id = userService.loadUser().get().id;
+			db.updateUsername(validUsername, id);
+		} catch (InvalidUsernameException e) {
+			model.addAttribute("error", e.getMessage());
 			model.addAttribute("url", usernameUrl);
 			return "registerUsername";
 		}
-
-		final UUID id = userService.loadUser().get().id;
-
-		db.updateUsername(username, id);
+		
 		return "redirect:/settings";
 	}
 

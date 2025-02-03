@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.domainPrimitive.Username;
+import no.vebb.f1.util.exception.InvalidUsernameException;
 
 @Controller
 @RequestMapping("/username")
@@ -43,24 +45,20 @@ public class UsernameController {
 	public String registerUsername(@AuthenticationPrincipal OAuth2User principal,
 			@RequestParam("username") String username,
 			Model model) {
-		final String googleId = principal.getName();
-
-		username = username.strip();
-
-		String error = UserUtil.validateUsername(username, db);
-
-		if (error != null) {
-			model.addAttribute("error", error);
+		try {
+			final String googleId = principal.getName();
+			Username validUsername = new Username(username, db);
+			try {
+				db.addUser(validUsername, googleId);
+			} catch (DataAccessException e) {
+				// Try again to ensure it could not be equal UUID
+				logger.warn("Failed to set UUID to new user. Tried again.");
+				db.addUser(validUsername, googleId);
+			}
+		} catch (InvalidUsernameException e) {
+			model.addAttribute("error", e.getMessage());
 			model.addAttribute("url", url);
 			return "registerUsername";
-		}
-
-		try {
-			db.addUser(username, googleId);
-		} catch (DataAccessException e) {
-			// Try again to ensure it could not be equal UUID
-			logger.warn("Failed to set UUID to new user. Tried again.");
-			db.addUser(username, googleId);
 		}
 		return "redirect:/";
 	}
