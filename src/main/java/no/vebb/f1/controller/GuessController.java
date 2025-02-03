@@ -26,8 +26,12 @@ import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Flags;
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Constructor;
+import no.vebb.f1.util.domainPrimitive.Driver;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.util.exception.InvalidConstructorException;
+import no.vebb.f1.util.exception.InvalidDriverException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 
 
@@ -73,29 +77,6 @@ public class GuessController {
 
 	@GetMapping("/drivers")
 	public String rankDrivers(Model model) {
-		model.addAttribute("title", "Ranger sjåførene");
-		model.addAttribute("type", "drivers");
-		return handleRankGet(model, "driver");
-	}
-
-	@PostMapping("/drivers")
-	public String rankDrivers(@RequestParam List<String> rankedCompetitors, Model model) {
-		return handleRankPost(model, rankedCompetitors, "driver");
-	}
-
-	@GetMapping("/constructors")
-	public String rankConstructors(Model model) {
-		model.addAttribute("title", "Ranger konstruktørene");
-		model.addAttribute("type", "constructors");
-		return handleRankGet(model, "constructor");
-	}
-
-	@PostMapping("/constructors")
-	public String rankConstructors(@RequestParam List<String> rankedCompetitors, Model model) {
-		return handleRankPost(model, rankedCompetitors, "constructor");
-	}
-
-	private String handleRankGet(Model model, String type) {
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
@@ -105,14 +86,17 @@ public class GuessController {
 		}
 		UUID id = user.get().id;
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		List<String> competitors = db.getCompetitorsGuess(type, id, year);
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
+		List<Driver> competitors = db.getDriversGuess(id, year);
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		model.addAttribute("competitors", competitors);
+		model.addAttribute("title", "Ranger sjåførene");
+		model.addAttribute("type", "drivers");
 		return "ranking";
 	}
 
-	private String handleRankPost(Model model, List<String> rankedCompetitors, String competitorType) {
+	@PostMapping("/drivers")
+	public String rankDrivers(@RequestParam List<String> rankedCompetitors, Model model) {
 		Optional<User> user = userService.loadUser();
 		if (!user.isPresent()) {
 			return "redirect:/";
@@ -121,25 +105,87 @@ public class GuessController {
 			return "redirect:/guess?success=false"; 
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		Set<String> competitors = new HashSet<>(db.getCompetitorsYear(year, competitorType));
-		String error = validateGuessList(rankedCompetitors, competitors);
-		if (error != null) {
-			logger.warn(error);
+		try {
+			List<Driver> validationList = db.getDriversYear(year);
+			Set<Driver> competitors = new HashSet<>(validationList);
+			List<Driver> guessedDrivers = rankedCompetitors.stream()
+				.map(driver -> new Driver(driver, db))
+				.toList();
+			String error = validateGuessList(guessedDrivers, competitors);
+			if (error != null) {
+				logger.warn(error);
+				return "redirect:/guess?success=false";
+			}
+			int position = 1;
+			UUID id = user.get().id;
+			for (Driver driver : guessedDrivers) {
+				db.insertDriversYearGuess(id, driver, year, position);
+				position++;
+			}
+			logger.info("User '{}' guessed on '{}' on year '{}'", id, "driver", year);
+		} catch (InvalidDriverException e) {
 			return "redirect:/guess?success=false";
 		}
-		int position = 1;
-		UUID id = user.get().id;
-		for (String competitor : rankedCompetitors) {
-			db.insertCompetitorsYearGuess(competitorType, id, competitor, year, position);
-			position++;
-		}
-		logger.info("User '{}' guessed on '{}' on year '{}'", user.get().id, competitorType, year);
 		return "redirect:/guess?success=true";
 	}
 
-	private String validateGuessList(List<String> guessed, Set<String> original) {
-		Set<String> guessedSet = new HashSet<>();
-		for (String competitor : guessed) {
+	@GetMapping("/constructors")
+	public String rankConstructors(Model model) {
+		Optional<User> user = userService.loadUser();
+		if (!user.isPresent()) {
+			return "redirect:/";
+		}
+		if (!cutoff.isAbleToGuessCurrentYear()) {
+			return "redirect:/guess"; 
+		}
+		UUID id = user.get().id;
+		Year year = new Year(TimeUtil.getCurrentYear(), db);
+		long timeLeftToGuess = db.getTimeLeftToGuessYear();
+		List<Constructor> competitors = db.getConstructorsGuess(id, year);
+		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
+		model.addAttribute("competitors", competitors);
+		model.addAttribute("title", "Ranger konstruktørene");
+		model.addAttribute("type", "constructors");
+		return "ranking";
+	}
+
+	@PostMapping("/constructors")
+	public String rankConstructors(@RequestParam List<String> rankedCompetitors, Model model) {
+		Optional<User> user = userService.loadUser();
+		if (!user.isPresent()) {
+			return "redirect:/";
+		}
+		if (!cutoff.isAbleToGuessCurrentYear()) {
+			return "redirect:/guess?success=false"; 
+		}
+		Year year = new Year(TimeUtil.getCurrentYear(), db);
+		try {
+			List<Constructor> validationList = db.getConstructorsYear(year);
+			Set<Constructor> competitors = new HashSet<>(validationList);
+			List<Constructor> guessedConstructors = rankedCompetitors.stream()
+				.map(constructor -> new Constructor(constructor, db))
+				.toList();
+			String error = validateGuessList(guessedConstructors, competitors);
+			if (error != null) {
+				logger.warn(error);
+				return "redirect:/guess?success=false";
+			}
+			int position = 1;
+			UUID id = user.get().id;
+			for (Constructor constructor : guessedConstructors) {
+				db.insertConstructorsYearGuess(id, constructor, year, position);
+				position++;
+			}
+			logger.info("User '{}' guessed on '{}' on year '{}'", id, "constructor", year);
+		} catch (InvalidConstructorException e) {
+			return "redirect:/guess?success=false";
+		}
+		return "redirect:/guess?success=true";
+	}
+
+	private <T> String validateGuessList(List<T> guessed, Set<T> original) {
+		Set<T> guessedSet = new HashSet<>();
+		for (T competitor : guessed) {
 			if (!original.contains(competitor)) {
 				return String.format("%s is not a valid competitor.", competitor);
 			}
@@ -193,10 +239,10 @@ public class GuessController {
 			long timeLeftToGuess = db.getTimeLeftToGuessRace(raceId);
 			model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 
-			List<String> drivers = db.getDriversFromStartingGrid(raceId);
+			List<Driver> drivers = db.getDriversFromStartingGrid(raceId);
 			model.addAttribute("items", drivers);
 
-			String driver = db.getGuessedDriverPlace(raceId, category, user.get().id);
+			String driver = db.getGuessedDriverPlace(raceId, category, user.get().id).toString();
 			model.addAttribute("guessedDriver", driver);
 		} catch (NoAvailableRaceException e) {
 			return "redirect:/guess";
@@ -214,19 +260,21 @@ public class GuessController {
 		}
 		try {
 			RaceId raceId = getRaceIdToGuess();
-			Set<String> driversCheck = new HashSet<>(db.getDriversFromStartingGrid(raceId));
-			if (!driversCheck.contains(driver)) {
+			Driver validDriver = new Driver(driver, db);
+			Set<Driver> driversCheck = new HashSet<>(db.getDriversFromStartingGrid(raceId));
+			if (!driversCheck.contains(validDriver)) {
 				logger.warn("'{}', invalid winner driver inputted by user.", driver);
 				return "redirect:/guess?success=false";
 			}
 			UUID id = user.get().id;
-			db.addDriverPlaceGuess(id, raceId, driver, category);
+			db.addDriverPlaceGuess(id, raceId, validDriver, category);
 			logger.info("User '{}' guessed on category '{}' on race '{}'", id, category, raceId);
 			return "redirect:/guess?success=true";
 
 		} catch (NoAvailableRaceException e) {
-			return "redirect:/guess";
+		} catch (InvalidDriverException e) {
 		}
+		return "redirect:/guess?success=false";
 	}
 
 	private RaceId getRaceIdToGuess() throws NoAvailableRaceException {

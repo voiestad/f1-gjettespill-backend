@@ -13,7 +13,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.domainPrimitive.Constructor;
+import no.vebb.f1.util.domainPrimitive.Driver;
 import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.util.exception.InvalidConstructorException;
+import no.vebb.f1.util.exception.InvalidDriverException;
 
 @Controller
 @RequestMapping("/admin/season/{year}/competitors")
@@ -29,8 +33,8 @@ public class SeasonCompetitorsController {
 	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
 		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
-		List<String> drivers = db.getDriversYear(seasonYear);
-		List<String> constructors = db.getConstructorsYear(seasonYear);
+		List<Driver> drivers = db.getDriversYear(seasonYear);
+		List<Constructor> constructors = db.getConstructorsYear(seasonYear);
 
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
@@ -43,6 +47,7 @@ public class SeasonCompetitorsController {
 	public String addDriverToSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
 		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
+
 		db.addDriverYear(driver, seasonYear);
 		
 		return "redirect:/admin/season/" + year + "/competitors";
@@ -61,19 +66,19 @@ public class SeasonCompetitorsController {
 	public String removeDriverFromSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
 		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
-		boolean driverExists = db.isValidDriverYear(driver, seasonYear);
-		if (!driverExists) {
-			return "redirect:/admin/season/" + year + "/competitors";
-		}
+		try {
+			Driver validDriver = new Driver(driver, db, seasonYear);
 
-		db.deleteDriverYear(driver, seasonYear);
-		List<String> drivers = db.getDriversYear(seasonYear);
-		db.deleteAllDriverYear(seasonYear);
+			db.deleteDriverYear(validDriver, seasonYear);
+			List<Driver> drivers = db.getDriversYear(seasonYear);
+			db.deleteAllDriverYear(seasonYear);
 
-		int position = 1;
-		for (String currentDriver : drivers) {
-			db.addDriverYear(currentDriver, seasonYear, position);
-			position++;
+			int position = 1;
+			for (Driver currentDriver : drivers) {
+				db.addDriverYear(currentDriver, seasonYear, position);
+				position++;
+			}
+		} catch (InvalidDriverException e) {
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
@@ -83,19 +88,19 @@ public class SeasonCompetitorsController {
 			@RequestParam("constructor") String constructor) {
 		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
-		boolean constructorExists = db.isValidConstructorYear(constructor, seasonYear);
-		if (!constructorExists) {
-			return "redirect:/admin/season/" + year + "/competitors";
-		}
+		try {
+			Constructor validConstructor = new Constructor(constructor, db);
 
-		db.deleteConstructorYear(constructor, seasonYear);
-		List<String> constructors = db.getConstructorsYear(seasonYear);
-		db.deleteAllConstructorYear(seasonYear);
+			db.deleteConstructorYear(validConstructor, seasonYear);
+			List<Constructor> constructors = db.getConstructorsYear(seasonYear);
+			db.deleteAllConstructorYear(seasonYear);
 
-		int position = 1;
-		for (String currentConstructor : constructors) {
-			db.addConstructorYear(currentConstructor, seasonYear, position);
-			position++;
+			int position = 1;
+			for (Constructor currentConstructor : constructors) {
+				db.addConstructorYear(currentConstructor, seasonYear, position);
+				position++;
+			}
+		} catch (InvalidConstructorException e) {
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
@@ -105,31 +110,31 @@ public class SeasonCompetitorsController {
 			@RequestParam("newPosition") int position) {
 		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
-		boolean driverExists = db.isValidDriverYear(driver, seasonYear);
-		if (!driverExists) {
-			return "redirect:/admin/season/" + year + "/competitors";
-		}
-		int maxPos = db.getMaxPosDriverYear(seasonYear);
-		boolean isPosOutOfBounds = position < 1 || position > maxPos;
-		if (isPosOutOfBounds) {
-			return "redirect:/admin/season/" + year + "/competitors";
-		}
+		try {
+			Driver validDriver = new Driver(driver, db, seasonYear);
+			int maxPos = db.getMaxPosDriverYear(seasonYear);
+			boolean isPosOutOfBounds = position < 1 || position > maxPos;
+			if (isPosOutOfBounds) {
+				return "redirect:/admin/season/" + year + "/competitors";
+			}
 
-		db.deleteDriverYear(driver, seasonYear);
-		List<String> drivers = db.getDriversYear(seasonYear);
-		db.deleteAllDriverYear(seasonYear);
+			db.deleteDriverYear(validDriver, seasonYear);
+			List<Driver> drivers = db.getDriversYear(seasonYear);
+			db.deleteAllDriverYear(seasonYear);
 
-		int currentPos = 1;
-		for (String currentDriver : drivers) {
-			if (currentPos == position) {
-				db.addDriverYear(driver, seasonYear, position);
+			int currentPos = 1;
+			for (Driver currentDriver : drivers) {
+				if (currentPos == position) {
+					db.addDriverYear(validDriver, seasonYear, position);
+					currentPos++;
+				}
+				db.addDriverYear(currentDriver, seasonYear, position);
 				currentPos++;
 			}
-			db.addDriverYear(currentDriver, seasonYear, position);
-			currentPos++;
-		}
-		if (currentPos == position) {
-			db.addDriverYear(driver, seasonYear, position);
+			if (currentPos == position) {
+				db.addDriverYear(validDriver, seasonYear, position);
+			}
+		} catch (InvalidDriverException e) {
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
@@ -139,31 +144,31 @@ public class SeasonCompetitorsController {
 			@RequestParam("constructor") String constructor, @RequestParam("newPosition") int position) {
 		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
-		boolean constructorExists = db.isValidConstructorYear(constructor, seasonYear);
-		if (!constructorExists) {
-			return "redirect:/admin/season/" + year + "/competitors";
-		}
-		int maxPos = db.getMaxPosConstructorYear(seasonYear);
-		boolean isPosOutOfBounds = position < 1 || position > maxPos;
-		if (isPosOutOfBounds) {
-			return "redirect:/admin/season/" + year + "/competitors";
-		}
+		try {
+			Constructor validConstructor = new Constructor(constructor, db);
+			int maxPos = db.getMaxPosConstructorYear(seasonYear);
+			boolean isPosOutOfBounds = position < 1 || position > maxPos;
+			if (isPosOutOfBounds) {
+				return "redirect:/admin/season/" + year + "/competitors";
+			}
 
-		db.deleteConstructorYear(constructor, seasonYear);
-		List<String> constructors = db.getConstructorsYear(seasonYear);
-		db.deleteAllConstructorYear(seasonYear);
+			db.deleteConstructorYear(validConstructor, seasonYear);
+			List<Constructor> constructors = db.getConstructorsYear(seasonYear);
+			db.deleteAllConstructorYear(seasonYear);
 
-		int currentPos = 1;
-		for (String currentConstructor : constructors) {
-			if (currentPos == position) {
-				db.addConstructorYear(constructor, seasonYear, position);
+			int currentPos = 1;
+			for (Constructor currentConstructor : constructors) {
+				if (currentPos == position) {
+					db.addConstructorYear(validConstructor, seasonYear, position);
+					currentPos++;
+				}
+				db.addConstructorYear(currentConstructor, seasonYear, position);
 				currentPos++;
 			}
-			db.addConstructorYear(currentConstructor, seasonYear, position);
-			currentPos++;
-		}
-		if (currentPos == position) {
-			db.addConstructorYear(constructor, seasonYear, position);
+			if (currentPos == position) {
+				db.addConstructorYear(validConstructor, seasonYear, position);
+			}
+		} catch (InvalidConstructorException e) {
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
 	}

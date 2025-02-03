@@ -71,7 +71,7 @@ public class FlagController {
 			if (!isRaceInSeason) {
 				return "redirect:/admin/flag";
 			}
-			List<String> flags = db.getFlags();
+			List<Flag> flags = db.getFlags();
 			model.addAttribute("flags", flags);
 			model.addAttribute("raceId", raceId);
 			

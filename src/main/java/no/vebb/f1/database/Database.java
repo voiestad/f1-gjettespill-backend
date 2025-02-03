@@ -20,7 +20,9 @@ import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.collection.UserRaceGuess;
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Diff;
+import no.vebb.f1.util.domainPrimitive.Driver;
 import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
@@ -247,9 +249,11 @@ public class Database {
 	 * @param userId of user
 	 * @return drivers ascendingly
 	 */
-	public List<String> getGuessedYearDriver(Year year, UUID userId) {
+	public List<Driver> getGuessedYearDriver(Year year, UUID userId) {
 		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guesser = ? ORDER BY position ASC";
-		return jdbcTemplate.queryForList(guessedSql, String.class, year, userId);
+		return jdbcTemplate.queryForList(guessedSql, String.class, year, userId).stream()
+			.map(driver -> new Driver(driver))
+			.toList();
 	}
 
 	/**
@@ -260,9 +264,11 @@ public class Database {
 	 * @param userId of user
 	 * @return constructors ascendingly
 	 */
-	public List<String> getGuessedYearConstructor(Year year, UUID userId) {
+	public List<Constructor> getGuessedYearConstructor(Year year, UUID userId) {
 		final String guessedSql = "SELECT constructor FROM ConstructorGuess WHERE year = ? AND guesser = ? ORDER BY position ASC";
-		return jdbcTemplate.queryForList(guessedSql, String.class, year, userId);
+		return jdbcTemplate.queryForList(guessedSql, String.class, year, userId).stream()
+			.map(constructor -> new Constructor(constructor))
+			.toList();
 	}
 
 	/**
@@ -275,14 +281,16 @@ public class Database {
 	 * @param year of season
 	 * @return drivers ascendingly
 	 */
-	public List<String> getDriverStandings(RaceId raceId, Year year) {
+	public List<Driver> getDriverStandings(RaceId raceId, Year year) {
 		final String driverYearSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
 		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
+		List<String> result;
 		if (raceId == null) {
-			return jdbcTemplate.queryForList(driverYearSql, String.class, year);
+			result = jdbcTemplate.queryForList(driverYearSql, String.class, year);
 		} else {
-			return jdbcTemplate.queryForList(driverStandingsSql, String.class, raceId);
+			result =jdbcTemplate.queryForList(driverStandingsSql, String.class, raceId);
 		}
+		return result.stream().map(driver -> new Driver(driver)).toList();
 	}
 
 	/**
@@ -295,14 +303,16 @@ public class Database {
 	 * @param year of season
 	 * @return constructors ascendingly
 	 */
-	public List<String> getConstructorStandings(RaceId raceId, Year year) {
+	public List<Constructor> getConstructorStandings(RaceId raceId, Year year) {
 		final String constructorYearSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
 		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
+		List<String> result;
 		if (raceId == null) {
-			return jdbcTemplate.queryForList(constructorYearSql, String.class, year);
+			result = jdbcTemplate.queryForList(constructorYearSql, String.class, year);
 		} else {
-			return jdbcTemplate.queryForList(constructorStandingsSql, String.class, raceId);
+			result =jdbcTemplate.queryForList(constructorStandingsSql, String.class, raceId);
 		}
+		return result.stream().map(constructor -> new Constructor(constructor)).toList();
 	}
 
 	/**
@@ -504,9 +514,11 @@ public class Database {
 	 * @param raceId of race
 	 * @return drivers ascendingly
 	 */
-	public List<String> getDriversFromStartingGrid(RaceId raceId) {
+	public List<Driver> getDriversFromStartingGrid(RaceId raceId) {
 		final String getDriversFromGrid = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
-		return jdbcTemplate.queryForList(getDriversFromGrid, String.class, raceId);
+		return jdbcTemplate.queryForList(getDriversFromGrid, String.class, raceId).stream()
+			.map(driver -> new Driver(driver))
+			.toList();
 	}
 
 	/**
@@ -517,13 +529,13 @@ public class Database {
 	 * @param userId of the user
 	 * @return name of driver guessed
 	 */
-	public String getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
+	public Driver getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
 		final String getPreviousGuessSql = """
 			SELECT driver
 			FROM DriverPlaceGuess
 			WHERE race_number = ? AND category = ? AND guesser = ?
 			""";
-		return jdbcTemplate.queryForObject(getPreviousGuessSql, String.class, raceId, category, userId);
+		return new Driver(jdbcTemplate.queryForObject(getPreviousGuessSql, String.class, raceId, category, userId));
 	}
 
 	/**
@@ -534,39 +546,39 @@ public class Database {
 	 * @param driver name guessed
 	 * @param category which the user guessed on
 	 */
-	public void addDriverPlaceGuess(UUID userId, RaceId raceId, String driver, Category category) {
+	public void addDriverPlaceGuess(UUID userId, RaceId raceId, Driver driver, Category category) {
 		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?)";
 		jdbcTemplate.update(insertGuessSql, userId, raceId, driver, category);
 	}
 
 	/**
-	 * Gets a list of a users guesses on a given competetitor type in a given season.
+	 * Gets a list of a users guesses on a drivers in a given season.
 	 * 
-	 * @param competitorType : driver or constructor
 	 * @param userId of user
 	 * @param year of season
 	 * @return competitors ascendingly
 	 */
-	public List<String> getCompetitorsGuess(String competitorType, UUID userId, Year year) {
-		if (competitorType.equals("driver")) {
-			return getDriversGuess(userId, year);
-		}
-		if (competitorType.equals("constructor")) {
-			return getConstructorsGuess(userId, year);
-		}
-		throw new IllegalArgumentException();
-	}
-
-	private List<String> getDriversGuess(UUID userId, Year year) {
+	public List<Driver> getDriversGuess(UUID userId, Year year) {
 		final String getGuessedSql = "SELECT driver FROM DriverGuess WHERE guesser = ? ORDER BY position ASC";
 		final String getDriversSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
-		return getCompetitorGuess(userId, year, getGuessedSql, getDriversSql);
+		return getCompetitorGuess(userId, year, getGuessedSql, getDriversSql).stream()
+			.map(driver -> new Driver(driver))
+			.toList();
 	}
 
-	private List<String> getConstructorsGuess(UUID userId, Year year) {
+	/**
+	 * Gets a list of a users guesses on constructors in a given season.
+	 * 
+	 * @param userId of user
+	 * @param year of season
+	 * @return competitors ascendingly
+	 */
+	public List<Constructor> getConstructorsGuess(UUID userId, Year year) {
 		final String getGuessedSql = "SELECT constructor FROM ConstructorGuess WHERE guesser = ? ORDER BY position ASC";
 		final String getConstructorsSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
-		return getCompetitorGuess(userId, year, getGuessedSql, getConstructorsSql);
+		return getCompetitorGuess(userId, year, getGuessedSql, getConstructorsSql).stream()
+			.map(constructor -> new Constructor(constructor))
+			.toList();
 	}
 
 	private List<String> getCompetitorGuess(UUID userId, Year year, final String getGuessedSql,
@@ -579,30 +591,16 @@ public class Database {
 	}
 
 	/**
-	 * Gets a list of a yearly competitors in a given season.
-	 * 
-	 * @param year of season
-	 * @param competitorType : driver or constructor
-	 * @return competitors ascendingly
-	 */
-	public List<String> getCompetitorsYear(Year year, String competitorType) {
-		if (competitorType.equals("driver")) {
-			return getDriversYear(year);
-		} else if (competitorType.equals("constructor")) {
-			return getConstructorsYear(year);
-		}
-		throw new IllegalArgumentException();
-	}
-
-	/**
 	 * Gets a list of a yearly drivers in a given season.
 	 * 
 	 * @param year of season
 	 * @return drivers ascendingly
 	 */
-	public List<String> getDriversYear(Year year) {
+	public List<Driver> getDriversYear(Year year) {
 		final String getDriversSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
-		return jdbcTemplate.queryForList(getDriversSql, String.class, year);
+		return jdbcTemplate.queryForList(getDriversSql, String.class, year).stream()
+			.map(driver -> new Driver(driver))
+			.toList();
 	}
 
 	/**
@@ -611,40 +609,37 @@ public class Database {
 	 * @param year of season
 	 * @return constructors ascendingly
 	 */
-	public List<String> getConstructorsYear(Year year) {
+	public List<Constructor> getConstructorsYear(Year year) {
 		final String getConstructorSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
-		return jdbcTemplate.queryForList(getConstructorSql, String.class, year);
+		return jdbcTemplate.queryForList(getConstructorSql, String.class, year).stream()
+		.map(constructor -> new Constructor(constructor))
+		.toList();
 	}
 
 	/**
-	 * Adds a guess for a user on the ranking of a competitor.
+	 * Adds a guess for a user on the ranking of a driver.
 	 * 
-	 * @param competitorType : driver or constructor
 	 * @param userId of user
-	 * @param competitor name
+	 * @param driver name
 	 * @param year of season
 	 * @param position guessed
 	 */
-	public void insertCompetitorsYearGuess(String competitorType, UUID userId, String competitor, Year year, int position) {
-		if (competitorType.equals("driver")) {
-			insertDriversYearGuess(userId, competitor, year, position);
-			return;
-		}
-		if (competitorType.equals("constructor")) {
-			insertConstructorsYearGuess(userId, competitor, year, position);
-			return;
-		}
-		throw new IllegalArgumentException();
-	}
-
-	private void insertDriversYearGuess(UUID userId, String competitor, Year year, int position) {
+	public void insertDriversYearGuess(UUID userId, Driver driver, Year year, int position) {
 		final String addRowDriver = "REPLACE INTO DriverGuess (guesser, driver, year, position) values (?, ?, ?, ?)";
-		jdbcTemplate.update(addRowDriver, userId, competitor, year, position);
+		jdbcTemplate.update(addRowDriver, userId, driver, year, position);
 	}
 
-	private void insertConstructorsYearGuess(UUID userId, String competitor, Year year, int position) {
+	/**
+	 * Adds a guess for a user on the ranking of a constructor.
+	 * 
+	 * @param userId of user
+	 * @param constructor name
+	 * @param year of season
+	 * @param position guessed
+	 */
+	public void insertConstructorsYearGuess(UUID userId, Constructor constructor, Year year, int position) {
 		final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?)";
-		jdbcTemplate.update(addRowConstructor, userId, competitor, year, position);
+		jdbcTemplate.update(addRowConstructor, userId, constructor, year, position);
 	}
 
 	/**
@@ -979,7 +974,7 @@ public class Database {
 	public void addDriverYear(String driver, Year year) {
 		addDriver(driver);
 		int position = getMaxPosDriverYear(year) + 1;
-		addDriverYear(driver, year, position);
+		addDriverYear(new Driver(driver), year, position);
 	}
 
 	/**
@@ -1000,7 +995,7 @@ public class Database {
 	 * @param year of season
 	 * @param position of driver
 	 */
-	public void addDriverYear(String driver, Year year, int position) {
+	public void addDriverYear(Driver driver, Year year, int position) {
 		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?)";
 		jdbcTemplate.update(addDriverYear, driver, year, position);
 	}
@@ -1011,7 +1006,7 @@ public class Database {
 	 * @param driver to delete
 	 * @param year of season
 	 */
-	public void deleteDriverYear(String driver, Year year) {
+	public void deleteDriverYear(Driver driver, Year year) {
 		final String deleteDriver = "DELETE FROM DriverYear WHERE year = ? AND driver = ?";
 		jdbcTemplate.update(deleteDriver, year, driver);
 	}
@@ -1045,7 +1040,7 @@ public class Database {
 	public void addConstructorYear(String constructor, Year year) {
 		addConstructor(constructor);
 		int position = getMaxPosConstructorYear(year) + 1;
-		addConstructorYear(constructor, year, position);
+		addConstructorYear(new Constructor(constructor), year, position);
 	}
 
 	/**
@@ -1066,7 +1061,7 @@ public class Database {
 	 * @param year of season
 	 * @param position of constructor
 	 */
-	public void addConstructorYear(String constructor, Year year, int position) {
+	public void addConstructorYear(Constructor constructor, Year year, int position) {
 		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?)";
 		jdbcTemplate.update(addConstructorYear, constructor, year, position);
 	}
@@ -1077,7 +1072,7 @@ public class Database {
 	 * @param constructor to delete
 	 * @param year of season
 	 */
-	public void deleteConstructorYear(String constructor, Year year) {
+	public void deleteConstructorYear(Constructor constructor, Year year) {
 		final String deleteConstructor = "DELETE FROM ConstructorYear WHERE year = ? AND constructor = ?";
 		jdbcTemplate.update(deleteConstructor, year, constructor);
 	}
@@ -1099,7 +1094,7 @@ public class Database {
 	 * @param position of driver
 	 * @param name of driver
 	 */
-	public void insertDriverStartingGrid(RaceId raceId, int position, String driver) {
+	public void insertDriverStartingGrid(RaceId raceId, int position, Driver driver) {
 		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
 		jdbcTemplate.update(insertStartingGrid, raceId, position, driver);
 	}
@@ -1123,7 +1118,7 @@ public class Database {
 	 * @param points
 	 * @param finishingPosition the position that driver finished race in
 	 */
-	public void insertDriverRaceResult(RaceId raceId, String position, String driver, Points points, int finishingPosition) {
+	public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, Points points, int finishingPosition) {
 		final String insertRaceResult = "INSERT OR REPLACE INTO RaceResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
 		jdbcTemplate.update(insertRaceResult, raceId, position, driver, points, finishingPosition);
 	}
@@ -1136,7 +1131,7 @@ public class Database {
 	 * @param position of driver
 	 * @param points of driver
 	 */
-	public void insertDriverIntoStandings(RaceId raceId, String driver, int position, Points points) {
+	public void insertDriverIntoStandings(RaceId raceId, Driver driver, int position, Points points) {
 		final String insertDriverStandings = "INSERT OR REPLACE INTO DriverStandings (race_number, driver, position, points) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(insertDriverStandings, raceId, driver, position, points);
 	}
@@ -1149,7 +1144,7 @@ public class Database {
 	 * @param position of constructor
 	 * @param points of constructor
 	 */
-	public void insertConstructorIntoStandings(RaceId raceId, String constructor, int position, Points points) {
+	public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, int position, Points points) {
 		final String insertConstructorStandings = "INSERT OR REPLACE INTO ConstructorStandings (race_number, constructor, position, points) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(insertConstructorStandings, raceId, constructor, position, points);
 	}
@@ -1382,9 +1377,11 @@ public class Database {
 	 * 
 	 * @return name of flag types
 	 */
-	public List<String> getFlags() {
+	public List<Flag> getFlags() {
 		final String sql = "SELECT name FROM Flag";
-		return jdbcTemplate.queryForList(sql, String.class);
+		return jdbcTemplate.queryForList(sql, String.class).stream()
+			.map(flag -> new Flag(flag))
+			.toList();
 	}
 
 	/**
@@ -1490,9 +1487,14 @@ public class Database {
 	 * @param year of season
 	 * @return true if driver is valid
 	 */
-	public boolean isValidDriverYear(String driver, Year year) {
+	public boolean isValidDriverYear(Driver driver, Year year) {
 		final String existCheck = "SELECT COUNT(*) FROM DriverYear WHERE year = ? AND driver = ?";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, year, driver) > 0;
+	}
+
+	public boolean isValidDriver(Driver driver) {
+		final String existCheck = "SELECT COUNT(*) FROM Driver WHERE name = ?";
+		return jdbcTemplate.queryForObject(existCheck, Integer.class, driver) > 0;
 	}
 	
 	/**
@@ -1502,9 +1504,14 @@ public class Database {
 	 * @param year of season
 	 * @return true if constructor is valid
 	 */
-	public boolean isValidConstructorYear(String constructor, Year year) {
+	public boolean isValidConstructorYear(Constructor constructor, Year year) {
 		final String existCheck = "SELECT COUNT(*) FROM ConstructorYear WHERE year = ? AND constructor = ?";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, year, constructor) > 0;
+	}
+	
+	public boolean isValidConstructor(Constructor constructor) {
+		final String existCheck = "SELECT COUNT(*) FROM Constructor WHERE name = ?";
+		return jdbcTemplate.queryForObject(existCheck, Integer.class, constructor) > 0;
 	}
 
 	public boolean isValidFlag(String value) {

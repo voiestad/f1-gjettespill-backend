@@ -13,7 +13,9 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Diff;
+import no.vebb.f1.util.domainPrimitive.Driver;
 import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
@@ -74,8 +76,8 @@ public class UserScore {
 		DiffPointsMap map = new DiffPointsMap(category, year, db);
 		List<String> header = Arrays.asList("Plass", "Sjåfør", "Gjettet", "Diff", "Poeng");
 
-		List<String> guessedDriver = db.getGuessedYearDriver(year, id);
-		List<String> drivers = db.getDriverStandings(raceId, year);
+		List<Driver> guessedDriver = db.getGuessedYearDriver(year, id);
+		List<Driver> drivers = db.getDriverStandings(raceId, year);
 		return getGuessedToPos(map, category, header, guessedDriver, drivers);
 	}
 
@@ -84,16 +86,16 @@ public class UserScore {
 		DiffPointsMap map = new DiffPointsMap(category, year, db);
 		List<String> header = Arrays.asList("Plass", "Konstruktør", "Gjettet", "Diff", "Poeng");
 
-		List<String> guessedConstructor = db.getGuessedYearConstructor(year, id);
-		List<String> constructors = db.getConstructorStandings(raceId, year);
+		List<Constructor> guessedConstructor = db.getGuessedYearConstructor(year, id);
+		List<Constructor> constructors = db.getConstructorStandings(raceId, year);
 
 		return getGuessedToPos(map, category, header, guessedConstructor, constructors);
 	}
 
-	private Table getGuessedToPos(DiffPointsMap map, Category category, List<String> header, List<String> guessed, List<String> competitors) {
+	private <T> Table getGuessedToPos(DiffPointsMap map, Category category, List<String> header, List<T> guessed, List<T> competitors) {
 		List<List<String>> body = new ArrayList<>();
 		Points competitorScore = new Points();
-		Map<String, Integer> guessedToPos = new HashMap<>();
+		Map<T, Integer> guessedToPos = new HashMap<>();
 		for (int i = 0; i < guessed.size(); i++) {
 			guessedToPos.put(guessed.get(i), i+1);
 		}
@@ -101,9 +103,9 @@ public class UserScore {
 			List<String> row = new ArrayList<>();
 			int actualPos = i + 1;
 			row.add(String.valueOf(actualPos));
-			String driver = competitors.get(i);
-			row.add(driver);
-			Integer pos = guessedToPos.get(driver);
+			T competitor = competitors.get(i);
+			row.add(competitor.toString());
+			Integer pos = guessedToPos.get(competitor);
 			if (pos == null) {
 				row.add("N/A");
 				row.add("N/A");

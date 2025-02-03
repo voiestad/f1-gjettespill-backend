@@ -8,6 +8,10 @@ public class Flag {
 	public final String value;
 	private Database db;
 
+	public Flag(String value) {
+		this.value = value;
+	}
+
 	public Flag(String value, Database db) throws InvalidFlagException {
 		this.value = value;
 		this.db = db;
