@@ -23,6 +23,9 @@ import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
+/**
+ * Class is responsible for displaying stats about users guesses.
+ */
 @Controller
 @RequestMapping("/user")
 public class ProfileController {
@@ -32,10 +35,20 @@ public class ProfileController {
 
 	@Autowired
 	private Cutoff cutoff;
-	
+
 	@Autowired
 	private Database db;
 
+	/**
+	 * Handles GET request for /user/{id} where id is the UUID of the guesser.
+	 * If user does not exist, redirects to /. If users are still able to guess
+	 * before season starts, the page will be blank if the page does not belongs to
+	 * the logged in user. Else it will display stats from the users guesses.
+	 * 
+	 * @param id    of user
+	 * @param model
+	 * @return guessing profile
+	 */
 	@GetMapping("/{id}")
 	public String guesserProfile(@PathVariable("id") UUID id, Model model) {
 		Optional<User> optUser = userService.loadUser(id);
@@ -46,6 +59,11 @@ public class ProfileController {
 		return getGuesserProfile(model, user);
 	}
 
+	/**
+	 * Handles GET request for /user/myprofile. Displays an overview of the
+	 * guesses of the user. If the user is not logged in, the user will be
+	 * redirected to /.
+	 */
 	@GetMapping("/myprofile")
 	public String myProfile(Model model) {
 		Optional<User> optUser = userService.loadUser();
@@ -70,7 +88,7 @@ public class ProfileController {
 			List<Table> tables = Arrays.asList(table);
 			model.addAttribute("tables", tables);
 		}
-		
+
 		model.addAttribute("title", user.username);
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
 		return "profile";
