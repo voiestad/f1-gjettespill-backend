@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
@@ -33,7 +31,6 @@ import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidConstructorException;
 import no.vebb.f1.util.exception.InvalidDriverException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
-
 
 @Controller
 @RequestMapping("/guess")
@@ -50,7 +47,11 @@ public class GuessController {
 	@Autowired
 	private Cutoff cutoff;
 
-	@GetMapping()
+	/**
+	 * Handles GET requests for /guess. Gives a list of links to the categories that
+	 * are currently available for guessing.
+	 */
+	@GetMapping
 	public String guess(@RequestParam(value = "success", required = false) Boolean success, Model model) {
 		if (success != null) {
 			if (success) {
@@ -75,16 +76,16 @@ public class GuessController {
 		return "linkList";
 	}
 
+	/**
+	 * Handles GET requests for /guess/drivers. If it is still possible to guess,
+	 * gives a list of drivers to rank and the time left to guess.
+	 */
 	@GetMapping("/drivers")
 	public String rankDrivers(Model model) {
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess"; 
+			return "redirect:/guess";
 		}
-		UUID id = user.get().id;
+		UUID id = userService.loadUser().get().id;
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
 		List<Driver> competitors = db.getDriversGuess(id, year);
@@ -95,29 +96,29 @@ public class GuessController {
 		return "ranking";
 	}
 
+	/**
+	 * Handles POST requests for /guess/drivers. If it is still possible to guess,
+	 * and input guess is valid, adds the guesses to the database.
+	 */
 	@PostMapping("/drivers")
 	public String rankDrivers(@RequestParam List<String> rankedCompetitors, Model model) {
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess?success=false"; 
+			return "redirect:/guess?success=false";
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		try {
 			List<Driver> validationList = db.getDriversYear(year);
 			Set<Driver> competitors = new HashSet<>(validationList);
 			List<Driver> guessedDrivers = rankedCompetitors.stream()
-				.map(driver -> new Driver(driver, db))
-				.toList();
+					.map(driver -> new Driver(driver, db))
+					.toList();
 			String error = validateGuessList(guessedDrivers, competitors);
 			if (error != null) {
 				logger.warn(error);
 				return "redirect:/guess?success=false";
 			}
 			int position = 1;
-			UUID id = user.get().id;
+			UUID id = userService.loadUser().get().id;
 			for (Driver driver : guessedDrivers) {
 				db.insertDriversYearGuess(id, driver, year, position);
 				position++;
@@ -129,16 +130,17 @@ public class GuessController {
 		return "redirect:/guess?success=true";
 	}
 
+	/**
+	 * Handles GET requests for /guess/constructors. If it is still possible to
+	 * guess,
+	 * gives a list of constructors to rank and the time left to guess.
+	 */
 	@GetMapping("/constructors")
 	public String rankConstructors(Model model) {
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess"; 
+			return "redirect:/guess";
 		}
-		UUID id = user.get().id;
+		UUID id = userService.loadUser().get().id;
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
 		List<Constructor> competitors = db.getConstructorsGuess(id, year);
@@ -149,29 +151,30 @@ public class GuessController {
 		return "ranking";
 	}
 
+	/**
+	 * Handles POST requests for /guess/constructors. If it is still possible to
+	 * guess,
+	 * and input guess is valid, adds the guesses to the database.
+	 */
 	@PostMapping("/constructors")
 	public String rankConstructors(@RequestParam List<String> rankedCompetitors, Model model) {
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess?success=false"; 
+			return "redirect:/guess?success=false";
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		try {
 			List<Constructor> validationList = db.getConstructorsYear(year);
 			Set<Constructor> competitors = new HashSet<>(validationList);
 			List<Constructor> guessedConstructors = rankedCompetitors.stream()
-				.map(constructor -> new Constructor(constructor, db))
-				.toList();
+					.map(constructor -> new Constructor(constructor, db))
+					.toList();
 			String error = validateGuessList(guessedConstructors, competitors);
 			if (error != null) {
 				logger.warn(error);
 				return "redirect:/guess?success=false";
 			}
 			int position = 1;
-			UUID id = user.get().id;
+			UUID id = userService.loadUser().get().id;
 			for (Constructor constructor : guessedConstructors) {
 				db.insertConstructorsYearGuess(id, constructor, year, position);
 				position++;
@@ -200,6 +203,10 @@ public class GuessController {
 		return null;
 	}
 
+	/**
+	 * Handles GET requests for /guess/tenth. If it is possible to guess, gives a
+	 * list of drivers that can be chosen.
+	 */
 	@GetMapping("/tenth")
 	public String guessTenth(Model model) {
 		model.addAttribute("title", "Tipp 10.plass");
@@ -208,12 +215,20 @@ public class GuessController {
 		return handleGetChooseDriver(model, category);
 	}
 
+	/**
+	 * Handles POST requests for /guess/tenth. If it is possible to guess, gives a
+	 * and input driver is valid, adds the guess to the database.
+	 */
 	@PostMapping("/tenth")
 	public String guessTenth(@RequestParam String driver, Model model) {
 		Category category = new Category("TENTH", db);
 		return handlePostChooseDriver(model, driver, category);
 	}
 
+	/**
+	 * Handles GET requests for /guess/winner. If it is possible to guess, gives a
+	 * list of drivers that can be chosen.
+	 */
 	@GetMapping("/winner")
 	public String guessWinner(Model model) {
 		model.addAttribute("title", "Tipp Vinneren");
@@ -222,6 +237,10 @@ public class GuessController {
 		return handleGetChooseDriver(model, category);
 	}
 
+	/**
+	 * Handles POST requests for /guess/winner. If it is possible to guess, gives a
+	 * and input driver is valid, adds the guess to the database.
+	 */
 	@PostMapping("/winner")
 	public String guessWinner(@RequestParam String driver, Model model) {
 		Category category = new Category("FIRST", db);
@@ -229,10 +248,6 @@ public class GuessController {
 	}
 
 	private String handleGetChooseDriver(Model model, Category category) {
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
 		try {
 			RaceId raceId = getRaceIdToGuess();
 
@@ -241,8 +256,8 @@ public class GuessController {
 
 			List<Driver> drivers = db.getDriversFromStartingGrid(raceId);
 			model.addAttribute("items", drivers);
-
-			String driver = db.getGuessedDriverPlace(raceId, category, user.get().id).toString();
+			UUID id = userService.loadUser().get().id;
+			String driver = db.getGuessedDriverPlace(raceId, category, id).toString();
 			model.addAttribute("guessedDriver", driver);
 		} catch (NoAvailableRaceException e) {
 			return "redirect:/guess";
@@ -254,10 +269,6 @@ public class GuessController {
 	}
 
 	private String handlePostChooseDriver(Model model, String driver, Category category) {
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
 		try {
 			RaceId raceId = getRaceIdToGuess();
 			Driver validDriver = new Driver(driver, db);
@@ -266,7 +277,7 @@ public class GuessController {
 				logger.warn("'{}', invalid winner driver inputted by user.", driver);
 				return "redirect:/guess?success=false";
 			}
-			UUID id = user.get().id;
+			UUID id = userService.loadUser().get().id;
 			db.addDriverPlaceGuess(id, raceId, validDriver, category);
 			logger.info("User '{}' guessed on category '{}' on race '{}'", id, category, raceId);
 			return "redirect:/guess?success=true";
@@ -279,33 +290,37 @@ public class GuessController {
 
 	private RaceId getRaceIdToGuess() throws NoAvailableRaceException {
 		try {
-			RaceId id = db.getCurrentRaceIdToGuess();
-			if (!cutoff.isAbleToGuessRace(id)) {
+			RaceId raceId = db.getCurrentRaceIdToGuess();
+			if (!cutoff.isAbleToGuessRace(raceId)) {
 				throw new NoAvailableRaceException("Cutoff has been passed");
 			}
-			return id;
+			return raceId;
 		} catch (EmptyResultDataAccessException e) {
 			throw new NoAvailableRaceException("Currently there are no available races");
 		}
 	}
 
+	/**
+	 * Handles GET requests for /guess/flags. If it is possible to guess, gives the
+	 * users previous guesses.
+	 */
 	@GetMapping("/flags")
 	public String guessFlags(Model model) {
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess"; 
+			return "redirect:/guess";
 		}
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		Flags flags = db.getFlagGuesses(user.get().id, year);
+		Flags flags = db.getFlagGuesses(userService.loadUser().get().id, year);
 		model.addAttribute("flags", flags);
 		return "guessFlags";
 	}
 
+	/**
+	 * Handles POST requests for /guess/flags. If it is possible to guess and values
+	 * are valid, adds the guesses to the database.
+	 */
 	@PostMapping("/flags")
 	public String guessFlags(@RequestParam int yellow, @RequestParam int red,
 			@RequestParam int safetyCar, Model model) {
@@ -314,16 +329,13 @@ public class GuessController {
 			model.addAttribute("error", "Verdier kan ikke være negative");
 			return "guessFlags";
 		}
-		Optional<User> user = userService.loadUser();
-		if (!user.isPresent()) {
-			return "redirect:/";
-		}
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess?success=false"; 
+			return "redirect:/guess?success=false";
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		db.addFlagGuesses(user.get().id, year, flags);
-		logger.info("User '{}' guessed on flags on year '{}'", user.get().id, year);
+		UUID id = userService.loadUser().get().id;
+		db.addFlagGuesses(id, year, flags);
+		logger.info("User '{}' guessed on flags on year '{}'", id, year);
 		return "redirect:/guess?success=true";
 	}
 
@@ -333,26 +345,6 @@ public class GuessController {
 			return true;
 		} catch (NoAvailableRaceException e) {
 			return false;
-		}
-	}
-
-	class PositionedItem implements Comparable<PositionedItem> {
-		public final int pos;
-		public final String value;
-
-		public PositionedItem(int pos, String value) {
-			this.pos = pos;
-			this.value = value;
-		}
-
-		@Override
-		public int compareTo(PositionedItem item) {
-			if (pos > item.pos) {
-				return 1;
-			} else if (pos < item.pos) {
-				return -1;
-			}
-			return 0;
 		}
 	}
 
