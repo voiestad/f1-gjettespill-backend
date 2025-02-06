@@ -18,6 +18,9 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidUsernameException;
 
+/**
+ * Class is responsible for registering username for new users.
+ */
 @Controller
 @RequestMapping("/username")
 public class UsernameController {
@@ -32,6 +35,9 @@ public class UsernameController {
 	@Autowired
 	private UserService userService;
 
+	/**
+	 * Handles GET requests for /username. Gives a form to set username.
+	 */
 	@GetMapping
 	public String registerUsernameForm(Model model) {
 		if (userService.isLoggedIn()) {
@@ -41,6 +47,11 @@ public class UsernameController {
 		return "registerUsername";
 	}
 
+	/**
+	 * Handles POST requests for /username. If the username is valid, it adds the
+	 * username along with the users Google ID and a generated ID into the database.
+	 * Otherwise, it gives the user an error message.
+	 */
 	@PostMapping
 	public String registerUsername(@AuthenticationPrincipal OAuth2User principal,
 			@RequestParam("username") String username,
