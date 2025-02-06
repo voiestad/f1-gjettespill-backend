@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import no.vebb.f1.controller.ScoreController;
 import no.vebb.f1.database.Database;
+import no.vebb.f1.scoring.ScoringTables;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Category;
@@ -49,7 +49,7 @@ public class ManagePointsSystemController {
 		}
 		model.addAttribute("categories", categoryMap);
 
-		List<Table> tables = ScoreController.getScoreMappingTables(seasonYear, db);
+		List<Table> tables = ScoringTables.getScoreMappingTables(seasonYear, db);
 		model.addAttribute("tables", tables);
 
 		model.addAttribute("title", year);
