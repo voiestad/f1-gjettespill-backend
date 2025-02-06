@@ -21,6 +21,9 @@ import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 
+/**
+ * Class is responsible for displaying guesses for the users for races.
+ */
 @Controller
 @RequestMapping("/race-guess")
 public class RaceGuess {
@@ -31,6 +34,11 @@ public class RaceGuess {
 	@Autowired
 	private Database db;
 
+	/**
+	 * Handles GET requests for /race-guess. If there is the guesses are not
+	 * available, redirects to /. A race is only available when the cutoff of the
+	 * latest starting grid of the current year has passed.
+	 */
 	@GetMapping
 	public String guessOverview(Model model) {
 		try {
@@ -41,15 +49,15 @@ public class RaceGuess {
 			}
 			String title = String.format("%d. %s %d", race.position, race.name, year.value);
 			model.addAttribute("title", title);
-			
+
 			List<Table> tables = new ArrayList<>();
 
-			Category[] categories = {new Category("FIRST", db), new Category("TENTH", db)};
+			Category[] categories = { new Category("FIRST", db), new Category("TENTH", db) };
 			List<String> header = Arrays.asList("Navn", "Tippet", "Startet");
 			for (Category category : categories) {
 				List<List<String>> body = db.getUserGuessesDriverPlace(race.id, category).stream()
-					.map(userGuess -> Arrays.asList(userGuess.user, userGuess.driver, userGuess.position))
-					.toList();
+						.map(userGuess -> Arrays.asList(userGuess.user, userGuess.driver, userGuess.position))
+						.toList();
 				String name = db.translateCategory(category);
 				Table table = new Table(name, header, body);
 				tables.add(table);
