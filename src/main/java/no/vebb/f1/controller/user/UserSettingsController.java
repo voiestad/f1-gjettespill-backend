@@ -1,6 +1,9 @@
 package no.vebb.f1.controller.user;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidUsernameException;
 
@@ -32,16 +36,28 @@ public class UserSettingsController {
 
 	private final String usernameUrl = "/settings/username";
 
-	@GetMapping()
+	@GetMapping
 	public String settings(Model model) {
 		model.addAttribute("title", "Innstillinger");
 		Map<String, String> linkMap = new LinkedHashMap<>();
+		linkMap.put("Se brukerinformasjon", "/settings/info");
 		linkMap.put("Endre brukernavn", "/settings/username");
 		linkMap.put("Slett bruker", "/settings/delete");
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
 	}
 
+	@GetMapping("/info")
+	public String userInformation(Model model) {
+		model.addAttribute("title", "Brukerinformasjon");
+		List<Table> tables = new ArrayList<>();
+		User user = userService.loadUser().get();
+		tables.add(new Table("", Arrays.asList("Brukernavn"), Arrays.asList(Arrays.asList(user.username))));
+		tables.add(new Table("", Arrays.asList("Bruker-ID"), Arrays.asList(Arrays.asList(user.id.toString()))));
+		tables.add(new Table("", Arrays.asList("Google-ID"), Arrays.asList(Arrays.asList(user.googleId.toString()))));
+		model.addAttribute("tables", tables);
+		return "tables";
+	}
 	@GetMapping("/username")
 	public String changeUsername(Model model) {
 		model.addAttribute("url", usernameUrl);
