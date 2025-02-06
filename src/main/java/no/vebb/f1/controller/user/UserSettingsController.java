@@ -24,10 +24,14 @@ import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidUsernameException;
 
+/**
+ * Class is responsible for managing the user settings. Like changing username
+ * and deleting user.
+ */
 @Controller
 @RequestMapping("/settings")
 public class UserSettingsController {
-	
+
 	@Autowired
 	private Database db;
 
@@ -36,6 +40,10 @@ public class UserSettingsController {
 
 	private final String usernameUrl = "/settings/username";
 
+	/**
+	 * Handles GET requests for /settings. Gives a list of links to further navigate
+	 * the settings.
+	 */
 	@GetMapping
 	public String settings(Model model) {
 		model.addAttribute("title", "Innstillinger");
@@ -47,6 +55,10 @@ public class UserSettingsController {
 		return "linkList";
 	}
 
+	/**
+	 * Handles GET requests for /settings/info. Gives the user information about
+	 * their username, user ID and Google ID that is associated with their user.
+	 */
 	@GetMapping("/info")
 	public String userInformation(Model model) {
 		model.addAttribute("title", "Brukerinformasjon");
@@ -58,12 +70,22 @@ public class UserSettingsController {
 		model.addAttribute("tables", tables);
 		return "tables";
 	}
+
+	/**
+	 * Handles GET requests for /settings/username. Gives the form for changing
+	 * username.
+	 */
 	@GetMapping("/username")
 	public String changeUsername(Model model) {
 		model.addAttribute("url", usernameUrl);
 		return "registerUsername";
 	}
 
+	/**
+	 * Handles POST requests for /settings/username. If the username is valid, it
+	 * changes the username in the database. Otherwise, it gives an error message to
+	 * the user.
+	 */
 	@PostMapping("/username")
 	public String changeUsername(String username, Model model) {
 		try {
@@ -75,18 +97,28 @@ public class UserSettingsController {
 			model.addAttribute("url", usernameUrl);
 			return "registerUsername";
 		}
-		
+
 		return "redirect:/settings";
 	}
 
+	/**
+	 * Handles GET requests for /settings/delete. Gives a form to confirm deletion
+	 * of account.
+	 */
 	@GetMapping("/delete")
 	public String deleteAccount(Model model) {
 		String username = userService.loadUser().get().username;
 		model.addAttribute("username", username);
-		
+
 		return "deleteAccount";
 	}
-	
+
+	/**
+	 * Handles POST requests for /settings/delete. If the input username matches the
+	 * username of the user the user is anonymized and Google ID removed. This
+	 * revokes their access to the website. If the username is incorrect, the user
+	 * gets an error message.
+	 */
 	@PostMapping("/delete")
 	public String deleteAccount(Model model, @RequestParam("username") String username, HttpServletRequest request) {
 		User user = userService.loadUser().get();
@@ -96,8 +128,7 @@ public class UserSettingsController {
 			model.addAttribute("error", "Brukernavn er feil");
 			return "deleteAccount";
 		}
-		UUID id = user.id;
-		db.deleteUser(id);
+		db.deleteUser(user.id);
 
 		request.getSession().invalidate();
 		SecurityContextHolder.clearContext();
