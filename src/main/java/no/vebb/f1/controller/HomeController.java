@@ -76,6 +76,14 @@ public class HomeController {
 	public String contact() {
 		return "contact";
 	}
+	
+	/**
+	 * Handles GET request for about page.
+	 */
+	@GetMapping("/about")
+	public String about() {
+		return "about";
+	}
 
 	private boolean isRaceGuess() {
 		try {
