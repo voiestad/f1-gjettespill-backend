@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" th:href="@{/tables.css}">
+	<title>F1 Tipping</title>
+	<style>
+		a {
+			color: black;
+		}
+	</style>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<h2>Det oppstå en ukjent feil...</h2>
+		<p>Hvis feilen vedvarer, vennligst meld den inn <a href="/contact">her</a>.</p>
+		<a href="/">Tilbake til hjem</a>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+</body>
+
+</html>

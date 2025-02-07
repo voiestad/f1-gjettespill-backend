@@ -22,7 +22,8 @@ public class SecurityConfig {
 				"/score/**",
 				"/race-guess/**",
 				"/contact",
-				"/about")
+				"/about",
+				"/error")
 				.permitAll();
 			auth.anyRequest().authenticated();	
 		})
