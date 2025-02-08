@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.domainPrimitive.Flag;
@@ -29,14 +28,11 @@ import no.vebb.f1.util.exception.InvalidYearException;
 public class FlagController {
 
 	@Autowired
-	private UserService userService;
-
-	@Autowired
 	private Database db;
 
 	@GetMapping
 	public String flagChooseYear(Model model) {
-		userService.adminCheck();
+		
 		model.addAttribute("title", "Velg år");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		List<Year> years = db.getAllValidYears();
@@ -49,7 +45,6 @@ public class FlagController {
 
 	@GetMapping("/{year}")
 	public String flagChooseRace(@PathVariable("year") int year, Model model) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		model.addAttribute("title", "Velg løp");
 		Map<String, String> linkMap = new LinkedHashMap<>();
@@ -63,7 +58,6 @@ public class FlagController {
 
 	@GetMapping("/{year}/{id}")
 	public String registerFlags(@PathVariable("year") int year, @PathVariable("id") int raceId, Model model) {
-		userService.adminCheck();
 		try {
 			Year seasonYear = new Year(year, db);
 			RaceId validRaceId = new RaceId(raceId, db);
@@ -87,7 +81,6 @@ public class FlagController {
 	@PostMapping("/add")
 	public String registerFlag(@RequestParam("flag") String flag, @RequestParam("round") int round,
 			@RequestParam("raceId") int raceId, @RequestParam("origin") String origin) {
-		userService.adminCheck();
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
 			Flag validFlag = new Flag(flag, db);
@@ -104,10 +97,7 @@ public class FlagController {
 
 	@PostMapping("/delete")
 	public String deleteFlag(@RequestParam("id") int id, @RequestParam("origin") String origin) {
-		userService.adminCheck();
-
 		db.deleteFlagStatsById(id);
-
 		return "redirect:" + origin;
 	}
 

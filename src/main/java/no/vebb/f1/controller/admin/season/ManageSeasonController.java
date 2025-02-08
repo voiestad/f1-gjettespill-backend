@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
-import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.collection.Table;
@@ -28,15 +27,11 @@ import no.vebb.f1.util.exception.InvalidRaceException;
 public class ManageSeasonController {
 	
 	@Autowired
-	private UserService userService;
-
-	@Autowired
 	private Database db;
 
 	@GetMapping
 	public String manageRacesInSeason(@RequestParam(value = "success", required = false) Boolean success,
 			@PathVariable("year") int year, Model model) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		if (success != null) {
 			if (success) {
@@ -54,7 +49,6 @@ public class ManageSeasonController {
 
 	@GetMapping("/{raceId}")
 	public String manageRacesInSeason(@PathVariable("raceId") int raceId, @PathVariable("year") int year, Model model) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
@@ -123,7 +117,6 @@ public class ManageSeasonController {
 
 	@PostMapping("/reload")
 	public String reloadRace(@RequestParam("id") int raceId, @PathVariable("year") int year) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
@@ -145,7 +138,6 @@ public class ManageSeasonController {
 	@PostMapping("/move")
 	public String changeRaceOrder(@PathVariable int year, @RequestParam("id") int raceId,
 			@RequestParam("newPosition") int position) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
@@ -185,7 +177,6 @@ public class ManageSeasonController {
 
 	@PostMapping("/delete")
 	public String deleteRace(@PathVariable int year, @RequestParam("id") int raceId) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
@@ -210,7 +201,6 @@ public class ManageSeasonController {
 
 	@PostMapping("/add")
 	public String addRace(@PathVariable int year, @RequestParam("id") int raceId) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			@SuppressWarnings("unused")

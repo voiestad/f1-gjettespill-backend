@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
-import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -30,12 +29,8 @@ public class SeasonController {
 	@Autowired
 	private Database db;
 
-	@Autowired
-	private UserService userService;
-
 	@GetMapping
 	public String seasonAdminOverview(Model model) {
-		userService.adminCheck();
 		model.addAttribute("title", "Administrer sesonger");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		List<Year> years = db.getAllValidYears();
@@ -50,7 +45,6 @@ public class SeasonController {
 	@GetMapping("/{year}")
 	public String seasonMenu(@RequestParam(value = "success", required = false) Boolean success,
 			@PathVariable("year") int year, Model model) {
-		userService.adminCheck();
 		new Year(year, db);
 		model.addAttribute("title", year);
 		Map<String, String> linkMap = new LinkedHashMap<>();
@@ -66,14 +60,12 @@ public class SeasonController {
 
 	@GetMapping("/add")
 	public String addSeasonForm() {
-		userService.adminCheck();
 		return "addSeason";
 	}
 
 	@PostMapping("/add")
 	public String addSeason(@RequestParam("year") int year, @RequestParam("start") int start,
 			@RequestParam("end") int end, Model model) {
-		userService.adminCheck();
 		try {
 			new Year(year, db);
 			model.addAttribute("error", String.format("Sesongen %d er allerede lagt til", year));

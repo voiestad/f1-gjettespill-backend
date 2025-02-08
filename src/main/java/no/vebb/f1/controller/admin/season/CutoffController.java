@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.domainPrimitive.RaceId;
@@ -28,9 +27,6 @@ import no.vebb.f1.util.exception.InvalidRaceException;
 @Controller
 @RequestMapping("/admin/season/{year}/cutoff")
 public class CutoffController {
-
-	@Autowired
-	private UserService userService;
 
 	@Autowired
 	private Database db;
@@ -46,7 +42,6 @@ public class CutoffController {
 	 */
 	@GetMapping
 	public String manageCutoff(@PathVariable("year") int year, Model model) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 
 		List<CutoffRace> races = db.getCutoffRaces(seasonYear);
@@ -71,7 +66,6 @@ public class CutoffController {
 	@PostMapping("/setRace")
 	public String setCutoffRace(@PathVariable("year") int year, @RequestParam("id") int raceId,
 			@RequestParam("cutoff") String cutoff) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
@@ -99,7 +93,6 @@ public class CutoffController {
 	 */
 	@PostMapping("/setYear")
 	public String setCutoffYear(@PathVariable("year") int year, @RequestParam("cutoff") String cutoff) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);

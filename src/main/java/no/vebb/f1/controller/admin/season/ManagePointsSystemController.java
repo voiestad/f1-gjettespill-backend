@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.scoring.ScoringTables;
-import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Diff;
@@ -26,19 +25,21 @@ import no.vebb.f1.util.exception.InvalidCategoryException;
 import no.vebb.f1.util.exception.InvalidDiffException;
 import no.vebb.f1.util.exception.InvalidPointsException;
 
+/**
+ * Class is responsible for changing the points system for a specified year.
+ */
 @Controller
 @RequestMapping("/admin/season/{year}/points")
 public class ManagePointsSystemController {
 	
 	@Autowired
-	private UserService userService;
-	
-	@Autowired
 	private Database db;
 
+	/**
+	 * Handles GET requests to /admin/season/{year}/points.
+	 */
 	@GetMapping
 	public String managePointsSystem(@PathVariable("year") int year, Model model) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 
 		List<Category> categories = db.getCategories();
@@ -59,7 +60,6 @@ public class ManagePointsSystemController {
 
 	@PostMapping("/add")
 	public String addPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		Diff newDiff;
 		try {
@@ -78,7 +78,6 @@ public class ManagePointsSystemController {
 
 	@PostMapping("/delete")
 	public String deletePointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			Category validCategory = new Category(category, db);
@@ -93,7 +92,6 @@ public class ManagePointsSystemController {
 	@PostMapping("/set")
 	public String setPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category,
 			@RequestParam("diff") int diff, @RequestParam("points") int points) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			Category validCategory = new Category(category, db);
@@ -104,8 +102,6 @@ public class ManagePointsSystemController {
 			}
 
 			Points validPoints = new Points(points);
-			
-
 			db.setNewDiffToPointsInPointsMap(validCategory, validDiff, seasonYear, validPoints);
 		} catch (EmptyResultDataAccessException e) {
 		} catch (InvalidCategoryException e) {

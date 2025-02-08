@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Driver;
 import no.vebb.f1.util.domainPrimitive.Year;
@@ -24,14 +23,10 @@ import no.vebb.f1.util.exception.InvalidDriverException;
 public class SeasonCompetitorsController {
 
 	@Autowired
-	private UserService userService;
-
-	@Autowired
 	private Database db;
 	
 	@GetMapping
 	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		List<Driver> drivers = db.getDriversYear(seasonYear);
 		List<Constructor> constructors = db.getConstructorsYear(seasonYear);
@@ -45,18 +40,14 @@ public class SeasonCompetitorsController {
 
 	@PostMapping("/addDriver")
 	public String addDriverToSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
-
 		db.addDriverYear(driver, seasonYear);
-		
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
 
 	@PostMapping("/addConstructor")
 	public String addConstructorToSeason(@PathVariable("year") int year,
 			@RequestParam("constructor") String constructor) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		db.addConstructorYear(constructor, seasonYear);
 		return "redirect:/admin/season/" + year + "/competitors";
@@ -64,7 +55,6 @@ public class SeasonCompetitorsController {
 
 	@PostMapping("/deleteDriver")
 	public String removeDriverFromSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			Driver validDriver = new Driver(driver, db, seasonYear);
@@ -86,7 +76,6 @@ public class SeasonCompetitorsController {
 	@PostMapping("/deleteConstructor")
 	public String removeConstructorFromSeason(@PathVariable("year") int year,
 			@RequestParam("constructor") String constructor) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			Constructor validConstructor = new Constructor(constructor, db);
@@ -108,7 +97,6 @@ public class SeasonCompetitorsController {
 	@PostMapping("/moveDriver")
 	public String moveDriverFromSeason(@PathVariable("year") int year, @RequestParam("driver") String driver,
 			@RequestParam("newPosition") int position) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			Driver validDriver = new Driver(driver, db, seasonYear);
@@ -142,7 +130,6 @@ public class SeasonCompetitorsController {
 	@PostMapping("/moveConstructor")
 	public String moveConstructorFromSeason(@PathVariable("year") int year,
 			@RequestParam("constructor") String constructor, @RequestParam("newPosition") int position) {
-		userService.adminCheck();
 		Year seasonYear = new Year(year, db);
 		try {
 			Constructor validConstructor = new Constructor(constructor, db);
