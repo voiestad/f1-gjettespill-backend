@@ -28,7 +28,7 @@ public class UsernameCheckFilter extends OncePerRequestFilter {
 
 	/**
 	 * Redirects user to /username when user logged in and does not have a username.
-	 * Exceptions to redirections are requests to /username, /logout, /favicon and
+	 * Exceptions to redirections are requests to /username, /logout, /favicon.ico, /errors and
 	 * all .css files.
 	 */
 	@Override
@@ -37,7 +37,7 @@ public class UsernameCheckFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		final String path = request.getRequestURI();
 		if (path.matches(
-				"/username|/logout|/favicon.ico|/.*\\.css|/about|/error")) {
+				"/username|/logout|/favicon.ico|/.*\\.css|/error")) {
 			filterChain.doFilter(request, response);
 			return;
 		}
