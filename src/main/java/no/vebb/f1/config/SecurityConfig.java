@@ -7,6 +7,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Class is responsible for configuring the security of the application.
+ * It defines which pages the user can access without being authenticated, all
+ * other pages require authentication. It also sets up oauth2.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

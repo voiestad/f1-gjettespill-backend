@@ -5,6 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+/**
+ * Class is responsible for setting up the required tables in the database.
+ */
 @Configuration
 public class SQLiteConfig {
 
