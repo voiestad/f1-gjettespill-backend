@@ -175,11 +175,16 @@ main {
 
 .breadcrumb {
 	display: flex;
+	flex-wrap: wrap;
 	list-style-type: none;
 	padding: 0;
 	margin: 0;
 	margin-top: 10px;
 	color: white;
+}
+
+.breadcrumb li {
+	list-style-position: inside;
 }
 
 .breadcrumb li:not(:last-child)::after {

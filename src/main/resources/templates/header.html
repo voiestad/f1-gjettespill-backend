@@ -12,7 +12,10 @@
 	</a>
 	<div th:if="${breadcrumbs}" style="margin: 0;">
 		<ol class="breadcrumb">
-			<li th:each="crumb : ${breadcrumbs}"><a th:href="${crumb.value}" th:text="${crumb.key}"></a></li>
+			<li th:each="crumb : ${breadcrumbs}">
+				<a th:if="${crumb.value}" th:href="${crumb.value}" th:text="${crumb.key}"></a>
+				<div th:unless="${crumb.value}" th:text="${crumb.key}" style="margin: 0;"></div>
+			</li>
 		</ol>
 	</div>
 	<div id="links">
