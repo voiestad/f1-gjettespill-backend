@@ -10,6 +10,11 @@
 	<a href="javascript:void(0);" class="icon" onclick="toggleDropDown()">
 		<i class="fa fa-bars"></i>
 	</a>
+	<div th:if="${breadcrumbs}" style="margin: 0;">
+		<ol class="breadcrumb">
+			<li th:each="crumb : ${breadcrumbs}"><a th:href="${crumb.value}" th:text="${crumb.key}"></a></li>
+		</ol>
+	</div>
 	<div id="links">
 		<a href="/">Hjem</a>
 		<a href="/guess">Tipping</a>
