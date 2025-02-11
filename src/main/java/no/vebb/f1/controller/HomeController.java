@@ -52,14 +52,19 @@ public class HomeController {
 		model.addAttribute("loggedOut", loggedOut);
 		Table leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
-		if (leaderBoard.getHeader().size() == 0) {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			List<String> guessers = db.getSeasonGuessers(year);
-			model.addAttribute("guessers", guessers);
+		try {
+			if (leaderBoard.getHeader().size() == 0) {
+				Year year = new Year(TimeUtil.getCurrentYear(), db);
+				List<String> guessers = db.getSeasonGuessers(year);
+				model.addAttribute("guessers", guessers);
+				model.addAttribute("guessersNames", new String[0]);
+				model.addAttribute("scores", new int[0]);
+			} else {
+				setGraph(model);
+			}
+		} catch (InvalidYearException e) {
 			model.addAttribute("guessersNames", new String[0]);
 			model.addAttribute("scores", new int[0]);
-		} else {
-			setGraph(model);
 		}
 		model.addAttribute("raceGuess", isRaceGuess());
 
@@ -105,27 +110,31 @@ public class HomeController {
 		if (cutoff.isAbleToGuessCurrentYear()) {
 			return new Table("Sesongen starter snart", new ArrayList<>(), new ArrayList<>());
 		}
-		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		List<Guesser> leaderBoard = db.getAllUsers().stream()
-			.map(id -> {
-				UserScore userScore = new UserScore(id, year, db);
-				User user = userService.loadUser(id).get();
-				return new Guesser(user.username, userScore.getScore(), id);
-			})
-			.filter(guesser -> guesser.points.value > 0)
-			.sorted()
-			.toList();
+		try {
+			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			List<Guesser> leaderBoard = db.getAllUsers().stream()
+				.map(id -> {
+					UserScore userScore = new UserScore(id, year, db);
+					User user = userService.loadUser(id).get();
+					return new Guesser(user.username, userScore.getScore(), id);
+				})
+				.filter(guesser -> guesser.points.value > 0)
+				.sorted()
+				.toList();
 
-		for (int i = 0; i < leaderBoard.size(); i++) {
-			Guesser guesser = leaderBoard.get(i);
-			body.add(Arrays.asList(
-				String.valueOf(i+1),
-				guesser.username,
-				String.valueOf(guesser.points),
-				guesser.id.toString()
-			));
+			for (int i = 0; i < leaderBoard.size(); i++) {
+				Guesser guesser = leaderBoard.get(i);
+				body.add(Arrays.asList(
+					String.valueOf(i+1),
+					guesser.username,
+					String.valueOf(guesser.points),
+					guesser.id.toString()
+				));
+			}
+			return new Table("Rangering", header, body);
+		} catch (InvalidYearException e) {
+			return new Table("Det vil snart være mulig å tippe", new ArrayList<>(), new ArrayList<>());
 		}
-		return new Table("Rangering", header, body);
 	}
 
 	private List<RaceId> getSeasonRaceIds(Year year) {

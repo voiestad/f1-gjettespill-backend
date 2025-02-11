@@ -64,7 +64,6 @@ public class Importer {
 			}
 			logger.info("Finished import of data to database");
 		} catch (InvalidYearException e) {
-			e.printStackTrace();
 			logger.error("Could not import data to the database because current year is not valid");
 		}
 	}
