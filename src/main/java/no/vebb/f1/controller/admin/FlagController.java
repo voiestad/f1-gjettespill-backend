@@ -45,15 +45,19 @@ public class FlagController {
 
 	@GetMapping("/{year}")
 	public String flagChooseRace(@PathVariable("year") int year, Model model) {
-		Year seasonYear = new Year(year, db);
-		model.addAttribute("title", "Velg løp");
-		Map<String, String> linkMap = new LinkedHashMap<>();
-		List<CutoffRace> races = db.getCutoffRaces(seasonYear);
-		for (CutoffRace race : races) {
-			linkMap.put(race.position + ". " + race.name, "/admin/flag/" + year + "/" + race.id);
+		try {
+			Year seasonYear = new Year(year, db);
+			model.addAttribute("title", "Velg løp");
+			Map<String, String> linkMap = new LinkedHashMap<>();
+			List<CutoffRace> races = db.getCutoffRaces(seasonYear);
+			for (CutoffRace race : races) {
+				linkMap.put(race.position + ". " + race.name, "/admin/flag/" + year + "/" + race.id);
+			}
+			model.addAttribute("linkMap", linkMap);
+			return "linkList";
+		} catch (InvalidYearException e) {
+			return "redirect:/admin/flag";
 		}
-		model.addAttribute("linkMap", linkMap);
-		return "linkList";
 	}
 
 	@GetMapping("/{year}/{id}")
@@ -63,7 +67,7 @@ public class FlagController {
 			RaceId validRaceId = new RaceId(raceId, db);
 			boolean isRaceInSeason = db.isRaceInSeason(validRaceId, seasonYear);
 			if (!isRaceInSeason) {
-				return "redirect:/admin/flag";
+				return "redirect:/admin/flag/" + year;
 			}
 			List<Flag> flags = db.getFlags();
 			model.addAttribute("flags", flags);
@@ -72,10 +76,12 @@ public class FlagController {
 			List<RegisteredFlag> registeredFlags = db.getRegisteredFlags(validRaceId);
 			model.addAttribute("registeredFlags", registeredFlags);
 			model.addAttribute("title", "Flagg " + db.getRaceName(validRaceId));
+			return "noteFlags";
 		} catch (InvalidRaceException e) {
+			return "redirect:/admin/flag/" + year;
 		} catch (InvalidYearException e) {
+			return "redirect:/admin/flag";
 		}
-		return "noteFlags";
 	}
 
 	@PostMapping("/add")
