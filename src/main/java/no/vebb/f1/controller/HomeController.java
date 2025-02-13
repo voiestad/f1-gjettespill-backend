@@ -112,7 +112,7 @@ public class HomeController {
 		}
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			List<Guesser> leaderBoard = db.getAllUsers().stream()
+			List<Guesser> leaderBoard = db.getAllUserIds().stream()
 				.map(id -> {
 					UserScore userScore = new UserScore(id, year, db);
 					User user = userService.loadUser(id).get();

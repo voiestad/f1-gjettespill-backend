@@ -764,9 +764,29 @@ public class Database {
 	 * 
 	 * @return id of every user
 	 */
-	public List<UUID> getAllUsers() {
+	public List<UUID> getAllUserIds() {
 		final String getAllUsersSql = "SELECT id FROM User";
 		return jdbcTemplate.queryForList(getAllUsersSql, UUID.class);
+	}
+
+	/**
+	 * Gets a list of all all users sorted by username_upper.
+	 * 
+	 * @return every user
+	 */
+	public List<User> getAllUsers() {
+		final String getAllUsersSql = """
+			SELECT id, username, google_id
+			FROM User
+			ORDER BY username_upper ASC
+			""";
+		return jdbcTemplate.queryForList(getAllUsersSql).stream()
+			.map(row -> 
+			new User(
+				(String) row.get("google_id"),
+				UUID.fromString((String) row.get("id")),
+				(String) row.get("username"))
+			).toList();
 	}
 
 	/**

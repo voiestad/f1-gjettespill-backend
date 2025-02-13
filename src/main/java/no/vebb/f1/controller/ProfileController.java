@@ -2,7 +2,9 @@ package no.vebb.f1.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,6 +40,24 @@ public class ProfileController {
 
 	@Autowired
 	private Database db;
+
+	/**
+	 * Handles GET request for /user.
+	 * 
+	 * @param model
+	 * @return links to all users
+	 */
+	@GetMapping
+	public String users(Model model) {
+		model.addAttribute("title", "Brukere");
+		Map<String, String> linkMap = new LinkedHashMap<>();
+		model.addAttribute("linkMap", linkMap);
+		List<User> users = db.getAllUsers();
+		for (User user : users) {
+			linkMap.put(user.username, "/user/" + user.id);
+		}
+		return "linkList";
+	}
 
 	/**
 	 * Handles GET request for /user/{id} where id is the UUID of the guesser.
