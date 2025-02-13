@@ -26,7 +26,7 @@ import no.vebb.f1.util.exception.NoAvailableRaceException;
  */
 @Controller
 @RequestMapping("/race-guess")
-public class RaceGuess {
+public class RaceGuessController {
 
 	@Autowired
 	private Cutoff cutoff;
