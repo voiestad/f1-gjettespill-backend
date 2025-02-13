@@ -2,7 +2,6 @@ package no.vebb.f1.controller.admin.season;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
+import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -87,35 +87,17 @@ public class SeasonController {
 		importer.importData();
 
 		Year seasonYear = new Year(year, db);
-		setDefaultCutoffYear(seasonYear);
-		setDefaultCutoffRaces(seasonYear);
+		Instant time = new Cutoff().getDefaultInstant(seasonYear);
+		db.setCutoffYear(time, seasonYear);
+		setDefaultCutoffRaces(seasonYear, time);
 
 		return "redirect:/admin/season";
 	}
 
-	private Instant getDefaultInstant(Year year) {
-		Calendar calendar = Calendar.getInstance();
-		calendar.set(Calendar.YEAR, year.value);
-		calendar.set(Calendar.MONTH, Calendar.JANUARY);
-		calendar.set(Calendar.DAY_OF_MONTH, 1);
-		calendar.set(Calendar.AM_PM, Calendar.AM);
-		calendar.set(Calendar.HOUR, 0);
-		calendar.set(Calendar.MINUTE, 0);
-		calendar.set(Calendar.SECOND, 0);
-		calendar.set(Calendar.MILLISECOND, 0);
-		return calendar.toInstant();
-	}
-
-	private void setDefaultCutoffRaces(Year year) {
-		Instant time = getDefaultInstant(year);
+	private void setDefaultCutoffRaces(Year year, Instant time) {
 		List<RaceId> races = db.getRacesFromSeason(year);
 		for (RaceId id : races) {
 			db.setCutoffRace(time, id);
 		}
-	}
-
-	private void setDefaultCutoffYear(Year year) {
-		Instant time = getDefaultInstant(year);
-		db.setCutoffYear(time, year);
 	}
 }

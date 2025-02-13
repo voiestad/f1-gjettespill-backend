@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
+import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.collection.Table;
@@ -211,6 +212,8 @@ public class ManageSeasonController {
 		Importer importer = new Importer(db);
 		importer.importRaceName(raceId, seasonYear);
 		importer.importData();
+		RaceId validRaceId = new RaceId(raceId, db);
+		db.setCutoffRace(new Cutoff().getDefaultInstant(seasonYear), validRaceId);
 		return "redirect:/admin/season/" + year + "/manage?success=true";
 	}
 }

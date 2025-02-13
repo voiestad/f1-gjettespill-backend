@@ -1,6 +1,7 @@
 package no.vebb.f1.util;
 
 import java.time.Instant;
+import java.util.Calendar;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,4 +45,16 @@ public class Cutoff {
 		return cutoff.compareTo(now) > 0;
 	}
 
+	public Instant getDefaultInstant(Year year) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.YEAR, year.value);
+		calendar.set(Calendar.MONTH, Calendar.JANUARY);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		calendar.set(Calendar.AM_PM, Calendar.AM);
+		calendar.set(Calendar.HOUR, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.toInstant();
+	}
 }
