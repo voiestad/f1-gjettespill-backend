@@ -66,7 +66,7 @@ public class ManagePointsSystemController {
 			Category validCategory = new Category(category, db);
 			try {
 				newDiff = db.getMaxDiffInPointsMap(seasonYear, validCategory).add(new Diff(1));
-			} catch (EmptyResultDataAccessException e) {
+			} catch (NullPointerException e) {
 				newDiff = new Diff();;
 			} 
 			db.addDiffToPointsMap(validCategory, newDiff, seasonYear);
@@ -83,7 +83,7 @@ public class ManagePointsSystemController {
 			Category validCategory = new Category(category, db);
 			Diff maxDiff = db.getMaxDiffInPointsMap(seasonYear, validCategory);
 			db.removeDiffToPointsMap(validCategory, maxDiff, seasonYear);
-		} catch (EmptyResultDataAccessException e) {
+		} catch (NullPointerException e) {
 		} catch (InvalidCategoryException e) {
 		}
 		return "redirect:/admin/season/" + year + "/points";
