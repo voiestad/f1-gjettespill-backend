@@ -6,7 +6,9 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <nav class="topnav">
-	<a id="logo" href="/"><h1>F1 Tipping</h1></a>
+	<a id="logo" href="/">
+		<h1>F1 Tipping</h1>
+	</a>
 	<a href="javascript:void(0);" class="icon" onclick="toggleDropDown()">
 		<i class="fa fa-bars"></i>
 	</a>
@@ -14,7 +16,7 @@
 		<ol class="breadcrumb">
 			<li th:each="crumb : ${breadcrumbs}">
 				<a th:if="${crumb.value}" th:href="${crumb.value}" th:text="${crumb.key}"></a>
-				<div th:unless="${crumb.value}" th:text="${crumb.key}" style="margin: 0;"></div>
+				<div th:unless="${crumb.value}" th:text="${crumb.key}"></div>
 			</li>
 		</ol>
 	</div>
@@ -22,7 +24,7 @@
 		<a href="/">Hjem</a>
 		<a href="/guess">Tipping</a>
 		<form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
-		<a th:unless="${loggedOut}" href="/user/myprofile" >Min Profil</a>
+		<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
 		<a href="/score">Poengberegning</a>
 		<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
 		<a th:unless="${loggedOut}" href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
@@ -33,10 +35,11 @@
 <script>
 	function toggleDropDown() {
 		var x = document.getElementById("links");
-		if (x.style.display === "flex") {
-			x.style.display = "none";
+		var isActive = x.classList.toggle("active");
+		if (isActive) {
+			x.style.maxHeight = x.scrollHeight + "px";
 		} else {
-			x.style.display = "flex";
+			x.style.maxHeight = "0";
 		}
 	}
 </script>

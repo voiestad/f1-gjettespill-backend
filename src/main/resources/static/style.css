@@ -58,9 +58,18 @@ div {
 }
 
 .topnav #links {
-	display: none;
+	margin: 0;
+	display: flex;
 	flex-direction: column;
 	align-content: right;
+	max-height: 0;
+    opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.5s ease;
+}
+
+.topnav #links.active {
+	display: flex;
+	opacity: 1;
 }
 
 .topnav #links a {
@@ -185,6 +194,13 @@ main {
 
 .breadcrumb li {
 	list-style-position: inside;
+}
+
+.breadcrumb div {
+	font-weight: bold;
+	margin: 0;
+	padding-left: 5px;
+	color: rgb(208, 208, 208);
 }
 
 .breadcrumb li:not(:last-child)::after {
