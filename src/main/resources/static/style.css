@@ -77,11 +77,21 @@ div {
 }
 
 /* Hamburger menu */
-.topnav a.icon {
+.topnav button.icon {
 	display: block;
 	position: absolute;
 	right: 0;
-	top: 0;
+	transform: translateY(-50%);
+	background: none;
+	border: none;
+	color: white;
+	width: fit-content;
+	height: fit-content;
+	padding: 5px;
+	font-weight: bold;
+	margin: 0px;
+	cursor: pointer;
+	font-size: large;
 }
 
 .linkList {
@@ -100,13 +110,6 @@ div {
 
 h2 {
 	text-align: center;
-}
-
-button {
-	margin: 16px;
-	width: 100px;
-	height: 50px;
-	cursor: pointer;
 }
 
 #logo {
