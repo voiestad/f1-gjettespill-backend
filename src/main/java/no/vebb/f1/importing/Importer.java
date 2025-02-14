@@ -51,7 +51,8 @@ public class Importer {
 				List<RaceId> races = racesToImportFrom.getValue();
 				importStartingGrids(races);
 				
-				if (importRaceResults(races) && year.equals(raceYear)) {
+				if ((importRaceResults(races) || !areStandingsUpToDate(year))
+						&& year.equals(raceYear)) {
 					shouldImportStandings = true;
 				}
 				importSprints(races, raceYear);
@@ -68,6 +69,16 @@ public class Importer {
 		}
 	}
 
+	private boolean areStandingsUpToDate(Year year) {
+		try {
+			RaceId latestRaceId = db.getLatestRaceResultId(year);
+			RaceId standingsRaceId = db.getLatestStandingsId(year);
+			return latestRaceId.equals(standingsRaceId);
+		} catch (EmptyResultDataAccessException e) {
+			return false;
+		}
+	}
+
 	private Map<Year, List<RaceId>> getActiveRaces() {
 		Map<Year, List<RaceId>> activeRaces = new LinkedHashMap<>();
 		List<CutoffRace> sqlRes = db.getActiveRaces();
@@ -78,7 +89,6 @@ public class Importer {
 			List<RaceId> races = activeRaces.get(race.year);
 			races.add(race.id);
 		}
-
 		return activeRaces;
 	}
 
@@ -187,7 +197,7 @@ public class Importer {
 			String position = row.get(0);
 			Driver driver = new Driver(parseDriver(row.get(2)), db);
 
-			Points points = new Points(Integer.parseInt(row.get(6)));
+			Points points = new Points((int) Double.parseDouble(row.get(6)));
 			
 			db.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
 			finishingPosition++;
@@ -260,11 +270,33 @@ public class Importer {
 		if (standings.size() == 0) {
 			return;
 		}
-		for (List<String> row : standings.subList(1, standings.size())) {
-			Driver driver = new Driver(parseDriver(row.get(1)), db);
-			int position = Integer.parseInt(row.get(0));
-			Points points = new Points(Integer.parseInt(row.get(4)));
+		standings = standings.subList(1, standings.size());
+		List<PositionedCompetitor> currentStandings = standings.stream()
+			.map(row -> 
+			new PositionedCompetitor(
+				String.valueOf(Integer.parseInt(row.get(0))),
+				parseDriver(row.get(1)), 
+				String.valueOf((int) Double.parseDouble(row.get(4)))
+				))
+			.toList();
+		if (!isDriverStandingsNew(currentStandings, year)) {
+			return;
+		}
+		for (PositionedCompetitor competitor : currentStandings) {
+			Driver driver = new Driver(competitor.name, db);
+			int position = Integer.parseInt(competitor.position);
+			Points points = new Points(Integer.parseInt(competitor.points));
 			db.insertDriverIntoStandings(newestRace, driver, position, points);
+		}
+	}
+
+	private boolean isDriverStandingsNew(List<PositionedCompetitor> standings, Year year) {
+		try {
+			RaceId previousRaceId = db.getLatestStandingsId(year);
+			List<PositionedCompetitor> previousStandings = db.getDriverStandings(previousRaceId);
+			return compareStandings(standings, previousStandings);
+		} catch (EmptyResultDataAccessException e) {
+			return true;
 		}
 	}
 
@@ -273,14 +305,48 @@ public class Importer {
 		if (standings.size() == 0) {
 			return;
 		}
-		for (List<String> row : standings.subList(1, standings.size())) {
-			String constructor = row.get(1);
-			int position = Integer.parseInt(row.get(0));
-			Points points = new Points(Integer.parseInt(row.get(2)));
-			db.addConstructor(constructor);
-			Constructor validConstructor = new Constructor(constructor);
+		standings = standings.subList(1, standings.size());
+		List<PositionedCompetitor> currentStandings = standings.stream()
+			.map(row -> 
+			new PositionedCompetitor(
+				String.valueOf(Integer.parseInt(row.get(0))),
+				row.get(1),
+				String.valueOf((int) Double.parseDouble(row.get(2)))
+				))
+			.toList();
+		if (!isConstructorStandingsNew(currentStandings, year)) {
+			return;
+		}
+		for (PositionedCompetitor competitor : currentStandings) {
+			int position = Integer.parseInt(competitor.position);
+			Points points = new Points(Integer.parseInt(competitor.points));
+			Constructor validConstructor = new Constructor(competitor.name);
 			db.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
 		}
+	}
+
+	private boolean isConstructorStandingsNew(List<PositionedCompetitor> standings, Year year) {
+		try {
+			RaceId previousRaceId = db.getLatestStandingsId(year);
+			List<PositionedCompetitor> previousStandings = db.getConstructorStandings(previousRaceId);
+			return compareStandings(standings, previousStandings);
+		} catch (EmptyResultDataAccessException e) {
+			return true;
+		}
+	}
+
+	private boolean compareStandings(List<PositionedCompetitor> standings, List<PositionedCompetitor> previousStandings) {
+		if (standings.size() != previousStandings.size()) {
+			return true;
+		}
+		for (int i = 0; i < standings.size(); i++) {
+			PositionedCompetitor previousCompetitor = previousStandings.get(i);
+			PositionedCompetitor competitor = standings.get(i);
+			if (!previousCompetitor.equals(competitor)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private String parseDriver(String driverName) {

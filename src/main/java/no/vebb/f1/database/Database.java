@@ -887,7 +887,7 @@ public class Database {
 			SELECT DISTINCT ro.id
 			FROM StartingGrid sg
 			JOIN RaceOrder ro on ro.id = sg.race_number
-			AND ro.year = ?
+			WHERE ro.year = ?
 			ORDER BY ro.position DESC
 			LIMIT 1
 			""";
@@ -905,7 +905,26 @@ public class Database {
 			SELECT ro.id
 			FROM RaceResult rr
 			JOIN RaceOrder ro on ro.id = rr.race_number
-			AND ro.year = ?
+			WHERE ro.year = ?
+			ORDER BY ro.position DESC
+			LIMIT 1
+			""";
+		return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year));
+	}
+
+	/**
+	 * Gets the id of the latest race result of a season.
+	 * 
+	 * @param year of season
+	 * @return race id
+	 */
+	public RaceId getLatestStandingsId(Year year) {
+		final String getRaceResultId = """
+			SELECT ro.id
+			FROM RaceOrder ro
+			JOIN DriverStandings ds on ds.race_number = ro.id
+			JOIN ConstructorStandings cs on cs.race_number = ro.id
+			WHERE ro.year = ?
 			ORDER BY ro.position DESC
 			LIMIT 1
 			""";
