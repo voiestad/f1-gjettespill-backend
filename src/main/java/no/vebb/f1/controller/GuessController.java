@@ -209,10 +209,9 @@ public class GuessController {
 	 */
 	@GetMapping("/tenth")
 	public String guessTenth(Model model) {
-		model.addAttribute("title", "Tipp 10.plass");
 		model.addAttribute("type", "tenth");
 		Category category = new Category("TENTH", db);
-		return handleGetChooseDriver(model, category);
+		return handleGetChooseDriver(model, category, "Tipp 10.plass i ");
 	}
 
 	/**
@@ -231,10 +230,9 @@ public class GuessController {
 	 */
 	@GetMapping("/winner")
 	public String guessWinner(Model model) {
-		model.addAttribute("title", "Tipp Vinneren");
 		model.addAttribute("type", "winner");
 		Category category = new Category("FIRST", db);
-		return handleGetChooseDriver(model, category);
+		return handleGetChooseDriver(model, category, "Tipp vinneren i ");
 	}
 
 	/**
@@ -247,10 +245,10 @@ public class GuessController {
 		return handlePostChooseDriver(model, driver, category);
 	}
 
-	private String handleGetChooseDriver(Model model, Category category) {
+	private String handleGetChooseDriver(Model model, Category category, String title) {
 		try {
 			RaceId raceId = getRaceIdToGuess();
-
+			model.addAttribute("title", title + db.getRaceName(raceId));
 			long timeLeftToGuess = db.getTimeLeftToGuessRace(raceId);
 			model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 
