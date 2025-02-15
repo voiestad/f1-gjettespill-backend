@@ -14,7 +14,7 @@ public class GlobalAspect {
 	@Autowired
 	private UserService userService;
 
-    @Before("execution(* no.vebb.f1.controller.admin..*(..))")
+    @Before("execution(public * no.vebb.f1.controller.admin..*(..))")
     public void adminCheck() throws NotAdminException {
         userService.adminCheck();
     }
