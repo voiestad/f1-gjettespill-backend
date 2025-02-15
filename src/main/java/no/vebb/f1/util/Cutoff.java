@@ -27,10 +27,6 @@ public class Cutoff {
 	}
 
 	public boolean isAbleToGuessYear(Year year) {
-			boolean yearExist = db.yearCutOffExist(year);
-			if (!yearExist) {
-				return false;
-			}
 			Instant cutoff = db.getCutoffYear(year);
 			return isAbleToGuess(cutoff);
 	}

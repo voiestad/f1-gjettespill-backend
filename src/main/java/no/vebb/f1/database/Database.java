@@ -42,17 +42,6 @@ public class Database {
 	}
 
 	/**
-	 * Checks if there is a cutoff set for a the given year.
-	 * 
-	 * @param year to check
-	 * @return true if cutoff for year exists
-	 */
-	public boolean yearCutOffExist(Year year) {
-		final String existCheck = "SELECT COUNT(*) FROM YearCutoff WHERE year = ?";
-		return jdbcTemplate.queryForObject(existCheck, Integer.class, year) > 0;
-	}
-
-	/**
 	 * Gets the cutoff for guessing on categories that happens before the season 
 	 * starts.
 	 * 
