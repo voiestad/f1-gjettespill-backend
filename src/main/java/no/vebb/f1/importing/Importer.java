@@ -49,19 +49,29 @@ public class Importer {
 			for (Entry<Year, List<RaceId>> racesToImportFrom : racesToImportFromList.entrySet()) {
 				Year raceYear = racesToImportFrom.getKey(); 
 				List<RaceId> races = racesToImportFrom.getValue();
-				importStartingGrids(races);
-				
-				if ((importRaceResults(races) || !areStandingsUpToDate(year))
-						&& year.equals(raceYear)) {
-					shouldImportStandings = true;
+				logger.info("Year '{}' has '{}' races to import", raceYear, races.size());
+				int startingGridCount = importStartingGrids(races);
+				logger.info("Imported '{}' starting grid", startingGridCount);
+				if (year.equals(raceYear)) {
+					if (importRaceResults(races)) {
+						logger.info("New race result imported, will import standings");
+						shouldImportStandings = true;
+					} else if (!areStandingsUpToDate(year)) {
+						logger.info("Standings not up to date, will import standings");
+						shouldImportStandings = true;
+					} else {
+						logger.info("Standings and race results are up to date");
+					}
 				}
 				importSprints(races, raceYear);
 			}
 			if (refreshLatestImports(year)) {
+				logger.info("Changes to the race result, will import standings");
 				shouldImportStandings = true;
 			}
 			if (shouldImportStandings) {
 				importStandings(year);
+				logger.info("Imported standings");
 			}
 			logger.info("Finished import of data to database");
 		} catch (InvalidYearException e) {
@@ -72,10 +82,14 @@ public class Importer {
 	private boolean areStandingsUpToDate(Year year) {
 		try {
 			RaceId latestRaceId = db.getLatestRaceResultId(year);
-			RaceId standingsRaceId = db.getLatestStandingsId(year);
-			return latestRaceId.equals(standingsRaceId);
+			try {
+				RaceId standingsRaceId = db.getLatestStandingsId(year);
+				return latestRaceId.equals(standingsRaceId);
+			} catch (EmptyResultDataAccessException e) {
+				return false;
+			}
 		} catch (EmptyResultDataAccessException e) {
-			return false;
+			return true;
 		}
 	}
 
@@ -149,7 +163,8 @@ public class Importer {
 		}
 	}
 
-	private void importStartingGrids(List<RaceId> racesToImportFrom) {
+	private int importStartingGrids(List<RaceId> racesToImportFrom) {
+		int count = 0;
 		for (RaceId raceId : racesToImportFrom) {
 			boolean isAlreadyAdded = db.isStartingGridAdded(raceId);
 			if (isAlreadyAdded) {
@@ -160,7 +175,9 @@ public class Importer {
 				break;
 			}
 			insertStartingGridData(raceId, startingGrid);
+			count++;
 		}
+		return count;
 	}
 
 	private void insertStartingGridData(RaceId raceId, List<List<String>> startingGrid) {
@@ -261,13 +278,14 @@ public class Importer {
 			importDriverStandings(year, newestRace);
 			importConstructorStandings(year, newestRace);
 		} catch (EmptyResultDataAccessException e) {
-		} catch (InvalidYearException e) {
+			throw new RuntimeException("Should not call importStandings without having a race result");
 		}
 	}
 
 	private void importDriverStandings(Year year, RaceId newestRace) {
 		List<List<String>> standings = TableImporter.getDriverStandings(year.value);
 		if (standings.size() == 0) {
+			logger.info("Driver standings not available");
 			return;
 		}
 		standings = standings.subList(1, standings.size());
@@ -280,6 +298,7 @@ public class Importer {
 				))
 			.toList();
 		if (!isDriverStandingsNew(currentStandings, year)) {
+			logger.info("Driver standings are not new, will not add new");
 			return;
 		}
 		for (PositionedCompetitor competitor : currentStandings) {
@@ -288,6 +307,7 @@ public class Importer {
 			Points points = new Points(Integer.parseInt(competitor.points));
 			db.insertDriverIntoStandings(newestRace, driver, position, points);
 		}
+		logger.info("Driver standings added for race '{}'", newestRace);
 	}
 
 	private boolean isDriverStandingsNew(List<PositionedCompetitor> standings, Year year) {
@@ -303,6 +323,7 @@ public class Importer {
 	private void importConstructorStandings(Year year, RaceId newestRace) {
 		List<List<String>> standings = TableImporter.getConstructorStandings(year.value);
 		if (standings.size() == 0) {
+			logger.info("Constructor standings not available");
 			return;
 		}
 		standings = standings.subList(1, standings.size());
@@ -315,6 +336,7 @@ public class Importer {
 				))
 			.toList();
 		if (!isConstructorStandingsNew(currentStandings, year)) {
+			logger.info("Constructor standings are not new, will not add new");
 			return;
 		}
 		for (PositionedCompetitor competitor : currentStandings) {
@@ -323,6 +345,7 @@ public class Importer {
 			Constructor validConstructor = new Constructor(competitor.name);
 			db.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
 		}
+		logger.info("Constructor standings added for race '{}'", newestRace);
 	}
 
 	private boolean isConstructorStandingsNew(List<PositionedCompetitor> standings, Year year) {

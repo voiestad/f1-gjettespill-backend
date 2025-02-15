@@ -132,7 +132,7 @@ public class Database {
 		final String getRaceIdSql = """
 			SELECT ro.id
 			FROM RaceOrder ro
-			JOIN Sprint s ON ro.id = s.race_number
+			JOIN RaceResult rr ON ro.id = rr.race_number
 			WHERE ro.year = ?
 			ORDER BY ro.position DESC
 			LIMIT 1;
