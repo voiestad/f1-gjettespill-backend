@@ -2,6 +2,7 @@ package no.vebb.f1.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -119,7 +120,7 @@ public class HomeController {
 					return new Guesser(user.username, userScore.getScore(), id);
 				})
 				.filter(guesser -> guesser.points.value > 0)
-				.sorted()
+				.sorted(Collections.reverseOrder())
 				.toList();
 
 			for (int i = 0; i < leaderBoard.size(); i++) {

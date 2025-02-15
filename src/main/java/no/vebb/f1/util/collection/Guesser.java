@@ -18,6 +18,6 @@ public class Guesser implements Comparable<Guesser> {
 
 	@Override
 	public int compareTo(Guesser other) {
-		return points.compareTo(points);
+		return points.compareTo(other.points);
 	}
 }
