@@ -1,30 +1,25 @@
 package no.vebb.f1.scoring;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import no.vebb.f1.database.Database;
+import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Diff;
+import no.vebb.f1.util.domainPrimitive.Points;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 public class DiffPointsMap {
 	  
-	private Map<Integer, Integer> map;
+	private Map<Diff, Points> map;
 
-	public DiffPointsMap(String category, JdbcTemplate jdbcTemplate, int year) {
-		final String sql = "SELECT diff, points FROM DiffPointsMap WHERE category = ? and year = ?";
-		List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, category, year);
-		map = new HashMap<>();
-		for (Map<String, Object> entry : result) {
-			Integer diff = (Integer) entry.get("diff");
-			Integer points = (Integer) entry.get("points");
-			map.put(diff, points);
-		}
+	public DiffPointsMap(Category category, Year year, Database db) {
+		map = db.getDiffPointsMap(year, category);
 	}
 
-	public int getPoints(int diff) {
-		Integer points = map.get(diff);
+	public Points getPoints(Diff diff) {
+		Points points = map.get(diff);
 		if (points == null) {
-			return 0;
+			return new Points(0);
 		}
 		return points;
 	}

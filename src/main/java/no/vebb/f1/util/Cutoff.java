@@ -1,45 +1,39 @@
 package no.vebb.f1.util;
 
 import java.time.Instant;
-import java.time.Year;
+import java.util.Calendar;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import no.vebb.f1.database.Database;
+import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.util.exception.NoAvailableRaceException;
 
 @Service
 public class Cutoff {
 	
-	private JdbcTemplate jdbcTemplate;
-
-	public Cutoff(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
-
+	@Autowired
+	private Database db;
 
 	public boolean isAbleToGuessCurrentYear() {
-		return isAbleToGuessYear(getCurrentYear());	
-	}
-
-	public boolean isAbleToGuessYear(int year) {
-		final String existCheck = "SELECT COUNT(*) FROM YearCutoff WHERE year = ?";
-		boolean yearExist = jdbcTemplate.queryForObject(existCheck, Integer.class, getCurrentYear()) > 0;
-		if (!yearExist) {
+		try {
+			return isAbleToGuessYear(new Year(TimeUtil.getCurrentYear(), db));	
+		} catch (InvalidYearException e) {
 			return false;
 		}
-		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
-		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, (rs, rowNum) -> rs.getString("cutoff"), getCurrentYear()));
-
-		return isAbleToGuess(cutoff);
 	}
 
-	public boolean isAbleToGuessRace(int raceNumber) {
-		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
-		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceNumber));
-		return isAbleToGuess(cutoff);
+	public boolean isAbleToGuessYear(Year year) {
+			Instant cutoff = db.getCutoffYear(year);
+			return isAbleToGuess(cutoff);
 	}
 
-	public int getCurrentYear() {
-		return Year.now().getValue();
+	public boolean isAbleToGuessRace(RaceId raceId) throws NoAvailableRaceException {
+		Instant cutoff = db.getCutoffRace(raceId);
+		return isAbleToGuess(cutoff);
 	}
 
 	private boolean isAbleToGuess(Instant cutoff) {
@@ -47,4 +41,16 @@ public class Cutoff {
 		return cutoff.compareTo(now) > 0;
 	}
 
+	public Instant getDefaultInstant(Year year) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.YEAR, year.value);
+		calendar.set(Calendar.MONTH, Calendar.JANUARY);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		calendar.set(Calendar.AM_PM, Calendar.AM);
+		calendar.set(Calendar.HOUR, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.toInstant();
+	}
 }

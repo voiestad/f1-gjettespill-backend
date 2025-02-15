@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" th:href="@{/tables.css}">
+	<title>Om F1 Tipping</title>
+	<style>
+		a {
+			color: black;
+		}
+
+		.paragraph p {
+			text-align: center;
+			margin: 0 auto;
+
+		}
+
+		@media (max-width: 600px) {
+			.paragraph p {
+				width: 80%;
+				font-size: medium;
+			}
+		}
+
+		@media (min-width: 601px) {
+			.paragraph p {
+				width: 50%;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<h2>Om F1 Tipping</h2>
+		<div class="paragraph">
+			<h3>Hva er F1 Tipping?</h3>
+			<p>
+				F1 Tipping er en tippeside der deltakerne tipper på sluttresultatene av Formel 1 sesongen. I tillegg
+				tippes det på hvem som kommer på første- og tiendeplass i hvert løp gjennom året.
+			</p>
+			<h3>Hvordan funker F1 Tipping?</h3>
+			<p>
+				Før hver sesong starter tipper man på hvordan man tror rekkefølgen i sjåførmesterskapet og
+				konstruktørmesterskapet kommer til å ende, i tillegg til hvor mange gule flagg, røde flagg og
+				sikkerhetsbiler (inkludert virtuelle sikkerthetsbiler) det kommer til å være i løpet av sesongen.
+				Tippingene kan endres så mye man ønsker frem til testingen før sesongen starter.<br><br>
+				Man kan også tippe på hvem man tror kommer på første- og tiendeplass i hvert løp. Dette kan man gjøre
+				fra resultatene av kvalifiseringen er klar frem til løpet starter. Her er det også mulig å endre på
+				tippingene sine helt frem til løpet starter.<br><br>
+				Poengene man får blir beregnet basert på hvor langt unna tippingen var det reelle resultatet. Hvordan
+				poengene eksakt blir beregnet kan du se <a href="/score">her</a>.<br><br>
+				Vinneren er den som har flest poeng når sesongen er over.
+			</p>
+		</div>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+</body>
+
+</html>

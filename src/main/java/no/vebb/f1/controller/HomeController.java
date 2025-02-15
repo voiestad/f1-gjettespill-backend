@@ -8,18 +8,27 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import no.vebb.f1.database.Database;
 import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
-import no.vebb.f1.util.Table;
+import no.vebb.f1.util.TimeUtil;
+import no.vebb.f1.util.collection.Guesser;
+import no.vebb.f1.util.collection.Table;
+import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.util.exception.NoAvailableRaceException;
 
 import org.springframework.ui.Model;
 
+/**
+ * Controller for home and contact page.
+ */
 @Controller
 public class HomeController {
 
@@ -28,26 +37,35 @@ public class HomeController {
 
 	@Autowired
 	private Cutoff cutoff;
-	
-	private JdbcTemplate jdbcTemplate;
 
-	public HomeController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
+	@Autowired
+	private Database db;
 
+	/**
+	 * Handles GET request for home page.
+	 * 
+	 * @param model
+	 * @return home page
+	 */
 	@GetMapping("/")
 	public String home(Model model) {
 		boolean loggedOut = !userService.isLoggedIn();
 		model.addAttribute("loggedOut", loggedOut);
 		Table leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
-		if (leaderBoard.getHeader().size() == 0) {
-			List<String> guessers = getSeasonGuessers();
-			model.addAttribute("guessers", guessers);
+		try {
+			if (leaderBoard.getHeader().size() == 0) {
+				Year year = new Year(TimeUtil.getCurrentYear(), db);
+				List<String> guessers = db.getSeasonGuessers(year);
+				model.addAttribute("guessers", guessers);
+				model.addAttribute("guessersNames", new String[0]);
+				model.addAttribute("scores", new int[0]);
+			} else {
+				setGraph(model);
+			}
+		} catch (InvalidYearException e) {
 			model.addAttribute("guessersNames", new String[0]);
 			model.addAttribute("scores", new int[0]);
-		} else {
-			setGraph(model);
 		}
 		model.addAttribute("raceGuess", isRaceGuess());
 
@@ -55,25 +73,34 @@ public class HomeController {
 		return "public";
 	}
 
+	/**
+	 * Handles GET request for contact page.
+	 * 
+	 * @return file for contact page
+	 */
 	@GetMapping("/contact")
 	public String contact() {
 		return "contact";
 	}
+	
+	/**
+	 * Handles GET request for about page.
+	 */
+	@GetMapping("/about")
+	public String about() {
+		return "about";
+	}
 
 	private boolean isRaceGuess() {
-		final String getRaceIdSql = """
-			SELECT ro.id AS id
-			FROM RaceOrder ro
-			JOIN StartingGrid sg ON ro.id = sg.race_number
-			WHERE ro.year = ?
-			ORDER BY ro.position DESC
-			LIMIT 1;
-		""";
-		int year = cutoff.getCurrentYear();
 		try {
-			int raceId = jdbcTemplate.queryForObject(getRaceIdSql, Integer.class, year);
+			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			RaceId raceId = db.getLatestRaceForPlaceGuess(year).id;
 			return !cutoff.isAbleToGuessRace(raceId);
+		} catch (InvalidYearException e) {
+			return false;
 		} catch (EmptyResultDataAccessException e) {
+			return false;
+		} catch (NoAvailableRaceException e) {
 			return false;
 		}
 	}
@@ -81,114 +108,58 @@ public class HomeController {
 	private Table getLeaderBoard() {
 		List<String> header = Arrays.asList("Plass", "Navn", "Poeng");
 		List<List<String>> body = new ArrayList<>();
-		List<Guesser> leaderBoardUnsorted = new ArrayList<>();
 		if (cutoff.isAbleToGuessCurrentYear()) {
 			return new Table("Sesongen starter snart", new ArrayList<>(), new ArrayList<>());
 		}
-		final String getAllUsersSql = "SELECT id FROM User";
-		List<UUID> userIds = jdbcTemplate.query(getAllUsersSql, (rs, rowNum) -> UUID.fromString(rs.getString("id")));
-		int year = cutoff.getCurrentYear();
-		for (UUID id : userIds) {
-			UserScore userScore = new UserScore(id, year, jdbcTemplate);
-			User user = userService.loadUser(id).get();
-			leaderBoardUnsorted.add(new Guesser(user.username, userScore.getScore(), id));
+		try {
+			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			List<Guesser> leaderBoard = db.getAllUserIds().stream()
+				.map(id -> {
+					UserScore userScore = new UserScore(id, year, db);
+					User user = userService.loadUser(id).get();
+					return new Guesser(user.username, userScore.getScore(), id);
+				})
+				.filter(guesser -> guesser.points.value > 0)
+				.sorted(Collections.reverseOrder())
+				.toList();
+
+			for (int i = 0; i < leaderBoard.size(); i++) {
+				Guesser guesser = leaderBoard.get(i);
+				body.add(Arrays.asList(
+					String.valueOf(i+1),
+					guesser.username,
+					String.valueOf(guesser.points),
+					guesser.id.toString()
+				));
+			}
+			return new Table("Rangering", header, body);
+		} catch (InvalidYearException e) {
+			return new Table("Det vil snart være mulig å tippe", new ArrayList<>(), new ArrayList<>());
 		}
-
-		leaderBoardUnsorted.removeIf(guesser -> guesser.points == 0);
-		Collections.sort(leaderBoardUnsorted);
-		
-		for (int i = 0; i < leaderBoardUnsorted.size(); i++) {
-			Guesser guesser = leaderBoardUnsorted.get(i);
-			body.add(Arrays.asList(String.valueOf(i+1), guesser.username, String.valueOf(guesser.points), guesser.id.toString()));
-		}
-		return new Table("Rangering", header, body);
 	}
 
-	private List<String> getSeasonGuessers() {
-		final String getGussers = """
-			SELECT DISTINCT u.username as username
-			FROM User u
-			JOIN FlagGuess fg ON fg.guesser = u.id
-			JOIN DriverGuess dg ON dg.guesser = u.id
-			JOIN ConstructorGuess cg ON cg.guesser = u.id
-			WHERE fg.year = ? AND dg.year = ? AND cg.year = ?
-			ORDER BY u.username ASC
-			""";
-		
-		int year = cutoff.getCurrentYear();
-		return jdbcTemplate.queryForList(getGussers, String.class, year, year, year);
-	}
-
-	private List<UUID> getSeasonGuesserIds() {
-		final String getGussers = """
-			SELECT DISTINCT u.id as id
-			FROM User u
-			JOIN FlagGuess fg ON fg.guesser = u.id
-			JOIN DriverGuess dg ON dg.guesser = u.id
-			JOIN ConstructorGuess cg ON cg.guesser = u.id
-			WHERE fg.year = ? AND dg.year = ? AND cg.year = ?
-			ORDER BY u.username ASC
-			""";
-		
-		int year = cutoff.getCurrentYear();
-		return jdbcTemplate.queryForList(getGussers, UUID.class, year, year, year);
-	}
-
-	private List<Integer> getSeasonRaceIds() {
-		final String getRaceIds = """
-			SELECT ro.id
-			FROM RaceOrder ro
-			JOIN Sprint s ON ro.id = s.race_number
-			WHERE ro.year = ?
-			ORDER BY ro.position ASC
-			""";
-		List<Integer> raceIds = new ArrayList<>();
-		raceIds.add(-1);
-		int year = cutoff.getCurrentYear();
-		List<Integer> queriedIds = jdbcTemplate.queryForList(getRaceIds, Integer.class, year);
-		queriedIds.forEach(id -> raceIds.add(id));
+	private List<RaceId> getSeasonRaceIds(Year year) {
+		List<RaceId> raceIds = new ArrayList<>();
+		raceIds.add(null);
+		db.getRaceIdsFinished(year).forEach(id -> raceIds.add(id));
 
 		return raceIds;
 	}
 
 	private void setGraph(Model model) {
-		List<UUID> guessers = getSeasonGuesserIds(); 
-		List<String> guessersNames = getSeasonGuessers();
+		Year year = new Year(TimeUtil.getCurrentYear(), db);
+		List<UUID> guessers = db.getSeasonGuesserIds(year);
+		List<String> guessersNames = db.getSeasonGuessers(year);
 		model.addAttribute("guessersNames", guessersNames);
-		List<Integer> raceIds = getSeasonRaceIds();
+		List<RaceId> raceIds = getSeasonRaceIds(year);
 		List<List<Integer>> scores = new ArrayList<>();
-		int year = cutoff.getCurrentYear();
 		for (UUID id : guessers) {
-			List<Integer> userScores = new ArrayList<>();
-			for (int raceId : raceIds) {
-				int score = new UserScore(id, year, jdbcTemplate, raceId).getScore();
-				userScores.add(score);
-			}
-			scores.add(userScores);
+			scores.add(
+				raceIds.stream()
+					.map(raceId -> new UserScore(id, year, raceId, db).getScore().value)
+					.toList()
+			);
 		}
 		model.addAttribute("scores", scores);
-	}
-
-	class Guesser implements Comparable<Guesser> {
-
-		public final String username;
-		public final int points;
-		public final UUID id;
-
-		public Guesser(String username, int points, UUID id) {
-			this.username = username;
-			this.points = points;
-			this.id = id;
-		}
-
-		@Override
-		public int compareTo(Guesser other) {
-			if (points < other.points) {
-				return 1;
-			} else if (points > other.points) {
-				return -1;
-			}
-			return 0;
-		}
 	}
 }

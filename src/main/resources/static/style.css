@@ -58,9 +58,18 @@ div {
 }
 
 .topnav #links {
-	display: none;
+	margin: 0;
+	display: flex;
 	flex-direction: column;
 	align-content: right;
+	max-height: 0;
+    opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.5s ease;
+}
+
+.topnav #links.active {
+	display: flex;
+	opacity: 1;
 }
 
 .topnav #links a {
@@ -68,11 +77,21 @@ div {
 }
 
 /* Hamburger menu */
-.topnav a.icon {
+.topnav button.icon {
 	display: block;
 	position: absolute;
 	right: 0;
-	top: 0;
+	transform: translateY(-50%);
+	background: none;
+	border: none;
+	color: white;
+	width: fit-content;
+	height: fit-content;
+	padding: 5px;
+	font-weight: bold;
+	margin: 0px;
+	cursor: pointer;
+	font-size: large;
 }
 
 .linkList {
@@ -91,13 +110,6 @@ div {
 
 h2 {
 	text-align: center;
-}
-
-button {
-	margin: 16px;
-	width: 100px;
-	height: 50px;
-	cursor: pointer;
 }
 
 #logo {
@@ -171,4 +183,42 @@ body {
 
 main {
     flex: 1;
+}
+
+.breadcrumb {
+	display: flex;
+	flex-wrap: wrap;
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+	margin-top: 10px;
+	color: white;
+}
+
+.breadcrumb li {
+	list-style-position: inside;
+}
+
+.breadcrumb div {
+	font-weight: bold;
+	margin: 0;
+	padding-left: 5px;
+	color: rgb(208, 208, 208);
+}
+
+.breadcrumb li:not(:last-child)::after {
+	content: ">";
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+@media (max-width: 600px) {
+    .breadcrumb {
+		font-size: 0.75em;
+	}
+	.breadcrumb li:not(:last-child)::after {
+		content: ">";
+		margin-left: 5px;
+		margin-right: 5px;
+	}
 }

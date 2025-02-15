@@ -3,20 +3,20 @@ package no.vebb.f1.user;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import no.vebb.f1.database.Database;
+import no.vebb.f1.util.exception.NotAdminException;
+
 @Service
 public class UserService {
 
-	private final JdbcTemplate jdbcTemplate;
-
-	public UserService(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
+	@Autowired
+	private Database db;
 
 	public Optional<User> loadUser() {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -24,26 +24,16 @@ public class UserService {
 			return Optional.empty();
 		}
 		final String googleId = authentication.getName();
-		final String sql = "SELECT username, id FROM User WHERE google_id = ?";
 		try {
-			return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-				String username = rs.getString("username");
-				UUID id = UUID.fromString(rs.getString("id"));
-				return Optional.of(new User(googleId, id, username));
-			}, googleId);
+			return Optional.of(db.getUserFromGoogleId(googleId));
 		} catch (EmptyResultDataAccessException e) {
 			return Optional.empty();
 		}
 	}
 
 	public Optional<User> loadUser(UUID id) {
-		final String sql = "SELECT username, google_id FROM User WHERE id = ?";
 		try {
-			return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-				String username = rs.getString("username");
-				String googleId = rs.getString("google_id");
-				return Optional.of(new User(googleId, id, username));
-			}, id);
+			return Optional.of(db.getUserFromId(id));
 		} catch (EmptyResultDataAccessException e) {
 			return Optional.empty();
 		}
@@ -59,14 +49,13 @@ public class UserService {
 		if (user.isEmpty()) {
 			return false;
 		}
-		final String sql = "SELECT COUNT(*) FROM Admin WHERE user_id = ?";
-		Integer count = jdbcTemplate.queryForObject(sql, Integer.class, user.get().id);
+		return db.isUserAdmin(user.get().id);
+	}
 
-		if (count != null && count > 0) {
-			return true;
+	public void adminCheck() throws NotAdminException {
+		if (!isAdmin()) {
+			throw new NotAdminException("User is not admin and does not have the required permission for this page");
 		}
-		
-		return false;
 	}
 
 	public boolean isLoggedInUser(User user) {
@@ -77,5 +66,5 @@ public class UserService {
 		User loggedInUser = optUser.get();
 		return loggedInUser.id.equals(user.id);
 	}
-	
+
 }

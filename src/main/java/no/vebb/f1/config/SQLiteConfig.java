@@ -5,6 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+/**
+ * Class is responsible for setting up the required tables in the database.
+ */
 @Configuration
 public class SQLiteConfig {
 
@@ -82,12 +85,6 @@ public class SQLiteConfig {
 					points TEXT NOT NULL,
 					PRIMARY KEY (race_number, constructor),
 					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE,
-					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
-			);
-			""");
-			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS Sprint (
-					race_number INTEGER PRIMARY KEY,
 					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
 			);
 			""");

@@ -13,18 +13,31 @@ import no.vebb.f1.user.UserService;
 import java.io.IOException;
 import java.security.Principal;
 
+/**
+ * Class is responsible for redirecting users to the /username page when they
+ * are logged in.
+ * This is to ensure that a user cannot be logged in and make requests that
+ * requires having a
+ * username and user ID.
+ */
 @Component
 public class UsernameCheckFilter extends OncePerRequestFilter {
 
 	@Autowired
-    private UserService userService;
+	private UserService userService;
 
+	/**
+	 * Redirects user to /username when user logged in and does not have a username.
+	 * Exceptions to redirections are requests to /username, /logout, /favicon.ico, /errors and
+	 * all .css files.
+	 */
 	@Override
+	@SuppressWarnings("null")
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		final String path = request.getRequestURI();
 		if (path.matches(
-				"/username|/logout|/favicon.ico|/.*\\.css|/user/*|/score|/score/*|/race-guess|/race-guess/*|/contact")) {
+				"/username|/logout|/favicon.ico|/.*\\.css|/error")) {
 			filterChain.doFilter(request, response);
 			return;
 		}
