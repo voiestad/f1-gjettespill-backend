@@ -89,12 +89,6 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS Sprint (
-					race_number INTEGER PRIMARY KEY,
-					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
-			);
-			""");
-			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS RaceResult (
 					race_number INTEGER NOT NULL,
 					position TEXT NOT NULL,

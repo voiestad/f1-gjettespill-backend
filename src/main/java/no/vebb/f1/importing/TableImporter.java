@@ -55,11 +55,6 @@ public class TableImporter {
 		String url = String.format("https://www.formula1.com/en/results/a/races/%d/a/race-result", race);
 		return TableImporter.getTable(url);
 	}
-
-	public static List<List<String>> getSprintResult(int race) {
-		String url = String.format("https://www.formula1.com/en/results/a/races/%d/a/sprint-results", race);
-		return TableImporter.getTable(url);
-	}
 	
 	public static String getGrandPrixName(int race) {
 		String url = String.format("https://www.formula1.com/en/results/a/races/%d/a/race-result", race);

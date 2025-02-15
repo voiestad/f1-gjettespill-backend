@@ -63,7 +63,6 @@ public class Importer {
 						logger.info("Standings and race results are up to date");
 					}
 				}
-				importSprints(races, raceYear);
 			}
 			if (refreshLatestImports(year)) {
 				logger.info("Changes to the race result, will import standings");
@@ -201,7 +200,6 @@ public class Importer {
 			if (raceResult.isEmpty()) {
 				break;
 			}
-			db.addSprint(raceId);
 			insertRaceResultData(raceId, raceResult);
 			addedNewRace = true;
 		}
@@ -219,28 +217,6 @@ public class Importer {
 			db.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
 			finishingPosition++;
 		}
-	}
-
-	private void importSprints(List<RaceId> racesToImportFrom, Year year) {
-		try {
-			RaceId raceId = db.getRaceIdForSprint(year);
-			if (!racesToImportFrom.contains(raceId)) {
-				return;
-			}
-			boolean isAlreadyAdded = db.isSprintAdded(raceId);
-			if (isAlreadyAdded) {
-				return;
-			}
-			List<List<String>> raceResult = TableImporter.getSprintResult(raceId.value);
-			if (raceResult.isEmpty()) {
-				return;
-			}
-			db.addSprint(raceId);
-
-		} catch (EmptyResultDataAccessException e) {
-
-		}
-
 	}
 
 	public void importRaceNames(List<Integer> racesToImportFrom, int year) {

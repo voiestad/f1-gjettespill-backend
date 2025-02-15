@@ -123,7 +123,7 @@ public class Database {
 	}
 
 	/**
-	 * Gets the latest race number that has either had a sprint or race.
+	 * Gets the latest race number that has either had a race.
 	 * 
 	 * @param year of season
 	 * @return race number of race
@@ -834,16 +834,16 @@ public class Database {
 	}
 
 	/**
-	 * Gets every race id from a year where there has been a sprint or a race.
+	 * Gets every race id from a year where there has been a a race.
 	 * 
 	 * @param year of season
 	 * @return id of races
 	 */
 	public List<RaceId> getRaceIdsFinished(Year year) {
 		final String getRaceIds = """
-			SELECT ro.id
+			SELECT DISTINCT ro.id
 			FROM RaceOrder ro
-			JOIN Sprint s ON ro.id = s.race_number
+			JOIN RaceResult rr ON ro.id = rr.race_number
 			WHERE ro.year = ?
 			ORDER BY ro.position ASC
 			""";
@@ -932,24 +932,6 @@ public class Database {
 	}
 
 	/**
-	 * Gets the id of the latest sprint of a season.
-	 * 
-	 * @param year of season
-	 * @return race id
-	 */
-	public RaceId getRaceIdForSprint(Year year) {
-		final String getRaceResultId = """
-			SELECT ro.id
-			FROM RaceOrder ro
-			WHERE ro.year = ?
-			AND ro.id NOT IN (SELECT race_number FROM RaceResult)
-			ORDER BY ro.position ASC
-			LIMIT 1
-			""";
-		return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year));
-	}
-
-	/**
 	 * Checks if starting grid for race already exists.
 	 * 
 	 * @param raceId
@@ -968,17 +950,6 @@ public class Database {
 	 */
 	public boolean isRaceResultAdded(RaceId raceId) {
 		final String existCheck = "SELECT COUNT(*) FROM RaceResult WHERE race_number = ?";
-		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
-	}
-
-	/**
-	 * Checks if sprint for race already exists.
-	 * 
-	 * @param raceId
-	 * @return true if exists
-	 */
-	public boolean isSprintAdded(RaceId raceId) {
-		final String existCheck = "SELECT COUNT(*) FROM Sprint WHERE race_number = ?";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 	}
 	
@@ -1135,16 +1106,6 @@ public class Database {
 	public void insertDriverStartingGrid(RaceId raceId, int position, Driver driver) {
 		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
 		jdbcTemplate.update(insertStartingGrid, raceId, position, driver);
-	}
-
-	/**
-	 * Adds race id to Sprint table.
-	 * 
-	 * @param raceId
-	 */
-	public void addSprint(RaceId raceId) {
-		final String insertSprint = "INSERT OR IGNORE INTO Sprint VALUES (?)";
-		jdbcTemplate.update(insertSprint, raceId);
 	}
 
 	/**
