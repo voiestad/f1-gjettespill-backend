@@ -30,6 +30,7 @@ import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserMail;
 
 @Service
 @SuppressWarnings("null")
@@ -344,6 +345,7 @@ public class Database {
 			SET username = 'Anonym', username_upper = 'ANONYM', google_id = ?
 			WHERE id = ?
 			""";
+		removeFromMailingList(userId);
 		jdbcTemplate.update(deleteUser, userId, userId);
 	}
 
@@ -1505,5 +1507,41 @@ public class Database {
 	public boolean isValidFlag(String value) {
 		final String existCheck = "SELECT COUNT(*) FROM Flag WHERE name = ?";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, value) > 0;
+	}
+
+	public void addToMailingList(UserMail userMail) {
+		final String sql = "INSERT OR REPLACE INTO MailingList (user_id, email) VALUES (?, ?)";
+		jdbcTemplate.update(sql, userMail.user.id, userMail.email);
+	}
+	
+	public void removeFromMailingList(UUID userId) {
+		final String sql = "DELETE FROM MailingList WHERE user_id = ?";
+		jdbcTemplate.update(sql, userId);
+	}
+
+	public List<UserMail> getMailingList(RaceId raceId) {
+		final String sql = """
+			SELECT u.google_id as google_id, u.id as id, u.username as username, ml.email as email
+			FROM User u
+			JOIN MailingList ml ON ml.user_id = u.id
+			WHERE u.id NOT IN (SELECT user_id FROM Notified WHERE race_number = ?)
+			AND u.id NOT IN (SELECT guesser FROM DriverPlaceGuess WHERE race_number = ? GROUP BY guesser HAVING COUNT(*) == 2);
+			""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, raceId, raceId);
+		return sqlRes.stream()
+			.map(row -> 
+			new UserMail(
+				new User(
+					(String) row.get("google_id"),
+					UUID.fromString((String) row.get("id")),
+					(String) row.get("username"))
+				, (String) row.get("email"))
+			)
+			.toList();
+	}
+
+	public void setNotified(RaceId raceId, UUID userId) {
+		final String sql = "INSERT OR IGNORE INTO Notified (user_id, race_number) VALUES (?, ?)";
+		jdbcTemplate.update(sql, userId, raceId);
 	}
 }

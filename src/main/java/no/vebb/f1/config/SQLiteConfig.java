@@ -255,6 +255,21 @@ public class SQLiteConfig {
 				cutoff TEXT NOT NULL
 			);
 			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS MailingList (
+				user_id TEXT PRIMARY KEY,
+				email TEXT NOT NULL,
+				FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Notified (
+				user_id TEXT NOT NULL,
+				race_number INTEGER TEXT NOT NULL,
+				FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+				FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+			);
+			""");
 		};
 	}
 }
