@@ -23,6 +23,8 @@ F1 Tipping er en tippeside der deltakerne tipper på sluttresultatene av Formel 
 spring.security.oauth2.client.registration.google.redirect-uri={baseUrl}/login/oauth2/code/google
 spring.security.oauth2.client.registration.google.client-id={id}
 spring.security.oauth2.client.registration.google.client-secret={secret}
+spring.mail.username={email}
+spring.mail.password={app password}
 ```
 
 ## Kjøre Applikasjonen
