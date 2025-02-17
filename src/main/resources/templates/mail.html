@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<title>Velg Brukernavn</title>
+	<title>E-post påminnelser</title>
 	<style>
 		form {
 			text-align: center;
@@ -27,15 +27,17 @@
 	<header th:insert="~{header}"></header>
 	<main>
 		<div>
-			<h2>Velg brukernavn</h2>
-			<form th:action="@{{url}(url=${url})}" method="post">
+			<h2>E-post påminnelser</h2>
+			<form th:action="@{/settings/mail/add}" method="post">
 				<div>
-					<input type="text" id="username" name="username" required placeholder="Brukernavn">
+					<input type="text" id="email" name="email" pattern="^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$" required
+					placeholder="E-post" title="eksempel@epost.no">
 				</div>
-				<input type="submit" value="Bekreft brukernavn">
+				<input type="submit" value="Meld på">
 			</form>
-
-			<p th:if="${error}" th:text="${error}"></p>
+			<form th:if="${hasMail}" th:action="@{/settings/mail/remove}" method="post">
+				<input type="submit" value="Meld av">
+			</form>
 		</div>
 	</main>
 	<footer th:insert="~{footer}"></footer>

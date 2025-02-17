@@ -1509,14 +1509,25 @@ public class Database {
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, value) > 0;
 	}
 
-	public void addToMailingList(UserMail userMail) {
+	private void addToMailingList(UUID userId, String email) {
 		final String sql = "INSERT OR REPLACE INTO MailingList (user_id, email) VALUES (?, ?)";
-		jdbcTemplate.update(sql, userMail.user.id, userMail.email);
+		jdbcTemplate.update(sql, userId, email);
+		removeVerificationCode(userId);
 	}
 	
 	public void removeFromMailingList(UUID userId) {
 		final String sql = "DELETE FROM MailingList WHERE user_id = ?";
 		jdbcTemplate.update(sql, userId);
+	}
+
+	public boolean userHasEmail(UUID userId) {
+		final String sql = "SELECT COUNT(*) FROM MailingList WHERE user_id = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
+	}
+
+	public String getEmail(UUID userId) {
+		final String sql = "SELECT email FROM MailingList WHERE user_id = ?";
+		return jdbcTemplate.queryForObject(sql, String.class, userId);	
 	}
 
 	public List<UserMail> getMailingList(RaceId raceId) {
@@ -1543,5 +1554,39 @@ public class Database {
 	public void setNotified(RaceId raceId, UUID userId) {
 		final String sql = "INSERT OR IGNORE INTO Notified (user_id, race_number) VALUES (?, ?)";
 		jdbcTemplate.update(sql, userId, raceId);
+	}
+
+	public void addVerificationCode(UserMail userMail, int verificationCode) {
+		final String sql = """
+			INSERT OR REPLACE INTO VerificationCode (user_id, verification_code, email, cutoff) VALUES (?, ?, ?, ?)""";
+		jdbcTemplate.update(sql, userMail.user.id, verificationCode, userMail.email, Instant.now().plus(Duration.ofMinutes(10)).toString());
+	}
+
+	public void removeVerificationCode(UUID userId) {
+		final String sql = "DELETE FROM VerificationCode WHERE user_id = ?";
+		jdbcTemplate.update(sql, userId);
+	}
+
+	public boolean hasVerificationCode(UUID userId) {
+		final String sql = "SELECT COUNT(*) FROM VerificationCode WHERE user_id = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
+	}
+
+	public boolean isValidVerificationCode(UUID userId, int verificationCode) {
+		final String sql = "SELECT COUNT(*) FROM VerificationCode WHERE user_id = ? AND verification_code = ?";
+		boolean isValidCode = jdbcTemplate.queryForObject(sql, Integer.class, userId, verificationCode) > 0;
+		if (!isValidCode) {
+			return false;
+		}
+		final String getCutoffSql = "SELECT cutoff FROM VerificationCode WHERE user_id = ?";
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoffSql, String.class, userId));
+		boolean isValidCutoff = cutoff.compareTo(Instant.now()) > 0;
+		if (!isValidCutoff) {
+			return false;
+		}
+		final String emailSql = "SELECT email FROM VerificationCode WHERE user_id = ?";
+		String email = jdbcTemplate.queryForObject(emailSql, String.class, userId);
+		addToMailingList(userId, email);
+		return true;
 	}
 }

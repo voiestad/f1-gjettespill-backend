@@ -20,8 +20,7 @@ public class UserMail {
 	}
 
 	private boolean isValidEmail() {
-		// TODO: Implement
-		return true;
+		return email.matches("^[\\w\\-\\.]+@([\\w\\-]+\\.)+[\\w\\-]{2,4}$");		
 	}
 
 }

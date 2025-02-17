@@ -52,7 +52,7 @@ public class NotificationMail {
 				message.setTo(user.email);
 				message.setSubject("F1 Tipping påminnelse");
 				message.setText(
-						String.format("Hei %s!\nDette er en påminnelse om å tippe på %s før tiden går ut.", user.user.username, race.name));
+						String.format("Hei %s!\n\nDette er en påminnelse om å tippe på %s før tiden går ut.", user.user.username, race.name));
 				mailSender.send(message);
 				db.setNotified(raceId, userId);
 				logger.info("Successfully notified '{}' about '{}'", userId, race.name);
