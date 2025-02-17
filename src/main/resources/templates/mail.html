@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<title>E-post påminnelser</title>
+	<title>Påminnelser</title>
 	<style>
 		form {
 			text-align: center;
@@ -27,7 +27,7 @@
 	<header th:insert="~{header}"></header>
 	<main>
 		<div>
-			<h2>E-post påminnelser</h2>
+			<h2>Påminnelser</h2>
 			<form th:action="@{/settings/mail/add}" method="post">
 				<div>
 					<input type="text" id="email" name="email" pattern="^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$" required

@@ -264,7 +264,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			case "delete":
 				return "Slett bruker";
 			case "mail":
-				return "E-post påminnelser";
+				return "Påminnelser";
 		}
 		return "no path";
 	}

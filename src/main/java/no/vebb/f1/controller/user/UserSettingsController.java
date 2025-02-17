@@ -60,7 +60,7 @@ public class UserSettingsController {
 		model.addAttribute("title", "Innstillinger");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		linkMap.put("Se brukerinformasjon", "/settings/info");
-		linkMap.put("E-post påminnelser", "/settings/mail");
+		linkMap.put("Påminnelser", "/settings/mail");
 		linkMap.put("Endre brukernavn", "/settings/username");
 		linkMap.put("Slett bruker", "/settings/delete");
 		model.addAttribute("linkMap", linkMap);
