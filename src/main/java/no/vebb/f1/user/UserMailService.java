@@ -1,13 +1,18 @@
 package no.vebb.f1.user;
 
+import java.io.UnsupportedEncodingException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.Message.RecipientType;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.VerificationCodeGenerator;
 
@@ -31,13 +36,17 @@ public class UserMailService {
 		String strCode = String.valueOf(verificationCode);
 		String formattedCode = String.format("%s %s %s",
 				strCode.substring(0, 3), strCode.substring(3, 6), strCode.substring(6, 9));
-		SimpleMailMessage message = new SimpleMailMessage();
-		message.setFrom(fromEmail);
-		message.setTo(user.email);
-		message.setSubject("Verifikasjonskode F1 Tipping");
-		message.setText(
-				String.format("Hei %s!\n\nHer er din verifikasjonskode: %s\n\nDen er gyldig i 10 minutter.", user.user.username, formattedCode));
-		mailSender.send(message);
-		logger.info("Successfully sent verification code to '{}'", user.user.id);
+		try {
+			MimeMessage message = mailSender.createMimeMessage();
+			message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+			message.addRecipients(RecipientType.TO, user.email);
+			message.setSubject("Verifikasjonskode F1 Tipping");
+			message.setContent(String.format("Hei %s!\n\nHer er din verifikasjonskode: %s\n\nDen er gyldig i 10 minutter.",
+					user.user.username, formattedCode), "text/plain; charset=UTF-8");
+			mailSender.send(message);
+			logger.info("Successfully sent verification code to '{}'", user.user.id);
+		} catch (MessagingException e) {
+		} catch (UnsupportedEncodingException e) {
+		}
 	}
 }

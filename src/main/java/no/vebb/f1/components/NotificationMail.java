@@ -1,5 +1,6 @@
 package no.vebb.f1.components;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,11 +9,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import jakarta.mail.Message.RecipientType;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserMail;
 import no.vebb.f1.util.TimeUtil;
@@ -46,16 +50,23 @@ public class NotificationMail {
 			}
 			List<UserMail> mailingList = db.getMailingList(raceId);
 			for (UserMail user : mailingList) {
-				SimpleMailMessage message = new SimpleMailMessage();
-				message.setFrom(fromEmail);
-				message.setTo(user.email);
-				message.setSubject("F1 Tipping påminnelse");
-				message.setText(
-					String.format("Hei %s!\n\nDette er en påminnelse om å tippe på %s før tiden går ut.", user.user.username, race.name));
-				mailSender.send(message);
-				UUID userId = user.user.id;
-				db.setNotified(raceId, userId);
-				logger.info("Successfully notified '{}' about '{}'", userId, race.name);
+				try {
+					MimeMessage message = mailSender.createMimeMessage();
+					message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+					message.addRecipients(RecipientType.TO, user.email);
+					message.setSubject("F1 Tipping påminnelse", "UTF-8");
+					message.setContent(String.format("Hei %s!\n\nDette er en påminnelse om å tippe på %s før tiden går ut.",
+							user.user.username, race.name), "text/plain; charset=UTF-8");
+					mailSender.send(message);
+					UUID userId = user.user.id;
+					db.setNotified(raceId, userId);
+					logger.info("Successfully notified '{}' about '{}'", userId, race.name);
+				} catch (MessagingException e) {
+					e.printStackTrace();
+					logger.info("Message fail");
+				} catch (UnsupportedEncodingException e) {
+					logger.info("Encoding fail");
+				}
 			}
 		} catch (InvalidYearException e) {
 		} catch (EmptyResultDataAccessException e) {
