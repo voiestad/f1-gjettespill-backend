@@ -20,6 +20,25 @@
 			padding: 10px;
 			margin-bottom: 10px;
 		}
+
+		.paragraph p {
+			text-align: center;
+			margin: auto;
+			margin-bottom: 10px;
+		}
+
+		@media (max-width: 600px) {
+			.paragraph p {
+				width: 80%;
+				font-size: medium;
+			}
+		}
+
+		@media (min-width: 601px) {
+			.paragraph p {
+				width: 50%;
+			}
+		}
 	</style>
 </head>
 
@@ -29,9 +48,13 @@
 		<div>
 			<h2>Påminnelser</h2>
 			<form th:action="@{/settings/mail/add}" method="post">
-				<div>
+				<div class="paragraph">
+					<p>
+						Ved å melde deg på for å få påminnelser vil du få en e-post 1 time før hvert løp hvis du ikke
+						har tippet allerede. Du kan når som helst melde deg av.
+					</p>
 					<input type="text" id="email" name="email" pattern="^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$" required
-					placeholder="E-post" title="eksempel@epost.no">
+						placeholder="E-post" title="eksempel@epost.no">
 				</div>
 				<input type="submit" value="Meld på">
 			</form>
