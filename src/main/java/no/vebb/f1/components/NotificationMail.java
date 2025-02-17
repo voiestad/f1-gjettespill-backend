@@ -46,14 +46,14 @@ public class NotificationMail {
 			}
 			List<UserMail> mailingList = db.getMailingList(raceId);
 			for (UserMail user : mailingList) {
-				UUID userId = user.user.id;
 				SimpleMailMessage message = new SimpleMailMessage();
 				message.setFrom(fromEmail);
 				message.setTo(user.email);
 				message.setSubject("F1 Tipping påminnelse");
 				message.setText(
-						String.format("Hei %s!\n\nDette er en påminnelse om å tippe på %s før tiden går ut.", user.user.username, race.name));
+					String.format("Hei %s!\n\nDette er en påminnelse om å tippe på %s før tiden går ut.", user.user.username, race.name));
 				mailSender.send(message);
+				UUID userId = user.user.id;
 				db.setNotified(raceId, userId);
 				logger.info("Successfully notified '{}' about '{}'", userId, race.name);
 			}

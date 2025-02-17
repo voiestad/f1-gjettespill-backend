@@ -1,7 +1,5 @@
 package no.vebb.f1.user;
 
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +31,6 @@ public class UserMailService {
 		String strCode = String.valueOf(verificationCode);
 		String formattedCode = String.format("%s %s %s",
 				strCode.substring(0, 3), strCode.substring(3, 6), strCode.substring(6, 9));
-		UUID userId = user.user.id;
 		SimpleMailMessage message = new SimpleMailMessage();
 		message.setFrom(fromEmail);
 		message.setTo(user.email);
@@ -41,6 +38,6 @@ public class UserMailService {
 		message.setText(
 				String.format("Hei %s!\n\nHer er din verifikasjonskode: %s\n\nDen er gyldig i 10 minutter.", user.user.username, formattedCode));
 		mailSender.send(message);
-		logger.info("Successfully sent verification code to '{}'", userId);
+		logger.info("Successfully sent verification code to '{}'", user.user.id);
 	}
 }
