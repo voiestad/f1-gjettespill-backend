@@ -30,6 +30,7 @@ import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserMail;
 
 @Service
 @SuppressWarnings("null")
@@ -344,6 +345,7 @@ public class Database {
 			SET username = 'Anonym', username_upper = 'ANONYM', google_id = ?
 			WHERE id = ?
 			""";
+		removeFromMailingList(userId);
 		jdbcTemplate.update(deleteUser, userId, userId);
 	}
 
@@ -1505,5 +1507,86 @@ public class Database {
 	public boolean isValidFlag(String value) {
 		final String existCheck = "SELECT COUNT(*) FROM Flag WHERE name = ?";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, value) > 0;
+	}
+
+	private void addToMailingList(UUID userId, String email) {
+		final String sql = "INSERT OR REPLACE INTO MailingList (user_id, email) VALUES (?, ?)";
+		jdbcTemplate.update(sql, userId, email);
+		removeVerificationCode(userId);
+	}
+	
+	public void removeFromMailingList(UUID userId) {
+		final String sql = "DELETE FROM MailingList WHERE user_id = ?";
+		jdbcTemplate.update(sql, userId);
+	}
+
+	public boolean userHasEmail(UUID userId) {
+		final String sql = "SELECT COUNT(*) FROM MailingList WHERE user_id = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
+	}
+
+	public String getEmail(UUID userId) {
+		final String sql = "SELECT email FROM MailingList WHERE user_id = ?";
+		return jdbcTemplate.queryForObject(sql, String.class, userId);	
+	}
+
+	public List<UserMail> getMailingList(RaceId raceId) {
+		final String sql = """
+			SELECT u.google_id as google_id, u.id as id, u.username as username, ml.email as email
+			FROM User u
+			JOIN MailingList ml ON ml.user_id = u.id
+			WHERE u.id NOT IN (SELECT user_id FROM Notified WHERE race_number = ?)
+			AND u.id NOT IN (SELECT guesser FROM DriverPlaceGuess WHERE race_number = ? GROUP BY guesser HAVING COUNT(*) == 2);
+			""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, raceId, raceId);
+		return sqlRes.stream()
+			.map(row -> 
+			new UserMail(
+				new User(
+					(String) row.get("google_id"),
+					UUID.fromString((String) row.get("id")),
+					(String) row.get("username"))
+				, (String) row.get("email"))
+			)
+			.toList();
+	}
+
+	public void setNotified(RaceId raceId, UUID userId) {
+		final String sql = "INSERT OR IGNORE INTO Notified (user_id, race_number) VALUES (?, ?)";
+		jdbcTemplate.update(sql, userId, raceId);
+	}
+
+	public void addVerificationCode(UserMail userMail, int verificationCode) {
+		final String sql = """
+			INSERT OR REPLACE INTO VerificationCode (user_id, verification_code, email, cutoff) VALUES (?, ?, ?, ?)""";
+		jdbcTemplate.update(sql, userMail.user.id, verificationCode, userMail.email, Instant.now().plus(Duration.ofMinutes(10)).toString());
+	}
+
+	public void removeVerificationCode(UUID userId) {
+		final String sql = "DELETE FROM VerificationCode WHERE user_id = ?";
+		jdbcTemplate.update(sql, userId);
+	}
+
+	public boolean hasVerificationCode(UUID userId) {
+		final String sql = "SELECT COUNT(*) FROM VerificationCode WHERE user_id = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
+	}
+
+	public boolean isValidVerificationCode(UUID userId, int verificationCode) {
+		final String sql = "SELECT COUNT(*) FROM VerificationCode WHERE user_id = ? AND verification_code = ?";
+		boolean isValidCode = jdbcTemplate.queryForObject(sql, Integer.class, userId, verificationCode) > 0;
+		if (!isValidCode) {
+			return false;
+		}
+		final String getCutoffSql = "SELECT cutoff FROM VerificationCode WHERE user_id = ?";
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoffSql, String.class, userId));
+		boolean isValidCutoff = cutoff.compareTo(Instant.now()) > 0;
+		if (!isValidCutoff) {
+			return false;
+		}
+		final String emailSql = "SELECT email FROM VerificationCode WHERE user_id = ?";
+		String email = jdbcTemplate.queryForObject(emailSql, String.class, userId);
+		addToMailingList(userId, email);
+		return true;
 	}
 }

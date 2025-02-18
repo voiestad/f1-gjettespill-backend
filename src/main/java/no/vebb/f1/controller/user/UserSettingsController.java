@@ -7,7 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,9 +22,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.servlet.http.HttpServletRequest;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserMail;
+import no.vebb.f1.user.UserMailService;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Username;
+import no.vebb.f1.util.exception.InvalidEmailException;
 import no.vebb.f1.util.exception.InvalidUsernameException;
 
 /**
@@ -32,11 +38,16 @@ import no.vebb.f1.util.exception.InvalidUsernameException;
 @RequestMapping("/settings")
 public class UserSettingsController {
 
+	private static final Logger logger = LoggerFactory.getLogger(UserSettingsController.class);
+
 	@Autowired
 	private Database db;
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private UserMailService userMailService;
 
 	private final String usernameUrl = "/settings/username";
 
@@ -49,6 +60,7 @@ public class UserSettingsController {
 		model.addAttribute("title", "Innstillinger");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		linkMap.put("Se brukerinformasjon", "/settings/info");
+		linkMap.put("Påminnelser", "/settings/mail");
 		linkMap.put("Endre brukernavn", "/settings/username");
 		linkMap.put("Slett bruker", "/settings/delete");
 		model.addAttribute("linkMap", linkMap);
@@ -67,6 +79,10 @@ public class UserSettingsController {
 		tables.add(new Table("", Arrays.asList("Brukernavn"), Arrays.asList(Arrays.asList(user.username))));
 		tables.add(new Table("", Arrays.asList("Bruker-ID"), Arrays.asList(Arrays.asList(user.id.toString()))));
 		tables.add(new Table("", Arrays.asList("Google-ID"), Arrays.asList(Arrays.asList(user.googleId.toString()))));
+		try {
+			tables.add(new Table("", Arrays.asList("E-post"), Arrays.asList(Arrays.asList(db.getEmail(user.id)))));
+		} catch (EmptyResultDataAccessException e) {
+		}
 		model.addAttribute("tables", tables);
 		return "tables";
 	}
@@ -134,6 +150,54 @@ public class UserSettingsController {
 		SecurityContextHolder.clearContext();
 
 		return "redirect:/";
+	}
+
+	@GetMapping("/mail")
+	public String mailingList(Model model) {
+		User user = userService.loadUser().get();
+		model.addAttribute("hasMail", db.userHasEmail(user.id));
+		return "mail";
+	}
+
+	@PostMapping("/mail/add")
+	public String addMailingList(Model model, @RequestParam("email") String email) {
+		try {
+			User user = userService.loadUser().get();
+			UserMail userMail = new UserMail(user, email);
+			userMailService.sendVerificationCode(userMail);
+			return "redirect:/settings/mail/verification";
+		} catch (InvalidEmailException e) {
+			return "redirect:/settings/mail";
+		}
+	}
+	
+	@PostMapping("/mail/remove")
+	public String removeMailingList(Model model) {
+		User user = userService.loadUser().get();
+		db.removeFromMailingList(user.id);
+		return "redirect:/settings/mail";
+	}
+
+	@GetMapping("/mail/verification")
+	public String verificationCodeForm() {
+		User user = userService.loadUser().get();
+		if (!db.hasVerificationCode(user.id)) {
+			return "redirect:/settings/mail";
+		}
+		return "verificationCode";
+	}
+
+	@PostMapping("/mail/verification")
+	public String verificationCode(Model model, @RequestParam("code") int code, HttpServletRequest request) {
+		User user = userService.loadUser().get();
+		boolean isValidVerificationCode = db.isValidVerificationCode(user.id, code);
+		if (isValidVerificationCode) {
+			logger.info("Successfully verified email of user '{}'", user.id);
+			return "redirect:/settings/mail";
+		}
+		logger.warn("User '{}' put the wrong verification code", user.id);
+		
+		return "redirect:/settings/mail/verification";
 	}
 
 }

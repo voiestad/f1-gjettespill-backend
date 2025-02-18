@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" th:href="@{/style.css}">
+	<title>Påminnelser</title>
+	<style>
+		form {
+			text-align: center;
+			padding: 20px;
+			border-radius: 5px;
+		}
+
+		input {
+			width: 100%;
+			max-width: 300px;
+			padding: 10px;
+			margin-bottom: 10px;
+		}
+
+		.paragraph p {
+			text-align: center;
+			margin: auto;
+			margin-bottom: 10px;
+		}
+
+		@media (max-width: 600px) {
+			.paragraph p {
+				width: 80%;
+				font-size: medium;
+			}
+		}
+
+		@media (min-width: 601px) {
+			.paragraph p {
+				width: 50%;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<div>
+			<h2>Påminnelser</h2>
+			<form th:action="@{/settings/mail/add}" method="post">
+				<div class="paragraph">
+					<p>
+						Ved å melde deg på for å få påminnelser vil du få en e-post 1 time før hvert løp hvis du ikke
+						har tippet allerede. Du kan når som helst melde deg av.
+					</p>
+					<input type="text" id="email" name="email" pattern="^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$" required
+						placeholder="E-post" title="eksempel@epost.no">
+				</div>
+				<input type="submit" value="Meld på">
+			</form>
+			<form th:if="${hasMail}" th:action="@{/settings/mail/remove}" method="post">
+				<input type="submit" value="Meld av">
+			</form>
+		</div>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+</body>
+
+</html>
