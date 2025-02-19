@@ -53,8 +53,8 @@
 						Ved å melde deg på for å få påminnelser vil du få en e-post 1 time før hvert løp hvis du ikke
 						har tippet allerede. Du kan når som helst melde deg av.
 					</p>
-					<input type="text" id="email" name="email" pattern="^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$" required
-						placeholder="E-post" title="eksempel@epost.no">
+					<input type="email" id="email" name="email" pattern="^[\w\-\.]+(([\+]{0,1})[\w\-\.])+@([\w\-]+\.)+[\w\-]{2,4}$" required
+						placeholder="E-post" title="eksempel@epost.no" autocomplete="on">
 				</div>
 				<input type="submit" value="Meld på">
 			</form>
