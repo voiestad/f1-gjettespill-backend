@@ -20,7 +20,7 @@ public class UserMail {
 	}
 
 	private boolean isValidEmail() {
-		return email.matches("^[\\w\\-\\.]+(([\\+]{0,1})[\\w\\-\\.])+@([\\w\\-]+\\.)+[\\w\\-]{2,4}$");		
+		return email.matches("^([\\w\\-\\.])+(\\+?[\\w\\-\\.]+)?@([\\w\\-]+\\.)+[\\w\\-]{2,4}$");		
 	}
 
 }
