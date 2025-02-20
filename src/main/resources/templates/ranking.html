@@ -32,54 +32,114 @@
 	<script>
 		const list = document.getElementById('sortable');
 		let draggedItem = null;
+		let draggedItemPos = null;
+		let currPos = null;
+		let itemBounds = null;
+		const items = document.querySelectorAll('.item-wrapper');
 
-		document.addEventListener('dragstart', (event) => {
-			if (event.target.classList.contains('item-wrapper')) {
+		items.forEach(item => {
+			item.style["z-index"] = 1000;
+			
+			item.addEventListener('dragstart', (event) => {
+				item.style["z-index"] = 1;
 				draggedItem = event.target;
-				event.target.style.opacity = 0.5;
-			}
+				draggedItemPos = getDraggedItemIndex();
+				currPos = draggedItemPos;
+				setItemBounds();
+			});
+
+			item.addEventListener('dragend', (event) => {
+				item.style["z-index"] = 1000;
+			});
 		});
 
-		document.addEventListener('dragend', (event) => {
-			if (event.target.classList.contains('item-wrapper')) {
-				event.target.style.opacity = "";
+		function setItemBounds() {
+			itemBounds = [];
+			const items = [...list.querySelectorAll('.item-wrapper')];
+			for (const child of items) {
+				const box = child.getBoundingClientRect();
+				itemBounds.push(box);
 			}
+		}
+
+		function getElementByIndex(index) {
+			return [...list.querySelectorAll('.item-wrapper')][index];
+		}
+
+		document.addEventListener('dragend', (event) => {
+			draggedItem.style.opacity = 1;
+			if (currPos == null) {
+				return;
+			}
+			let draggedIndex = getDraggedItemIndex();
+			const currPosItem = getElementByIndex(currPos);
+			if (draggedIndex > currPos) {
+				list.insertBefore(draggedItem, currPosItem);
+			} else {
+				list.insertBefore(draggedItem, currPosItem);
+				list.insertBefore(currPosItem, draggedItem);
+			}
+			updateNumbers();
+			resetPositions();
 		});
 
 		list.addEventListener('dragover', (event) => {
 			event.preventDefault();
-			const target = findElementUnderCursor(list, event.clientY);
-			if (target == null) {
+			const y = event.clientY;
+			const index = findIndexOfCursor(y);
+			if (index == null) {
 				return;
 			}
-			let targetBefore = false;
-			for (let elem of list.children) {
-				if (elem === target) {
-					targetBefore = true;
-					break;
-				}
-				if (elem === draggedItem) {
-					break;
-				}
-			}
-			if (targetBefore) {
-				list.insertBefore(draggedItem, target);
-			} else {
-				list.insertBefore(target, draggedItem);
-			}
-			updateNumbers();
+			currPos = index;
+			updatePositions();
 		});
 
-		function findElementUnderCursor(container, y) {
-			const draggableElements = [...container.querySelectorAll('.item-wrapper:not(.dragging)')];
+		function getDraggedItemIndex() {
+			return getIndex(draggedItem);
+		}
 
-			for (const child of draggableElements) {
-				const box = child.getBoundingClientRect();
+		function getIndex(item) {
+			return parseInt(item.getElementsByClassName("number")[0].innerHTML) - 1;
+		}
+
+		function findIndexOfCursor(y) {
+			let i = 0;
+			for (const box of itemBounds) {
 				if (y > box.top && y < box.bottom) {
-					return child;
+					return i;
 				}
+				i++;
 			}
 			return null;
+		}
+
+		function updatePositions() {
+			const items = document.querySelectorAll('.item-wrapper');
+			const boxHeight = draggedItem.getBoundingClientRect().height;
+			items.forEach((box, index) => {
+				let offset;
+				if (index === draggedItemPos) {
+					return;
+				}
+				if (index > draggedItemPos && index > currPos) {
+					offset = 0;
+				} else if (index < draggedItemPos && index < currPos) {
+					offset = 0;
+				} else if (index < draggedItemPos && index >= currPos) {
+					offset = boxHeight;
+				} else if (index > draggedItemPos && index <= currPos) {
+					offset = -boxHeight;
+				}
+				let transformation = "translate3d(0px, " + offset + "px, 0px)";
+				box.style.transform = transformation;
+			});
+		}
+
+		function resetPositions() {
+			const items = document.querySelectorAll('.item-wrapper');
+			items.forEach((box, index) => {
+				box.style.transform = "translate3d(0px, 0px, 0px)";
+			});
 		}
 
 		function updateNumbers() {
