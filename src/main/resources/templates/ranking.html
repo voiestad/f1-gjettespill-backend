@@ -36,10 +36,27 @@
 		let currPos = null;
 		let itemBounds = null;
 		const items = document.querySelectorAll('.item-wrapper');
+		setEqualHeights();
+		
+		function setEqualHeights() {
+			const items = document.querySelectorAll('.item-wrapper');
+			let maxHeight = 0;
+
+			items.forEach(item => {
+				const itemHeight = item.getBoundingClientRect().height;
+				if (itemHeight > maxHeight) {
+					maxHeight = itemHeight;
+				}
+			});
+
+			items.forEach(item => {
+				item.style.height = `${maxHeight}px`;
+			});
+		}
 
 		items.forEach(item => {
 			item.style["z-index"] = 1000;
-			
+
 			item.addEventListener('dragstart', (event) => {
 				enableTransitions();
 				item.style["z-index"] = 1;
