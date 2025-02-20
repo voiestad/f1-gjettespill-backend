@@ -41,6 +41,7 @@
 			item.style["z-index"] = 1000;
 			
 			item.addEventListener('dragstart', (event) => {
+				enableTransitions();
 				item.style["z-index"] = 1;
 				draggedItem = event.target;
 				draggedItemPos = getDraggedItemIndex();
@@ -62,12 +63,26 @@
 			}
 		}
 
+		function disableTransitions() {
+			const items = [...list.querySelectorAll('.item-wrapper')];
+			for (const child of items) {
+				child.classList.add('disable-transitions');
+			}
+		}
+		function enableTransitions() {
+			const items = [...list.querySelectorAll('.item-wrapper')];
+			for (const child of items) {
+				child.classList.remove('disable-transitions');
+			}
+		}
+
 		function getElementByIndex(index) {
 			return [...list.querySelectorAll('.item-wrapper')][index];
 		}
 
 		document.addEventListener('dragend', (event) => {
-			draggedItem.style.opacity = 1;
+			disableTransitions();
+			resetPositions();
 			if (currPos == null) {
 				return;
 			}
@@ -80,7 +95,6 @@
 				list.insertBefore(currPosItem, draggedItem);
 			}
 			updateNumbers();
-			resetPositions();
 		});
 
 		list.addEventListener('dragover', (event) => {
@@ -138,7 +152,7 @@
 		function resetPositions() {
 			const items = document.querySelectorAll('.item-wrapper');
 			items.forEach((box, index) => {
-				box.style.transform = "translate3d(0px, 0px, 0px)";
+				box.style.transform = "";
 			});
 		}
 

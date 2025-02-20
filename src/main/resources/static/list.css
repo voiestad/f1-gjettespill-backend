@@ -34,6 +34,10 @@
 	border: 2px dashed #000;
 }
 
+.disable-transitions {
+    transition: none !important;
+}
+
 @media (max-width: 600px) {
 	.item-wrapper {
 		font-size: smaller;
