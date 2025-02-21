@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1601,5 +1602,85 @@ public class Database {
 		String email = jdbcTemplate.queryForObject(emailSql, String.class, userId);
 		addToMailingList(userId, email);
 		return true;
+	}
+
+	public List<List<String>> userGuessDataDriver(UUID userId) {
+		final String sql = """
+			SELECT position, driver, year
+			FROM DriverGuess
+			WHERE guesser = ?
+			ORDER BY year DESC, position ASC
+			""";
+		return jdbcTemplate.queryForList(sql, userId).stream()
+			.map(row -> Arrays.asList(
+				String.valueOf((int) row.get("position")),
+				(String) row.get("driver"),
+				String.valueOf((int) row.get("year"))
+			)).toList();
+	}
+
+	public List<List<String>> userGuessDataConstructor(UUID userId) {
+		final String sql = """
+			SELECT position, constructor, year
+			FROM ConstructorGuess
+			WHERE guesser = ?
+			ORDER BY year DESC, position ASC
+			""";
+		return jdbcTemplate.queryForList(sql, userId).stream()
+			.map(row -> Arrays.asList(
+				String.valueOf((int) row.get("position")),
+				(String) row.get("constructor"),
+				String.valueOf((int) row.get("year"))
+			)).toList();
+	}
+
+	public List<List<String>> userGuessDataFlag(UUID userId) {
+		final String sql = """
+			SELECT flag, amount, year
+			FROM FlagGuess
+			WHERE guesser = ?
+			ORDER BY year DESC, flag ASC
+			""";
+		return jdbcTemplate.queryForList(sql, userId).stream()
+			.map(row -> Arrays.asList(
+				translateFlagName(new Flag((String) row.get("flag"))),
+				String.valueOf((int) row.get("amount")),
+				String.valueOf((int) row.get("year"))
+			)).toList();
+
+	}
+
+	public List<List<String>> userGuessDataDriverPlace(UUID userId) {
+		final String sql = """
+			SELECT dpg.category AS category, dpg.driver AS driver, r.name AS race_name, ro.year AS year
+			FROM DriverPlaceGuess dpg
+			JOIN Race r ON dpg.race_number = r.id
+			JOIN RaceOrder ro ON dpg.race_number = ro.id
+			WHERE dpg.guesser = ?
+			ORDER BY ro.year DESC, ro.position ASC, category ASC
+			""";
+		return jdbcTemplate.queryForList(sql, userId).stream()
+		.map(row -> Arrays.asList(
+			translateCategory(new Category((String) row.get("category"))),
+			(String) row.get("driver"),
+			(String) row.get("race_name"),
+			String.valueOf((int) row.get("year"))
+		)).toList();
+	}
+
+	public List<List<String>> userDataNotified(UUID userId) {
+		final String sql = """
+			SELECT r.name AS name, ro.year AS year
+			FROM Notified n
+			JOIN Race r ON n.race_number = r.id
+			JOIN RaceOrder ro ON n.race_number = ro.id
+			WHERE n.user_id = ?
+			ORDER BY ro.year DESC, ro.position ASC
+			""";
+		return jdbcTemplate.queryForList(sql, userId).stream()
+		.map(row -> Arrays.asList(
+			(String) row.get("name"),
+			String.valueOf((int) row.get("year"))
+		)).toList();
 	}
 }

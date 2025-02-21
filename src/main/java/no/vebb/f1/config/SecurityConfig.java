@@ -28,7 +28,8 @@ public class SecurityConfig {
 				"/race-guess/**",
 				"/contact",
 				"/about",
-				"/error")
+				"/error",
+				"/privacy")
 				.permitAll();
 			auth.anyRequest().authenticated();	
 		})

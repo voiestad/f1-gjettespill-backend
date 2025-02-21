@@ -83,6 +83,11 @@ public class UserSettingsController {
 			tables.add(new Table("", Arrays.asList("E-post"), Arrays.asList(Arrays.asList(db.getEmail(user.id)))));
 		} catch (EmptyResultDataAccessException e) {
 		}
+		tables.add(new Table("Tippet sjåfør", Arrays.asList("Plass", "Sjåfør", "År"), db.userGuessDataDriver(user.id)));
+		tables.add(new Table("Tippet konstruktør", Arrays.asList("Plass", "Konstruktør", "År"), db.userGuessDataConstructor(user.id)));
+		tables.add(new Table("Tippet antall", Arrays.asList("Type", "Tippet", "År"), db.userGuessDataFlag(user.id)));
+		tables.add(new Table("Tippet løp", Arrays.asList("Type", "Tippet", "Løp", "År"), db.userGuessDataDriverPlace(user.id)));
+		tables.add(new Table("Påminnelser e-post", Arrays.asList("Løp", "År"), db.userDataNotified(user.id)));
 		model.addAttribute("tables", tables);
 		return "tables";
 	}

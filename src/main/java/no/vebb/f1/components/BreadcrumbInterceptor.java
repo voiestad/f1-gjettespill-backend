@@ -93,6 +93,8 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 				return getSettingsPath(segments);
 			case "username":
 				return "Velg brukernavn";
+			case "privacy":
+				return "Personvernerklæring";
 			default:
 				return "no path";
 		}

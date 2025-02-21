@@ -91,6 +91,14 @@ public class HomeController {
 		return "about";
 	}
 
+	/**
+	 * Handles GET request for privacy page.
+	 */
+	@GetMapping("/privacy")
+	public String privacy() {
+		return "privacy";
+	}
+
 	private boolean isRaceGuess() {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
