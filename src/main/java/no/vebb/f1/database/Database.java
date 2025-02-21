@@ -25,6 +25,7 @@ import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Driver;
 import no.vebb.f1.util.domainPrimitive.Flag;
+import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Username;
@@ -1682,5 +1683,20 @@ public class Database {
 			(String) row.get("name"),
 			String.valueOf((int) row.get("year"))
 		)).toList();
+	}
+
+	public boolean isValidMailOption(int option) {
+		final String sql = "SELECT COUNT(*) FROM MailOption WHERE option = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, option) > 0;
+	}
+
+	public void addMailOption(UUID userId, MailOption option) {
+		final String sql = "INSERT OR IGNORE INTO MailPreference (user_id, option) VALUES (?, ?)";
+		jdbcTemplate.update(sql, userId, option);
+	}
+
+	public void removeMailOption(UUID userId, MailOption option) {
+		final String sql = "DELETE FROM MailPreference WHERE user_id = ? AND option = ?";
+		jdbcTemplate.update(sql, userId, option);
 	}
 }

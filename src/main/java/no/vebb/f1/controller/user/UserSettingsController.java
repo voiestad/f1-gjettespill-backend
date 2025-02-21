@@ -26,6 +26,7 @@ import no.vebb.f1.user.UserMail;
 import no.vebb.f1.user.UserMailService;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.Table;
+import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidEmailException;
 import no.vebb.f1.util.exception.InvalidUsernameException;
@@ -204,5 +205,28 @@ public class UserSettingsController {
 		
 		return "redirect:/settings/mail/verification";
 	}
+	@PostMapping("/mail/option/add")
+	public String addMailingOption(@RequestParam("option") int option) {
+		try {
+			User user = userService.loadUser().get();
+			MailOption mailOption = new MailOption(option, db);
+			db.addMailOption(user.id, mailOption);
+		} catch (InvalidEmailException e) {
+		}
+		return "redirect:/settings/mail";
+	}
+	
+	@PostMapping("/mail/option/remove")
+	public String removeMailingOption(@RequestParam("option") int option) {
+		try {
+			User user = userService.loadUser().get();
+			MailOption mailOption = new MailOption(option, db);
+			db.removeMailOption(user.id, mailOption);
+		} catch (InvalidEmailException e) {
+		}
+		return "redirect:/settings/mail";
+	}
+
+
 
 }
