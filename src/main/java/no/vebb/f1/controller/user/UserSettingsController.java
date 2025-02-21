@@ -161,7 +161,20 @@ public class UserSettingsController {
 	@GetMapping("/mail")
 	public String mailingList(Model model) {
 		User user = userService.loadUser().get();
-		model.addAttribute("hasMail", db.userHasEmail(user.id));
+		boolean hasMail = db.userHasEmail(user.id);
+		model.addAttribute("hasMail", hasMail);
+		if (hasMail) {
+			Map<Integer, Boolean> mailOptions = new LinkedHashMap<>();
+			model.addAttribute("mailOptions", mailOptions);
+			List<MailOption> options = db.getMailingOptions();
+			for (MailOption option : options) {
+				mailOptions.put(option.value, false);
+			}
+			List<MailOption> preferences = db.getMailingPreference(user.id);
+			for (MailOption preference : preferences) {
+				mailOptions.put(preference.value, true);
+			}
+		}
 		return "mail";
 	}
 
@@ -226,7 +239,4 @@ public class UserSettingsController {
 		}
 		return "redirect:/settings/mail";
 	}
-
-
-
 }

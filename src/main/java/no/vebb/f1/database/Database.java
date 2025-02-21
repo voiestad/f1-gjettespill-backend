@@ -1699,4 +1699,18 @@ public class Database {
 		final String sql = "DELETE FROM MailPreference WHERE user_id = ? AND option = ?";
 		jdbcTemplate.update(sql, userId, option);
 	}
+
+	public List<MailOption> getMailingPreference(UUID userId) {
+		final String sql = "SELECT option FROM MailPreference WHERE user_id = ? ORDER BY option ASC";
+		return jdbcTemplate.queryForList(sql, Integer.class, userId).stream()
+			.map(option -> new MailOption(option))
+			.toList();
+	}
+	
+	public List<MailOption> getMailingOptions() {
+		final String sql = "SELECT option FROM MailOption ORDER BY option ASC";
+		return jdbcTemplate.queryForList(sql, Integer.class).stream()
+			.map(option -> new MailOption(option))
+			.toList();
+	}
 }

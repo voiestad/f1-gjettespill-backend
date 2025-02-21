@@ -14,6 +14,7 @@ public class MailOption {
 	
 	public MailOption(int value, Database db) throws InvalidMailOptionException {
 		this.value = value;
+		this.db = db;
 		validate();
 	}
 
