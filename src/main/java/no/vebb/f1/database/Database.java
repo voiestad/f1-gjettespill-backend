@@ -1567,6 +1567,19 @@ public class Database {
 		jdbcTemplate.update(sql, userId);
 	}
 
+	public void removeExpiredVerificationCodes() {
+		final String sql = "SELECT cutoff, user_id FROM VerificationCode";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
+		
+		List<UUID> expired = sqlRes.stream()
+			.filter(row -> Instant.parse((String) row.get("cutoff")).compareTo(Instant.now()) < 0)
+			.map(row -> UUID.fromString((String) row.get("user_id")))
+			.toList();
+		for (UUID userId : expired) {
+			removeVerificationCode(userId);
+		}
+	}
+
 	public boolean hasVerificationCode(UUID userId) {
 		final String sql = "SELECT COUNT(*) FROM VerificationCode WHERE user_id = ?";
 		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
