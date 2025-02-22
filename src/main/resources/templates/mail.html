@@ -7,6 +7,7 @@
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
 	<link rel="stylesheet" th:href="@{/tables.css}">
+	<link rel="stylesheet" th:href="@{/loader.css}">
 	<title>Påminnelser</title>
 	<style>
 		form {
@@ -53,8 +54,8 @@
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
-		<div>
-			<h2>Påminnelser</h2>
+		<h2>Påminnelser</h2>
+		<div id="form">
 			<div th:if="${hasMail}" class="tables">
 				<table>
 					<thead>
@@ -85,7 +86,7 @@
 					</tbody>
 				</table>
 			</div>
-			<form th:action="@{/settings/mail/add}" method="post">
+			<form th:action="@{/settings/mail/add}" method="post" onsubmit="showLoader();">
 				<div class="paragraph">
 					<p>
 						Ved å melde deg på for å få påminnelser vil du få en e-post hvis du fremdeles ikke har tippet 1,
@@ -102,6 +103,16 @@
 				<input type="submit" value="Meld av">
 			</form>
 		</div>
+		<div id="loader">
+			<div class="loading"></div>
+			<p>Laster...</p>
+		</div>
+		<script>
+			function showLoader() {
+				document.getElementById('form').style.display = 'none';
+				document.getElementById('loader').style.display = 'flex';
+			}
+		</script>
 	</main>
 	<footer th:insert="~{footer}"></footer>
 </body>
