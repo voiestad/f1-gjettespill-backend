@@ -2,10 +2,12 @@ package no.vebb.f1.controller.user;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +90,14 @@ public class UserSettingsController {
 		tables.add(new Table("Tippet konstruktør", Arrays.asList("Plass", "Konstruktør", "År"), db.userGuessDataConstructor(user.id)));
 		tables.add(new Table("Tippet antall", Arrays.asList("Type", "Tippet", "År"), db.userGuessDataFlag(user.id)));
 		tables.add(new Table("Tippet løp", Arrays.asList("Type", "Tippet", "Løp", "År"), db.userGuessDataDriverPlace(user.id)));
-		tables.add(new Table("Påminnelser e-post", Arrays.asList("Løp", "År"), db.userDataNotified(user.id)));
+		tables.add(new Table("Påminnelser e-post", Arrays.asList("Løp", "Antall påminnelser", "År"), db.userDataNotified(user.id)));
+		tables.add(new Table("Preferanser påminnelser", Arrays.asList("Timer før løp"),
+			db.getMailingPreference(user.id).stream()
+				.map(option -> Arrays.asList(option.toString()))
+				.collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
+					Collections.reverse(list);
+					return list;
+				}))));
 		model.addAttribute("tables", tables);
 		return "tables";
 	}

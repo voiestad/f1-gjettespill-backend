@@ -1687,16 +1687,18 @@ public class Database {
 
 	public List<List<String>> userDataNotified(UUID userId) {
 		final String sql = """
-			SELECT r.name AS name, ro.year AS year
+			SELECT r.name AS name, count(*) as notified_count, ro.year AS year
 			FROM Notified n
 			JOIN Race r ON n.race_number = r.id
 			JOIN RaceOrder ro ON n.race_number = ro.id
 			WHERE n.user_id = ?
+			GROUP BY n.race_number
 			ORDER BY ro.year DESC, ro.position ASC
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
 		.map(row -> Arrays.asList(
 			(String) row.get("name"),
+			String.valueOf((int) row.get("notified_count")),
 			String.valueOf((int) row.get("year"))
 		)).toList();
 	}
