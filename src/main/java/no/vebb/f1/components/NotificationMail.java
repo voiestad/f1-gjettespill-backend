@@ -21,6 +21,7 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserMail;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
+import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -45,31 +46,51 @@ public class NotificationMail {
 			CutoffRace race = db.getLatestRaceForPlaceGuess(new Year(TimeUtil.getCurrentYear(), db));
 			RaceId raceId = race.id;
 			long timeLeft = db.getTimeLeftToGuessRace(raceId);
-			if (timeLeft > 3600 || timeLeft < 0) {
+			if (timeLeft < 0) {
 				return;
 			}
+			int timeLeftHours = (int) timeLeft / 3600;
 			List<UserMail> mailingList = db.getMailingList(raceId);
 			for (UserMail user : mailingList) {
-				try {
-					MimeMessage message = mailSender.createMimeMessage();
-					message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
-					message.addRecipients(RecipientType.TO, user.email);
-					message.setSubject("F1 Tipping påminnelse", "UTF-8");
-					message.setContent(String.format("Hei %s!\n\nDette er en påminnelse om å tippe på %s før tiden går ut.",
-							user.user.username, race.name), "text/plain; charset=UTF-8");
-					mailSender.send(message);
-					UUID userId = user.user.id;
-					db.setNotified(raceId, userId);
-					logger.info("Successfully notified '{}' about '{}'", userId, race.name);
-				} catch (MessagingException e) {
-					e.printStackTrace();
-					logger.info("Message fail");
-				} catch (UnsupportedEncodingException e) {
-					logger.info("Encoding fail");
+				UUID userId = user.user.id;
+				int notifiedCount = db.getNotifiedCount(raceId, userId);
+				List<MailOption> options = db.getMailingPreference(userId);
+				for (MailOption option : options) {
+					if (notifiedCount > 0) {
+						notifiedCount--;
+						continue;
+					}
+					if (option.value < timeLeftHours) {
+						break;
+					}
+					try {
+						MimeMessage message = mailSender.createMimeMessage();
+						message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+						message.addRecipients(RecipientType.TO, user.email);
+						message.setSubject("F1 Tipping påminnelse", "UTF-8");
+						message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
+						mailSender.send(message);
+						db.setNotified(raceId, userId);
+						logger.info("Successfully notified '{}' about '{}'", userId, race.name);
+					} catch (MessagingException e) {
+						e.printStackTrace();
+						logger.info("Message fail");
+					} catch (UnsupportedEncodingException e) {
+						logger.info("Encoding fail");
+					}
+					break;
 				}
 			}
 		} catch (InvalidYearException e) {
 		} catch (EmptyResultDataAccessException e) {
 		}
+	}
+
+	private String getMessageContent(UserMail user, CutoffRace race, int timeLeft) {
+		String greet = String.format("Hei %s!", user.user.username);
+		String reminder = String.format("Dette er en påminnelse om å tippe på %s før tiden går ut.", race.name);
+		String hours = timeLeft == 1 ? "time" : "timer";
+		String time = String.format("Det er mindre enn %d %s igjen.", timeLeft, hours);
+		return String.format("%s\n\n%s %s", greet, reminder, time);
 	}
 }

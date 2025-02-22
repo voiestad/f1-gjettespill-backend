@@ -193,7 +193,7 @@ public class UserSettingsController {
 	@PostMapping("/mail/remove")
 	public String removeMailingList(Model model) {
 		User user = userService.loadUser().get();
-		db.removeFromMailingList(user.id);
+		db.clearUserFromMailing(user.id);
 		return "redirect:/settings/mail";
 	}
 

@@ -347,7 +347,7 @@ public class Database {
 			SET username = 'Anonym', username_upper = 'ANONYM', google_id = ?
 			WHERE id = ?
 			""";
-		removeFromMailingList(userId);
+		clearUserFromMailing(userId);
 		jdbcTemplate.update(deleteUser, userId, userId);
 	}
 
@@ -1517,11 +1517,17 @@ public class Database {
 		removeVerificationCode(userId);
 	}
 	
-	public void removeFromMailingList(UUID userId) {
+	public void clearUserFromMailing(UUID userId) {
 		clearMailPreferences(userId);
+		clearNotified(userId);
+		deleteUserFromMailingList(userId);
+	}
+	
+	private void deleteUserFromMailingList(UUID userId) {
 		final String sql = "DELETE FROM MailingList WHERE user_id = ?";
 		jdbcTemplate.update(sql, userId);
 	}
+
 
 	public boolean userHasEmail(UUID userId) {
 		final String sql = "SELECT COUNT(*) FROM MailingList WHERE user_id = ?";
@@ -1538,10 +1544,9 @@ public class Database {
 			SELECT u.google_id as google_id, u.id as id, u.username as username, ml.email as email
 			FROM User u
 			JOIN MailingList ml ON ml.user_id = u.id
-			WHERE u.id NOT IN (SELECT user_id FROM Notified WHERE race_number = ?)
-			AND u.id NOT IN (SELECT guesser FROM DriverPlaceGuess WHERE race_number = ? GROUP BY guesser HAVING COUNT(*) == 2);
+			WHERE u.id NOT IN (SELECT guesser FROM DriverPlaceGuess WHERE race_number = ? GROUP BY guesser HAVING COUNT(*) == 2);
 			""";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, raceId, raceId);
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, raceId);
 		return sqlRes.stream()
 			.map(row -> 
 			new UserMail(
@@ -1557,6 +1562,16 @@ public class Database {
 	public void setNotified(RaceId raceId, UUID userId) {
 		final String sql = "INSERT OR IGNORE INTO Notified (user_id, race_number) VALUES (?, ?)";
 		jdbcTemplate.update(sql, userId, raceId);
+	}
+
+	public int getNotifiedCount(RaceId raceId, UUID userId) {
+		final String sql = "SELECT COUNT(*) FROM Notified WHERE user_id = ? AND race_number = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, userId, raceId);
+	}
+
+	private void clearNotified(UUID userId) {
+		final String sql = "DELETE FROM Notified WHERE user_id = ?";
+		jdbcTemplate.update(sql, userId);
 	}
 
 	public void addVerificationCode(UserMail userMail, int verificationCode) {
@@ -1701,13 +1716,13 @@ public class Database {
 		jdbcTemplate.update(sql, userId, option);
 	}
 
-	public void clearMailPreferences(UUID userId) {
+	private void clearMailPreferences(UUID userId) {
 		final String sql = "DELETE FROM MailPreference WHERE user_id = ?";
 		jdbcTemplate.update(sql, userId);
 	}
 
 	public List<MailOption> getMailingPreference(UUID userId) {
-		final String sql = "SELECT option FROM MailPreference WHERE user_id = ? ORDER BY option ASC";
+		final String sql = "SELECT option FROM MailPreference WHERE user_id = ? ORDER BY option DESC";
 		return jdbcTemplate.queryForList(sql, Integer.class, userId).stream()
 			.map(option -> new MailOption(option))
 			.toList();
