@@ -1518,6 +1518,7 @@ public class Database {
 	}
 	
 	public void removeFromMailingList(UUID userId) {
+		clearMailPreferences(userId);
 		final String sql = "DELETE FROM MailingList WHERE user_id = ?";
 		jdbcTemplate.update(sql, userId);
 	}
@@ -1698,6 +1699,11 @@ public class Database {
 	public void removeMailOption(UUID userId, MailOption option) {
 		final String sql = "DELETE FROM MailPreference WHERE user_id = ? AND option = ?";
 		jdbcTemplate.update(sql, userId, option);
+	}
+
+	public void clearMailPreferences(UUID userId) {
+		final String sql = "DELETE FROM MailPreference WHERE user_id = ?";
+		jdbcTemplate.update(sql, userId);
 	}
 
 	public List<MailOption> getMailingPreference(UUID userId) {
