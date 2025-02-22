@@ -6,6 +6,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
+	<link rel="stylesheet" th:href="@{/tables.css}">
+	<link rel="stylesheet" th:href="@{/loader.css}">
 	<title>Påminnelser</title>
 	<style>
 		form {
@@ -32,6 +34,13 @@
 				width: 80%;
 				font-size: medium;
 			}
+
+			th,
+			td {
+				width: auto;
+				font-size: 20px;
+			}
+
 		}
 
 		@media (min-width: 601px) {
@@ -45,16 +54,48 @@
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
-		<div>
-			<h2>Påminnelser</h2>
-			<form th:action="@{/settings/mail/add}" method="post">
+		<h2>Påminnelser</h2>
+		<div id="form">
+			<div th:if="${hasMail}" class="tables">
+				<table>
+					<thead>
+						<th>
+							Antall timer før løp
+						</th>
+						<th>
+							Av/på
+						</th>
+					</thead>
+					<tbody>
+						<tr th:each="option : ${mailOptions}">
+							<form th:if="${option.value}" th:action="@{/settings/mail/option/remove}" method="post">
+								<input type="hidden" name="option" th:value="${option.key}">
+								<td th:text="${option.key}"></td>
+								<td>
+									<input type="checkbox" checked onchange="this.form.submit();">
+								</td>
+							</form>
+							<form th:unless="${option.value}" th:action="@{/settings/mail/option/add}" method="post">
+								<input type="hidden" name="option" th:value="${option.key}">
+								<td th:text="${option.key}"></td>
+								<td>
+									<input type="checkbox" onchange="this.form.submit();">
+								</td>
+							</form>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<form th:action="@{/settings/mail/add}" method="post" onsubmit="showLoader();">
 				<div class="paragraph">
 					<p>
-						Ved å melde deg på for å få påminnelser vil du få en e-post 1 time før hvert løp hvis du ikke
-						har tippet allerede. Du kan når som helst melde deg av.
+						Ved å melde deg på for å få påminnelser vil du få en e-post hvis du fremdeles ikke har tippet 1,
+						2, 3, 6, 12 og/eller 24 timer før hvert løp etter hva du selv velger. Du kan når som helst endre
+						tidspunktene du får påminnelse på, eller melde deg helt av.
 					</p>
-					<input type="email" id="email" name="email" pattern="^([\w\-\.])+(\+?[\w\-\.]+)?@([\w\-]+\.)+[\w\-]{2,4}$" required
-						placeholder="E-post" title="eksempel@epost.no" autocomplete="on"> 
+					<input type="email" id="email" name="email"
+						pattern="^([\w\-\.])+(\+?[\w\-\.]+)?@([\w\-]+\.)+[\w\-]{2,4}$" required placeholder="E-post"
+						title="eksempel@epost.no" autocomplete="on">
 				</div>
 				<input type="submit" value="Meld på">
 			</form>
@@ -62,6 +103,16 @@
 				<input type="submit" value="Meld av">
 			</form>
 		</div>
+		<div id="loader">
+			<div class="loading"></div>
+			<p>Laster...</p>
+		</div>
+		<script>
+			function showLoader() {
+				document.getElementById('form').style.display = 'none';
+				document.getElementById('loader').style.display = 'flex';
+			}
+		</script>
 	</main>
 	<footer th:insert="~{footer}"></footer>
 </body>

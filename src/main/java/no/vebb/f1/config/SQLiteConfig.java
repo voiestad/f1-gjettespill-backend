@@ -279,6 +279,32 @@ public class SQLiteConfig {
 				FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
 			);
 			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS MailOption (
+					option INTEGER PRIMARY KEY
+			);
+			""");
+			jdbcTemplate.execute("""
+                INSERT INTO MailOption (option) 
+                VALUES
+                    (1),
+                    (2),
+                    (3),
+                    (6),
+                    (12),
+                    (24)
+                ON CONFLICT(option) DO NOTHING;
+            """);
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS MailPreference (
+				user_id TEXT NOT NULL,
+				option INTEGER NOT NULL,
+				PRIMARY KEY (user_id, option),
+				FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
+				FOREIGN KEY (option) REFERENCES MailOption(option) ON DELETE CASCADE
+			);
+			""");
+
 		};
 	}
 }

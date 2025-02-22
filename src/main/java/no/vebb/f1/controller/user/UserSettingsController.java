@@ -2,10 +2,12 @@ package no.vebb.f1.controller.user;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ import no.vebb.f1.user.UserMail;
 import no.vebb.f1.user.UserMailService;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.Table;
+import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidEmailException;
 import no.vebb.f1.util.exception.InvalidUsernameException;
@@ -87,7 +90,14 @@ public class UserSettingsController {
 		tables.add(new Table("Tippet konstruktør", Arrays.asList("Plass", "Konstruktør", "År"), db.userGuessDataConstructor(user.id)));
 		tables.add(new Table("Tippet antall", Arrays.asList("Type", "Tippet", "År"), db.userGuessDataFlag(user.id)));
 		tables.add(new Table("Tippet løp", Arrays.asList("Type", "Tippet", "Løp", "År"), db.userGuessDataDriverPlace(user.id)));
-		tables.add(new Table("Påminnelser e-post", Arrays.asList("Løp", "År"), db.userDataNotified(user.id)));
+		tables.add(new Table("Påminnelser e-post", Arrays.asList("Løp", "Antall påminnelser", "År"), db.userDataNotified(user.id)));
+		tables.add(new Table("Preferanser påminnelser", Arrays.asList("Timer før løp"),
+			db.getMailingPreference(user.id).stream()
+				.map(option -> Arrays.asList(option.toString()))
+				.collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
+					Collections.reverse(list);
+					return list;
+				}))));
 		model.addAttribute("tables", tables);
 		return "tables";
 	}
@@ -160,7 +170,20 @@ public class UserSettingsController {
 	@GetMapping("/mail")
 	public String mailingList(Model model) {
 		User user = userService.loadUser().get();
-		model.addAttribute("hasMail", db.userHasEmail(user.id));
+		boolean hasMail = db.userHasEmail(user.id);
+		model.addAttribute("hasMail", hasMail);
+		if (hasMail) {
+			Map<Integer, Boolean> mailOptions = new LinkedHashMap<>();
+			model.addAttribute("mailOptions", mailOptions);
+			List<MailOption> options = db.getMailingOptions();
+			for (MailOption option : options) {
+				mailOptions.put(option.value, false);
+			}
+			List<MailOption> preferences = db.getMailingPreference(user.id);
+			for (MailOption preference : preferences) {
+				mailOptions.put(preference.value, true);
+			}
+		}
 		return "mail";
 	}
 
@@ -179,7 +202,7 @@ public class UserSettingsController {
 	@PostMapping("/mail/remove")
 	public String removeMailingList(Model model) {
 		User user = userService.loadUser().get();
-		db.removeFromMailingList(user.id);
+		db.clearUserFromMailing(user.id);
 		return "redirect:/settings/mail";
 	}
 
@@ -204,5 +227,25 @@ public class UserSettingsController {
 		
 		return "redirect:/settings/mail/verification";
 	}
-
+	@PostMapping("/mail/option/add")
+	public String addMailingOption(@RequestParam("option") int option) {
+		try {
+			User user = userService.loadUser().get();
+			MailOption mailOption = new MailOption(option, db);
+			db.addMailOption(user.id, mailOption);
+		} catch (InvalidEmailException e) {
+		}
+		return "redirect:/settings/mail";
+	}
+	
+	@PostMapping("/mail/option/remove")
+	public String removeMailingOption(@RequestParam("option") int option) {
+		try {
+			User user = userService.loadUser().get();
+			MailOption mailOption = new MailOption(option, db);
+			db.removeMailOption(user.id, mailOption);
+		} catch (InvalidEmailException e) {
+		}
+		return "redirect:/settings/mail";
+	}
 }
