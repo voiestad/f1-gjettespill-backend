@@ -52,8 +52,9 @@ public class Importer {
 				logger.info("Year '{}' has '{}' races to import", raceYear, races.size());
 				int startingGridCount = importStartingGrids(races);
 				logger.info("Imported '{}' starting grid", startingGridCount);
+				boolean hasAddedNewRaceResult = importRaceResults(races);
 				if (year.equals(raceYear)) {
-					if (importRaceResults(races)) {
+					if (hasAddedNewRaceResult) {
 						logger.info("New race result imported, will import standings");
 						shouldImportStandings = true;
 					} else if (!areStandingsUpToDate(year)) {
