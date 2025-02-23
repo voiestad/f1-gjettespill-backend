@@ -208,15 +208,27 @@ public class Importer {
 
 	private void insertRaceResultData(RaceId raceId, List<List<String>> raceResult) {
 		int finishingPosition = 1;
+		List<List<String>> disqualified = new ArrayList<>();
 		for (List<String> row : raceResult.subList(1, raceResult.size())) {
 			String position = row.get(0);
-			Driver driver = new Driver(parseDriver(row.get(2)), db);
-
-			Points points = new Points((int) Double.parseDouble(row.get(6)));
-			
-			db.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
+			if (position.equals("DQ")) {
+				disqualified.add(row);	
+				continue;
+			}
+			insertRaceResultRow(raceId, row, finishingPosition);
 			finishingPosition++;
 		}
+		for (List<String> row : disqualified) {
+			insertRaceResultRow(raceId, row, finishingPosition);
+			finishingPosition++;
+		}
+	}
+
+	private void insertRaceResultRow(RaceId raceId, List<String> row, int finishingPosition) {
+		String position = row.get(0);
+		Driver driver = new Driver(parseDriver(row.get(2)), db);
+		Points points = new Points((int) Double.parseDouble(row.get(6)));
+		db.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
 	}
 
 	public void importRaceNames(List<Integer> racesToImportFrom, int year) {
