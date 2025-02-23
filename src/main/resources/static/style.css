@@ -20,11 +20,12 @@ nav div {
 nav a {
 	color: #fff;
 	padding: 5px;
+	font-weight: bold;
 }
 
 a {
 	text-decoration: none;
-	font-weight: bold;
+	color: rgba(187, 0 ,31);
 }
 
 a:hover {
@@ -33,7 +34,7 @@ a:hover {
 
 main {
 	text-align: center;
-	margin-top: 50px;
+	margin-top: 10px;
 	margin-bottom: 25px;
 	font-size: 24px;
 	color: #333;
@@ -102,6 +103,7 @@ div {
 .linkList a {
 	margin: 16px;
 	color: black;
+	font-weight: bold;
 }
 
 .linkList a:hover {
@@ -136,6 +138,7 @@ footer p {
 
 footer a {
     color: white;
+	font-weight: bold;
     text-decoration: none;
     margin: 0 10px;
 }
@@ -185,6 +188,50 @@ main {
     flex: 1;
 }
 
+input[type=button], input[type=submit], input[type=reset] {
+	background-color: rgb(187, 0, 31);
+	border: none;
+	color: white;
+	padding: 16px 32px;
+	text-decoration: none;
+	font-weight: bold;
+	cursor: pointer;
+	border-radius: 12px;
+}
+
+input[type=range] {
+	-webkit-appearance: none;  /* Override default CSS styles */
+	appearance: none;
+	width: 300px;
+	height: 25px;
+	background: #d3d3d3;
+	outline: none;
+	border-radius: 12px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 25px;
+	height: 25px;
+	background: rgb(187, 0, 31);
+	cursor: pointer;
+	border-radius: 50%;
+}
+  
+input[type=range]::-moz-range-thumb {
+	width: 25px;
+	height: 25px;
+	background: rgb(187, 0, 31);
+	cursor: pointer;
+	border-radius: 50%;
+}
+
+@media (max-width: 600px) {
+	input[type=range] {
+		width: 75%;
+	}
+}
 .breadcrumb {
 	display: flex;
 	flex-wrap: wrap;
