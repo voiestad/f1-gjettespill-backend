@@ -193,6 +193,7 @@ input[type=button], input[type=submit], input[type=reset] {
 	border: none;
 	color: white;
 	padding: 16px 32px;
+	margin: 8px;
 	text-decoration: none;
 	font-weight: bold;
 	cursor: pointer;
