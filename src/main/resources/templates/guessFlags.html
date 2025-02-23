@@ -16,14 +16,34 @@
 		<p th:if="${error}" th:text="${error}"></p>
 		<div th:insert="~{countdown :: countdown(timeLeftToGuess=${timeLeftToGuess})}"></div>
 		<form th:action="@{/guess/flags}" method="post">
-			<label>Antall gule flagg</label>
-			<input type="number" th:value="${flags.yellow}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="yellow" required><br><br>
-			<label>Antall røde flagg</label>
-			<input type="number" th:value="${flags.red}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="red" required><br><br>
-			<label>Antall sikkerhetsbiler</label>
-			<input type="number" th:value="${flags.safetyCar}" min="0" max="1000" pattern="[0-9]*" inputmode="numeric" name="safetyCar" required><br><br>
+			<label>Antall gule flagg</label><br>
+			<input id="yellowInput" type="range" th:value="${flags.yellow}" min="0" max="150" name="yellow" required><br>
+			<div id="yellowOutput" th:text="${flags.yellow}"></div><br><br>
+			<label>Antall røde flagg</label><br>
+			<input id="redInput" type="range" th:value="${flags.red}" min="0" max="50" name="red" required><br>
+			<div id="redOutput" th:text="${flags.red}"></div><br><br>
+			<label>Antall sikkerhetsbiler</label><br>
+			<input id="safetyInput" type="range" th:value="${flags.safetyCar}" min="0" max="100" name="safetyCar" required><br>
+			<div id="safetyOutput" th:text="${flags.safetyCar}"></div><br><br>
 			<input type="submit" value="Send inn gjett">
 		</form>
+		<script>
+			const yellowInput = document.getElementById("yellowInput");
+			const redInput = document.getElementById("redInput");
+			const safetyInput = document.getElementById("safetyInput");
+			const yellowOutput = document.getElementById("yellowOutput");
+			const redOutput = document.getElementById("redOutput");
+			const safetyOutput = document.getElementById("safetyOutput");
+			yellowInput.oninput = function () {
+				yellowOutput.innerHTML = yellowInput.value;
+			};
+			redInput.oninput = function () {
+				redOutput.innerHTML = redInput.value;
+			};
+			safetyInput.oninput = function () {
+				safetyOutput.innerHTML = safetyInput.value;
+			};
+		</script>
 	</main>
 	<footer th:insert="~{footer}"></footer>
 </body>

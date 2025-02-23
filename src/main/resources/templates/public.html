@@ -12,6 +12,10 @@
 		.graph-container {
 			text-align: center;
 		}
+		
+		#graph svg {
+			box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+		}
 
 		@media (max-width: 600px) {
 			#graph {
@@ -94,10 +98,6 @@
 
 			}
 		</script>
-		<div class="linkList">
-			<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
-			<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
-		</div>
 	</main>
 	<footer th:insert="~{footer}"></footer>
 </body>

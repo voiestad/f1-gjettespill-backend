@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -22,7 +21,6 @@ import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
-import no.vebb.f1.util.exception.NoAvailableRaceException;
 
 import org.springframework.ui.Model;
 
@@ -49,8 +47,6 @@ public class HomeController {
 	 */
 	@GetMapping("/")
 	public String home(Model model) {
-		boolean loggedOut = !userService.isLoggedIn();
-		model.addAttribute("loggedOut", loggedOut);
 		Table leaderBoard = getLeaderBoard();
 		model.addAttribute("leaderBoard", leaderBoard);
 		try {
@@ -67,9 +63,6 @@ public class HomeController {
 			model.addAttribute("guessersNames", new String[0]);
 			model.addAttribute("scores", new int[0]);
 		}
-		model.addAttribute("raceGuess", isRaceGuess());
-
-		model.addAttribute("isAdmin", userService.isAdmin());
 		return "public";
 	}
 
@@ -97,20 +90,6 @@ public class HomeController {
 	@GetMapping("/privacy")
 	public String privacy() {
 		return "privacy";
-	}
-
-	private boolean isRaceGuess() {
-		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			RaceId raceId = db.getLatestRaceForPlaceGuess(year).id;
-			return !cutoff.isAbleToGuessRace(raceId);
-		} catch (InvalidYearException e) {
-			return false;
-		} catch (EmptyResultDataAccessException e) {
-			return false;
-		} catch (NoAvailableRaceException e) {
-			return false;
-		}
 	}
 
 	private Table getLeaderBoard() {
