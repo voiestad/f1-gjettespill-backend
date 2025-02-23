@@ -20,13 +20,15 @@
 			</li>
 		</ol>
 	</div>
+	<form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
 	<div id="links">
 		<a href="/">Hjem</a>
 		<a href="/guess">Tipping</a>
-		<form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
-		<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
+		<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
 		<a href="/score">Poengberegning</a>
+		<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
 		<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
+			<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
 		<a th:unless="${loggedOut}" href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
 		<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
 	</div>
