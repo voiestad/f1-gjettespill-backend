@@ -216,12 +216,10 @@ public class Importer {
 				disqualified.add(row);	
 				continue;
 			}
-			insertRaceResultRow(raceId, row, finishingPosition);
-			finishingPosition++;
+			insertRaceResultRow(raceId, row, finishingPosition++);
 		}
 		for (List<String> row : disqualified) {
-			insertRaceResultRow(raceId, row, finishingPosition);
-			finishingPosition++;
+			insertRaceResultRow(raceId, row, finishingPosition++);
 		}
 	}
 
