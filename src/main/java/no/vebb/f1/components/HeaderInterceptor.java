@@ -34,6 +34,7 @@ public class HeaderInterceptor  implements HandlerInterceptor  {
 		request.setAttribute("loggedOut", !userService.isLoggedIn());
 		request.setAttribute("raceGuess", isRaceGuess());
 		request.setAttribute("isAdmin", userService.isAdmin());
+		request.setAttribute("isAbleToGuess", cutoff.isAbleToGuessCurrentYear() || isRaceToGuess());
 		return true;
 	}
 
@@ -44,6 +45,20 @@ public class HeaderInterceptor  implements HandlerInterceptor  {
 			return !cutoff.isAbleToGuessRace(raceId);
 		} catch (InvalidYearException e) {
 			return false;
+		} catch (EmptyResultDataAccessException e) {
+			return false;
+		} catch (NoAvailableRaceException e) {
+			return false;
+		}
+	}
+
+	private boolean isRaceToGuess() {
+		try {
+			RaceId raceId = db.getCurrentRaceIdToGuess();
+			if (!cutoff.isAbleToGuessRace(raceId)) {
+				return false;
+			}
+			return true;
 		} catch (EmptyResultDataAccessException e) {
 			return false;
 		} catch (NoAvailableRaceException e) {
