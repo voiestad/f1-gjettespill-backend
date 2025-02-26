@@ -55,10 +55,7 @@ public class HeaderInterceptor  implements HandlerInterceptor  {
 	private boolean isRaceToGuess() {
 		try {
 			RaceId raceId = db.getCurrentRaceIdToGuess();
-			if (!cutoff.isAbleToGuessRace(raceId)) {
-				return false;
-			}
-			return true;
+			return cutoff.isAbleToGuessRace(raceId);
 		} catch (EmptyResultDataAccessException e) {
 			return false;
 		} catch (NoAvailableRaceException e) {
