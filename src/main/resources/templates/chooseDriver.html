@@ -16,12 +16,13 @@
 	<main>
 		<div th:insert="~{countdown :: countdown(timeLeftToGuess=${timeLeftToGuess})}"></div>
 		<form th:action="@{/guess/{type}(type=${type})}" method="post">
-			<input type="hidden" name="driver" value="" id="guessedDriver">
+			<input type="hidden" name="driver" th:value="${guessedDriver}" id="guessedDriver">
 			<ul class="container">
 				<li th:each="item, iterStat : ${items}" onclick="select(event)"
-				th:class="${item == guessedDriver ? 'selected item-wrapper' : 'item-wrapper'}">
+				th:class="${item.competitor.value.equals(guessedDriver) ? 'selected item-wrapper' : 'item-wrapper'}">
 				<div class="number" th:text="${iterStat.index + 1}"></div>
-				<div class="item" th:text="${item}" th:id="${item}"></div>
+				<div class="item" th:text="${item.competitor}" th:id="${item.competitor}"></div>
+				<span th:if="${item.color.value}" class="circle" th:style="'background-color:' + ${item.color}"></span>
 			</li>
 		</ul>
 			<input type="submit" value="Send inn gjett">
@@ -33,20 +34,19 @@
 		let selectedItem = null;
 		let guessedDriver = document.getElementById("guessedDriver");
 
-		document.querySelectorAll('.item-wrapper').forEach(function(itemWrapper) {
-			if (itemWrapper.classList.contains('selected')) {
-				select({target: itemWrapper});
-			}
-		});
+		let selected = document.querySelector('.selected')
+		select({target: selected});
 
 		function select(event) {
+			if (event.target == null) {
+				return;
+			}
 			if (selectedItem != null) {
 				selectedItem.style.color = "";
 			}
-			selectedItem = event.target;
+			selectedItem = event.target.querySelector('.item') || event.target.parentElement.querySelector('.item');
 			selectedItem.style.color = "red";
-			let item = selectedItem.getElementsByClassName('item')[0] || selectedItem;
-			guessedDriver.value = item.innerHTML;
+			guessedDriver.value = selectedItem.innerHTML;
 		}
 
 
