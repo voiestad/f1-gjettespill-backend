@@ -67,6 +67,25 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS DriverTeam (
+					driver TEXT NOT NULL,
+					team TEXT NOT NULL,
+					year INTEGER NOT NULL,
+					PRIMARY KEY (driver, year),
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (team) REFERENCES Constructor ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS ConstructorColor (
+					constructor TEXT NOT NULL,
+					year INTEGER NOT NULL,
+					color TEXT NOT NULL,
+					PRIMARY KEY (constructor, year),
+					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS DriverStandings (
 					race_number INTEGER NOT NULL,
 					driver TEXT NOT NULL,

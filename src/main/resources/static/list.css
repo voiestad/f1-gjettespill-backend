@@ -21,6 +21,8 @@
 	flex-grow: 1;
 	display: flex;
 	align-items: center;
+	text-align: center;
+	justify-content: center;
 }
 
 .number {
@@ -38,6 +40,10 @@
     transition: none !important;
 }
 
+.item {
+	width: 175px;
+}
+
 @media (max-width: 600px) {
 	.item-wrapper {
 		font-size: smaller;
@@ -45,5 +51,5 @@
 }
 
 @media (min-width: 601px) {
-	
+
 }

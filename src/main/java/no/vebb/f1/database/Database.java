@@ -15,12 +15,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.util.*;
+import no.vebb.f1.util.collection.ColoredCompetitor;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.Flags;
 import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.collection.UserRaceGuess;
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.util.domainPrimitive.Color;
 import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Driver;
@@ -513,6 +515,20 @@ public class Database {
 			.toList();
 	}
 
+	public List<ColoredCompetitor<Driver>> getDriversFromStartingGridWithColors(RaceId raceId) {
+		final String getDriversFromGrid = """
+			SELECT sg.driver as driver, cc.color as color
+			FROM StartingGrid sg
+			LEFT JOIN DriverTeam dt ON dt.driver = sg.driver
+			LEFT JOIN ConstructorColor cc ON cc.constructor = dt.team
+			WHERE race_number = ?
+			ORDER BY position ASC
+			""";
+		return jdbcTemplate.queryForList(getDriversFromGrid, raceId).stream()
+			.map(row -> new ColoredCompetitor<>(new Driver((String) row.get("driver")), new Color((String) row.get("color"))))
+			.toList();
+	}
+
 	/**
 	 * Gets the previous guess of a user on driver place guess.
 	 * 
@@ -550,11 +566,27 @@ public class Database {
 	 * @param year of season
 	 * @return competitors ascendingly
 	 */
-	public List<Driver> getDriversGuess(UUID userId, Year year) {
-		final String getGuessedSql = "SELECT driver FROM DriverGuess WHERE guesser = ? ORDER BY position ASC";
-		final String getDriversSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
+	public List<ColoredCompetitor<Driver>> getDriversGuess(UUID userId, Year year) {
+		final String getGuessedSql = """
+			SELECT dg.driver as driver, cc.color as color
+			FROM DriverGuess dg
+			LEFT JOIN DriverTeam dt ON dt.driver = dg.driver
+			LEFT JOIN ConstructorColor cc ON cc.constructor = dt.team
+			WHERE dg.guesser = ?
+			ORDER BY position ASC
+			""";
+		final String getDriversSql = """
+			SELECT dy.driver as driver, cc.color as color
+			FROM DriverYear dy
+			LEFT JOIN DriverTeam dt ON dt.driver = dy.driver
+			LEFT JOIN ConstructorColor cc ON cc.constructor = dt.team
+			WHERE dy.year = ?
+			ORDER BY position ASC
+			""";
 		return getCompetitorGuess(userId, year, getGuessedSql, getDriversSql).stream()
-			.map(driver -> new Driver(driver))
+			.map(row -> new ColoredCompetitor<>(
+				new Driver((String) row.get("driver")),
+				new Color((String) row.get("color"))))
 			.toList();
 	}
 
@@ -565,19 +597,33 @@ public class Database {
 	 * @param year of season
 	 * @return competitors ascendingly
 	 */
-	public List<Constructor> getConstructorsGuess(UUID userId, Year year) {
-		final String getGuessedSql = "SELECT constructor FROM ConstructorGuess WHERE guesser = ? ORDER BY position ASC";
-		final String getConstructorsSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
+	public List<ColoredCompetitor<Constructor>> getConstructorsGuess(UUID userId, Year year) {
+		final String getGuessedSql = """
+			SELECT cg.constructor as constructor, cc.color as color
+			FROM ConstructorGuess cg
+			LEFT JOIN ConstructorColor cc ON cc.constructor = cg.constructor
+			WHERE cg.guesser = ?
+			ORDER BY position ASC
+			""";
+		final String getConstructorsSql = """
+			SELECT cy.constructor as constructor, cc.color as color
+			FROM ConstructorYear cy
+			LEFT JOIN ConstructorColor cc ON cc.constructor = cy.constructor
+			WHERE cy.year = ?
+			ORDER BY position ASC
+			""";
 		return getCompetitorGuess(userId, year, getGuessedSql, getConstructorsSql).stream()
-			.map(constructor -> new Constructor(constructor))
+			.map(row -> new ColoredCompetitor<>(
+				new Constructor((String) row.get("constructor")),
+				new Color((String) row.get("color"))))
 			.toList();
 	}
 
-	private List<String> getCompetitorGuess(UUID userId, Year year, final String getGuessedSql,
+	private List<Map<String, Object>> getCompetitorGuess(UUID userId, Year year, final String getGuessedSql,
 			final String getCompetitorsSql) {
-		List<String> competitors = jdbcTemplate.queryForList(getGuessedSql, String.class, userId);
+		List<Map<String, Object>> competitors = jdbcTemplate.queryForList(getGuessedSql, userId);
 		if (competitors.size() == 0) {
-			return jdbcTemplate.queryForList(getCompetitorsSql, String.class, year);
+			return jdbcTemplate.queryForList(getCompetitorsSql, year);
 		}
 		return competitors;
 	}
@@ -792,7 +838,7 @@ public class Database {
 	 */
 	public List<String> getSeasonGuessers(Year year) {
 		final String getGussers = """
-			SELECT DISTINCT u.username as username
+			SELECT DISTINCT u.username as username, u.id as id
 			FROM User u
 			JOIN FlagGuess fg ON fg.guesser = u.id
 			JOIN DriverGuess dg ON dg.guesser = u.id
@@ -801,7 +847,9 @@ public class Database {
 			ORDER BY u.username ASC
 			""";
 		
-		return jdbcTemplate.queryForList(getGussers, String.class, year, year, year);
+		return jdbcTemplate.queryForList(getGussers, year, year, year).stream()
+			.map(row -> (String) row.get("username"))
+			.toList();
 	}
 
 	/**
@@ -1735,5 +1783,18 @@ public class Database {
 		return jdbcTemplate.queryForList(sql, Integer.class).stream()
 			.map(option -> new MailOption(option))
 			.toList();
+	}
+
+	public void setTeamDriver(Driver driver, Constructor team, Year year) {
+		final String sql = "INSERT OR REPLACE INTO DriverTeam (driver, team, year) VALUES (?, ?, ?)";
+		jdbcTemplate.update(sql, driver, team, year);
+	}
+	
+	public void addColorConstructor(Constructor constructor, Year year, Color color) {
+		if (color.value == null) {
+			return;
+		}
+		final String sql = "INSERT OR REPLACE INTO ConstructorColor (constructor, year, color) VALUES (?, ?, ?)";
+		jdbcTemplate.update(sql, constructor, year, color);
 	}
 }

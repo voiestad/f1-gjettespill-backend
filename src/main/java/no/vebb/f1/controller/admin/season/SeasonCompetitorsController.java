@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.util.domainPrimitive.Color;
 import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Driver;
 import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.util.exception.InvalidColorException;
 import no.vebb.f1.util.exception.InvalidConstructorException;
 import no.vebb.f1.util.exception.InvalidDriverException;
 
@@ -24,7 +26,7 @@ public class SeasonCompetitorsController {
 
 	@Autowired
 	private Database db;
-	
+
 	@GetMapping
 	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
 		Year seasonYear = new Year(year, db);
@@ -36,6 +38,30 @@ public class SeasonCompetitorsController {
 		model.addAttribute("drivers", drivers);
 		model.addAttribute("constructors", constructors);
 		return "addCompetitors";
+	}
+
+	@PostMapping("/setTeamDriver")
+	public String setTeamDriver(@PathVariable("year") int year, @RequestParam("driver") String driver,
+			@RequestParam("team") String team) {
+		Year seasonYear = new Year(year, db);
+		try {
+			db.setTeamDriver(new Driver(driver, db, seasonYear), new Constructor(team, db, seasonYear), seasonYear);
+		} catch (InvalidDriverException e) {
+		} catch (InvalidConstructorException e) {
+		}
+		return "redirect:/admin/season/" + year + "/competitors";
+	}
+
+	@PostMapping("/addColor")
+	public String addColorConstructor(@PathVariable("year") int year, @RequestParam("constructor") String constructor,
+			@RequestParam("color") String color) {
+		Year seasonYear = new Year(year, db);
+		try {
+			db.addColorConstructor(new Constructor(constructor, db, seasonYear), seasonYear, new Color(color));
+		} catch (InvalidConstructorException e) {
+		} catch (InvalidColorException e) {
+		}
+		return "redirect:/admin/season/" + year + "/competitors";
 	}
 
 	@PostMapping("/addDriver")

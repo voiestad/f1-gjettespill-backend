@@ -23,6 +23,7 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Flags;
+import no.vebb.f1.util.collection.ColoredCompetitor;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Driver;
@@ -88,7 +89,7 @@ public class GuessController {
 		UUID id = userService.loadUser().get().id;
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
-		List<Driver> competitors = db.getDriversGuess(id, year);
+		List<ColoredCompetitor<Driver>> competitors = db.getDriversGuess(id, year);
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		model.addAttribute("competitors", competitors);
 		model.addAttribute("title", "Ranger sjåførene");
@@ -143,7 +144,7 @@ public class GuessController {
 		UUID id = userService.loadUser().get().id;
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
-		List<Constructor> competitors = db.getConstructorsGuess(id, year);
+		List<ColoredCompetitor<Constructor>> competitors = db.getConstructorsGuess(id, year);
 		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		model.addAttribute("competitors", competitors);
 		model.addAttribute("title", "Ranger konstruktørene");
@@ -252,7 +253,7 @@ public class GuessController {
 			long timeLeftToGuess = db.getTimeLeftToGuessRace(raceId);
 			model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 
-			List<Driver> drivers = db.getDriversFromStartingGrid(raceId);
+			List<ColoredCompetitor<Driver>> drivers = db.getDriversFromStartingGridWithColors(raceId);
 			model.addAttribute("items", drivers);
 			UUID id = userService.loadUser().get().id;
 			String driver = db.getGuessedDriverPlace(raceId, category, id).toString();

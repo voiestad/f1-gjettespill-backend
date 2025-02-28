@@ -20,8 +20,9 @@
 			<ul id="sortable" class="container">
 				<li class="item-wrapper" th:each="item, iterStat : ${competitors}" draggable="true">
 					<div class="number" th:text="${iterStat.index + 1}"></div>
-					<div class="item" th:text="${item}"></div>
-					<input type="hidden" name="rankedCompetitors" th:value="${item}" />
+					<div class="item" th:text="${item.competitor}"></div>
+					<span th:if="${item.color.value}" class="circle" th:style="'background-color:' + ${item.color}"></span>
+					<input type="hidden" name="rankedCompetitors" th:value="${item.competitor}" />
 				</li>
 			</ul>
 			<input type="submit" value="Send inn rangering">
