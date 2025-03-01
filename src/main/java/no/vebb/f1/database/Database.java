@@ -214,7 +214,7 @@ public class Database {
 
 	/**
 	 * Gets the data for a users guesses on the given race of the given year.
-	 * Columns: race_name, driver, start, finish
+	 * Columns: race_position, race_name, driver, start, finish
 	 * 
 	 * @param category to get table for
 	 * @param userId of guesser/user
@@ -224,7 +224,7 @@ public class Database {
 	 */
 	public List<Map<String, Object>> getDataForPlaceGuessTable(Category category, UUID userId, Year year, int racePos) {
 		final String sql = """
-			SELECT r.name AS race_name, dpg.driver AS driver, sg.position AS start, rr.finishing_position AS finish
+			SELECT ro.position as race_position, r.name AS race_name, dpg.driver AS driver, sg.position AS start, rr.finishing_position AS finish
 			FROM DriverPlaceGuess dpg
 			JOIN Race r ON r.id = dpg.race_number
 			JOIN RaceOrder ro ON r.id = ro.id

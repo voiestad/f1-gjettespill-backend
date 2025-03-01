@@ -222,6 +222,9 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		if (userProfile.equals("myprofile")) {
 			return "Min profil";
 		}
+		if (userProfile.equals("compare")) {
+			return "Sammenlign";
+		}
 		try {
 			Optional<User> optUser = userService.loadUser(UUID.fromString(userProfile));
 			if (optUser.isEmpty()) {
