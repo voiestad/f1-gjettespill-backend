@@ -7,33 +7,18 @@
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 	<link rel="stylesheet" th:href="@{/style.css}">
 	<link rel="stylesheet" th:href="@{/tables.css}">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<title>F1 Tipping</title>
 	<style>
-		.graph-container {
-			text-align: center;
-		}
-		
-		#graph svg {
-			box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-		}
-
-		@media (max-width: 600px) {
-			#graph {
-				display: none;
-			}
-		}
-
-		@media (min-width: 601px) {
-			#graph {
-				display: inline-block;
-				width: 100%;
-				max-width: 800px;
-				height: 650px;
-			}
+		#chart {
+			display: flex;
+			max-width: 800px;
+			max-height: 500px;
+			margin: 0 auto;
+			width: 100% !important;
 		}
 	</style>
 </head>
-<script src="https://www.gstatic.com/charts/loader.js"></script>
 
 <body>
 	<header th:insert="~{header}"></header>
@@ -62,40 +47,63 @@
 				</ul>
 			</div>
 		</div>
-		<div class="graph-container">
-			<div id="graph"></div>
-		</div>
+		<canvas id="chart"></canvas>
 		<script th:inline="javascript">
-			google.charts.load('current', { packages: ['corechart'] });
-			google.charts.setOnLoadCallback(drawChart);
-
+			drawChart();
 			function drawChart() {
-
 				const scores = /*[[${scores}]]*/[];
-				const guessersNames = /*[[${guessersNames}]]*/[];
+				const ctx = document.getElementById('chart');
 				if (scores.length === 0) {
-					const chartContainer = document.getElementById('graph').parentElement;
-					chartContainer.remove();
+					ctx.remove();
 					return;
 				}
-				const data = google.visualization.arrayToDataTable([
-					['Poeng', ...guessersNames],
-					...scores[0].map((_, index) => {
-						return [index, ...scores.map(scoreList => scoreList[index])];
-					})
-				]);
-
-				const options = {
-					title: 'Utvikling gjennom sesongen',
-					hAxis: { title: 'Løp', ticks: scores[0].map((_, i) => i) },
-					vAxis: { title: 'Poeng' },
-					legend: { position: 'right' },
-					chartArea: { width: '60%', height: '70%' }
-				};
-
-				const chart = new google.visualization.LineChart(document.getElementById('graph'));
-				chart.draw(data, options);
-
+				const xValues = scores[0].map((_, i) => i);
+				const guessersNames = /*[[${guessersNames}]]*/[];
+				const data = [];
+				const colors = ["#f7d000", "purple", "red", "green", "blue", "orange"];
+				for (let i = 0; i < scores.length; i++) {
+					data.push({
+						data: scores[i],
+						borderColor: colors[i % colors.length],
+						backgroundColor: colors[i % colors.length],
+						fill: false,
+						label: guessersNames[i]
+					});
+				}
+				new Chart(ctx, {
+					type: "line",
+					data: {
+						labels: xValues,
+						datasets: data
+					},
+					options: {
+						scales: {
+							x: {
+								title: {
+									display: true,
+									text: "Løp"
+								}
+							},
+							y: {
+								title: {
+									display: true,
+									text: "Poeng"
+								}
+							}
+						},
+						maintainAspectRatio: false,
+						plugins: {
+							legend: {
+								display: true,
+								position: "top",
+							},
+							title: {
+								display: true,
+								text: "Utvikling gjennom sesongen"
+							}
+						}
+					}
+				});
 			}
 		</script>
 	</main>
