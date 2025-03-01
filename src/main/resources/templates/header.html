@@ -26,6 +26,7 @@
 		<a th:if="${isAbleToGuess}" href="/guess">Tipping</a>
 		<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
 		<a href="/score">Poengberegning</a>
+		<a href="/user/compare">Sammenlign brukere</a>
 		<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
 		<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
 			<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>

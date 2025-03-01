@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.scoring.UserScore;
@@ -104,7 +105,7 @@ public class ProfileController {
 			}
 		} else {
 			String title = "Tippingen er tilgjenglig snart!";
-			Table table = new Table(title, new ArrayList<>(), new ArrayList<>());
+			Table table = new Table(title, Arrays.asList(), Arrays.asList());
 			List<Table> tables = Arrays.asList(table);
 			model.addAttribute("tables", tables);
 		}
@@ -112,6 +113,43 @@ public class ProfileController {
 		model.addAttribute("title", user.username);
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
 		return "profile";
+	}
+
+	@GetMapping("/compare")
+	public String compareUsers(Model model,
+			@RequestParam(value = "year", required = false) Integer year,
+			@RequestParam(value = "user1", required = false) UUID userId1,
+			@RequestParam(value = "user2", required = false) UUID userId2) {
+		Optional<User> optUser1 = userService.loadUser(userId1);
+		Optional<User> optUser2 = userService.loadUser(userId2);
+		List<Table> tables = new ArrayList<>();
+		model.addAttribute("title", "Sammenlign brukere");
+		model.addAttribute("tables", tables);
+		model.addAttribute("users", db.getAllUsers());
+		model.addAttribute("years", db.getAllValidYears());
+		model.addAttribute("selectedUser1", userId1);
+		model.addAttribute("selectedUser2", userId2);
+		model.addAttribute("selectedYear", year);
+		
+		if (optUser1.isEmpty() || optUser2.isEmpty() || year == null) {
+			return "compare";
+		}
+		try {
+			Year seasonYear = new Year(year, db);
+			if (cutoff.isAbleToGuessYear(seasonYear)) {
+				String title = "Tippingen er tilgjenglig snart!";
+				tables.add(new Table(title, Arrays.asList(), Arrays.asList()));
+				return "compare";
+			}
+			User user1 = optUser1.get();
+			User user2 = optUser2.get();
+			UserScore userScore1 = new UserScore(user1.id, seasonYear, db);
+			UserScore userScore2 = new UserScore(user2.id, seasonYear, db);
+			tables.addAll(userScore1.comparisonTables(userScore2));
+			model.addAttribute("title", String.format("%s vs %s", user1.username, user2.username));
+		} catch (InvalidYearException e) {
+		}
+		return "compare";
 	}
 
 }
