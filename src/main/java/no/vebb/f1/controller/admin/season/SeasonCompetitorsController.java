@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +42,7 @@ public class SeasonCompetitorsController {
 	}
 
 	@PostMapping("/setTeamDriver")
+	@Transactional
 	public String setTeamDriver(@PathVariable("year") int year, @RequestParam("driver") String driver,
 			@RequestParam("team") String team) {
 		Year seasonYear = new Year(year, db);
@@ -53,6 +55,7 @@ public class SeasonCompetitorsController {
 	}
 
 	@PostMapping("/addColor")
+	@Transactional
 	public String addColorConstructor(@PathVariable("year") int year, @RequestParam("constructor") String constructor,
 			@RequestParam("color") String color) {
 		Year seasonYear = new Year(year, db);
@@ -65,6 +68,7 @@ public class SeasonCompetitorsController {
 	}
 
 	@PostMapping("/addDriver")
+	@Transactional
 	public String addDriverToSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
 		Year seasonYear = new Year(year, db);
 		db.addDriverYear(driver, seasonYear);
@@ -72,6 +76,7 @@ public class SeasonCompetitorsController {
 	}
 
 	@PostMapping("/addConstructor")
+	@Transactional
 	public String addConstructorToSeason(@PathVariable("year") int year,
 			@RequestParam("constructor") String constructor) {
 		Year seasonYear = new Year(year, db);
@@ -80,6 +85,7 @@ public class SeasonCompetitorsController {
 	}
 
 	@PostMapping("/deleteDriver")
+	@Transactional
 	public String removeDriverFromSeason(@PathVariable("year") int year, @RequestParam("driver") String driver) {
 		Year seasonYear = new Year(year, db);
 		try {
@@ -100,6 +106,7 @@ public class SeasonCompetitorsController {
 	}
 
 	@PostMapping("/deleteConstructor")
+	@Transactional
 	public String removeConstructorFromSeason(@PathVariable("year") int year,
 			@RequestParam("constructor") String constructor) {
 		Year seasonYear = new Year(year, db);
@@ -121,6 +128,7 @@ public class SeasonCompetitorsController {
 	}
 
 	@PostMapping("/moveDriver")
+	@Transactional
 	public String moveDriverFromSeason(@PathVariable("year") int year, @RequestParam("driver") String driver,
 			@RequestParam("newPosition") int position) {
 		Year seasonYear = new Year(year, db);
@@ -154,6 +162,7 @@ public class SeasonCompetitorsController {
 	}
 
 	@PostMapping("/moveConstructor")
+	@Transactional
 	public String moveConstructorFromSeason(@PathVariable("year") int year,
 			@RequestParam("constructor") String constructor, @RequestParam("newPosition") int position) {
 		Year seasonYear = new Year(year, db);

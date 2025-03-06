@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -117,6 +118,7 @@ public class ManageSeasonController {
 	}
 
 	@PostMapping("/reload")
+	@Transactional
 	public String reloadRace(@RequestParam("id") int raceId, @PathVariable("year") int year) {
 		Year seasonYear = new Year(year, db);
 		try {
@@ -137,6 +139,7 @@ public class ManageSeasonController {
 	}
 
 	@PostMapping("/move")
+	@Transactional
 	public String changeRaceOrder(@PathVariable int year, @RequestParam("id") int raceId,
 			@RequestParam("newPosition") int position) {
 		Year seasonYear = new Year(year, db);
@@ -177,6 +180,7 @@ public class ManageSeasonController {
 	}
 
 	@PostMapping("/delete")
+	@Transactional
 	public String deleteRace(@PathVariable int year, @RequestParam("id") int raceId) {
 		Year seasonYear = new Year(year, db);
 		try {
@@ -201,6 +205,7 @@ public class ManageSeasonController {
 	}
 
 	@PostMapping("/add")
+	@Transactional
 	public String addRace(@PathVariable int year, @RequestParam("id") int raceId) {
 		Year seasonYear = new Year(year, db);
 		try {

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -102,6 +103,7 @@ public class GuessController {
 	 * and input guess is valid, adds the guesses to the database.
 	 */
 	@PostMapping("/drivers")
+	@Transactional
 	public String rankDrivers(@RequestParam List<String> rankedCompetitors, Model model) {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false";
@@ -158,6 +160,7 @@ public class GuessController {
 	 * and input guess is valid, adds the guesses to the database.
 	 */
 	@PostMapping("/constructors")
+	@Transactional
 	public String rankConstructors(@RequestParam List<String> rankedCompetitors, Model model) {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false";
@@ -220,6 +223,7 @@ public class GuessController {
 	 * and input driver is valid, adds the guess to the database.
 	 */
 	@PostMapping("/tenth")
+	@Transactional
 	public String guessTenth(@RequestParam String driver, Model model) {
 		Category category = new Category("TENTH", db);
 		return handlePostChooseDriver(model, driver, category);
@@ -241,6 +245,7 @@ public class GuessController {
 	 * and input driver is valid, adds the guess to the database.
 	 */
 	@PostMapping("/winner")
+	@Transactional
 	public String guessWinner(@RequestParam String driver, Model model) {
 		Category category = new Category("FIRST", db);
 		return handlePostChooseDriver(model, driver, category);
@@ -321,6 +326,7 @@ public class GuessController {
 	 * are valid, adds the guesses to the database.
 	 */
 	@PostMapping("/flags")
+	@Transactional
 	public String guessFlags(@RequestParam int yellow, @RequestParam int red,
 			@RequestParam int safetyCar, Model model) {
 		Flags flags = new Flags(yellow, red, safetyCar);

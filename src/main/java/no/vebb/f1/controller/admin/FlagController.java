@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -85,6 +86,7 @@ public class FlagController {
 	}
 
 	@PostMapping("/add")
+	@Transactional
 	public String registerFlag(@RequestParam("flag") String flag, @RequestParam("round") int round,
 			@RequestParam("raceId") int raceId, @RequestParam("origin") String origin) {
 		try {
@@ -102,6 +104,7 @@ public class FlagController {
 	}
 
 	@PostMapping("/delete")
+	@Transactional
 	public String deleteFlag(@RequestParam("id") int id, @RequestParam("origin") String origin) {
 		db.deleteFlagStatsById(id);
 		return "redirect:" + origin;

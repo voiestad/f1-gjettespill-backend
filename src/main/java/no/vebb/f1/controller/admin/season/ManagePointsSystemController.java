@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,6 +60,7 @@ public class ManagePointsSystemController {
 	}
 
 	@PostMapping("/add")
+	@Transactional
 	public String addPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
 		Year seasonYear = new Year(year, db);
 		Diff newDiff;
@@ -77,6 +79,7 @@ public class ManagePointsSystemController {
 	}
 
 	@PostMapping("/delete")
+	@Transactional
 	public String deletePointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
 		Year seasonYear = new Year(year, db);
 		try {
@@ -90,6 +93,7 @@ public class ManagePointsSystemController {
 	}
 
 	@PostMapping("/set")
+	@Transactional
 	public String setPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category,
 			@RequestParam("diff") int diff, @RequestParam("points") int points) {
 		Year seasonYear = new Year(year, db);
