@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,6 +65,7 @@ public class CutoffController {
 	 * @return redirect to origin if user is admin and season valid
 	 */
 	@PostMapping("/setRace")
+	@Transactional
 	public String setCutoffRace(@PathVariable("year") int year, @RequestParam("id") int raceId,
 			@RequestParam("cutoff") String cutoff) {
 		Year seasonYear = new Year(year, db);
@@ -92,6 +94,7 @@ public class CutoffController {
 	 * @return redirect to origin if user is admin and season valid
 	 */
 	@PostMapping("/setYear")
+	@Transactional
 	public String setCutoffYear(@PathVariable("year") int year, @RequestParam("cutoff") String cutoff) {
 		Year seasonYear = new Year(year, db);
 		try {

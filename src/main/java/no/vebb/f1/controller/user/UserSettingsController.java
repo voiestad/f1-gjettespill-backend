@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -118,6 +119,7 @@ public class UserSettingsController {
 	 * the user.
 	 */
 	@PostMapping("/username")
+	@Transactional
 	public String changeUsername(String username, Model model) {
 		try {
 			Username validUsername = new Username(username, db);
@@ -151,6 +153,7 @@ public class UserSettingsController {
 	 * gets an error message.
 	 */
 	@PostMapping("/delete")
+	@Transactional
 	public String deleteAccount(Model model, @RequestParam("username") String username, HttpServletRequest request) {
 		User user = userService.loadUser().get();
 		String actualUsername = user.username;
@@ -188,6 +191,7 @@ public class UserSettingsController {
 	}
 
 	@PostMapping("/mail/add")
+	@Transactional
 	public String addMailingList(Model model, @RequestParam("email") String email) {
 		try {
 			User user = userService.loadUser().get();
@@ -200,6 +204,7 @@ public class UserSettingsController {
 	}
 	
 	@PostMapping("/mail/remove")
+	@Transactional
 	public String removeMailingList(Model model) {
 		User user = userService.loadUser().get();
 		db.clearUserFromMailing(user.id);
@@ -216,6 +221,7 @@ public class UserSettingsController {
 	}
 
 	@PostMapping("/mail/verification")
+	@Transactional
 	public String verificationCode(Model model, @RequestParam("code") int code, HttpServletRequest request) {
 		User user = userService.loadUser().get();
 		boolean isValidVerificationCode = db.isValidVerificationCode(user.id, code);
@@ -227,7 +233,9 @@ public class UserSettingsController {
 		
 		return "redirect:/settings/mail/verification";
 	}
+
 	@PostMapping("/mail/option/add")
+	@Transactional
 	public String addMailingOption(@RequestParam("option") int option) {
 		try {
 			User user = userService.loadUser().get();
@@ -239,6 +247,7 @@ public class UserSettingsController {
 	}
 	
 	@PostMapping("/mail/option/remove")
+	@Transactional
 	public String removeMailingOption(@RequestParam("option") int option) {
 		try {
 			User user = userService.loadUser().get();
