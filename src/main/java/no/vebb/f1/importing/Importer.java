@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.TimeUtil;
@@ -39,6 +40,7 @@ public class Importer {
 	}
 
 	@Scheduled(fixedRate = 3600000, initialDelay = 5000)
+	@Transactional
 	public void importData() {
 		logger.info("Starting import of data to database");
 		try {
