@@ -49,7 +49,7 @@ public class NotificationMail {
 			if (timeLeft < 0) {
 				return;
 			}
-			int timeLeftHours = (int) timeLeft / 3600;
+			int timeLeftHours = (int) (timeLeft / 3600);
 			List<UserMail> mailingList = db.getMailingList(raceId);
 			for (UserMail user : mailingList) {
 				UUID userId = user.user.id;
@@ -60,7 +60,7 @@ public class NotificationMail {
 						notifiedCount--;
 						continue;
 					}
-					if (option.value < timeLeftHours) {
+					if (option.value <= timeLeftHours) {
 						break;
 					}
 					try {
