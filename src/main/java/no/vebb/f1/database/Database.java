@@ -1366,10 +1366,10 @@ public class Database {
 	 */
 	public List<RegisteredFlag> getRegisteredFlags(RaceId raceId) {
 		List<RegisteredFlag> registeredFlags = new ArrayList<>();
-		final String getRegisteredFlags = "SELECT flag, round, id FROM FlagStats WHERE race_number = ?";
+		final String getRegisteredFlags = "SELECT flag, round, id FROM FlagStats WHERE race_number = ? ORDER BY round";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRegisteredFlags, raceId);
 		for (Map<String, Object> row : sqlRes) {
-			String type = (String) row.get("flag");
+			Flag type = new Flag((String) row.get("flag"));
 			int round = (int) row.get("round");
 			int id = (int) row.get("id");
 

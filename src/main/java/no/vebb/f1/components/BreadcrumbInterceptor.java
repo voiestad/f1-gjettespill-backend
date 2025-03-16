@@ -95,6 +95,8 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 				return "Velg brukernavn";
 			case "privacy":
 				return "Personvernerklæring";
+			case "stats":
+				return getStatsPath(segments);
 			default:
 				return "no path";
 		}
@@ -270,6 +272,25 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 				return "Slett bruker";
 			case "mail":
 				return "Påminnelser";
+		}
+		return "no path";
+	}
+
+	private String getStatsPath(Iterator<String> segments) {
+		if (!segments.hasNext()) {
+			return "Statistikk";
+		}
+
+		String year = segments.next();
+		if (!segments.hasNext()) {
+			return year;
+		}
+		String id = segments.next();
+		if (!segments.hasNext()) {
+			RaceId raceId = new RaceId(Integer.parseInt(id), db);
+			int position = db.getPositionOfRace(raceId);
+			String raceName = db.getRaceName(raceId);
+			return position + ". " + raceName;
 		}
 		return "no path";
 	}
