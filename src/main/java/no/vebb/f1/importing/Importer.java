@@ -109,8 +109,19 @@ public class Importer {
 	}
 
 	public void importRaceData(RaceId raceId) {
+		logger.info("Race data from '{}' manually reloaded by admin", raceId);
 		importStartingGridData(raceId);
 		importRaceResultData(raceId);
+		try {
+			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			RaceId newestRaceId = db.getLatestRaceId(year);
+			if (raceId.equals(newestRaceId)) {
+				logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
+				importStandings(year);
+			}
+		} catch (InvalidYearException e) {
+		} catch (EmptyResultDataAccessException e) {
+		}
 	}
 
 	private void importStartingGridData(RaceId raceId) {
