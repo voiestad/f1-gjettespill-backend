@@ -29,7 +29,8 @@ public class SecurityConfig {
 				"/contact",
 				"/about",
 				"/error",
-				"/privacy")
+				"/privacy",
+				"/stats/**")
 				.permitAll();
 			auth.anyRequest().authenticated();	
 		})

@@ -1,7 +1,6 @@
 package no.vebb.f1.controller.admin.season;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +16,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
 import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.util.StatsUtil;
 import no.vebb.f1.util.collection.CutoffRace;
-import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
@@ -30,6 +29,9 @@ public class ManageSeasonController {
 	
 	@Autowired
 	private Database db;
+
+	@Autowired
+	private StatsUtil statsUtil;
 
 	@GetMapping
 	public String manageRacesInSeason(@RequestParam(value = "success", required = false) Boolean success,
@@ -60,10 +62,11 @@ public class ManageSeasonController {
 			}	
 			
 			List<Table> tables = new ArrayList<>();
-			tables.add(getStartingGridTable(validRaceId));
-			tables.add(getRaceResultTable(validRaceId));
-			tables.add(getDriverStandingsTable(validRaceId));
-			tables.add(getConstructorStandingsTable(validRaceId));
+			tables.add(statsUtil.getStartingGridTable(validRaceId));
+			tables.add(statsUtil.getRaceResultTable(validRaceId));
+			tables.add(statsUtil.getDriverStandingsTable(validRaceId));
+			tables.add(statsUtil.getConstructorStandingsTable(validRaceId));
+			tables.add(statsUtil.getFlagTable(validRaceId));
 			
 			model.addAttribute("tables", tables);
 			model.addAttribute("title", year);
@@ -71,50 +74,6 @@ public class ManageSeasonController {
 		} catch (InvalidRaceException e) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
-	}
-	
-	private Table getStartingGridTable(RaceId raceId) {
-
-		List<String> header = Arrays.asList("Plass", "Sjåfør");
-		List<List<String>> body = new ArrayList<>();
-		List<PositionedCompetitor> startingGrid = db.getStartingGrid(raceId);
-		for (PositionedCompetitor driver : startingGrid) {
-			body.add(Arrays.asList(driver.position, driver.name));
-		}
-
-		return new Table("Starting grid", header, body);
-	}
-
-	private Table getRaceResultTable(RaceId raceId) {
-		List<String> header = Arrays.asList("Plass", "Sjåfør", "Poeng");
-		List<List<String>> body = new ArrayList<>();
-		List<PositionedCompetitor> raceResult = db.getRaceResult(raceId);
-		for (PositionedCompetitor driver : raceResult) {
-			body.add(Arrays.asList(driver.position, driver.name, driver.points));
-		}
-		return new Table("Race result", header, body);
-	}
-
-	private Table getDriverStandingsTable(RaceId raceId) {
-		List<String> header = Arrays.asList("Plass", "Sjåfør", "Poeng");
-		List<List<String>> body = new ArrayList<>();
-		List<PositionedCompetitor> standings = db.getDriverStandings(raceId);
-		for (PositionedCompetitor driver : standings) {
-			body.add(Arrays.asList(driver.position, driver.name, driver.points));
-		}
-
-		return new Table("Driver standings", header, body);
-	}
-
-	private Table getConstructorStandingsTable(RaceId raceId) {
-		List<String> header = Arrays.asList("Plass", "Konstruktør", "Poeng");
-		List<List<String>> body = new ArrayList<>();
-		List<PositionedCompetitor> standings = db.getConstructorStandings(raceId);
-		for (PositionedCompetitor constructor : standings) {
-			body.add(Arrays.asList(constructor.position, constructor.name, constructor.points));
-		}
-
-		return new Table("Constructor standings", header, body);
 	}
 
 	@PostMapping("/reload")
