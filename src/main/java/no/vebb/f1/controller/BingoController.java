@@ -127,8 +127,9 @@ public class BingoController {
 		}
 	}
 
-	// TODO: Implement validiation of text
 	private String validate(String text) {
-		return "";
+		text = text.strip();
+		text = text.replaceAll("[^A-Za-z0-9æøåÆØÅ,.'\" ]", "");
+		return text;
 	}
 }
