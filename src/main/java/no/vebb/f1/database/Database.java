@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.util.*;
+import no.vebb.f1.util.collection.BingoSquare;
 import no.vebb.f1.util.collection.ColoredCompetitor;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.Flags;
@@ -1839,5 +1840,70 @@ public class Database {
 				UUID.fromString((String) row.get("id")),
 				(String) row.get("username"))
 			).toList();
+	}
+
+	public boolean isBingomaster(UUID userId) {
+		final String sql = "SELCT COUNT(*) FROM Bingomaster WHERE user_id = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
+	}
+
+	public List<BingoSquare> getBingoCard(Year year) {
+		final String sql = """
+			SELECT year, id, square_text, marked
+			FROM BingoCard
+			WHERE year = ?
+			ORDER BY id ASC
+			""";
+		return jdbcTemplate.queryForList(sql, year).stream()
+			.map(row ->
+			new BingoSquare(
+				(String) row.get("square_text"),
+				(int) row.get("marked") != 0,
+				(int) row.get("id"),
+				new Year((int) row.get("year"))
+				)
+			).toList();
+	}
+
+	public BingoSquare getBingoSquare(Year year, int id) {
+		final String sql = """
+			SELECT year, id, square_text, marked
+			FROM BingoCard
+			WHERE year = ? AND id = ?
+			ORDER BY id ASC
+			""";
+		Map<String, Object> row = jdbcTemplate.queryForMap(sql, year);
+		return new BingoSquare(
+			(String) row.get("square_text"),
+			(int) row.get("marked") != 0,
+			(int) row.get("id"),
+			new Year((int) row.get("year"))
+		);
+	}
+
+	public void addBingoSquare(BingoSquare bingoSquare) {
+		final String sql = """
+			INSERT OR REPLACE INTO BingoCard
+			(year, id, square_text, marked) 
+			VALUES (?, ?, ?, ?);= 
+			""";
+		jdbcTemplate.update(
+			sql,
+			bingoSquare.year(),
+			bingoSquare.id(),
+			bingoSquare.text(),
+			bingoSquare.marked() ? 1 : 0
+			); 
+	}
+
+	public void toogleMarkBingoSquare(Year year, int id) {
+		BingoSquare bingoSquare = getBingoSquare(year, id);
+		boolean newMark = !bingoSquare.marked();
+		final String sql = """
+			UPDATE BingoCard
+			SET marked = ? 
+			WHERE year = ? AND id = ?
+			""";
+		jdbcTemplate.update(sql, newMark ? 1 : 0, year, id);
 	}
 }

@@ -58,6 +58,14 @@ public class UserService {
 		}
 	}
 
+	public boolean isBingomaster() {
+		Optional<User> user = loadUser();
+		if (user.isEmpty()) {
+			return false;
+		}
+		return db.isBingomaster(user.get().id);
+	}
+
 	public boolean isLoggedInUser(User user) {
 		Optional<User> optUser = loadUser();
 		if (optUser.isEmpty()) {
