@@ -18,6 +18,7 @@ public class AdminController {
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		linkMap.put("Registrer flagg", "/admin/flag");
 		linkMap.put("Administrer sesonger", "/admin/season");
+		linkMap.put("Administrer bingomasters", "/admin/bingo");
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
 	}

@@ -350,6 +350,7 @@ public class Database {
 			WHERE id = ?
 			""";
 		clearUserFromMailing(userId);
+		removeBingomaster(userId);
 		jdbcTemplate.update(deleteUser, userId, userId);
 	}
 
@@ -1796,5 +1797,47 @@ public class Database {
 		}
 		final String sql = "INSERT OR REPLACE INTO ConstructorColor (constructor, year, color) VALUES (?, ?, ?)";
 		jdbcTemplate.update(sql, constructor, year, color);
+	}
+
+	public void addBingomaster(UUID userId) {
+		final String sql = "INSERT OR IGNORE INTO Bingomaster (user_id) VALUES (?)";
+		jdbcTemplate.update(sql, userId);
+	}
+
+	public void removeBingomaster(UUID userId) {
+		final String sql = "DELETE FROM Bingomaster WHERE user_id = ?";
+		jdbcTemplate.update(sql, userId);
+	}
+
+	public List<User> getBingomasters() {
+		final String getAllUsersSql = """
+			SELECT u.id AS id, u.username AS username, u.google_id AS google_id
+			FROM User u
+			JOIN Bingomaster bm ON u.id = bm.user_id
+			ORDER BY u.username_upper ASC
+			""";
+		return jdbcTemplate.queryForList(getAllUsersSql).stream()
+			.map(row -> 
+			new User(
+				(String) row.get("google_id"),
+				UUID.fromString((String) row.get("id")),
+				(String) row.get("username"))
+			).toList();
+	}
+
+	public List<User> getNonBingomasters() {
+		final String getAllUsersSql = """
+			SELECT id, username, google_id
+			FROM User
+			WHERE id NOT IN (SELECT user_id FROM Bingomaster)
+			ORDER BY username_upper ASC
+			""";
+		return jdbcTemplate.queryForList(getAllUsersSql).stream()
+			.map(row -> 
+			new User(
+				(String) row.get("google_id"),
+				UUID.fromString((String) row.get("id")),
+				(String) row.get("username"))
+			).toList();
 	}
 }
