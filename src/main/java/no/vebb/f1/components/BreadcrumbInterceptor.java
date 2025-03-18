@@ -97,6 +97,8 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 				return "Personvernerklæring";
 			case "stats":
 				return getStatsPath(segments);
+			case "bingo":
+				return getBingoPath(segments);
 			default:
 				return "no path";
 		}
@@ -112,6 +114,8 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 				return getFlagPath(segments);
 			case "season":
 				return getSeasonPath(segments);
+			case "bingo":
+				return "Bingo";
 		}
 		return "no path";
 	}
@@ -291,6 +295,23 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			int position = db.getPositionOfRace(raceId);
 			String raceName = db.getRaceName(raceId);
 			return position + ". " + raceName;
+		}
+		return "no path";
+	}
+	
+	private String getBingoPath(Iterator<String> segments) {
+		if (!segments.hasNext()) {
+			return "Bingo";
+		}
+		String admin = segments.next();
+		if (!segments.hasNext()) {
+			if (admin.equals("admin")) {
+				return "Administrer bingo";
+			}
+		}
+		String year = segments.next();
+		if (!segments.hasNext()) {
+			return year;
 		}
 		return "no path";
 	}

@@ -323,7 +323,21 @@ public class SQLiteConfig {
 				FOREIGN KEY (option) REFERENCES MailOption(option) ON DELETE CASCADE
 			);
 			""");
-
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Bingomaster (
+				user_id TEXT PRIMARY KEY,
+				FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS BingoCard (
+				year INTEGER NOT NULL,
+				id INTEGER NOT NULL,
+				square_text TEXT NOT NULL,
+				marked INTEGER NOT NULL,
+				PRIMARY KEY (year, id)
+			);
+			""");
 		};
 	}
 }
