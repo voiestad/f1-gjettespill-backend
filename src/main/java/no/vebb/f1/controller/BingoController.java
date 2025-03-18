@@ -25,6 +25,8 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RequestMapping("/bingo")
 public class BingoController {
 	
+	final String REGEX = "[^A-Za-z0-9æøåÆØÅ,.'\" ]";
+
 	@Autowired
 	private Database db;
 
@@ -36,6 +38,8 @@ public class BingoController {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			model.addAttribute("bingoCard", db.getBingoCard(year));
+			model.addAttribute("isBingomaster", userService.isBingomaster());
+			model.addAttribute("title", "Bingo");
 		} catch (InvalidYearException e) {
 		}
 		return "bingo";
@@ -61,6 +65,8 @@ public class BingoController {
 		try {
 			Year validSeason = new Year(year, db);
 			model.addAttribute("bingoCard", db.getBingoCard(validSeason));
+			model.addAttribute("year", year);
+			model.addAttribute("title", "Bingo " + year);
 			return "bingoCardAdmin";
 		} catch (InvalidYearException e) {
 			return "redirect:/bingo/admin";
@@ -105,7 +111,7 @@ public class BingoController {
 			}
 			String validatedText = validate(text);
 			db.setTextBingoSquare(validSeason, id, validatedText);;
-			return "redirect:/bingo/admin/" + year;
+			return "redirect:/bingo/admin/" + year + "#" + id;
 		} catch (InvalidYearException e) {
 			return "redirect:/bingo/admin";
 		}
@@ -121,7 +127,7 @@ public class BingoController {
 		try {
 			Year validSeason = new Year(year, db);
 			db.toogleMarkBingoSquare(validSeason, id);
-			return "redirect:/bingo/admin/" + year;
+			return "redirect:/bingo/admin/" + year + "#" + id;
 		} catch (InvalidYearException e) {
 			return "redirect:/bingo/admin";
 		}
@@ -129,7 +135,7 @@ public class BingoController {
 
 	private String validate(String text) {
 		text = text.strip();
-		text = text.replaceAll("[^A-Za-z0-9æøåÆØÅ,.'\" ]", "");
+		text = text.replaceAll(REGEX, "");
 		return text;
 	}
 }

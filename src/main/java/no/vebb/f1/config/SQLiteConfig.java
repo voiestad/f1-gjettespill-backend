@@ -335,8 +335,7 @@ public class SQLiteConfig {
 				id INTEGER NOT NULL,
 				square_text TEXT NOT NULL,
 				marked INTEGER NOT NULL,
-				PRIMARY KEY (year, id),
-				FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+				PRIMARY KEY (year, id)
 			);
 			""");
 		};

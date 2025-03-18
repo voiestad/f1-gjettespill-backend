@@ -1843,7 +1843,7 @@ public class Database {
 	}
 
 	public boolean isBingomaster(UUID userId) {
-		final String sql = "SELCT COUNT(*) FROM Bingomaster WHERE user_id = ?";
+		final String sql = "SELECT COUNT(*) FROM Bingomaster WHERE user_id = ?";
 		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
 	}
 
@@ -1870,9 +1870,8 @@ public class Database {
 			SELECT year, id, square_text, marked
 			FROM BingoCard
 			WHERE year = ? AND id = ?
-			ORDER BY id ASC
 			""";
-		Map<String, Object> row = jdbcTemplate.queryForMap(sql, year);
+		Map<String, Object> row = jdbcTemplate.queryForMap(sql, year, id);
 		return new BingoSquare(
 			(String) row.get("square_text"),
 			(int) row.get("marked") != 0,
