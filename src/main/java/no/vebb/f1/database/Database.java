@@ -1906,4 +1906,22 @@ public class Database {
 			""";
 		jdbcTemplate.update(sql, newMark ? 1 : 0, year, id);
 	}
+
+	public void setTextBingoSquare(Year year, int id, String text) {
+		final String sql = """
+			UPDATE BingoCard
+			SET square_text = ? 
+			WHERE year = ? AND id = ?
+			""";
+		jdbcTemplate.update(sql, text, year, id);
+	}
+
+	public boolean isBingoCardAdded(Year year) {
+		final String sql = """
+			SELECT COUNT(*)
+			FROM BingoCard
+			WHERE year = ?
+			""";
+		return jdbcTemplate.queryForObject(sql, Integer.class, year) > 0;
+	}
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -66,36 +67,44 @@ public class BingoController {
 		}
 	}
 
-	@PostMapping("/admin/{year}/add")
-	public String addBingoSquare(@PathVariable("year") int year,
-		@RequestParam("text") String text) {
+	@PostMapping("/admin/{year}/add-card")
+	@Transactional
+	public String addBingoSquare(@PathVariable("year") int year) {
 		if (!userService.isBingomaster()) {
 			return "redirect:/bingo";
 		}
 		try {
-			// TODO: Validate user inputted text
 			Year validSeason = new Year(year, db);
-			// TODO: Set ID
-			int id = 0;
-			BingoSquare bingoSquare = new BingoSquare(text, false, id, validSeason);
-			db.addBingoSquare(bingoSquare);
+			if (db.isBingoCardAdded(validSeason)) {
+				return "redirect:/bingo/admin/" + year;
+			}
+			for (int id = 0; id < 25; id++) {
+				BingoSquare bingoSquare = new BingoSquare("", false, id, validSeason);
+				db.addBingoSquare(bingoSquare);
+			}
 			return "redirect:/bingo/admin/" + year;
 		} catch (InvalidYearException e) {
 			return "redirect:/bingo/admin";
 		}
 	}
 
-	@PostMapping("/admin/{year}/add")
+	@PostMapping("/admin/{year}/set")
+	@Transactional
 	public String updateBingoSquareText(@PathVariable("year") int year,
 		@RequestParam("id") int id, @RequestParam("text") String text) {
 		if (!userService.isBingomaster()) {
 			return "redirect:/bingo";
 		}
 		try {
-			// TODO: Validate user inputted text and ID
 			Year validSeason = new Year(year, db);
-			BingoSquare bingoSquare = new BingoSquare(text, false, id, validSeason);
-			db.addBingoSquare(bingoSquare);
+			if (!db.isBingoCardAdded(validSeason)) {
+				return "redirect:/bingo/admin/" + year;
+			}
+			if (id < 0 || id >= 25) {
+				return "redirect:/bingo/admin/" + year;
+			}
+			String validatedText = validate(text);
+			db.setTextBingoSquare(validSeason, id, validatedText);;
 			return "redirect:/bingo/admin/" + year;
 		} catch (InvalidYearException e) {
 			return "redirect:/bingo/admin";
@@ -103,6 +112,7 @@ public class BingoController {
 	}
 
 	@PostMapping("/admin/{year}/mark")
+	@Transactional
 	public String markBingoSquare(@PathVariable("year") int year, 
 		@RequestParam("id") int id) {
 		if (!userService.isBingomaster()) {
@@ -115,5 +125,10 @@ public class BingoController {
 		} catch (InvalidYearException e) {
 			return "redirect:/bingo/admin";
 		}
+	}
+
+	// TODO: Implement validiation of text
+	private String validate(String text) {
+		return "";
 	}
 }
