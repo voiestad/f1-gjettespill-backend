@@ -9,7 +9,7 @@
 	<a id="logo" href="/">
 		<h1>F1 Tipping</h1>
 	</a>
-	<button class="icon" onclick="toggleDropDown()">
+	<button class="icon" onclick="toggleMainDropDown()">
 		<i class="fa fa-bars"></i>
 	</button>
 	<div th:if="${breadcrumbs}" style="margin: 0;">
@@ -21,30 +21,77 @@
 		</ol>
 	</div>
 	<form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
-	<div id="links">
-		<a href="/">Hjem</a>
-		<a th:if="${isAbleToGuess}" href="/guess">Tipping</a>
-		<a href="/stats">Statistikk</a>
-		<a href="/bingo">Bingo</a>
-		<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
-		<a href="/score">Poengberegning</a>
-		<a href="/user/compare">Sammenlign brukere</a>
-		<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
-		<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
-			<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
-		<a th:unless="${loggedOut}" href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
-		<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
-	</div>
-</nav>
+	<div id="links-container">
 
+		<div id="links">
+			<div class="dropdown-section">
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(0)">Tipping &#x2BC6;</button>
+				<div id="sub-menu-0">
+					<a th:if="${isAbleToGuess}" href="/guess">Tipp</a>
+					<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
+				</div>
+			</div>
+			<div class="dropdown-section">
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(1)">Resultater &#x2BC6;</button>
+				<div id="sub-menu-1">
+					<a href="/user/compare">Sammenlign brukere</a>
+					<a href="/stats">Statistikk</a>
+					<a href="/score">Poengberegning</a>
+					<a href="https://voiestad.no/f1-old">Resultater før 2025</a>
+				</div>
+			</div>
+			<div class="dropdown-section">
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(2)">Andre &#x2BC6;</button>
+				<div id="sub-menu-2">
+					<a href="/bingo">Bingo</a>
+				</div>
+			</div>
+			<div th:unless="${loggedOut}" class="dropdown-section">
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(3)">Profil &#x2BC6;</button>
+					<div id="sub-menu-3">
+						<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
+						<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
+						<a href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
+					</div>
+				</div>
+				<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
+				<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
+			</div>
+		</div>
+	</nav>
+	
 <script>
-	function toggleDropDown() {
-		var x = document.getElementById("links");
-		var isActive = x.classList.toggle("active");
+	let totalHeight = 0;
+	document.querySelectorAll("#links").forEach(child => {
+		totalHeight += child.clientHeight;
+	});
+
+	function toggleMainDropDown() {
+		const links = document.getElementById("links");
+		links.style = "transition: opacity 0.5s ease;";
+		const isActive = links.classList.toggle("active");
 		if (isActive) {
-			x.style.maxHeight = x.scrollHeight + "px";
+			links.style = "transition: max-height 0.5s ease, opacity 0.5s ease;";
+			links.style.maxHeight = links.scrollHeight + "px";
 		} else {
-			x.style.maxHeight = "0";
+			links.style.maxHeight = links.scrollHeight + "px";
+			setTimeout(event => {
+				links.style = "transition: max-height 0.5s ease, opacity 0.5s ease;";
+				links.style.maxHeight = "0";
+			});
+		}
+	}
+
+	function toggleSubMenuDropDown(menuIndex) {
+		const subMenu = document.getElementById("sub-menu-" + menuIndex);
+		const links = document.getElementById("links");
+		links.style.transition = "";
+		links.style.maxHeight = "1000px";
+		const isActive = subMenu.classList.toggle("active");
+		if (isActive) {
+			subMenu.style.maxHeight = subMenu.scrollHeight + "px";
+		} else {
+			subMenu.style.maxHeight = "0";
 		}
 	}
 </script>
