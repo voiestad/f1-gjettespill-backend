@@ -25,14 +25,14 @@
 
 		<div id="links">
 			<div class="dropdown-section">
-				<button class="dropdown-button" onclick="toggleSubMenuDropDown(0)">Tipping &#x2BC6;</button>
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(0)">Tipping &#x25BC;</button>
 				<div id="sub-menu-0">
 					<a th:if="${isAbleToGuess}" href="/guess">Tipp</a>
 					<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
 				</div>
 			</div>
 			<div class="dropdown-section">
-				<button class="dropdown-button" onclick="toggleSubMenuDropDown(1)">Resultater &#x2BC6;</button>
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(1)">Resultater &#x25BC;</button>
 				<div id="sub-menu-1">
 					<a href="/user/compare">Sammenlign brukere</a>
 					<a href="/stats">Statistikk</a>
@@ -41,13 +41,13 @@
 				</div>
 			</div>
 			<div class="dropdown-section">
-				<button class="dropdown-button" onclick="toggleSubMenuDropDown(2)">Andre &#x2BC6;</button>
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(2)">Andre &#x25BC;</button>
 				<div id="sub-menu-2">
 					<a href="/bingo">Bingo</a>
 				</div>
 			</div>
 			<div th:unless="${loggedOut}" class="dropdown-section">
-				<button class="dropdown-button" onclick="toggleSubMenuDropDown(3)">Profil &#x2BC6;</button>
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(3)">Profil &#x25BC;</button>
 					<div id="sub-menu-3">
 						<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
 						<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
