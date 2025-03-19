@@ -25,7 +25,7 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RequestMapping("/bingo")
 public class BingoController {
 	
-	final String REGEX = "[^A-Za-z0-9æøåÆØÅ,.'\" ]";
+	final String REGEX = "[^A-Za-z0-9æøåÆØÅ,.'\"\\- ]";
 
 	@Autowired
 	private Database db;
