@@ -21,34 +21,45 @@
 		</ol>
 	</div>
 	<form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
-	<div id="links">
-		<div class="dropdown-section" id="sub-menu-0">
-			<button class="dropdown-button" onclick="toggleSubMenuDropDown(0)">Tipping &#x2BC6;</button>
-			<a th:if="${isAbleToGuess}" href="/guess">Tipp</a>
-			<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
-		</div>
-		<div class="dropdown-section" id="sub-menu-1">
-			<button class="dropdown-button" onclick="toggleSubMenuDropDown(1)">Resultater &#x2BC6;</button>
-			<a href="/user/compare">Sammenlign brukere</a>
-			<a href="/stats">Statistikk</a>
-			<a href="/score">Poengberegning</a>
-			<a href="https://voiestad.no/f1-old">Resultater før 2025</a>
-		</div>
-		<div class="dropdown-section" id="sub-menu-2">
-			<button class="dropdown-button" onclick="toggleSubMenuDropDown(2)">Andre &#x2BC6;</button>
-			<a href="/bingo">Bingo</a>
-		</div>
-		<div th:unless="${loggedOut}" class="dropdown-section" id="sub-menu-3">
-			<button class="dropdown-button" onclick="toggleSubMenuDropDown(3)">Profil &#x2BC6;</button>
-			<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
-			<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
-			<a href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
-		</div>
-		<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
-		<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
-	</div>
-</nav>
+	<div id="links-container">
 
+		<div id="links">
+			<div class="dropdown-section">
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(0)">Tipping &#x2BC6;</button>
+				<div id="sub-menu-0">
+					<a th:if="${isAbleToGuess}" href="/guess">Tipp</a>
+					<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
+				</div>
+			</div>
+			<div class="dropdown-section">
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(1)">Resultater &#x2BC6;</button>
+				<div id="sub-menu-1">
+					<a href="/user/compare">Sammenlign brukere</a>
+					<a href="/stats">Statistikk</a>
+					<a href="/score">Poengberegning</a>
+					<a href="https://voiestad.no/f1-old">Resultater før 2025</a>
+				</div>
+			</div>
+			<div class="dropdown-section">
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(2)">Andre &#x2BC6;</button>
+				<div id="sub-menu-2">
+					<a href="/bingo">Bingo</a>
+				</div>
+			</div>
+			<div th:unless="${loggedOut}" class="dropdown-section">
+				<button class="dropdown-button" onclick="toggleSubMenuDropDown(3)">Profil &#x2BC6;</button>
+					<div id="sub-menu-3">
+						<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
+						<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
+						<a href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
+					</div>
+				</div>
+				<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
+				<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
+			</div>
+		</div>
+	</nav>
+	
 <script>
 	let totalHeight = 0;
 	document.querySelectorAll("#links").forEach(child => {
@@ -57,6 +68,7 @@
 
 	function toggleMainDropDown() {
 		const links = document.getElementById("links");
+		links.style = "transition: opacity 0.5s ease;";
 		const isActive = links.classList.toggle("active");
 		if (isActive) {
 			links.style = "transition: max-height 0.5s ease, opacity 0.5s ease;";
@@ -66,7 +78,6 @@
 			setTimeout(event => {
 				links.style = "transition: max-height 0.5s ease, opacity 0.5s ease;";
 				links.style.maxHeight = "0";
-
 			});
 		}
 	}
@@ -76,15 +87,11 @@
 		const links = document.getElementById("links");
 		links.style.transition = "";
 		links.style.maxHeight = "1000px";
-		for (const elem of subMenu.childNodes) {
-			if (elem.tagName === "A") {
-				const isActive = elem.classList.toggle("active");
-				if (isActive) {
-					elem.style.maxHeight = elem.scrollHeight + "px";
-				} else {
-					elem.style.maxHeight = "0";
-				}
-			}
+		const isActive = subMenu.classList.toggle("active");
+		if (isActive) {
+			subMenu.style.maxHeight = subMenu.scrollHeight + "px";
+		} else {
+			subMenu.style.maxHeight = "0";
 		}
 	}
 </script>

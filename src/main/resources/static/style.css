@@ -58,9 +58,15 @@ div {
 	position: relative;
 }
 
+.topnav #links-container {
+	margin: 0;
+	align-content: flex-end;
+	display: flex;
+	justify-content: flex-end;
+}
+
 .topnav #links {
 	margin: 0;
-	display: flex;
 	flex-direction: column;
 	align-content: right;
 	max-height: 0;
@@ -70,30 +76,31 @@ div {
 }
 
 .topnav #links.active {
-	display: flex;
 	opacity: 1;
 }
 
 .topnav #links a {
-	text-align: left;	
+	text-align: right;
 }
 
-.dropdown-section> a {
-	display: none;
+.dropdown-section> div {
+	display: flex;
+	overflow: hidden;
+	flex-direction: column;
+	margin: 0;
     opacity: 0;
 	max-height: 0;
     transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 
-.dropdown-section> a.active {
-	display: flex;
+.dropdown-section> div.active {
     opacity: 1;
 }
 
 .dropdown-button {
 	display: flex;
-	/* justify-content: flex-end; */
 	background: none;
+	align-self: flex-end;
 	border: none;
 	color: white;
 	padding: 0px;
@@ -117,7 +124,7 @@ div {
 }
 
 .dropdown-section a {
-	padding-left: 25px;
+	padding-right: 35px;
 }
 
 /* Hamburger menu */
