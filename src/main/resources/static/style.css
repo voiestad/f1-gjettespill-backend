@@ -66,6 +66,8 @@ div {
 	max-height: 0;
     opacity: 0;
     transition: max-height 0.5s ease, opacity 0.5s ease;
+	font-size: 15px;
+	width: fit-content;
 }
 
 .topnav #links.active {
@@ -74,7 +76,37 @@ div {
 }
 
 .topnav #links a {
-	text-align: right;	
+	text-align: left;	
+}
+
+.dropdown-button {
+	display: flex;
+	/* justify-content: flex-end; */
+	background: none;
+	border: none;
+	color: white;
+	padding: 0px;
+	margin: 5px;
+	font-weight: bold;
+	cursor: pointer;
+	font-size: 15px;
+	block-size:17.5px;
+}
+
+.dropdown-button:hover {
+	text-decoration: underline;
+}
+
+.dropdown-section {
+	margin: 0px;
+	padding: 0px;
+	display: flex;
+	justify-content: flex-end;
+	flex-direction: column;
+}
+
+.dropdown-section a {
+	padding-left: 25px;
 }
 
 /* Hamburger menu */

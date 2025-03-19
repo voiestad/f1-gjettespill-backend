@@ -22,17 +22,29 @@
 	</div>
 	<form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
 	<div id="links">
-		<a href="/">Hjem</a>
-		<a th:if="${isAbleToGuess}" href="/guess">Tipping</a>
-		<a href="/stats">Statistikk</a>
-		<a href="/bingo">Bingo</a>
-		<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
-		<a href="/score">Poengberegning</a>
-		<a href="/user/compare">Sammenlign brukere</a>
-		<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
-		<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
-			<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
-		<a th:unless="${loggedOut}" href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
+		<div class="dropdown-section">
+			<button class="dropdown-button">Tipping &#x2BC6;</button>
+			<a th:if="${isAbleToGuess}" href="/guess">Tipp</a>
+			<a th:if="${raceGuess}" th:href="@{/race-guess}">Tippet på løp</a>
+		</div>
+		<div class="dropdown-section">
+			<button class="dropdown-button">Resultater &#x2BC6;</button>
+			<a href="/user/compare">Sammenlign brukere</a>
+			<a href="/stats">Statistikk</a>
+			<a href="/score">Poengberegning</a>
+			<a href="https://voiestad.no/f1-old">Resultater før 2025</a>
+		</div>
+		<div class="dropdown-section">
+			<button class="dropdown-button">Andre &#x2BC6;</button>
+			<a href="/bingo">Bingo</a>
+		</div>
+		<div th:unless="${loggedOut}" class="dropdown-section">
+			<button class="dropdown-button">Profil &#x2BC6;</button>
+			<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
+			<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
+			<a href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
+		</div>
+		<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
 		<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
 	</div>
 </nav>
