@@ -19,9 +19,11 @@ import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.SessionType;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidFlagException;
 import no.vebb.f1.util.exception.InvalidRaceException;
+import no.vebb.f1.util.exception.InvalidSessionTypeException;
 import no.vebb.f1.util.exception.InvalidYearException;
 
 @Controller
@@ -72,6 +74,8 @@ public class FlagController {
 			}
 			List<Flag> flags = db.getFlags();
 			model.addAttribute("flags", flags);
+			List<SessionType> sessionTypes = db.getSessionTypes();
+			model.addAttribute("sessionTypes", sessionTypes);
 			model.addAttribute("raceId", raceId);
 			
 			List<RegisteredFlag> registeredFlags = db.getRegisteredFlags(validRaceId);
@@ -88,17 +92,20 @@ public class FlagController {
 	@PostMapping("/add")
 	@Transactional
 	public String registerFlag(@RequestParam("flag") String flag, @RequestParam("round") int round,
-			@RequestParam("raceId") int raceId, @RequestParam("origin") String origin) {
+			@RequestParam("raceId") int raceId, @RequestParam("sessionType") String sessionType,
+			@RequestParam("origin") String origin) {
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
 			Flag validFlag = new Flag(flag, db);
+			SessionType validSessionType = new SessionType(sessionType, db);
 			if (round < 1 || round > 100) {
 				throw new IllegalArgumentException("Round : '" + round + "' out of bounds. Range: 1-100.");
 			}
-			db.insertFlagStats(validFlag, round, validRaceId);
+			db.insertFlagStats(validFlag, round, validRaceId, validSessionType);
 		} catch (InvalidRaceException e) {
 		} catch (InvalidFlagException e) {
 		} catch (IllegalArgumentException e) {
+		} catch (InvalidSessionTypeException e) {
 		}
 		return "redirect:" + origin;
 	}

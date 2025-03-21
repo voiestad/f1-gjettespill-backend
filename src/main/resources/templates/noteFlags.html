@@ -17,6 +17,7 @@
 		<form th:each="registeredFlag : ${registeredFlags}" onsubmit="return confirmSubmit()" th:action="@{/admin/flag/delete}" method="POST">
 			<span th:text="${registeredFlag.type}"></span>
 			<span th:text="${registeredFlag.round}"></span>
+			<span th:text="${registeredFlag.sessionType}"></span>
 			<input type="hidden" th:value="${registeredFlag.id}" name="id">
 			<input type="hidden" name="origin" class="originInput">
 			<input type="submit" value="&#128465;">
@@ -24,6 +25,9 @@
 		<form th:action="@{/admin/flag/add}" method="POST">
 			<select name="flag">
 				<option th:each="flag : ${flags}" th:text="${flag}" th:value="${flag}"></option>
+			</select>
+			<select name="sessionType">
+				<option th:each="sessionType : ${sessionTypes}" th:text="${sessionType}" th:value="${sessionType}"></option>
 			</select>
 			<input type="number" min="1" max="100" pattern="[0-9]*" inputmode="numeric" name="round" autofocus required>
 			<input type="hidden" name="raceId" th:value="${raceId}">

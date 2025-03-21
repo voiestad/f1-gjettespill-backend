@@ -231,13 +231,41 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS SessionType (
+					name PRIMARY KEY
+			);
+			""");
+			jdbcTemplate.execute("""
+                INSERT INTO SessionType (name) 
+                VALUES
+                    ('RACE'), 
+                    ('SPRINT')
+                ON CONFLICT(name) DO NOTHING;
+            """);
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS SessionTypeTranslation (
+					session_type TEXT PRIMARY KEY,
+					translation TEXT NOT NULL,
+					FOREIGN KEY (session_type) REFERENCES SessionType ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+                INSERT INTO SessionTypeTranslation (session_type, translation) 
+                VALUES
+                    ('RACE', 'Løp'), 
+                    ('SPRINT', 'Sprint')
+                ON CONFLICT(session_type) DO NOTHING;
+            """);
+			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS FlagStats (
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
 					flag TEXT NOT NULL,
 					race_number INTEGER NOT NULL,
 					round INTEGER NOT NULL,
+					session_type TEXT NOT NULL,
 					FOREIGN KEY (flag) REFERENCES Flag ON DELETE CASCADE,
-					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE,
+					FOREIGN KEY (session_type) REFERENCES SessionType ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""

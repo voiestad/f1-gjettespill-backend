@@ -31,6 +31,7 @@ import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.SessionType;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
@@ -1368,14 +1369,14 @@ public class Database {
 	 */
 	public List<RegisteredFlag> getRegisteredFlags(RaceId raceId) {
 		List<RegisteredFlag> registeredFlags = new ArrayList<>();
-		final String getRegisteredFlags = "SELECT flag, round, id FROM FlagStats WHERE race_number = ? ORDER BY round";
+		final String getRegisteredFlags = "SELECT flag, round, id, session_type FROM FlagStats WHERE race_number = ? ORDER BY session_type ASC, round ASC";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRegisteredFlags, raceId);
 		for (Map<String, Object> row : sqlRes) {
 			Flag type = new Flag((String) row.get("flag"));
 			int round = (int) row.get("round");
 			int id = (int) row.get("id");
-
-			registeredFlags.add(new RegisteredFlag(type, round, id));
+			SessionType sessionType = new SessionType((String) row.get("session_type"));
+			registeredFlags.add(new RegisteredFlag(type, round, id, sessionType));
 		}
 		return registeredFlags;
 	}
@@ -1388,9 +1389,9 @@ public class Database {
 	 * @param round the round flag happened in
 	 * @param raceId of race
 	 */
-	public void insertFlagStats(Flag flag, int round, RaceId raceId) {
-		final String sql = "INSERT INTO FlagStats (flag, race_number, round) VALUES (?, ?, ?)";
-		jdbcTemplate.update(sql, flag, raceId, round);
+	public void insertFlagStats(Flag flag, int round, RaceId raceId, SessionType sessionType) {
+		final String sql = "INSERT INTO FlagStats (flag, race_number, round, session_type) VALUES (?, ?, ?, ?)";
+		jdbcTemplate.update(sql, flag, raceId, round, sessionType);
 	}
 
 	/**
@@ -1922,5 +1923,22 @@ public class Database {
 			WHERE year = ?
 			""";
 		return jdbcTemplate.queryForObject(sql, Integer.class, year) > 0;
+	}
+
+	public boolean isValidSessionType(String sessionType) {
+		final String sql = "SELECT COUNT(*) FROM SessionType WHERE name = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, sessionType) > 0;
+	}
+
+	public List<SessionType> getSessionTypes() {
+		final String sql = "SELECT name FROM SessionType ORDER BY name ASC";
+		return jdbcTemplate.queryForList(sql).stream()
+			.map(row -> new SessionType((String) row.get("name")))
+			.toList();
+	}
+
+	public String translateSessionType(SessionType sessionType) {
+		final String sql = "SELECT translation FROM SessionTypeTranslation WHERE session_type = ?";
+		return jdbcTemplate.queryForObject(sql, String.class, sessionType);
 	}
 }
