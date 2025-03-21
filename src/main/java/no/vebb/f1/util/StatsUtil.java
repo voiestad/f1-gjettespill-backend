@@ -64,11 +64,11 @@ public class StatsUtil {
 	}
 
 	public Table getFlagTable(RaceId raceId) {
-		List<String> header = Arrays.asList("Runde", "Type");
+		List<String> header = Arrays.asList("Økt", "Runde", "Type");
 		List<List<String>> body = new ArrayList<>();
 		List<RegisteredFlag> flags = db.getRegisteredFlags(raceId);
 		for (RegisteredFlag flag : flags) {
-			body.add(Arrays.asList(String.valueOf(flag.round), db.translateFlagName(flag.type)));
+			body.add(Arrays.asList(db.translateSessionType(flag.sessionType), String.valueOf(flag.round), db.translateFlagName(flag.type)));
 		}
 		return new Table("Flagg", header, body);
 	}
