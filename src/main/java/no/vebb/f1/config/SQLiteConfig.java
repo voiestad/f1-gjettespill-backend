@@ -86,6 +86,14 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS DriverAlternativeName (
+					alternative_name TEXT PRIMARY KEY,
+					driver TEXT NOT NULL,
+					year INTEGER NOT NULL,
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS DriverStandings (
 					race_number INTEGER NOT NULL,
 					driver TEXT NOT NULL,

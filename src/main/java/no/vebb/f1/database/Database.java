@@ -1941,4 +1941,32 @@ public class Database {
 		final String sql = "SELECT translation FROM SessionTypeTranslation WHERE session_type = ?";
 		return jdbcTemplate.queryForObject(sql, String.class, sessionType);
 	}
+
+	public String getAlternativeDriverName(String driver, Year year) {
+		final String sql = """
+			SELECT driver
+			FROM DriverAlternativeName
+			WHERE alternative_name = ? AND year = ?
+			""";
+		try {
+			return jdbcTemplate.queryForObject(sql, String.class, driver, year);
+		} catch (EmptyResultDataAccessException e) {
+			return driver;
+		}
+	}
+
+	public String getAlternativeDriverName(String driver, RaceId raceId) {
+		Year year = getYearFromRaceId(raceId);
+		return getAlternativeDriverName(driver, year);
+	}
+
+	private Year getYearFromRaceId(RaceId raceId) {
+		final String sql = "SELECT year FROM RaceOrder WHERE id = ?";
+		return new Year(jdbcTemplate.queryForObject(sql, Integer.class, raceId));
+	}
+
+	public void addAlternativeDriverName(Driver driver, String alternativeName, Year year) {
+		final String sql = "INSERT OR IGNORE INTO DriverAlternativeName (driver, alternative_name, year) VALUES (?, ?, ?)";
+		jdbcTemplate.update(sql, driver, alternativeName, year);
+	}
 }

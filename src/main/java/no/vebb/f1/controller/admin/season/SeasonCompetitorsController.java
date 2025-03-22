@@ -194,4 +194,17 @@ public class SeasonCompetitorsController {
 		}
 		return "redirect:/admin/season/" + year + "/competitors";
 	}
+
+	@PostMapping("/addAlternativeName")
+	@Transactional
+	public String addAlternativeName(@PathVariable("year") int year, @RequestParam("driver") String driver,
+			@RequestParam("alternativeName") String alternativeName) {
+		Year seasonYear = new Year(year, db);
+		try {
+			Driver validDriver = new Driver(driver, db, seasonYear);
+			db.addAlternativeDriverName(validDriver, alternativeName, seasonYear);
+		} catch (InvalidDriverException e) {
+		}
+		return "redirect:/admin/season/" + year + "/competitors";
+	}
 }

@@ -196,7 +196,7 @@ public class Importer {
 	private void insertStartingGridData(RaceId raceId, List<List<String>> startingGrid) {
 		for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
 			int position = Integer.parseInt(row.get(0));
-			String driver = parseDriver(row.get(2));
+			String driver = parseDriver(row.get(2), raceId);
 			db.addDriver(driver);
 			Driver validDriver = new Driver(driver, db);
 			db.insertDriverStartingGrid(raceId, position, validDriver);
@@ -238,7 +238,7 @@ public class Importer {
 
 	private void insertRaceResultRow(RaceId raceId, List<String> row, int finishingPosition) {
 		String position = row.get(0);
-		Driver driver = new Driver(parseDriver(row.get(2)), db);
+		Driver driver = new Driver(parseDriver(row.get(2), raceId), db);
 		Points points = new Points((int) Double.parseDouble(row.get(6)));
 		db.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
 	}
@@ -293,7 +293,7 @@ public class Importer {
 			.map(row -> 
 			new PositionedCompetitor(
 				String.valueOf(Integer.parseInt(row.get(0))),
-				parseDriver(row.get(1)), 
+				parseDriver(row.get(1), year), 
 				String.valueOf((int) Double.parseDouble(row.get(4)))
 				))
 			.toList();
@@ -374,5 +374,13 @@ public class Importer {
 
 	private String parseDriver(String driverName) {
 		return driverName.substring(0, driverName.length() - 3);
+	}
+
+	private String parseDriver(String driverName, RaceId raceId) {
+		return db.getAlternativeDriverName(parseDriver(driverName), raceId);
+	}
+
+	private String parseDriver(String driverName, Year year) {
+		return db.getAlternativeDriverName(parseDriver(driverName), year);
 	}
 }
