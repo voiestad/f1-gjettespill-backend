@@ -1,11 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
   	<timestamp key="byDay" datePattern="yyyyMMdd"/>
 
   	<appender name="FILE1" class="ch.qos.logback.core.FileAppender">
 		<file>logs/info/${byDay}.log</file>
 		<immediateFlush>true</immediateFlush>
 		<encoder>
-	  		<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+	  		<pattern>${FILE_LOG_PATTERN}</pattern>
 		</encoder>
   	</appender>
 
@@ -23,13 +25,13 @@
 		<file>logs/error/${byDay}.log</file>
 		<immediateFlush>true</immediateFlush>
 		<encoder>
-	  		<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+	  		<pattern>${FILE_LOG_PATTERN}</pattern>
 		</encoder>
   	</appender>
 	
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-	  		<pattern>%d [%thread] %-5level %logger{36} - %msg%n</pattern>
+	  		<pattern>${CONSOLE_LOG_PATTERN}</pattern>
 		</encoder>
   	</appender>
 
