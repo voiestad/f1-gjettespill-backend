@@ -116,6 +116,8 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 				return getSeasonPath(segments);
 			case "bingo":
 				return "Bingo";
+			case "log":
+				return getLogPath(segments);
 		}
 		return "no path";
 	}
@@ -141,6 +143,21 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			int position = db.getPositionOfRace(raceId);
 			String raceName = db.getRaceName(raceId);
 			return position + ". " + raceName;
+		}
+		return "no path";
+	}
+
+	private String getLogPath(Iterator<String> segments) {
+		if (!segments.hasNext()) {
+			return "Logg";
+		}
+		String type = segments.next();
+		if (!segments.hasNext()) {
+			return type;
+		}
+		String file = segments.next();
+		if (!segments.hasNext()) {
+			return file;
 		}
 		return "no path";
 	}

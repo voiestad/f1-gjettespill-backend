@@ -19,6 +19,7 @@ public class AdminController {
 		linkMap.put("Registrer flagg", "/admin/flag");
 		linkMap.put("Administrer sesonger", "/admin/season");
 		linkMap.put("Administrer bingomasters", "/admin/bingo");
+		linkMap.put("Logg", "/admin/log");
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
 	}
