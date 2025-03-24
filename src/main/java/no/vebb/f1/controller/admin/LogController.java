@@ -40,14 +40,7 @@ public class LogController {
 		}
 		List<String> files = getFilesInFolder(type);
 		for (String file : files) {
-			linkMap.put(
-				String.format(
-					"%s-%s-%s", 
-					file.substring(6, 8),
-					file.substring(4, 6),
-					file.substring(0, 4)
-					),
-				String.format("/admin/log/%s/%s", type, file));
+			linkMap.put(file.substring(0, 10),String.format("/admin/log/%s/%s", type, file));
 		}
 		return "linkList";
 	}

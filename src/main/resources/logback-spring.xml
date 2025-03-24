@@ -3,15 +3,24 @@
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
   	<timestamp key="byDay" datePattern="yyyyMMdd"/>
 
-  	<appender name="FILE1" class="ch.qos.logback.core.FileAppender">
-		<file>logs/info/${byDay}.log</file>
+  	<appender name="FILE1" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logs/info/%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>90</maxHistory> 
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
 		<immediateFlush>true</immediateFlush>
 		<encoder>
 	  		<pattern>${FILE_LOG_PATTERN}</pattern>
 		</encoder>
   	</appender>
 
-	<appender name="FILE2" class="ch.qos.logback.core.FileAppender">
+	<appender name="FILE2" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logs/error/%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>90</maxHistory> 
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
 		<filter class="ch.qos.logback.classic.filter.LevelFilter">
 	  		<level>ERROR</level>
 			<onMatch>ACCEPT</onMatch>
@@ -22,7 +31,6 @@
 			<onMatch>ACCEPT</onMatch>
 	  		<onMismatch>DENY</onMismatch>
 		</filter>
-		<file>logs/error/${byDay}.log</file>
 		<immediateFlush>true</immediateFlush>
 		<encoder>
 	  		<pattern>${FILE_LOG_PATTERN}</pattern>
