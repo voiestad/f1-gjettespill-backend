@@ -329,3 +329,39 @@ input[type=range]::-moz-range-thumb {
 	margin-right: 10px;
 	vertical-align: middle;
 }
+
+input[type="radio"] {
+	margin-right: 15px;
+}
+
+input[type='radio']:after {
+	width: 15px;
+	height: 15px;
+	border-radius: 15px;
+	top: -2px;
+	left: -1px;
+	position: relative;
+	background-color: #f4f4f4;
+	content: '';
+	display: inline-block;
+	visibility: visible;
+	border: 2px solid rgb(208, 208, 208);
+}
+
+input[type='radio']:hover:after {
+	background-color: rgb(210, 150, 150);
+}
+
+input[type='radio']:checked:after {
+	background-color: rgb(187, 0, 31);
+}
+
+.radio-buttons {
+	width: fit-content;
+	margin: 0 auto;
+	text-align: left;
+}
+.radio-buttons div {
+	display: flex;
+	align-items: center;
+}
