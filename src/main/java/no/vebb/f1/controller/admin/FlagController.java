@@ -64,7 +64,11 @@ public class FlagController {
 	}
 
 	@GetMapping("/{year}/{id}")
-	public String registerFlags(@PathVariable("year") int year, @PathVariable("id") int raceId, Model model) {
+	public String registerFlags(@PathVariable("year") int year, @PathVariable("id") int raceId, 
+		@RequestParam(value = "session", required = false) String selectedSessionType,
+		@RequestParam(value = "flag", required = false) String selectedFlag,
+		@RequestParam(value = "round", required = false) Integer selectedRound,
+		Model model) {
 		try {
 			Year seasonYear = new Year(year, db);
 			RaceId validRaceId = new RaceId(raceId, db);
@@ -77,10 +81,34 @@ public class FlagController {
 			List<SessionType> sessionTypes = db.getSessionTypes();
 			model.addAttribute("sessionTypes", sessionTypes);
 			model.addAttribute("raceId", raceId);
-			
 			List<RegisteredFlag> registeredFlags = db.getRegisteredFlags(validRaceId);
 			model.addAttribute("registeredFlags", registeredFlags);
 			model.addAttribute("title", "Flagg " + db.getRaceName(validRaceId));
+
+			SessionType sessionType = null;
+			try {
+				if (selectedSessionType != null) {
+					sessionType = new SessionType(selectedSessionType, db);
+				}
+			} catch (InvalidSessionTypeException e) {
+			}
+			model.addAttribute("selectedSessionType", sessionType);
+			
+			Flag flag = null;
+			try {
+				if (selectedFlag != null) {
+					flag = new Flag(selectedFlag, db);
+				}
+			} catch (InvalidFlagException e) {
+			}
+			model.addAttribute("selectedFlag", flag);
+			
+			int round = 1;
+			if (selectedRound != null && isValidRound(selectedRound)) {
+				round = selectedRound;
+			}
+			model.addAttribute("selectedRound", round);
+
 			return "noteFlags";
 		} catch (InvalidRaceException e) {
 			return "redirect:/admin/flag/" + year;
@@ -98,15 +126,24 @@ public class FlagController {
 			RaceId validRaceId = new RaceId(raceId, db);
 			Flag validFlag = new Flag(flag, db);
 			SessionType validSessionType = new SessionType(sessionType, db);
-			if (round < 1 || round > 100) {
+			if (!isValidRound(round)) {
 				throw new IllegalArgumentException("Round : '" + round + "' out of bounds. Range: 1-100.");
 			}
 			db.insertFlagStats(validFlag, round, validRaceId, validSessionType);
+			String originWithoutParameters = removeParameters(origin);
+			String originWithParameters = String.format(
+				"%s?session=%s&flag=%s&round=%d",
+				originWithoutParameters,
+				validSessionType,
+				validFlag,
+				round);
+			return "redirect:" + originWithParameters;
 		} catch (InvalidRaceException e) {
 		} catch (InvalidFlagException e) {
 		} catch (IllegalArgumentException e) {
 		} catch (InvalidSessionTypeException e) {
 		}
+
 		return "redirect:" + origin;
 	}
 
@@ -115,6 +152,20 @@ public class FlagController {
 	public String deleteFlag(@RequestParam("id") int id, @RequestParam("origin") String origin) {
 		db.deleteFlagStatsById(id);
 		return "redirect:" + origin;
+	}
+
+	private boolean isValidRound(int round) {
+		return round >= 1 && round <= 100;
+	}
+
+	private String removeParameters(String path) {
+		for (int i = 0; i < path.length(); i++) {
+			if (path.charAt(i) == '?') {
+				return path.substring(0, i);
+			}
+		}
+
+		return path;
 	}
 
 }
