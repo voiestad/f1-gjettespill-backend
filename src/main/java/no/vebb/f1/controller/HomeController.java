@@ -112,8 +112,12 @@ public class HomeController {
 
 			for (int i = 0; i < leaderBoard.size(); i++) {
 				Guesser guesser = leaderBoard.get(i);
+				String ranking = String.valueOf(i+1);
+				if (i > 0 && guesser.points.equals(leaderBoard.get(i-1).points)) {
+					ranking = body.get(i-1).get(0);
+				}
 				body.add(Arrays.asList(
-					String.valueOf(i+1),
+					ranking,
 					guesser.username,
 					String.valueOf(guesser.points),
 					guesser.id.toString()
