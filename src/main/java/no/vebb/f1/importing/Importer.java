@@ -39,7 +39,7 @@ public class Importer {
 		this.db = db;
 	}
 
-	@Scheduled(fixedRate = 3600000, initialDelay = 5000)
+	@Scheduled(fixedRate = 600000, initialDelay = 5000)
 	@Transactional
 	public void importData() {
 		logger.info("Starting import of data to database");
