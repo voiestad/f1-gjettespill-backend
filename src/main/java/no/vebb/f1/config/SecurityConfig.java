@@ -21,6 +21,7 @@ public class SecurityConfig {
 			auth.requestMatchers(
 				"/",
 				"/favicon.ico",
+				"/logo.svg",
 				"/**.css",
 				"/user/**",
 				"/score/**",
