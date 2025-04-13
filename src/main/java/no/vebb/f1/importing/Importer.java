@@ -72,7 +72,10 @@ public class Importer {
 				shouldImportStandings = true;
 			}
 			if (shouldImportStandings) {
-				importStandings(year);
+				if (!importStandings(year)) {
+					logger.error("Standings were not new. Rolling back.");
+					throw new RuntimeException("Standings were not up to date with race result.");	
+				}
 				logger.info("Imported standings");
 			}
 			logger.info("Finished import of data to database");
@@ -272,21 +275,21 @@ public class Importer {
 		return true;
 	}
 
-	private void importStandings(Year year) {
+	private boolean importStandings(Year year) {
 		try {
 			RaceId newestRace = db.getLatestRaceId(year);
-			importDriverStandings(year, newestRace);
-			importConstructorStandings(year, newestRace);
+			return importDriverStandings(year, newestRace) 
+				&& importConstructorStandings(year, newestRace);
 		} catch (EmptyResultDataAccessException e) {
 			throw new RuntimeException("Should not call importStandings without having a race result");
 		}
 	}
 
-	private void importDriverStandings(Year year, RaceId newestRace) {
+	private boolean importDriverStandings(Year year, RaceId newestRace) {
 		List<List<String>> standings = TableImporter.getDriverStandings(year.value);
 		if (standings.size() == 0) {
 			logger.info("Driver standings not available");
-			return;
+			return false;
 		}
 		standings = standings.subList(1, standings.size());
 		List<PositionedCompetitor> currentStandings = standings.stream()
@@ -299,7 +302,7 @@ public class Importer {
 			.toList();
 		if (!isDriverStandingsNew(currentStandings, year)) {
 			logger.info("Driver standings are not new, will not add new");
-			return;
+			return false;
 		}
 		for (PositionedCompetitor competitor : currentStandings) {
 			Driver driver = new Driver(competitor.name, db);
@@ -308,6 +311,7 @@ public class Importer {
 			db.insertDriverIntoStandings(newestRace, driver, position, points);
 		}
 		logger.info("Driver standings added for race '{}'", newestRace);
+		return true;
 	}
 
 	private boolean isDriverStandingsNew(List<PositionedCompetitor> standings, Year year) {
@@ -320,11 +324,11 @@ public class Importer {
 		}
 	}
 
-	private void importConstructorStandings(Year year, RaceId newestRace) {
+	private boolean importConstructorStandings(Year year, RaceId newestRace) {
 		List<List<String>> standings = TableImporter.getConstructorStandings(year.value);
 		if (standings.size() == 0) {
 			logger.info("Constructor standings not available");
-			return;
+			return false;
 		}
 		standings = standings.subList(1, standings.size());
 		List<PositionedCompetitor> currentStandings = standings.stream()
@@ -337,7 +341,7 @@ public class Importer {
 			.toList();
 		if (!isConstructorStandingsNew(currentStandings, year)) {
 			logger.info("Constructor standings are not new, will not add new");
-			return;
+			return false;
 		}
 		for (PositionedCompetitor competitor : currentStandings) {
 			int position = Integer.parseInt(competitor.position);
@@ -346,6 +350,7 @@ public class Importer {
 			db.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
 		}
 		logger.info("Constructor standings added for race '{}'", newestRace);
+		return true;
 	}
 
 	private boolean isConstructorStandingsNew(List<PositionedCompetitor> standings, Year year) {
