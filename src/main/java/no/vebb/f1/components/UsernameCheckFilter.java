@@ -37,7 +37,7 @@ public class UsernameCheckFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		final String path = request.getRequestURI();
 		if (path.matches(
-				"/username|/logout|/favicon.ico|/.*\\.css|/error")) {
+				"/username|/logout|/favicon.ico|/.*\\.css|/error|logo.svg")) {
 			filterChain.doFilter(request, response);
 			return;
 		}
