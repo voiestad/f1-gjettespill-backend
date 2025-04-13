@@ -2,11 +2,15 @@ package no.vebb.f1.controller.admin;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Stack;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,6 +43,7 @@ public class LogController {
 			return "redirect:/admin/log";
 		}
 		List<String> files = getFilesInFolder(type);
+		Collections.sort(files, Collections.reverseOrder());
 		for (String file : files) {
 			linkMap.put(file.substring(0, 10),String.format("/admin/log/%s/%s", type, file));
 		}
@@ -55,9 +60,20 @@ public class LogController {
 		File file = new File(String.format("%s/%s/%s", logPath, type, logFile));
 		try {
 			Scanner scanner = new Scanner(file);
-			StringBuffer buffer = new StringBuffer();
+			Stack<StringBuffer> stack = new Stack<>();
+			StringBuffer section = new StringBuffer();
 			while (scanner.hasNextLine()) {
-				buffer.append(scanner.nextLine()).append('\n');
+				String logLine = scanner.nextLine();
+				if (isLogLineStart(logLine)) {
+					stack.add(section);
+					section = new StringBuffer();
+				}
+				section.append(logLine).append('\n');
+			}
+			stack.add(section);
+			StringBuffer buffer = new StringBuffer();
+			while (!stack.empty()) {
+				buffer.append(stack.pop());
 			}
 			model.addAttribute("text", buffer.toString());
 			scanner.close();
@@ -92,6 +108,18 @@ public class LogController {
 
 	private boolean isValidLogType(String type) {
 		return type.matches("error|info");
+	}
+
+	private boolean isLogLineStart(String logLine) {
+		try {
+			String time = logLine.substring(0, 20);
+			LocalDateTime.parse(time);
+		} catch (DateTimeParseException e) {
+			return false;
+		} catch (IndexOutOfBoundsException e) {
+			return false;
+		}
+		return true;
 	}
 
 }
