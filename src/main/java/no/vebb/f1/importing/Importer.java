@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.user.UserMailService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.PositionedCompetitor;
@@ -32,6 +33,9 @@ public class Importer {
 
 	@Autowired
 	private Database db;
+
+	@Autowired
+	private UserMailService userMailService;
 
 	public Importer() {}
 
@@ -67,16 +71,25 @@ public class Importer {
 					}
 				}
 			}
-			if (refreshLatestImports(year)) {
+			ResultChangeStatus changeStatus = refreshLatestImports(year);
+			if (!changeStatus.equals(ResultChangeStatus.NO_CHANGE)) {
 				logger.info("Changes to the race result, will import standings");
 				shouldImportStandings = true;
 			}
 			if (shouldImportStandings) {
-				if (!importStandings(year)) {
-					logger.error("Standings were not new. Rolling back.");
-					throw new RuntimeException("Standings were not up to date with race result.");	
+				boolean standingsNew = importStandings(year);
+				if (!standingsNew) {
+					if (!changeStatus.equals(ResultChangeStatus.OUTSIDE_POINTS_CHANGE)) {
+						logger.error("Standings were not new. Rolling back.");
+						throw new RuntimeException("Standings were not up to date with race result.");	
+					} else {
+						logger.info("Race result changed outside points without standings changing. Sending message to admins.");
+						userMailService.sendServerMessageToAdmins(
+							"Endringer i resultat av løp utenfor poengene uten at mesterskapet endret seg. Vennligst verifiser at mesterskapet er korrekt.");
+					}
+				} else {
+					logger.info("Imported standings");
 				}
-				logger.info("Imported standings");
 			}
 			logger.info("Finished import of data to database");
 		} catch (InvalidYearException e) {
@@ -135,28 +148,31 @@ public class Importer {
 		insertStartingGridData(raceId, startingGrid);
 	}
 
-	private boolean importRaceResultData(RaceId raceId) {
+	private ResultChangeStatus importRaceResultData(RaceId raceId) {
 		List<List<String>> raceResult = TableImporter.getRaceResult(raceId.value);
 		if (raceResult.isEmpty()) {
-			return false;
+			return ResultChangeStatus.NO_CHANGE;
 		}
 		List<PositionedCompetitor> preList = db.getRaceResult(raceId);
 		insertRaceResultData(raceId, raceResult);
 		List<PositionedCompetitor> postList = db.getRaceResult(raceId);
 		if (preList.size() != postList.size()) {
-			return true;
+			return ResultChangeStatus.POINTS_CHANGE;
 		}
 		for (int i = 0; i < preList.size(); i++) {
 			PositionedCompetitor pre = preList.get(i);
 			PositionedCompetitor post = postList.get(i);
 			if (!pre.equals(post)) {
-				return true;
+				if (i < 10) {
+					return ResultChangeStatus.POINTS_CHANGE;
+				}
+				return ResultChangeStatus.OUTSIDE_POINTS_CHANGE;
 			}
 		}
-		return false;
+		return ResultChangeStatus.NO_CHANGE;
 	}
 
-	private boolean refreshLatestImports(Year year) {
+	private ResultChangeStatus refreshLatestImports(Year year) {
 		refreshLatestStartingGrid(year);
 		return refreshLatestRaceResult(year);
 	}
@@ -170,12 +186,12 @@ public class Importer {
 		}
 	}
 
-	private boolean refreshLatestRaceResult(Year year) {
+	private ResultChangeStatus refreshLatestRaceResult(Year year) {
 		try {
 			RaceId raceId = db.getLatestRaceResultId(year);
 			return importRaceResultData(raceId);
 		} catch (EmptyResultDataAccessException e) {
-			return false;
+			return ResultChangeStatus.NO_CHANGE;
 		}
 	}
 
@@ -278,8 +294,9 @@ public class Importer {
 	private boolean importStandings(Year year) {
 		try {
 			RaceId newestRace = db.getLatestRaceId(year);
-			return importDriverStandings(year, newestRace) 
-				&& importConstructorStandings(year, newestRace);
+			boolean driverStandingsChanged = importDriverStandings(year, newestRace);
+			boolean constructorStandingsChanged = importConstructorStandings(year, newestRace);
+			return driverStandingsChanged && constructorStandingsChanged;
 		} catch (EmptyResultDataAccessException e) {
 			throw new RuntimeException("Should not call importStandings without having a race result");
 		}
@@ -387,5 +404,11 @@ public class Importer {
 
 	private String parseDriver(String driverName, Year year) {
 		return db.getAlternativeDriverName(parseDriver(driverName), year);
+	}
+
+	private enum ResultChangeStatus {
+		NO_CHANGE,
+		POINTS_CHANGE, 
+		OUTSIDE_POINTS_CHANGE;
 	}
 }

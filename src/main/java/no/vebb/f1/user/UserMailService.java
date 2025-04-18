@@ -1,6 +1,8 @@
 package no.vebb.f1.user;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +49,29 @@ public class UserMailService {
 			logger.info("Successfully sent verification code to '{}'", user.user.id);
 		} catch (MessagingException e) {
 		} catch (UnsupportedEncodingException e) {
+		}
+	}
+
+	public void sendServerMessageToAdmins(String messageForAdmin) {
+		List<UUID> admins = db.getAdmins();
+		List<UserMail> adminsWithMail = admins.stream()
+			.filter(admin -> db.userHasEmail(admin))
+			.map(admin -> db.getUserFromId(admin))
+			.map(admin -> new UserMail(admin, db.getEmail(admin.id)))
+			.toList();
+		for (UserMail admin : adminsWithMail) {
+			try {
+				MimeMessage message = mailSender.createMimeMessage();
+				message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+				message.addRecipients(RecipientType.TO, admin.email);
+				message.setSubject("Server melding F1 Tipping");
+				message.setContent(String.format("Hei administrator!\n\nDette er en automatisk generert melding:\n%s",
+						messageForAdmin), "text/plain; charset=UTF-8");
+				mailSender.send(message);
+				logger.info("Successfully sent server message to '{}'", admin.user.id);
+			} catch (MessagingException e) {
+			} catch (UnsupportedEncodingException e) {
+			}
 		}
 	}
 }

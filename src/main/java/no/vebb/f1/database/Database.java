@@ -1969,4 +1969,11 @@ public class Database {
 		final String sql = "INSERT OR IGNORE INTO DriverAlternativeName (driver, alternative_name, year) VALUES (?, ?, ?)";
 		jdbcTemplate.update(sql, driver, alternativeName, year);
 	}
+
+	public List<UUID> getAdmins() {
+		final String sql = "SELECT user_id FROM Admin";
+		return jdbcTemplate.queryForList(sql, String.class).stream()
+			.map(adminId -> UUID.fromString(adminId))
+			.toList();
+	}
 }
