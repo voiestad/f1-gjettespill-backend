@@ -3,15 +3,15 @@
 	margin: 50px auto;
 	padding: 0;
 	list-style: none;
-	border: 1px solid #ccc;
+	border: 1px solid light-dark(#cccccc, #333333);
 }
 
 .item-wrapper {
 	display: flex;
 	align-items: center;
 	margin: 0;
-	background: #ffffff;
-	border: 1px solid #ccc;
+	background: light-dark(white, black);
+	border: 1px solid light-dark(#cccccc, #333333);
 	cursor: move;
 	transition: transform 0.3s ease;
 	position: relative;
@@ -33,7 +33,7 @@
 }
 
 .over {
-	border: 2px dashed #000;
+	border: 2px dashed light-dark(black, white);
 }
 
 .disable-transitions {

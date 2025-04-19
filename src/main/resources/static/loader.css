@@ -1,5 +1,5 @@
 .loading {
-	border: 16px solid #f3f3f3;
+	border: 16px solid light-dark(#f3f3f3, #0c0c0c);
 	border-radius: 50%;
 	border-top: 16px solid #db3434;
 	width: 120px;

@@ -1,11 +1,11 @@
 table {
 	border-collapse: collapse;
-	box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+	box-shadow: 0 0 20px light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.15));
 }
 
 thead th {
 	background-color: rgb(187, 0, 31);
-	color: #ffffff;
+	color: white;
 }
 
 th {
@@ -14,15 +14,15 @@ th {
 }
 
 tbody tr {
-	border-bottom: 1px solid #bebebe;
+	border-bottom: 1px solid light-dark(#bebebe, #414141);
 }
 
 tbody tr:nth-of-type(even) {
-	background-color: #ececec;
+	background-color: light-dark(#ececec, #131313);
 }
 
 tbody tr:nth-of-type(odd) {
-	background-color: #ffffffed;
+	background-color: light-dark(#ffffffed, #000000ed);
 }
 
 tbody tr:last-of-type {
