@@ -238,7 +238,7 @@ main {
     flex: 1;
 }
 
-input[type=button], input[type=submit], input[type=reset] {
+input[type=button], input[type=submit], input[type=reset], button {
 	background-color: rgb(187, 0, 31);
 	border: none;
 	color: white;

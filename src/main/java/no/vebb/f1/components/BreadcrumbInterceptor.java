@@ -118,6 +118,8 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 				return "Bingo";
 			case "log":
 				return getLogPath(segments);
+			case "backup":
+				return "Sikkerhetskopi";
 		}
 		return "no path";
 	}

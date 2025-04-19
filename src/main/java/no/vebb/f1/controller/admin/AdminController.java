@@ -20,7 +20,13 @@ public class AdminController {
 		linkMap.put("Administrer sesonger", "/admin/season");
 		linkMap.put("Administrer bingomasters", "/admin/bingo");
 		linkMap.put("Logg", "/admin/log");
+		linkMap.put("Sikkerhetskopi", "/admin/backup");
 		model.addAttribute("linkMap", linkMap);
 		return "linkList";
+	}
+
+	@GetMapping("/backup")
+	public String backupPage() {
+		return "backup";
 	}
 }
