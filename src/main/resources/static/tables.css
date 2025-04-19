@@ -15,6 +15,8 @@ th {
 
 tbody tr {
 	border-bottom: 1px solid light-dark(#bebebe, #414141);
+	border-left: 1px solid light-dark(#bebebe, #414141);
+	border-right: 1px solid light-dark(#bebebe, #414141);
 }
 
 tbody tr:nth-of-type(even) {
