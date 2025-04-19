@@ -70,6 +70,9 @@
 						label: guessersNames[i]
 					});
 				}
+
+				const chartColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim();
+
 				new Chart(ctx, {
 					type: "line",
 					data: {
@@ -82,12 +85,26 @@
 								title: {
 									display: true,
 									text: "Løp"
+								},
+								grid: {
+									color: chartColor,
+									borderColor: chartColor
+								},
+								ticks: {
+									color: chartColor
 								}
 							},
 							y: {
 								title: {
 									display: true,
 									text: "Poeng"
+								},
+								grid: {
+									color: chartColor,
+									borderColor: chartColor
+								},
+								ticks: {
+									color: chartColor
 								}
 							}
 						},
@@ -96,10 +113,14 @@
 							legend: {
 								display: true,
 								position: "top",
+								labels: {
+									color: chartColor
+								}
 							},
 							title: {
 								display: true,
-								text: "Utvikling gjennom sesongen"
+								text: "Utvikling gjennom sesongen",
+								color: chartColor
 							}
 						}
 					}

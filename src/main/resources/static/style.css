@@ -1,13 +1,18 @@
+:root {
+	color-scheme: light dark;
+	--chart-color: rgba(125, 125, 125);
+}
+
 body {
 	font-family: Arial, sans-serif;
-	background-color: #f4f4f4;
+	background-color: light-dark(#f4f4f4, black);
 	margin: 0;
 	padding: 0;
 }
 
 header {
 	background-color: rgb(187, 0, 31);
-	color: #fff;
+	color: white;
 	padding: 15px;
 	margin: 0;
 }
@@ -18,7 +23,7 @@ nav div {
 }
 
 nav a {
-	color: #fff;
+	color: white;
 	padding: 5px;
 	font-weight: bold;
 }
@@ -37,7 +42,7 @@ main {
 	margin-top: 10px;
 	margin-bottom: 25px;
 	font-size: 24px;
-	color: #333;
+	color: light-dark(#333333, #f4f4f4);
 }
 
 h1 {
@@ -152,7 +157,7 @@ div {
 
 .linkList a {
 	margin: 16px;
-	color: black;
+	color: light-dark(black, white);
 	font-weight: bold;
 }
 
