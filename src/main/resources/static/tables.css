@@ -1,6 +1,6 @@
 table {
 	border-collapse: collapse;
-	box-shadow: 0 0 20px light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.15));
+	box-shadow: 0 0 20px light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0));
 }
 
 thead th {
