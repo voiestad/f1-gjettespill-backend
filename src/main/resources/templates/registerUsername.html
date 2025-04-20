@@ -34,7 +34,9 @@
 				</div>
 				<input type="submit" value="Bekreft brukernavn">
 			</form>
-
+			<form th:if="${newUser}" th:action="@{/logout}" method="post">
+				<input type="submit" value="Logg ut">
+			</form>
 			<p th:if="${error}" th:text="${error}"></p>
 		</div>
 	</main>

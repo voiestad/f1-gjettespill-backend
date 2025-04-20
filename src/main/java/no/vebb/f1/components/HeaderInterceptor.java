@@ -17,7 +17,7 @@ import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 
 @Component
-public class HeaderInterceptor  implements HandlerInterceptor  {
+public class HeaderInterceptor implements HandlerInterceptor  {
 
 	@Autowired
 	private Database db;
