@@ -75,7 +75,7 @@ public class GuessController {
 			linkMap.put("Tipp 10.plass", "/guess/tenth");
 		}
 		model.addAttribute("linkMap", linkMap);
-		return "linkList";
+		return "util/linkList";
 	}
 
 	/**
@@ -95,7 +95,7 @@ public class GuessController {
 		model.addAttribute("competitors", competitors);
 		model.addAttribute("title", "Ranger sjåførene");
 		model.addAttribute("type", "drivers");
-		return "ranking";
+		return "guess/ranking";
 	}
 
 	/**
@@ -151,7 +151,7 @@ public class GuessController {
 		model.addAttribute("competitors", competitors);
 		model.addAttribute("title", "Ranger konstruktørene");
 		model.addAttribute("type", "constructors");
-		return "ranking";
+		return "guess/ranking";
 	}
 
 	/**
@@ -269,7 +269,7 @@ public class GuessController {
 			model.addAttribute("guessedDriver", "");
 		}
 
-		return "chooseDriver";
+		return "guess/chooseDriver";
 	}
 
 	private String handlePostChooseDriver(Model model, String driver, Category category) {
@@ -318,7 +318,7 @@ public class GuessController {
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		Flags flags = db.getFlagGuesses(userService.loadUser().get().id, year);
 		model.addAttribute("flags", flags);
-		return "guessFlags";
+		return "guess/guessFlags";
 	}
 
 	/**
@@ -332,7 +332,7 @@ public class GuessController {
 		Flags flags = new Flags(yellow, red, safetyCar);
 		if (!flags.hasValidValues()) {
 			model.addAttribute("error", "Verdier kan ikke være negative");
-			return "guessFlags";
+			return "guess/guessFlags";
 		}
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return "redirect:/guess?success=false";

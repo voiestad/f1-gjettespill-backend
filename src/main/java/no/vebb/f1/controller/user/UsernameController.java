@@ -46,7 +46,7 @@ public class UsernameController {
 		}
 		model.addAttribute("url", url);
 		model.addAttribute("newUser", true);
-		return "registerUsername";
+		return "user/registerUsername";
 	}
 
 	/**
@@ -72,7 +72,7 @@ public class UsernameController {
 		} catch (InvalidUsernameException e) {
 			model.addAttribute("error", e.getMessage());
 			model.addAttribute("url", url);
-			return "registerUsername";
+			return "user/registerUsername";
 		}
 		return "redirect:/";
 	}

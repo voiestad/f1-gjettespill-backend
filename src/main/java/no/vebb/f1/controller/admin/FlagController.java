@@ -43,7 +43,7 @@ public class FlagController {
 			linkMap.put(String.valueOf(year), "/admin/flag/" + year);
 		}
 		model.addAttribute("linkMap", linkMap);
-		return "linkList";
+		return "util/linkList";
 	}
 
 	@GetMapping("/{year}")
@@ -57,7 +57,7 @@ public class FlagController {
 				linkMap.put(race.position + ". " + race.name, "/admin/flag/" + year + "/" + race.id);
 			}
 			model.addAttribute("linkMap", linkMap);
-			return "linkList";
+			return "util/linkList";
 		} catch (InvalidYearException e) {
 			return "redirect:/admin/flag";
 		}
@@ -109,7 +109,7 @@ public class FlagController {
 			}
 			model.addAttribute("selectedRound", round);
 
-			return "noteFlags";
+			return "admin/noteFlags";
 		} catch (InvalidRaceException e) {
 			return "redirect:/admin/flag/" + year;
 		} catch (InvalidYearException e) {

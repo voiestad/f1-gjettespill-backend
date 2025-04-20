@@ -22,11 +22,11 @@ public class AdminController {
 		linkMap.put("Logg", "/admin/log");
 		linkMap.put("Sikkerhetskopi", "/admin/backup");
 		model.addAttribute("linkMap", linkMap);
-		return "linkList";
+		return "util/linkList";
 	}
 
 	@GetMapping("/backup")
 	public String backupPage() {
-		return "backup";
+		return "admin/backup";
 	}
 }

@@ -68,7 +68,7 @@ public class UserSettingsController {
 		linkMap.put("Endre brukernavn", "/settings/username");
 		linkMap.put("Slett bruker", "/settings/delete");
 		model.addAttribute("linkMap", linkMap);
-		return "linkList";
+		return "util/linkList";
 	}
 
 	/**
@@ -100,7 +100,7 @@ public class UserSettingsController {
 					return list;
 				}))));
 		model.addAttribute("tables", tables);
-		return "tables";
+		return "util/tables";
 	}
 
 	/**
@@ -110,7 +110,7 @@ public class UserSettingsController {
 	@GetMapping("/username")
 	public String changeUsername(Model model) {
 		model.addAttribute("url", usernameUrl);
-		return "registerUsername";
+		return "user/registerUsername";
 	}
 
 	/**
@@ -128,7 +128,7 @@ public class UserSettingsController {
 		} catch (InvalidUsernameException e) {
 			model.addAttribute("error", e.getMessage());
 			model.addAttribute("url", usernameUrl);
-			return "registerUsername";
+			return "user/registerUsername";
 		}
 
 		return "redirect:/settings";
@@ -143,7 +143,7 @@ public class UserSettingsController {
 		String username = userService.loadUser().get().username;
 		model.addAttribute("username", username);
 
-		return "deleteAccount";
+		return "user/deleteAccount";
 	}
 
 	/**
@@ -160,7 +160,7 @@ public class UserSettingsController {
 		if (!username.equals(actualUsername)) {
 			model.addAttribute("username", actualUsername);
 			model.addAttribute("error", "Brukernavn er feil");
-			return "deleteAccount";
+			return "user/deleteAccount";
 		}
 		db.deleteUser(user.id);
 
@@ -187,7 +187,7 @@ public class UserSettingsController {
 				mailOptions.put(preference.value, true);
 			}
 		}
-		return "mail";
+		return "user/mail";
 	}
 
 	@PostMapping("/mail/add")
@@ -217,7 +217,7 @@ public class UserSettingsController {
 		if (!db.hasVerificationCode(user.id)) {
 			return "redirect:/settings/mail";
 		}
-		return "verificationCode";
+		return "user/verificationCode";
 	}
 
 	@PostMapping("/mail/verification")

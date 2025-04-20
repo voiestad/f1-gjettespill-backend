@@ -63,7 +63,7 @@ public class HomeController {
 			model.addAttribute("guessersNames", new String[0]);
 			model.addAttribute("scores", new int[0]);
 		}
-		return "public";
+		return "public/index";
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class HomeController {
 	 */
 	@GetMapping("/contact")
 	public String contact() {
-		return "contact";
+		return "public/contact";
 	}
 	
 	/**
@@ -81,7 +81,7 @@ public class HomeController {
 	 */
 	@GetMapping("/about")
 	public String about() {
-		return "about";
+		return "public/about";
 	}
 
 	/**
@@ -89,7 +89,7 @@ public class HomeController {
 	 */
 	@GetMapping("/privacy")
 	public String privacy() {
-		return "privacy";
+		return "public/privacy";
 	}
 
 	private Table getLeaderBoard() {

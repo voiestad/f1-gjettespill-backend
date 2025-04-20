@@ -31,7 +31,7 @@ public class LogController {
 		model.addAttribute("linkMap", linkMap);
 		linkMap.put("Error", "/admin/log/error");
 		linkMap.put("Info", "/admin/log/info");
-		return "linkList";
+		return "util/linkList";
 	}
 
 	@GetMapping("/{type}")
@@ -47,7 +47,7 @@ public class LogController {
 		for (String file : files) {
 			linkMap.put(file.substring(0, 10),String.format("/admin/log/%s/%s", type, file));
 		}
-		return "linkList";
+		return "util/linkList";
 	}
 	
 	@GetMapping("/{type}/{logFile}")
@@ -80,7 +80,7 @@ public class LogController {
 		} catch (IOException e) {	
 			return "redirect:/admin/log/" + type;
 		}
-		return "text";
+		return "admin/log";
 	}
 
 	private List<String> getFilesInFolder(String folderName) {

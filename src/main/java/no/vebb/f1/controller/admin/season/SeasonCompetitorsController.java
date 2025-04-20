@@ -38,7 +38,7 @@ public class SeasonCompetitorsController {
 		model.addAttribute("year", year);
 		model.addAttribute("drivers", drivers);
 		model.addAttribute("constructors", constructors);
-		return "addCompetitors";
+		return "admin/addCompetitors";
 	}
 
 	@PostMapping("/setTeamDriver")

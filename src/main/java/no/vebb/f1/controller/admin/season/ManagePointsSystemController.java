@@ -56,7 +56,7 @@ public class ManagePointsSystemController {
 
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
-		return "managePointsSystem";
+		return "admin/managePointsSystem";
 	}
 
 	@PostMapping("/add")

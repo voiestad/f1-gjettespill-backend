@@ -48,7 +48,7 @@ public class ManageSeasonController {
 		model.addAttribute("races", races);
 		model.addAttribute("title", year);
 		model.addAttribute("year", year);
-		return "manageSeason";
+		return "admin/manageSeason";
 	}
 
 	@GetMapping("/{raceId}")
@@ -70,7 +70,7 @@ public class ManageSeasonController {
 			
 			model.addAttribute("tables", tables);
 			model.addAttribute("title", year);
-			return "tables";
+			return "util/tables";
 		} catch (InvalidRaceException e) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}

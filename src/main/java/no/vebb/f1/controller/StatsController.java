@@ -40,7 +40,7 @@ public class StatsController {
 		for (Year year : years) {
 			linkMap.put(String.valueOf(year), "/stats/" + year);
 		}
-		return "linkList";
+		return "util/linkList";
 	}
 
 	@GetMapping("/{year}")
@@ -54,7 +54,7 @@ public class StatsController {
 			for (CutoffRace race : races) {
 				linkMap.put(race.position + ". " + race.name, "/stats/" + year + "/" + race.id);
 			}
-			return "linkList";
+			return "util/linkList";
 		} catch (InvalidYearException e) {
 			return "redirect:/stats";	
 		}
@@ -74,7 +74,7 @@ public class StatsController {
 			
 			model.addAttribute("tables", tables);
 			model.addAttribute("title", year);
-			return "tables";
+			return "util/tables";
 		} catch (InvalidRaceException e) {
 			return "redirect:/stats/" + year;
 		}

@@ -51,7 +51,7 @@ public class CutoffController {
 		model.addAttribute("title", year);
 		model.addAttribute("races", races);
 		model.addAttribute("cutoffYear", cutoffYear);
-		return "cutoff";
+		return "admin/cutoff";
 	}
 
 	/**

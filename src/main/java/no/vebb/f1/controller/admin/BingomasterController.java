@@ -28,7 +28,7 @@ public class BingomasterController {
 		model.addAttribute("title", "Administrer bingomasters");
 		model.addAttribute("bingomasters", db.getBingomasters());
 		model.addAttribute("nonBingomasters", db.getNonBingomasters());
-		return "bingomasters";
+		return "admin/bingomasters";
 	}
 
 	@PostMapping("/add")

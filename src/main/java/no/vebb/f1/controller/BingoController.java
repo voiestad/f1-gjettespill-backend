@@ -42,7 +42,7 @@ public class BingoController {
 			model.addAttribute("title", "Bingo");
 		} catch (InvalidYearException e) {
 		}
-		return "bingo";
+		return "bingo/bingo";
 	}
 
 	@GetMapping("/admin")
@@ -54,7 +54,7 @@ public class BingoController {
 		for (Year year : years) {
 			linkMap.put(String.valueOf(year), "/bingo/admin/" + year);
 		}
-		return "linkList";
+		return "util/linkList";
 	}
 
 	@GetMapping("/admin/{year}")
@@ -67,7 +67,7 @@ public class BingoController {
 			model.addAttribute("bingoCard", db.getBingoCard(validSeason));
 			model.addAttribute("year", year);
 			model.addAttribute("title", "Bingo " + year);
-			return "bingoCardAdmin";
+			return "bingo/bingoCardAdmin";
 		} catch (InvalidYearException e) {
 			return "redirect:/bingo/admin";
 		}
