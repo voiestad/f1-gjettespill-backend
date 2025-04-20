@@ -45,6 +45,7 @@ public class UsernameController {
 			return "redirect:/";
 		}
 		model.addAttribute("url", url);
+		model.addAttribute("newUser", true);
 		return "registerUsername";
 	}
 
