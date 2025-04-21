@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.graph.GraphCache;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.domainPrimitive.RaceId;
@@ -31,6 +32,9 @@ public class CutoffController {
 
 	@Autowired
 	private Database db;
+
+	@Autowired
+	private GraphCache graphCache;
 
 	/**
 	 * Handles GET requests for managing cutoff for the given season. Gives a list
@@ -100,6 +104,7 @@ public class CutoffController {
 		try {
 			Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
 			db.setCutoffYear(cutoffTime, seasonYear);
+			graphCache.refresh();
 		} catch (DateTimeParseException e) {
 
 		}

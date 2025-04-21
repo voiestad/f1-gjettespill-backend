@@ -40,7 +40,7 @@ public class NotificationMail {
 	@Value("${spring.mail.username}")
 	private String fromEmail;
 
-	@Scheduled(fixedRate = 300000, initialDelay = 1000)
+	@Scheduled(fixedRate = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
 	public void notifyUsers() {
 		try {
 			CutoffRace race = db.getLatestRaceForPlaceGuess(new Year(TimeUtil.getCurrentYear(), db));
