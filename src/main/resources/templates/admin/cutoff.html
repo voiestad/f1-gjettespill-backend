@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="no" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<h2 th:text="${title}"></h2>
+
+		<form th:action="@{/admin/season/{year}/cutoff/setYear(year=${year})}" method="POST">
+			<p th:text="${year} + ' sesongen'"></p>
+			<input type="datetime-local" name="cutoff" th:value="${cutoffYear.toString()}" required>
+			<input type="submit" value="Sett cutoff">
+		</form>
+
+		<div th:each="race : ${races}" th:id="${race.id}">
+			<p th:text="${race.position} + ' ' + ${race.name} + ' ' + ${race.id}"></p>
+			<form th:action="@{/admin/season/{year}/cutoff/setRace(year=${year})}" method="post">
+				<input type="hidden" name="id" th:value="${race.id}">
+				<input type="datetime-local" name="cutoff" th:value="${race.cutoff.toString()}" required>
+				<input type="submit" value="Sett cutoff">
+			</form>
+		</div>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+</body>
+
+</html>

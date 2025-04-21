@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="no" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Personvernerklæring</title>
+	<style>
+		.paragraph p {
+			text-align: center;
+			margin: 0 auto;
+		}
+
+		@media (max-width: 600px) {
+			.paragraph p {
+				width: 80%;
+				font-size: medium;
+			}
+		}
+
+		@media (min-width: 601px) {
+			.paragraph p {
+				width: 50%;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<h2>Personvernerklæring</h2>
+		<div class="paragraph">
+			<p>
+				Dette er en personvernerklæring for F1 Tipping og gjelder for <a href="/">f1.voiestad.no</a>. Nettsiden
+				styres av Vebjørn Øiestad og alle spørsmål angående nettsiden kan sendes inn via kontaktskjemaet
+				<a href="/contact">her</a>.
+			</p>
+			<h3>Personopplysninger som samles inn</h3>
+			<h4>Krevd</h4>
+			<p>
+				Google OpenID<br><br>
+				Brukernavn<br><br>
+				Tipping<br><br>
+			</p>
+			<h4>Valgfritt</h4>
+			<p>
+				E-post <a href="#reminders">(med mer)</a>
+			</p>
+			<h3>Bruksområder av personopplysninger</h3>
+			<h4>Innlogging</h4>
+			<p>
+				Nettsiden bruker <a href="https://developers.google.com/identity/protocols/oauth2">Google OAuth2</a>
+				for innlogging. <a href="https://developers.google.com/identity/protocols/oauth2/scopes">"Scopet"</a>
+				som brukes er kun <a href="https://en.wikipedia.org/wiki/OpenID">OpenID</a>, som er definert som
+				ikke-sensitiv av Google. Denne IDen er nødvendig for å koble innloggingen til brukeren din. IDen knyttes
+				til en tilfeldig generert ID som brukes på resten av nettsiden og brukernavnet som du velger selv. For å
+				redusere personlige opplysninger som er knyttet til brukeren, er det lurt å ikke oppgi fullt navn som
+				brukernavn.
+			</p>
+			<h4 id="reminders">Påminnelser</h4>
+			<p>
+				Dersom du velger å melde deg på for å få påminnelser på e-post, vil e-posten kun brukes til å sende
+				påminnelser og ingenting annet. Preferansene for når man ønsker påminnelser blir brukt til å sende
+				påminnelser på riktig tidspunkt. I tillegg lagres det også hvor mange ganger en påminnelse blir sendt ut
+				for hvert løp for å sende riktig antall påminnelser.
+			</p>
+			<h4>Tippedata</h4>
+			<p>
+				Tippedataen blir brukt til å regne ut en poengsum som blir brukt å rangere deltakerne etter hvor bra de
+				har tippet for å avgjøre vinneren hvert år.
+			</p>
+			<h4>Tredjeparter</h4>
+			<p>
+				Dataen som blir samlet inn vil aldri bli delt med tredjeparter.
+			</p>
+			<h3>Informasjonskapsler</h3>
+			<p>
+				Det brukes kun <a href="https://en.wikipedia.org/wiki/Session_ID">"session ID token"</a>
+				som brukes for å knytte økten din opp mot innloggingen din.
+			</p>
+			<h3>Dine rettigheter</h3>
+			<h4>Rett til innsyn</h4>
+			<p>
+				Hvis du ønsker innsyn i hva av dine personlige opplysninger som er lagret kan du se det
+				<a href="/settings/info">her</a>.
+			</p>
+			<h4>Rett til korrigering</h4>
+			<p>
+				Brukernavnet ditt kan når som helst endres <a href="/settings/username">her</a>.
+			</p>
+			<h4>Rett til begrensning</h4>
+			<p>
+				E-post som er lagret for å sende påminnelser kan når som helst fjernes <a href="/settings/mail">her</a>.
+				Når e-post blir fjernet vil også preferansene dine og antall påminnelser som er sendt ut fjernes.
+			</p>
+			<h4>Rett til sletting</h4>
+			<p>
+				Brukeren din kan når som helst slettes <a href="/settings/delete">her</a>. Da vil e-post bli fjernet,
+				brukernavn anonymisert og OpenID fjernet. All tippedataen vil forbli lagret for å bevare integriteten
+				av statistikken, men dataen vil ikke lengre være tilknyttet dine personopplysinger på noe som helst vis.
+			</p>
+			<h4>Rett til å klage</h4>
+			<p>
+				Hvis du mener dine personlige opplysninger blir behandlet feil, kan du klage <a href="/contact">her</a>.
+			</p>
+		</div>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+</body>
+
+</html>

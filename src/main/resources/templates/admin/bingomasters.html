@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="no" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<h2 th:text="${title}"></h2>
+		<div>
+			<form th:each="user : ${bingomasters}" th:action="@{/admin/bingo/remove}" method="post">
+				<label th:text="${user.username}"></label>
+				<input type="hidden" th:value="${user.id}" name="bingomaster">
+				<input type="submit" value="Fjern bingomaster">
+			</form>
+			<form th:each="user : ${nonBingomasters}" th:action="@{/admin/bingo/add}" method="post">
+				<label th:text="${user.username}"></label>
+				<input type="hidden" th:value="${user.id}" name="bingomaster">
+				<input type="submit" value="Sett som bingomaster">
+			</form>
+		</div>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+</body>
+
+</html>

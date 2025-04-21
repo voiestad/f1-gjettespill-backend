@@ -22,6 +22,7 @@ import no.vebb.f1.util.collection.Flags;
 import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.collection.UserRaceGuess;
+import no.vebb.f1.util.collection.ValuedCompetitor;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Color;
 import no.vebb.f1.util.domainPrimitive.Constructor;
@@ -1801,6 +1802,38 @@ public class Database {
 		jdbcTemplate.update(sql, constructor, year, color);
 	}
 
+	public List<ColoredCompetitor<Constructor>> getConstructorsYearWithColors(Year year) {
+		final String sql = """
+			SELECT cy.constructor as constructor, cc.color as color
+			FROM ConstructorYear cy
+			LEFT JOIN ConstructorColor cc ON cc.constructor = cy.constructor
+			WHERE cy.year = ?
+			ORDER BY cy.position ASC
+			""";
+		return jdbcTemplate.queryForList(sql, year).stream()
+		.map(row -> new ColoredCompetitor<>(
+			new Constructor((String) row.get("constructor")),
+			new Color((String) row.get("color"))))
+		.toList();
+	}
+
+	public List<ValuedCompetitor<Driver, Constructor>> getDriversTeam(Year year) {
+		final String sql = """
+			SELECT dy.driver as driver, dt.team as team
+			FROM DriverYear dy
+			LEFT JOIN DriverTeam dt ON dt.driver = dy.driver
+			WHERE dy.year = ?
+			ORDER BY dy.position ASC
+			""";
+		return jdbcTemplate.queryForList(sql, year).stream()
+		.map(row -> new ValuedCompetitor<>(
+			new Driver((String) row.get("driver")),
+			new Constructor((String) row.get("team"))))
+		.toList();
+	}
+
+	
+
 	public void addBingomaster(UUID userId) {
 		final String sql = "INSERT OR IGNORE INTO Bingomaster (user_id) VALUES (?)";
 		jdbcTemplate.update(sql, userId);
@@ -1955,6 +1988,22 @@ public class Database {
 		}
 	}
 
+	public Map<String, String> getAlternativeDriverNamesYear(Year year) {
+		final String sql = """
+			SELECT driver, alternative_name
+			FROM DriverAlternativeName
+			WHERE year = ?
+			""";
+		Map<String, String> linkedMap = new LinkedHashMap<>();
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, year);
+		for (Map<String, Object> row : sqlRes) {
+			String driverName = (String) row.get("driver");
+			String alternativeName = (String) row.get("alternative_name");
+			linkedMap.put(driverName, alternativeName);
+		}
+		return linkedMap;
+	}
+
 	public String getAlternativeDriverName(String driver, RaceId raceId) {
 		Year year = getYearFromRaceId(raceId);
 		return getAlternativeDriverName(driver, year);
@@ -1968,6 +2017,11 @@ public class Database {
 	public void addAlternativeDriverName(Driver driver, String alternativeName, Year year) {
 		final String sql = "INSERT OR IGNORE INTO DriverAlternativeName (driver, alternative_name, year) VALUES (?, ?, ?)";
 		jdbcTemplate.update(sql, driver, alternativeName, year);
+	}
+
+	public void deleteAlternativeName(Driver driver, Year year) {
+		final String sql = "DELETE FROM DriverAlternativeName WHERE driver = ? AND year = ?";
+		jdbcTemplate.update(sql, driver, year);
 	}
 
 	public List<UUID> getAdmins() {

@@ -1,16 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="no" xmlns:th="http://www.thymeleaf.org">
 
 <head>
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" th:href="@{/tables.css}">
+	<link rel="stylesheet" th:href="@{/list.css}">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 </head>
 <nav class="topnav">
 	<a id="logo" href="/">
 		<h1>F1 Tipping</h1>
 	</a>
 	<button class="icon" onclick="toggleMainDropDown()">
-		<i class="fa fa-bars"></i>
+		<svg class="hamburger" viewBox="0 0 15 16">
+			<rect x="0" y="2" width="15" height="3" fill="white" />
+			<rect x="0" y="7.5" width="15" height="3" fill="white" />
+			<rect x="0" y="13" width="15" height="3" fill="white" />
+		</svg>
 	</button>
 	<div th:if="${breadcrumbs}" style="margin: 0;">
 		<ol class="breadcrumb">
@@ -22,7 +28,6 @@
 	</div>
 	<form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
 	<div id="links-container">
-
 		<div id="links">
 			<div class="dropdown-section">
 				<button class="dropdown-button" onclick="toggleSubMenuDropDown(0)">Tipping &#x25BC;</button>
@@ -48,18 +53,18 @@
 			</div>
 			<div th:unless="${loggedOut}" class="dropdown-section">
 				<button class="dropdown-button" onclick="toggleSubMenuDropDown(3)">Profil &#x25BC;</button>
-					<div id="sub-menu-3">
-						<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
-						<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
-						<a href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
-					</div>
+				<div id="sub-menu-3">
+					<a th:unless="${loggedOut}" href="/user/myprofile">Min Profil</a>
+					<a th:unless="${loggedOut}" href="/settings">Innstillinger</a>
+					<a href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
 				</div>
-				<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
-				<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
 			</div>
+			<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
+			<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
 		</div>
-	</nav>
-	
+	</div>
+</nav>
+
 <script>
 	let totalHeight = 0;
 	document.querySelectorAll("#links").forEach(child => {

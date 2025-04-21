@@ -40,7 +40,7 @@ public class SeasonController {
 		}
 		linkMap.put("Legg til ny sesong", "/admin/season/add");
 		model.addAttribute("linkMap", linkMap);
-		return "linkList";
+		return "util/linkList";
 	}
 
 	@GetMapping("/{year}")
@@ -48,6 +48,7 @@ public class SeasonController {
 			@PathVariable("year") int year, Model model) {
 		new Year(year, db);
 		model.addAttribute("title", year);
+		model.addAttribute("tabTitle", "Administrer " + year);
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		String basePath = "/admin/season/" + year;
 		linkMap.put("Endring av løp", basePath + "/manage");
@@ -56,12 +57,12 @@ public class SeasonController {
 		linkMap.put("Poengsystem", basePath + "/points");
 
 		model.addAttribute("linkMap", linkMap);
-		return "linkList";
+		return "util/linkList";
 	}
 
 	@GetMapping("/add")
 	public String addSeasonForm() {
-		return "addSeason";
+		return "admin/addSeason";
 	}
 
 	@PostMapping("/add")
@@ -71,12 +72,12 @@ public class SeasonController {
 		try {
 			new Year(year, db);
 			model.addAttribute("error", String.format("Sesongen %d er allerede lagt til", year));
-			return "addSeason";
+			return "admin/addSeason";
 		} catch (InvalidYearException e) {
 		}
 		if (start > end) {
 			model.addAttribute("error", "Starten av året kan ikke være etter slutten av året");
-			return "addSeason";
+			return "admin/addSeason";
 		}
 
 		List<Integer> races = new ArrayList<>();

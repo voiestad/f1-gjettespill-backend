@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import jakarta.servlet.RequestDispatcher;
@@ -28,7 +29,7 @@ public class F1ErrorController implements ErrorController {
 	 * be handled properly elsewhere.
 	 */
 	@RequestMapping("/error")
-	public String error(HttpServletRequest request) {
+	public String error(HttpServletRequest request, Model model) {
 		Optional<User> user = userService.loadUser();
 		String userId = user.map(u -> u.id.toString()).orElse("unknown");
 		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
@@ -41,13 +42,19 @@ public class F1ErrorController implements ErrorController {
 		
 			if (statusCode.equals(HttpStatus.NOT_FOUND.value())) {
 				logger.error("User '{}' received a 404 error and tried accessing '{}', coming from '{}'.", userId, url, referer);
-				return "error-404";
+				model.addAttribute("errorTitle", "Beklager, vi kunne ikke finne siden du lette etter...");
+				model.addAttribute("serverFault", false);
+				return "error";
 			} else if (statusCode.equals(HttpStatus.INTERNAL_SERVER_ERROR.value())) {
 				logger.error("User '{}' received a 500 error while accessing '{}', coming from '{}'.", userId, url, referer);
-				return "error-500";
+				model.addAttribute("errorTitle", "Det oppstå en feil hos tjeneren...");
+				model.addAttribute("serverFault", true);
+				return "error";
 			}
 		}
 		logger.error("User '{}' received an error unknown error at '{}', coming from '{}'.", userId, url, referer);
+		model.addAttribute("errorTitle", "Det oppstå en ukjent feil...");
+		model.addAttribute("serverFault", true);
 		return "error";
 	}
 }

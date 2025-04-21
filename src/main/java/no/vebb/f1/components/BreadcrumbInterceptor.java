@@ -155,10 +155,16 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		}
 		String type = segments.next();
 		if (!segments.hasNext()) {
+			if (type.length() > 1) {
+				return type.substring(0, 1).toUpperCase() + type.substring(1);
+			}
 			return type;
 		}
 		String file = segments.next();
 		if (!segments.hasNext()) {
+			if (file.length() > 4) {
+				return file.substring(0, file.length()-4);
+			}
 			return file;
 		}
 		return "no path";
@@ -193,10 +199,14 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		if (!segments.hasNext()) {
 			return "Deltakere";
 		}
-		// String remainder = segments.next();
-		// if (remainder.matches("addDriver|addConstructor|deleteDriver|deleteConstructor|moveDriver|moveConstructor")) {
-		// 	return "";
-		// }
+		switch (segments.next()) {
+			case "constructors":
+				return "Konstruktører";
+			case "drivers":
+				return "Sjåfører";
+			case "alias":
+				return "Alternative navn";
+		}
 		return "no path";
 	}
 	
@@ -204,10 +214,6 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		if (!segments.hasNext()) {
 			return "Poengsystem";
 		}
-		// String remainder = segments.next();
-		// if (remainder.matches("add|delete|set")) {
-		// 	return "";
-		// }
 		return "no path";
 	}
 
@@ -215,10 +221,6 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		if (!segments.hasNext()) {
 			return "Frister";
 		}
-		// String remainder = segments.next();
-		// if (remainder.matches("setRace|setYear")) {
-		// 	return "";
-		// }
 		return "no path";
 	}
 

@@ -46,9 +46,9 @@ public class ManageSeasonController {
 		}
 		List<CutoffRace> races = db.getCutoffRaces(seasonYear);
 		model.addAttribute("races", races);
-		model.addAttribute("title", year);
+		model.addAttribute("title", "Løp " + year);
 		model.addAttribute("year", year);
-		return "manageSeason";
+		return "admin/manageSeason";
 	}
 
 	@GetMapping("/{raceId}")
@@ -69,8 +69,10 @@ public class ManageSeasonController {
 			tables.add(statsUtil.getFlagTable(validRaceId));
 			
 			model.addAttribute("tables", tables);
-			model.addAttribute("title", year);
-			return "tables";
+			int position = db.getPositionOfRace(validRaceId);
+			String raceName = db.getRaceName(validRaceId);
+			model.addAttribute("title", position + ". " + raceName + " " + year);
+			return "util/tables";
 		} catch (InvalidRaceException e) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
@@ -132,7 +134,7 @@ public class ManageSeasonController {
 			}
 			Importer importer = new Importer(db);
 			importer.importData();
-			return "redirect:/admin/season/" + year + "/manage?success=true";
+			return "redirect:/admin/season/" + year + "/manage?success=true#" + validRaceId;
 		} catch (InvalidRaceException e) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
@@ -178,6 +180,6 @@ public class ManageSeasonController {
 		importer.importData();
 		RaceId validRaceId = new RaceId(raceId, db);
 		db.setCutoffRace(new Cutoff().getDefaultInstant(seasonYear), validRaceId);
-		return "redirect:/admin/season/" + year + "/manage?success=true";
+		return "redirect:/admin/season/" + year + "/manage?success=true#addRace";
 	}
 }

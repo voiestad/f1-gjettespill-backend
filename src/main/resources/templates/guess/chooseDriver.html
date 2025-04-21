@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="no" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<h2 th:text="${title}"></h2>
+	<main>
+		<div th:insert="~{guess/countdown :: countdown(timeLeftToGuess=${timeLeftToGuess})}"></div>
+		<form th:action="@{/guess/{type}(type=${type})}" method="post">
+			<input type="hidden" name="driver" th:value="${guessedDriver}" id="guessedDriver">
+			<ul class="container">
+				<li th:each="item, iterStat : ${items}" onclick="select(event)"
+					th:class="${item.competitor.value.equals(guessedDriver) ? 'selected item-wrapper' : 'item-wrapper'}">
+					<div class="number" th:text="${iterStat.index + 1}"></div>
+					<div class="item" th:text="${item.competitor}" th:id="${item.competitor}"></div>
+					<span th:if="${item.color.value}" class="circle"
+						th:style="'background-color:' + ${item.color}"></span>
+				</li>
+			</ul>
+			<input type="submit" value="Send inn gjett">
+		</form>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+
+	<script>
+		let selectedItem = null;
+		let guessedDriver = document.getElementById("guessedDriver");
+
+		let selected = document.querySelector('.selected')
+		select({ target: selected });
+
+		function select(event) {
+			if (event.target == null) {
+				return;
+			}
+			if (selectedItem != null) {
+				selectedItem.style.color = "";
+			}
+			selectedItem = event.target.querySelector('.item') || event.target.parentElement.querySelector('.item');
+			selectedItem.style.color = "red";
+			guessedDriver.value = selectedItem.innerHTML;
+		}
+
+
+	</script>
+
+</body>
+
+</html>

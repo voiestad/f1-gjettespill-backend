@@ -57,7 +57,7 @@ public class ProfileController {
 		for (User user : users) {
 			linkMap.put(user.username, "/user/" + user.id);
 		}
-		return "linkList";
+		return "util/linkList";
 	}
 
 	/**
@@ -112,7 +112,7 @@ public class ProfileController {
 
 		model.addAttribute("title", user.username);
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
-		return "profile";
+		return "util/tables";
 	}
 
 	@GetMapping("/compare")
@@ -132,14 +132,14 @@ public class ProfileController {
 		model.addAttribute("selectedYear", year);
 		
 		if (optUser1.isEmpty() || optUser2.isEmpty() || year == null) {
-			return "compare";
+			return "public/compare";
 		}
 		try {
 			Year seasonYear = new Year(year, db);
 			if (cutoff.isAbleToGuessYear(seasonYear)) {
 				String title = "Tippingen er tilgjenglig snart!";
 				tables.add(new Table(title, Arrays.asList(), Arrays.asList()));
-				return "compare";
+				return "public/compare";
 			}
 			User user1 = optUser1.get();
 			User user2 = optUser2.get();
@@ -149,7 +149,7 @@ public class ProfileController {
 			model.addAttribute("title", String.format("%s vs %s", user1.username, user2.username));
 		} catch (InvalidYearException e) {
 		}
-		return "compare";
+		return "public/compare";
 	}
 
 }

@@ -48,10 +48,10 @@ public class CutoffController {
 		List<CutoffRace> races = db.getCutoffRaces(seasonYear);
 		LocalDateTime cutoffYear = db.getCutoffYearLocalTime(seasonYear);
 
-		model.addAttribute("title", year);
+		model.addAttribute("title", "Frister " + year);
 		model.addAttribute("races", races);
 		model.addAttribute("cutoffYear", cutoffYear);
-		return "cutoff";
+		return "admin/cutoff";
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class CutoffController {
 		} catch (DateTimeParseException e) {
 		} catch (InvalidRaceException e) {
 		}
-		return "redirect:/admin/season/" + year + "/cutoff";
+		return "redirect:/admin/season/" + year + "/cutoff#" + raceId;
 	}
 
 	/**

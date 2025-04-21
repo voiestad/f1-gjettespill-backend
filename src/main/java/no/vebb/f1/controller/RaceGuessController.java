@@ -49,6 +49,7 @@ public class RaceGuessController {
 			}
 			String title = String.format("%d. %s %d", race.position, race.name, year.value);
 			model.addAttribute("title", title);
+			model.addAttribute("tabTitle", "Tippet på løp");
 
 			List<Table> tables = new ArrayList<>();
 
@@ -64,7 +65,7 @@ public class RaceGuessController {
 			}
 
 			model.addAttribute("tables", tables);
-			return "raceGuess";
+			return "util/tables";
 		} catch (InvalidYearException e) {
 			return "redirect:/";
 		} catch (EmptyResultDataAccessException e) {

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="no" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<h2 th:text="${title}"></h2>
+		<form th:action="@{/admin/season/{year}/competitors/alias/add(year=${year})}" method="post">
+			<select name="driver">
+				<option th:each="driver : ${drivers}" th:text="${driver}" th:value="${driver}"></option>
+			</select>
+			<input type="text" name="alternativeName" placeholder="Alternativt navn">
+			<input type="submit" value="Legg til alternativt navn">
+		</form>
+		<div th:each="driverAlias, iterStat : ${driverAliases}">
+			<p th:text="${driverAlias.key} + ' : ' + ${driverAlias.value}"></p>
+			<form th:action="@{/admin/season/{year}/competitors/alias/delete(year=${year})}" method="post">
+				<input type="hidden" name="driver" th:value="${driverAlias.key}">
+				<input type="submit" value="Slett alternativt navn">
+			</form>
+		</div>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+</body>
+
+</html>

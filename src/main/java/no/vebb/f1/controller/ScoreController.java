@@ -45,7 +45,7 @@ public class ScoreController {
 		model.addAttribute("tables", scoreMappingTables);
 		model.addAttribute("title", "Poengberegning");
 		model.addAttribute("loggedOut", !userService.isLoggedIn());
-		return "tables";
+		return "util/tables";
 	}
 
 }
