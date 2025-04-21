@@ -1822,7 +1822,6 @@ public class Database {
 			SELECT dy.driver as driver, dt.team as team
 			FROM DriverYear dy
 			LEFT JOIN DriverTeam dt ON dt.driver = dy.driver
-			LEFT JOIN ConstructorYear cy ON cy.constructor = dt.team
 			WHERE dy.year = ?
 			ORDER BY dy.position ASC
 			""";

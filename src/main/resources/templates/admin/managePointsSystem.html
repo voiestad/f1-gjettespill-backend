@@ -4,7 +4,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>F1 Tipping</title>
+	<title th:text="${title}"></title>
 </head>
 
 <body>
@@ -67,7 +67,6 @@
 				document.getElementById("delete").getElementsByClassName("diff")[0].value = diff;
 				document.getElementById("delete").getElementsByClassName("points")[0].value = points;
 			}
-			
 		</script>
 	</main>
 	<footer th:insert="~{footer}"></footer>
