@@ -297,6 +297,8 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 				return "Slett bruker";
 			case "mail":
 				return "Påminnelser";
+			case "referral":
+				return "Inviter brukere";
 		}
 		return "no path";
 	}

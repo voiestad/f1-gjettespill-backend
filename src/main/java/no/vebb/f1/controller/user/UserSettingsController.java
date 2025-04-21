@@ -65,6 +65,7 @@ public class UserSettingsController {
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		linkMap.put("Se brukerinformasjon", "/settings/info");
 		linkMap.put("Påminnelser", "/settings/mail");
+		linkMap.put("Inviter brukere", "/settings/referral");
 		linkMap.put("Endre brukernavn", "/settings/username");
 		linkMap.put("Slett bruker", "/settings/delete");
 		model.addAttribute("linkMap", linkMap);
@@ -256,5 +257,31 @@ public class UserSettingsController {
 		} catch (InvalidEmailException e) {
 		}
 		return "redirect:/settings/mail";
+	}
+
+	@GetMapping("/referral")
+	public String generateReferralCodeForm(Model model) {
+		UUID userId = userService.loadUser().get().id;
+		Long referralCode = db.getReferralCode(userId);
+		if (referralCode != null) {
+			model.addAttribute("referralCode", referralCode);
+		}
+		return "user/referralCode";
+	}
+	
+	@PostMapping("/referral/add")
+	@Transactional
+	public String generateReferralCode() {
+		UUID userId = userService.loadUser().get().id;
+		db.addReferralCode(userId);
+		return "redirect:/settings/referral";
+	}
+	
+	@PostMapping("/referral/delete")
+	@Transactional
+	public String removeReferralCode() {
+		UUID userId = userService.loadUser().get().id;
+		db.removeReferralCode(userId);
+		return "redirect:/settings/referral";
 	}
 }

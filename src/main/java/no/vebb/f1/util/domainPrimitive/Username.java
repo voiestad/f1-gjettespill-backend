@@ -27,7 +27,7 @@ public class Username {
 		}
 		
 		if (usernameUpper.equals("ANONYM")) {
-			throw new InvalidUsernameException("Brukernavn kan ikke være 'Anonym'");
+			throw new InvalidUsernameException("Brukernavn kan ikke være 'Anonym'.");
 		}
 
 		boolean isUsernameInUse = db.isUsernameInUse(usernameUpper);

@@ -16,7 +16,7 @@ import jakarta.mail.Message.RecipientType;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.VerificationCodeGenerator;
+import no.vebb.f1.util.CodeGenerator;
 
 @Service
 public class UserMailService {
@@ -33,7 +33,7 @@ public class UserMailService {
 	private String fromEmail;
 
 	public void sendVerificationCode(UserMail user) {
-		final int verificationCode = VerificationCodeGenerator.getCode();
+		final int verificationCode = CodeGenerator.getVerificationCode();
 		db.addVerificationCode(user, verificationCode);
 		String strCode = String.valueOf(verificationCode);
 		String formattedCode = String.format("%s %s %s",

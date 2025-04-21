@@ -8,7 +8,7 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.util.TimeUtil;
 
 @Component
-public class VerificationCodeRemover {
+public class CodeRemover {
 
 	@Autowired
 	private Database db;
@@ -16,5 +16,6 @@ public class VerificationCodeRemover {
 	@Scheduled(fixedRate = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
 	public void removeExpiredCodes() {
 		db.removeExpiredVerificationCodes();
+		db.removeExpiredReferralCodes();
 	}
 }

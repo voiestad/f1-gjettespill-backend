@@ -26,6 +26,7 @@
 		}
 
 		.pin-input {
+			color: var(--color-fg);
 			font-family: monospace;
 			font-size: 2rem;
 			border: none;
@@ -47,7 +48,7 @@
 			<form th:action="@{/settings/mail/verification}" method="post">
 				<div>
 					<div class="pin-container">
-						<input type="text" name="code" class="pin-input" pattern="\d*" inputMode="numeric"
+						<input type="text" name="code" class="pin-input" pattern="\d{9}" inputMode="numeric"
 							autocomplete="off" id="pin-input" />
 					</div>
 					<script>
