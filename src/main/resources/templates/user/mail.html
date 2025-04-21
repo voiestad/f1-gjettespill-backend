@@ -4,7 +4,6 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" th:href="@{/loader.css}">
 	<title>Påminnelser</title>
 	<style>
 		form {
@@ -51,8 +50,8 @@
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
-		<h2>Påminnelser</h2>
 		<div id="form">
+		<h2>Påminnelser</h2>
 			<div th:if="${hasMail}" class="tables">
 				<table>
 					<thead>
