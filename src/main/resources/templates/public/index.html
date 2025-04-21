@@ -23,14 +23,14 @@
 		<h2>F1 Tipping hjemskjerm!</h2>
 		<div class="tables">
 			<table>
-				<h3 th:text="${leaderBoard.getName()}"></h3>
+				<h3 th:text="${leaderboard.getName()}"></h3>
 				<thead>
 					<tr>
-						<th th:each="cell : ${leaderBoard.getHeader()}" th:text="${cell}"></th>
+						<th th:each="cell : ${leaderboard.getHeader()}" th:text="${cell}"></th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr th:each="row : ${leaderBoard.getBody()}">
+					<tr th:each="row : ${leaderboard.getBody()}">
 						<td th:text="${row[0]}"></td>
 						<td><a th:text="${row[1]}" th:href="@{/user/{id}(id=${row[3]})}"></a></td>
 						<td th:text="${row[2]}"></td>
@@ -45,17 +45,13 @@
 			</div>
 		</div>
 		<canvas id="chart"></canvas>
-		<script th:inline="javascript">
+		<script th:if="${graph}" th:inline="javascript">
 			drawChart();
 			function drawChart() {
-				const scores = /*[[${scores}]]*/[];
+				const scores = /*[[${graph.getScores()}]]*/[];
 				const ctx = document.getElementById('chart');
-				if (scores.length === 0) {
-					ctx.remove();
-					return;
-				}
 				const xValues = scores[0].map((_, i) => i);
-				const guessersNames = /*[[${guessersNames}]]*/[];
+				const guessersNames = /*[[${graph.getGuessers()}]]*/[];
 				const data = [];
 				const colors = ["#f7d000", "purple", "red", "green", "blue", "orange"];
 				for (let i = 0; i < scores.length; i++) {
@@ -123,6 +119,9 @@
 					}
 				});
 			}
+		</script>
+		<script th:unless="${graph}">
+			const ctx = document.getElementById('chart').remove();
 		</script>
 	</main>
 	<footer th:insert="~{footer}"></footer>

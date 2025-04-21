@@ -12,13 +12,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PreDestroy;
+import no.vebb.f1.util.TimeUtil;
 
 @Component
 public class DatabaseBackup {
 
 	private static final Logger logger = LoggerFactory.getLogger(DatabaseBackup.class);
 
-	@Scheduled(fixedRate = 86400000, initialDelay = 15000)
+	@Scheduled(fixedRate = TimeUtil.DAY, initialDelay = TimeUtil.MINUTE)
 	@PreDestroy
 	public void backupDatabase() {
         String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"));

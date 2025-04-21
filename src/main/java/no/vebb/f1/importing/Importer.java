@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.graph.GraphCache;
 import no.vebb.f1.user.UserMailService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
@@ -37,13 +38,16 @@ public class Importer {
 	@Autowired
 	private UserMailService userMailService;
 
+	@Autowired
+	private GraphCache graphCache;
+
 	public Importer() {}
 
 	public Importer(Database db) {
 		this.db = db;
 	}
 
-	@Scheduled(fixedRate = 600000, initialDelay = 5000)
+	@Scheduled(fixedRate = TimeUtil.TEN_MINUTES, initialDelay = TimeUtil.SECOND * 5)
 	@Transactional
 	public void importData() {
 		logger.info("Starting import of data to database");
@@ -88,6 +92,7 @@ public class Importer {
 							"Endringer i resultat av løp utenfor poengene uten at mesterskapet endret seg. Vennligst verifiser at mesterskapet er korrekt.");
 					}
 				} else {
+					graphCache.refresh();
 					logger.info("Imported standings");
 				}
 			}
