@@ -335,6 +335,14 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS ReferralCode (
+				user_id TEXT PRIMARY KEY,
+				referral_code INTEGER NOT NULL,
+				cutoff TEXT NOT NULL,
+				FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS MailOption (
 					option INTEGER PRIMARY KEY
 			);

@@ -1673,6 +1673,54 @@ public class Database {
 		return true;
 	}
 
+	public boolean isValidReferralCode(long referralCode) {
+		final String sql = "SELECT COUNT(*) FROM ReferralCode WHERE referral_code = ?";
+		boolean isValidCode = jdbcTemplate.queryForObject(sql, Integer.class, referralCode) > 0;
+		if (!isValidCode) {
+			return false;
+		}
+		final String getCutoffSql = "SELECT cutoff FROM ReferralCode WHERE referral_code = ?";
+		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoffSql, String.class, referralCode));
+		return cutoff.compareTo(Instant.now()) > 0;
+	}
+
+	public void removeExpiredReferralCodes() {
+		final String sql = "SELECT cutoff, user_id FROM ReferralCode";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
+		
+		List<UUID> expired = sqlRes.stream()
+			.filter(row -> Instant.parse((String) row.get("cutoff")).compareTo(Instant.now()) < 0)
+			.map(row -> UUID.fromString((String) row.get("user_id")))
+			.toList();
+		for (UUID userId : expired) {
+			removeReferralCode(userId);
+		}
+	}
+
+	public void removeReferralCode(UUID userId) {
+		final String sql = "DELETE FROM ReferralCode WHERE user_id = ?";
+		jdbcTemplate.update(sql, userId);
+	}
+
+	public void addReferralCode(UUID userId) {
+		final String sql = """
+			INSERT OR REPLACE INTO ReferralCode 
+			(user_id, referral_code, cutoff) VALUES (?, ?, ?)
+			""";
+		long referralCode = CodeGenerator.getReferralCode();
+		Instant cutoff = Instant.now().plus(Duration.ofHours(1));
+		jdbcTemplate.update(sql, userId, referralCode, cutoff);
+	}
+
+	public Long getReferralCode(UUID userId) {
+		final String sql = "SELECT referral_code FROM ReferralCode WHERE user_id = ?";
+		try {
+			return jdbcTemplate.queryForObject(sql, Long.class, userId);
+		} catch (EmptyResultDataAccessException e) {
+			return null;
+		}
+	}
+
 	public List<List<String>> userGuessDataDriver(UUID userId) {
 		final String sql = """
 			SELECT position, driver, year

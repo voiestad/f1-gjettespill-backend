@@ -58,7 +58,15 @@ public class UsernameController {
 	@Transactional
 	public String registerUsername(@AuthenticationPrincipal OAuth2User principal,
 			@RequestParam("username") String username,
+			@RequestParam("referralCode") long referralCode,
 			Model model) {
+		model.addAttribute("url", url);
+		model.addAttribute("newUser", true);
+		if (!db.isValidReferralCode(referralCode)) {
+			model.addAttribute("error", "Ikke gyldig invitasjonskode.");
+			logger.warn("Someone tried to use an invalid referral code.");
+			return "user/registerUsername";
+		}
 		try {
 			final String googleId = principal.getName();
 			Username validUsername = new Username(username, db);
@@ -71,7 +79,6 @@ public class UsernameController {
 			}
 		} catch (InvalidUsernameException e) {
 			model.addAttribute("error", e.getMessage());
-			model.addAttribute("url", url);
 			return "user/registerUsername";
 		}
 		return "redirect:/";
