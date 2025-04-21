@@ -3,7 +3,6 @@
 
 <head>
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<link rel="stylesheet" th:href="@{/tables.css}">
 	<link rel="stylesheet" th:href="@{/list.css}">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -13,7 +12,11 @@
 		<h1>F1 Tipping</h1>
 	</a>
 	<button class="icon" onclick="toggleMainDropDown()">
-		<i class="fa fa-bars"></i>
+		<svg class="hamburger" viewBox="0 0 15 16">
+			<rect x="0" y="2" width="15" height="3" fill="white"/>
+			<rect x="0" y="7.5" width="15" height="3" fill="white"/>
+			<rect x="0" y="13" width="15" height="3" fill="white"/>
+		</svg>
 	</button>
 	<div th:if="${breadcrumbs}" style="margin: 0;">
 		<ol class="breadcrumb">

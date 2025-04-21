@@ -150,6 +150,11 @@ div {
 	font-size: large;
 }
 
+.hamburger {
+	width: 15px;
+	height: 16px;
+}
+
 .linkList {
 	display: flex;
 	flex-direction: column;
