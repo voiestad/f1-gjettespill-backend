@@ -64,7 +64,7 @@ public class RaceGuessController {
 			}
 
 			model.addAttribute("tables", tables);
-			return "public/raceGuess";
+			return "util/tables";
 		} catch (InvalidYearException e) {
 			return "redirect:/";
 		} catch (EmptyResultDataAccessException e) {

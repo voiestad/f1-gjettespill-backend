@@ -18,7 +18,8 @@
 				<li class="item-wrapper" th:each="item, iterStat : ${competitors}" draggable="true">
 					<div class="number" th:text="${iterStat.index + 1}"></div>
 					<div class="item" th:text="${item.competitor}"></div>
-					<span th:if="${item.color.value}" class="circle" th:style="'background-color:' + ${item.color}"></span>
+					<span th:if="${item.color.value}" class="circle"
+						th:style="'background-color:' + ${item.color}"></span>
 					<input type="hidden" name="rankedCompetitors" th:value="${item.competitor}" />
 				</li>
 			</ul>
@@ -35,7 +36,7 @@
 		let itemBounds = null;
 		const items = document.querySelectorAll('.item-wrapper');
 		setEqualHeights();
-		
+
 		function setEqualHeights() {
 			const items = document.querySelectorAll('.item-wrapper');
 			let maxHeight = 0;

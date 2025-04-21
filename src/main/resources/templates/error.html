@@ -12,7 +12,9 @@
 	<main>
 		<h2 th:text="${errorTitle}"></h2>
 		<p th:if="${serverFault}">Hvis feilen vedvarer, vennligst meld den inn <a href="/contact">her</a>.</p>
-		<p th:unless="${serverFault}">Hvis du mener det er en feil, vennligst meld det inn <a href="/contact">her</a>.</p>
+		<p th:unless="${serverFault}">
+			Hvis du mener det er en feil, vennligst meld det inn <a href="/contact">her</a>.
+		</p>
 		<a href="/">Tilbake til hjem</a>
 	</main>
 	<footer th:insert="~{footer}"></footer>

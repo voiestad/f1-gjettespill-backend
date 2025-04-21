@@ -15,7 +15,8 @@
 			<div th:each="square, iterStat: ${bingoCard}" th:id="${square.id()}">
 				<h3 th:text="${iterStat.index+1}"></h3>
 				<form th:action="@{/bingo/admin/{year}/set(year=${year})}" method="post" autocomplete="off">
-					<textarea th:text="${square.text()}" placeholder="Rutetekst" name="text" rows="8" cols="20"></textarea>
+					<textarea th:text="${square.text()}" placeholder="Rutetekst" name="text" rows="8"
+						cols="20"></textarea>
 					<input type="hidden" th:value="${square.id()}" name="id">
 					<input type="submit" value="Sett ny tekst">
 				</form>

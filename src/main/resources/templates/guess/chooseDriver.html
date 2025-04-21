@@ -16,23 +16,24 @@
 			<input type="hidden" name="driver" th:value="${guessedDriver}" id="guessedDriver">
 			<ul class="container">
 				<li th:each="item, iterStat : ${items}" onclick="select(event)"
-				th:class="${item.competitor.value.equals(guessedDriver) ? 'selected item-wrapper' : 'item-wrapper'}">
-				<div class="number" th:text="${iterStat.index + 1}"></div>
-				<div class="item" th:text="${item.competitor}" th:id="${item.competitor}"></div>
-				<span th:if="${item.color.value}" class="circle" th:style="'background-color:' + ${item.color}"></span>
-			</li>
-		</ul>
+					th:class="${item.competitor.value.equals(guessedDriver) ? 'selected item-wrapper' : 'item-wrapper'}">
+					<div class="number" th:text="${iterStat.index + 1}"></div>
+					<div class="item" th:text="${item.competitor}" th:id="${item.competitor}"></div>
+					<span th:if="${item.color.value}" class="circle"
+						th:style="'background-color:' + ${item.color}"></span>
+				</li>
+			</ul>
 			<input type="submit" value="Send inn gjett">
 		</form>
 	</main>
 	<footer th:insert="~{footer}"></footer>
-	
+
 	<script>
 		let selectedItem = null;
 		let guessedDriver = document.getElementById("guessedDriver");
 
 		let selected = document.querySelector('.selected')
-		select({target: selected});
+		select({ target: selected });
 
 		function select(event) {
 			if (event.target == null) {

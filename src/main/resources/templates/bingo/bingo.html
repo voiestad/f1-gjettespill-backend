@@ -14,7 +14,8 @@
 		<h2 th:text="${title}"></h2>
 		<div class="bingo-container">
 			<div class="bingo">
-				<div th:each="square : ${bingoCard}" th:text="${square.text()}" th:classappend="${square.marked() ? 'marked' : ''}"></div>
+				<div th:each="square : ${bingoCard}" th:text="${square.text()}"
+					th:classappend="${square.marked() ? 'marked' : ''}"></div>
 			</div>
 		</div>
 		<a th:if="${isBingomaster}" href="/bingo/admin">Endre bingo</a>

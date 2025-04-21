@@ -21,10 +21,12 @@
 						inputmode="numeric" required>
 					<input type="submit" value="Endre plass">
 				</form>
-				<form th:action="@{/admin/season/{year}/competitors/setTeamDriver(year=${year})}" method="post" autocomplete="off">
+				<form th:action="@{/admin/season/{year}/competitors/setTeamDriver(year=${year})}" method="post"
+					autocomplete="off">
 					<input type="hidden" name="driver" th:value="${driver}">
 					<select name="team">
-						<option th:each="constructor : ${constructors}" th:text="${constructor}" th:value="${constructor}"></option>
+						<option th:each="constructor : ${constructors}" th:text="${constructor}"
+							th:value="${constructor}"></option>
 					</select>
 					<input type="submit" value="Sett lag">
 				</form>
@@ -56,7 +58,8 @@
 						inputmode="numeric" required>
 					<input type="submit" value="Endre plass">
 				</form>
-				<form th:action="@{/admin/season/{year}/competitors/addColor(year=${year})}" method="post" autocomplete="off">
+				<form th:action="@{/admin/season/{year}/competitors/addColor(year=${year})}" method="post"
+					autocomplete="off">
 					<input type="hidden" name="constructor" th:value="${constructor}">
 					<input type="text" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#ffffff" name="color">
 					<input type="submit" value="Velg farge">

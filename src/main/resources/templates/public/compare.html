@@ -7,12 +7,15 @@
 	<title th:text="${title}"></title>
 	<style>
 		@media (min-width: 601px) {
+
 			th,
 			td {
 				font-size: 14px;
 			}
 		}
+
 		@media (max-width: 600px) {
+
 			th,
 			td {
 				font-size: 8px;
@@ -20,26 +23,26 @@
 		}
 	</style>
 	<script>
-        function prefixUrlWithQuery(url, paramName, paramValue) {
-            const params = new URLSearchParams(window.location.search);
-            if (paramValue) {
-                params.set(paramName, paramValue);
-            } else {
-                params.delete(paramName);
-            }
+		function prefixUrlWithQuery(url, paramName, paramValue) {
+			const params = new URLSearchParams(window.location.search);
+			if (paramValue) {
+				params.set(paramName, paramValue);
+			} else {
+				params.delete(paramName);
+			}
 			if (params.toString() === '') {
 				return url;
 			}
-            return `${url}?${params.toString()}`;
-        }
+			return `${url}?${params.toString()}`;
+		}
 
-        function handleSelectChange(selectElement, paramName) {
-            const selectedValue = selectElement.value;
-            const currentUrl = window.location.pathname;
-            const newUrl = prefixUrlWithQuery(currentUrl, paramName, selectedValue);
-            window.location.href = newUrl;
-        }
-    </script>
+		function handleSelectChange(selectElement, paramName) {
+			const selectedValue = selectElement.value;
+			const currentUrl = window.location.pathname;
+			const newUrl = prefixUrlWithQuery(currentUrl, paramName, selectedValue);
+			window.location.href = newUrl;
+		}
+	</script>
 </head>
 
 <body>
@@ -49,28 +52,22 @@
 		<form method="get">
 			<select name="user1" onchange="handleSelectChange(this, 'user1')">
 				<option value="">Velg bruker 1</option>
-				<option th:each="user : ${users}"
-						th:text="${user.username}"
-						th:value="${user.id}"
-						th:selected="${user.id.equals(selectedUser1)}"></option>
+				<option th:each="user : ${users}" th:text="${user.username}" th:value="${user.id}"
+					th:selected="${user.id.equals(selectedUser1)}"></option>
 			</select>
 		</form>
 		<form method="get">
 			<select name="user2" onchange="handleSelectChange(this, 'user2')">
 				<option value="">Velg bruker 2</option>
-				<option th:each="user : ${users}"
-						th:text="${user.username}"
-						th:value="${user.id}"
-						th:selected="${user.id.equals(selectedUser2)}"></option>
+				<option th:each="user : ${users}" th:text="${user.username}" th:value="${user.id}"
+					th:selected="${user.id.equals(selectedUser2)}"></option>
 			</select>
 		</form>
 		<form method="get">
 			<select name="year" onchange="handleSelectChange(this, 'year')">
 				<option value="">Velg år</option>
-				<option th:each="year : ${years}"
-						th:text="${year}"
-						th:value="${year}"
-						th:selected="${year.value == selectedYear}"></option>
+				<option th:each="year : ${years}" th:text="${year}" th:value="${year}"
+					th:selected="${year.value == selectedYear}"></option>
 			</select>
 		</form>
 		<div th:insert="~{util/tablesFragment}" class="tables"></div>

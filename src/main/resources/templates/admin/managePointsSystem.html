@@ -14,27 +14,29 @@
 		<form th:action="@{/admin/season/{year}/points/set(year=${year})}" method="post">
 			<label>Kategori</label>
 			<select name="category">
-				<option th:each="category : ${categories}" th:value="${category.key}" th:text="${category.value}"></option>
+				<option th:each="category : ${categories}" th:value="${category.key}" th:text="${category.value}">
+				</option>
 			</select>
 			<label>Differanse</label>
-			<input type="number" name="diff" value="0" min="0" max="100" pattern="[0-9]*"
-			inputmode="numeric" required>
+			<input type="number" name="diff" value="0" min="0" max="100" pattern="[0-9]*" inputmode="numeric" required>
 			<label>Poeng</label>
-			<input type="number" name="points" value="0" min="0" max="250" pattern="[0-9]*"
-			inputmode="numeric" required>
+			<input type="number" name="points" value="0" min="0" max="250" pattern="[0-9]*" inputmode="numeric"
+				required>
 			<input type="submit" value="Sett ny verdi">
 		</form>
 		<form th:action="@{/admin/season/{year}/points/add(year=${year})}" method="post">
 			<label>Kategori</label>
 			<select name="category">
-				<option th:each="category : ${categories}" th:value="${category.key}" th:text="${category.value}"></option>
+				<option th:each="category : ${categories}" th:value="${category.key}" th:text="${category.value}">
+				</option>
 			</select>
 			<input type="submit" value="Legg til">
 		</form>
 		<form th:action="@{/admin/season/{year}/points/delete(year=${year})}" method="post">
 			<label>Kategori</label>
 			<select name="category">
-				<option th:each="category : ${categories}" th:value="${category.key}" th:text="${category.value}"></option>
+				<option th:each="category : ${categories}" th:value="${category.key}" th:text="${category.value}">
+				</option>
 			</select>
 			<input type="submit" value="&#128465;">
 		</form>
