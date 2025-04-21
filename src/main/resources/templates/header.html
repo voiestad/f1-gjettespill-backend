@@ -3,8 +3,6 @@
 
 <head>
 	<link rel="stylesheet" th:href="@{/style.css}">
-	<link rel="stylesheet" th:href="@{/tables.css}">
-	<link rel="stylesheet" th:href="@{/list.css}">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 </head>
 <nav class="topnav">
@@ -59,6 +57,7 @@
 					<a href="#" onclick="document.getElementById('logoutForm').submit();">Logg ut</a>
 				</div>
 			</div>
+			<button onclick="changeTheme()" class="dropdown-button" id="theme-button"></button>
 			<a th:if="${isAdmin}" th:href="@{/admin}">Admin Portal</a>
 			<a th:if="${loggedOut}" href="/oauth2/authorization/google">Logg inn</a>
 		</div>
@@ -66,6 +65,44 @@
 </nav>
 
 <script>
+	const themes = ["light", "dark", "oled"]
+	const themeNames = ["Lys", "Mørk", "Mørkere"]
+	let themeIndex;
+	const button = document.getElementById("theme-button");
+	const html = document.querySelector("html");
+
+	function setTheme() {
+		let theme = themes[themeIndex];
+		html.setAttribute("data-theme", theme);
+		localStorage.setItem("theme", theme);
+		let themeName = themeNames[themeIndex];
+		button.innerHTML = `Tema: ${themeName}`;
+	}
+	
+	function initTheme() {
+		let theme = localStorage.getItem("theme");
+		const isUsingLightTheme = window.matchMedia("(prefers-color-scheme: light)");
+		isUsingLightTheme.addEventListener("change", (e) => {
+			if (e.matches) {
+				themeIndex = 0;	
+			} else {
+				themeIndex = 1;
+			}
+			setTheme();
+		});
+		if (theme === null) {
+			theme = isUsingLightTheme.matches ? "light" : "dark";
+		}
+		themeIndex = themes.indexOf(theme);
+		setTheme();
+	}
+
+	function changeTheme() {
+		themeIndex = (themeIndex + 1) % themes.length;
+		setTheme();
+	}
+	initTheme();
+
 	let totalHeight = 0;
 	document.querySelectorAll("#links").forEach(child => {
 		totalHeight += child.clientHeight;
