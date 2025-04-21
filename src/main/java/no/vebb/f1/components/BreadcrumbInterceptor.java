@@ -193,10 +193,14 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		if (!segments.hasNext()) {
 			return "Deltakere";
 		}
-		// String remainder = segments.next();
-		// if (remainder.matches("addDriver|addConstructor|deleteDriver|deleteConstructor|moveDriver|moveConstructor")) {
-		// 	return "";
-		// }
+		switch (segments.next()) {
+			case "constructors":
+				return "Konstruktører";
+			case "drivers":
+				return "Sjåfører";
+			case "alias":
+				return "Alternative navn";
+		}
 		return "no path";
 	}
 	
@@ -204,10 +208,6 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		if (!segments.hasNext()) {
 			return "Poengsystem";
 		}
-		// String remainder = segments.next();
-		// if (remainder.matches("add|delete|set")) {
-		// 	return "";
-		// }
 		return "no path";
 	}
 
@@ -215,10 +215,6 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		if (!segments.hasNext()) {
 			return "Frister";
 		}
-		// String remainder = segments.next();
-		// if (remainder.matches("setRace|setYear")) {
-		// 	return "";
-		// }
 		return "no path";
 	}
 

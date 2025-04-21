@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="no" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<h2 th:text="${title}"></h2>
+		<div th:each="driver, iterStat : ${drivers}" th:id="${driver.competitor}">
+			<p th:text="${iterStat.index + 1} + ' ' + ${driver.competitor}"></p>
+			<form th:action="@{/admin/season/{year}/competitors/drivers/move(year=${year})}" method="post">
+				<input type="hidden" name="driver" th:value="${driver.competitor}">
+				<input type="number" name="newPosition" placeholder="Ny plass" min="1" max="50" pattern="[0-9]*"
+					inputmode="numeric" required>
+				<input type="submit" value="Endre plass">
+			</form>
+			<form th:action="@{/admin/season/{year}/competitors/drivers/setTeam(year=${year})}" method="post"
+				autocomplete="off">
+				<input type="hidden" name="driver" th:value="${driver.competitor}">
+				<select name="team">
+					<option value="">Velg lag</option>
+					<option th:each="constructor : ${constructors}" th:text="${constructor}"
+						th:value="${constructor}" th:selected="${constructor.equals(driver.value)}"></option>
+				</select>
+				<input type="submit" value="Sett lag">
+			</form>
+			<form th:action="@{/admin/season/{year}/competitors/drivers/delete(year=${year})}" method="post">
+				<input type="hidden" name="driver" th:value="${driver.competitor}">
+				<input type="submit" value="&#128465;">
+			</form>
+		</div>
+
+		<form th:action="@{/admin/season/{year}/competitors/drivers/add(year=${year})}" method="post" id="add">
+			<input type="text" name="driver" placeholder="Sjåførnavn" required>
+			<input type="submit" value="Legg til sjåfør">
+		</form>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+	<script th:if="${successMessage}" th:inline="javascript" th:insert="~{util/successMessage.js}"></script>
+</body>
+
+</html>

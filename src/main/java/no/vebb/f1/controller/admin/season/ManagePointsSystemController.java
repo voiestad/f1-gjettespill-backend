@@ -40,7 +40,10 @@ public class ManagePointsSystemController {
 	 * Handles GET requests to /admin/season/{year}/points.
 	 */
 	@GetMapping
-	public String managePointsSystem(@PathVariable("year") int year, Model model) {
+	public String managePointsSystem(@PathVariable("year") int year, Model model,
+			@RequestParam(value = "category", required = false) String selectedCategory,
+			@RequestParam(value = "diff", required = false, defaultValue = "0") int diff,
+			@RequestParam(value = "points", required = false, defaultValue = "0") int points) {
 		Year seasonYear = new Year(year, db);
 
 		List<Category> categories = db.getCategories();
@@ -50,6 +53,9 @@ public class ManagePointsSystemController {
 			categoryMap.put(category.value, translation);
 		}
 		model.addAttribute("categories", categoryMap);
+		model.addAttribute("selectedCategory", selectedCategory);
+		model.addAttribute("diff", diff);
+		model.addAttribute("points", points);
 
 		List<Table> tables = ScoringTables.getScoreMappingTables(seasonYear, db);
 		model.addAttribute("tables", tables);
@@ -61,7 +67,9 @@ public class ManagePointsSystemController {
 
 	@PostMapping("/add")
 	@Transactional
-	public String addPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
+	public String addPointsMapping(@PathVariable("year") int year, @RequestParam("category") String category,
+			@RequestParam(value = "diff", required = false, defaultValue = "0") int diff,
+			@RequestParam(value = "points", required = false, defaultValue = "0") int points) {
 		Year seasonYear = new Year(year, db);
 		Diff newDiff;
 		try {
@@ -75,12 +83,15 @@ public class ManagePointsSystemController {
 		} catch (InvalidCategoryException e) {
 			return "redirect:/admin/season/" + year + "/points";
 		}
-		return "redirect:/admin/season/" + year + "/points";
+		return String.format("redirect:/admin/season/%d/points?category=%s&diff=%d&points=%d",
+			year, category, diff, points);
 	}
 
 	@PostMapping("/delete")
 	@Transactional
-	public String deletePointsMapping(@PathVariable("year") int year, @RequestParam("category") String category) {
+	public String deletePointsMapping(@PathVariable("year") int year, @RequestParam("category") String category,
+			@RequestParam(value = "diff", required = false, defaultValue = "0") int diff,
+			@RequestParam(value = "points", required = false, defaultValue = "0") int points) {
 		Year seasonYear = new Year(year, db);
 		try {
 			Category validCategory = new Category(category, db);
@@ -89,7 +100,8 @@ public class ManagePointsSystemController {
 		} catch (NullPointerException e) {
 		} catch (InvalidCategoryException e) {
 		}
-		return "redirect:/admin/season/" + year + "/points";
+		return String.format("redirect:/admin/season/%d/points?category=%s&diff=%d&points=%d",
+			year, category, diff, points);
 	}
 
 	@PostMapping("/set")
@@ -112,6 +124,7 @@ public class ManagePointsSystemController {
 		} catch (InvalidPointsException e) {
 		} catch (InvalidDiffException e) {
 		}
-		return "redirect:/admin/season/" + year + "/points";
+		return String.format("redirect:/admin/season/%d/points?category=%s&diff=%d&points=%d",
+			year, category, diff, points);
 	}
 }

@@ -18,7 +18,7 @@
 			<input type="submit" value="Sett cutoff">
 		</form>
 
-		<div th:each="race : ${races}">
+		<div th:each="race : ${races}" th:id="${race.id}">
 			<p th:text="${race.position} + ' ' + ${race.name} + ' ' + ${race.id}"></p>
 			<form th:action="@{/admin/season/{year}/cutoff/setRace(year=${year})}" method="post">
 				<input type="hidden" name="id" th:value="${race.id}">

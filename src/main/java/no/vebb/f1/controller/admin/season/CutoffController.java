@@ -80,7 +80,7 @@ public class CutoffController {
 		} catch (DateTimeParseException e) {
 		} catch (InvalidRaceException e) {
 		}
-		return "redirect:/admin/season/" + year + "/cutoff";
+		return "redirect:/admin/season/" + year + "/cutoff#" + raceId;
 	}
 
 	/**

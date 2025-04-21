@@ -28,21 +28,14 @@
 			<input type="submit" value="Send inn gjett">
 		</form>
 		<script>
-			const yellowInput = document.getElementById("yellowInput");
-			const redInput = document.getElementById("redInput");
-			const safetyInput = document.getElementById("safetyInput");
-			const yellowOutput = document.getElementById("yellowOutput");
-			const redOutput = document.getElementById("redOutput");
-			const safetyOutput = document.getElementById("safetyOutput");
-			yellowInput.oninput = function () {
-				yellowOutput.innerHTML = yellowInput.value;
-			};
-			redInput.oninput = function () {
-				redOutput.innerHTML = redInput.value;
-			};
-			safetyInput.oninput = function () {
-				safetyOutput.innerHTML = safetyInput.value;
-			};
+			const sliders = ["yellow", "red", "safety"];
+			for (const sliderName of sliders) {
+				const input = document.getElementById(`${sliderName}Input`)
+				const output = document.getElementById(`${sliderName}Output`)
+				input.oninput = function () {
+					output.innerHTML = input.value;
+				};
+			}
 		</script>
 	</main>
 	<footer th:insert="~{footer}"></footer>

@@ -10,13 +10,13 @@
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
-		<p th:if="${successMessage}" th:text="${successMessage}"></p>
 		<h2 th:text="${title}"></h2>
 		<div class="linkList">
 			<a th:each="entry : ${linkMap}" th:href="${entry.value}" th:text="${entry.key}"></a>
 		</div>
 	</main>
 	<footer th:insert="~{footer}"></footer>
+	<script th:if="${successMessage}" th:inline="javascript" th:insert="~{util/successMessage.js}"></script>
 </body>
 
 </html>

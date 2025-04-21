@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="no" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title th:text="${title}"></title>
+</head>
+
+<body>
+	<header th:insert="~{header}"></header>
+	<main>
+		<h2 th:text="${title}"></h2>
+		<div th:each="constructor, iterStat : ${constructors}" th:id="${constructor.competitor}">
+			<p th:text="${iterStat.index + 1} + ' ' + ${constructor.competitor}"></p>
+			<form th:action="@{/admin/season/{year}/competitors/constructors/move(year=${year})}" method="post">
+				<input type="hidden" name="constructor" th:value="${constructor.competitor}">
+				<input type="number" name="newPosition" placeholder="Ny plass" min="1" max="50" pattern="[0-9]*"
+					inputmode="numeric" required>
+				<input type="submit" value="Endre plass">
+			</form>
+			<form th:action="@{/admin/season/{year}/competitors/constructors/addColor(year=${year})}" method="post"
+				autocomplete="off">
+				<span th:if="${constructor.color.value}" class="circle"
+						th:style="'background-color:' + ${constructor.color}"></span>
+				<input type="hidden" name="constructor" th:value="${constructor.competitor}">
+				<input type="text" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#ffffff" name="color" th:value="${constructor.color.value != null ? constructor.color.value : ''}">
+				<input type="submit" value="Velg farge">
+			</form>
+			<form th:action="@{/admin/season/{year}/competitors/constructors/delete(year=${year})}" method="post">
+				<input type="hidden" name="constructor" th:value="${constructor.competitor}">
+				<input type="submit" value="&#128465;">
+			</form>
+		</div>
+
+		<form th:action="@{/admin/season/{year}/competitors/constructors/add(year=${year})}" method="post" id="add">
+			<input type="text" name="constructor" placeholder="Konstruktørnavn" required>
+			<input type="submit" value="Legg til konstruktør">
+		</form>
+	</main>
+	<footer th:insert="~{footer}"></footer>
+	<script th:if="${successMessage}" th:inline="javascript" th:insert="~{util/successMessage.js}"></script>
+</body>
+
+</html>

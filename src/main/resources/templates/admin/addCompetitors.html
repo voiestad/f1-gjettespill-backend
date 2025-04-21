@@ -10,7 +10,6 @@
 <body>
 	<header th:insert="~{header}"></header>
 	<main>
-		<p th:if="${successMessage}" th:text="${successMessage}"></p>
 		<h2 th:text="${title}"></h2>
 		<div>
 			<div th:each="driver, iterStat : ${drivers}">
@@ -77,6 +76,7 @@
 		</div>
 	</main>
 	<footer th:insert="~{footer}"></footer>
+	<script th:insert="~{util/successMessage}"></script>
 </body>
 
 </html>

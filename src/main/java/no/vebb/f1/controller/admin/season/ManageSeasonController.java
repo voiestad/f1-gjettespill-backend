@@ -132,7 +132,7 @@ public class ManageSeasonController {
 			}
 			Importer importer = new Importer(db);
 			importer.importData();
-			return "redirect:/admin/season/" + year + "/manage?success=true";
+			return "redirect:/admin/season/" + year + "/manage?success=true#" + validRaceId;
 		} catch (InvalidRaceException e) {
 			return "redirect:/admin/season/" + year + "/manage?success=false";
 		}
@@ -178,6 +178,6 @@ public class ManageSeasonController {
 		importer.importData();
 		RaceId validRaceId = new RaceId(raceId, db);
 		db.setCutoffRace(new Cutoff().getDefaultInstant(seasonYear), validRaceId);
-		return "redirect:/admin/season/" + year + "/manage?success=true";
+		return "redirect:/admin/season/" + year + "/manage?success=true#addRace";
 	}
 }
