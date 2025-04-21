@@ -48,7 +48,7 @@ public class CutoffController {
 		List<CutoffRace> races = db.getCutoffRaces(seasonYear);
 		LocalDateTime cutoffYear = db.getCutoffYearLocalTime(seasonYear);
 
-		model.addAttribute("title", year);
+		model.addAttribute("title", "Frister " + year);
 		model.addAttribute("races", races);
 		model.addAttribute("cutoffYear", cutoffYear);
 		return "admin/cutoff";

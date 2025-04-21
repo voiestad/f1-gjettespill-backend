@@ -4,7 +4,8 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title th:text="${title}"></title>
+	<title th:if="${tabTitle}" th:text="${tabTitle}"></title>
+	<title th:unless="${tabTitle}" th:text="${title}"></title>
 </head>
 
 <body>

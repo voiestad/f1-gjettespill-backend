@@ -36,6 +36,7 @@ public class StatsController {
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		model.addAttribute("linkMap", linkMap);
 		model.addAttribute("title", "Velg år");
+		model.addAttribute("tabTitle", "Statistikk");
 		List<Year> years = db.getAllValidYears();
 		for (Year year : years) {
 			linkMap.put(String.valueOf(year), "/stats/" + year);
@@ -49,6 +50,7 @@ public class StatsController {
 			Map<String, String> linkMap = new LinkedHashMap<>();
 			model.addAttribute("linkMap", linkMap);
 			model.addAttribute("title", "Velg løp");
+			model.addAttribute("tabTitle", "Statistikk");
 			Year seasonYear = new Year(year, db);
 			List<CutoffRace> races = db.getCutoffRaces(seasonYear);
 			for (CutoffRace race : races) {
@@ -73,7 +75,10 @@ public class StatsController {
 			tables.add(statsUtil.getFlagTable(validRaceId));
 			
 			model.addAttribute("tables", tables);
-			model.addAttribute("title", year);
+
+			int position = db.getPositionOfRace(validRaceId);
+			String raceName = db.getRaceName(validRaceId);
+			model.addAttribute("title", String.format("%d. %s %d", position, raceName, year));
 			return "util/tables";
 		} catch (InvalidRaceException e) {
 			return "redirect:/stats/" + year;

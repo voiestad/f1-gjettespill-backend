@@ -14,7 +14,7 @@ public class AdminController {
 
 	@GetMapping
 	public String adminHome(Model model) {
-		model.addAttribute("title", "Admin Portal");
+		model.addAttribute("title", "Admin portal");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		linkMap.put("Registrer flagg", "/admin/flag");
 		linkMap.put("Administrer sesonger", "/admin/season");

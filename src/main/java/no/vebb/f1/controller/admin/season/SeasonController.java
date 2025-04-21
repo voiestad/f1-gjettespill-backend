@@ -48,6 +48,7 @@ public class SeasonController {
 			@PathVariable("year") int year, Model model) {
 		new Year(year, db);
 		model.addAttribute("title", year);
+		model.addAttribute("tabTitle", "Administrer " + year);
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		String basePath = "/admin/season/" + year;
 		linkMap.put("Endring av løp", basePath + "/manage");

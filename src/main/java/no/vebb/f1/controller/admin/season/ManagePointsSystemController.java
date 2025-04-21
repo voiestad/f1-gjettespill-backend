@@ -60,7 +60,7 @@ public class ManagePointsSystemController {
 		List<Table> tables = ScoringTables.getScoreMappingTables(seasonYear, db);
 		model.addAttribute("tables", tables);
 
-		model.addAttribute("title", year);
+		model.addAttribute("title", "Poengsystem " + year);
 		model.addAttribute("year", year);
 		return "admin/managePointsSystem";
 	}

@@ -155,10 +155,16 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		}
 		String type = segments.next();
 		if (!segments.hasNext()) {
+			if (type.length() > 1) {
+				return type.substring(0, 1).toUpperCase() + type.substring(1);
+			}
 			return type;
 		}
 		String file = segments.next();
 		if (!segments.hasNext()) {
+			if (file.length() > 4) {
+				return file.substring(0, file.length()-4);
+			}
 			return file;
 		}
 		return "no path";

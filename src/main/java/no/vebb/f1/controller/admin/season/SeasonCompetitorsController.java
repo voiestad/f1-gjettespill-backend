@@ -35,7 +35,7 @@ public class SeasonCompetitorsController {
 	@GetMapping
 	public String addSeasonCompetitorsForm(@PathVariable("year") int year, Model model) {
 		new Year(year, db);
-		model.addAttribute("title", year);
+		model.addAttribute("title", "Deltakere " + year);
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		model.addAttribute("linkMap", linkMap);
 		String path = String.format("/admin/season/%d/competitors/", year);
@@ -51,7 +51,7 @@ public class SeasonCompetitorsController {
 		List<ValuedCompetitor<Driver, Constructor>> drivers = db.getDriversTeam(seasonYear);
 		List<Constructor> constructors = db.getConstructorsYear(seasonYear);
 
-		model.addAttribute("title", year);
+		model.addAttribute("title", "Sjåfører " + year);
 		model.addAttribute("year", year);
 		model.addAttribute("drivers", drivers);
 		model.addAttribute("constructors", constructors);
@@ -138,7 +138,7 @@ public class SeasonCompetitorsController {
 	public String addConstructorsForm(@PathVariable("year") int year, Model model) {
 		Year seasonYear = new Year(year, db);
 		List<ColoredCompetitor<Constructor>> constructors = db.getConstructorsYearWithColors(seasonYear);
-		model.addAttribute("title", year);
+		model.addAttribute("title", "Konstruktører " + year);
 		model.addAttribute("year", year);
 		model.addAttribute("constructors", constructors);
 		return "admin/addConstructors";

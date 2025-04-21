@@ -56,7 +56,9 @@ public class LogController {
 		if (!isValidFile(type, logFile)) {
 			return "redirect:/admin/log/" + type;
 		}
-		model.addAttribute("title", "Logging");
+		model.addAttribute("title", String.format("%s log: %s", 
+			type.substring(0, 1).toUpperCase() + type.substring(1),
+			logFile.substring(0, 10)));
 		File file = new File(String.format("%s/%s/%s", logPath, type, logFile));
 		try {
 			Scanner scanner = new Scanner(file);
