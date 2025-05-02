@@ -68,15 +68,15 @@
 	const themes = ["light", "dark", "oled"]
 	const themeNames = ["Lys", "Mørk", "Mørkere"]
 	let themeIndex;
-	const button = document.getElementById("theme-button");
-	const html = document.querySelector("html");
+	const themeButton = document.getElementById("theme-button");
+	const htmlElement = document.querySelector("html");
 
 	function setTheme() {
 		let theme = themes[themeIndex];
-		html.setAttribute("data-theme", theme);
+		htmlElement.setAttribute("data-theme", theme);
 		localStorage.setItem("theme", theme);
 		let themeName = themeNames[themeIndex];
-		button.innerHTML = `Tema: ${themeName}`;
+		themeButton.innerHTML = `Tema: ${themeName}`;
 	}
 	
 	function initTheme() {
