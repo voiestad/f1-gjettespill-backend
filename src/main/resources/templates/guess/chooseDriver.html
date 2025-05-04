@@ -9,8 +9,8 @@
 
 <body>
 	<header th:insert="~{header}"></header>
-	<h2 th:text="${title}"></h2>
 	<main>
+	<h2 th:text="${title}"></h2>
 		<div th:insert="~{guess/countdown :: countdown(timeLeftToGuess=${timeLeftToGuess})}"></div>
 		<form th:action="@{/guess/{type}(type=${type})}" method="post">
 			<input type="hidden" name="driver" th:value="${guessedDriver}" id="guessedDriver">
