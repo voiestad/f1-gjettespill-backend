@@ -81,12 +81,13 @@ public class Importer {
 				shouldImportStandings = true;
 			}
 			if (shouldImportStandings) {
-				boolean standingsNew = importStandings(year);
+				boolean standingsNew = importStandings(year, changeStatus.getPointsChange());
 				if (!standingsNew) {
 					if (!changeStatus.equals(ResultChangeStatus.OUTSIDE_POINTS_CHANGE)) {
 						logger.error("Standings were not new. Rolling back.");
 						throw new RuntimeException("Standings were not up to date with race result.");	
 					} else {
+						graphCache.refresh();
 						logger.info("Race result changed outside points without standings changing. Sending message to admins.");
 						userMailService.sendServerMessageToAdmins(
 							"Endringer i resultat av løp utenfor poengene uten at mesterskapet endret seg. Vennligst verifiser at mesterskapet er korrekt.");
@@ -138,7 +139,7 @@ public class Importer {
 			RaceId newestRaceId = db.getLatestRaceId(year);
 			if (raceId.equals(newestRaceId)) {
 				logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
-				importStandings(year);
+				importStandings(year, new Points());
 			}
 		} catch (InvalidYearException e) {
 		} catch (EmptyResultDataAccessException e) {
@@ -162,7 +163,10 @@ public class Importer {
 		insertRaceResultData(raceId, raceResult);
 		List<PositionedCompetitor> postList = db.getRaceResult(raceId);
 		if (preList.size() != postList.size()) {
-			return ResultChangeStatus.POINTS_CHANGE;
+			ResultChangeStatus status = ResultChangeStatus.POINTS_CHANGE;
+			Points change = compPoints(postList);
+			status.setPointsChange(change);
+			return status;
 		}
 		for (int i = 0; i < preList.size(); i++) {
 			PositionedCompetitor pre = preList.get(i);
@@ -296,22 +300,31 @@ public class Importer {
 		return true;
 	}
 
-	private boolean importStandings(Year year) {
+	private boolean importStandings(Year year, Points expectedChange) {
 		try {
 			RaceId newestRace = db.getLatestRaceId(year);
-			boolean driverStandingsChanged = importDriverStandings(year, newestRace);
-			boolean constructorStandingsChanged = importConstructorStandings(year, newestRace);
-			return driverStandingsChanged && constructorStandingsChanged;
+			ResultChangeStatus driverStatus = importDriverStandings(year, newestRace);
+			ResultChangeStatus constructorStatus = importConstructorStandings(year, newestRace);
+			boolean equalPointsChange = driverStatus.getPointsChange().equals(constructorStatus.getPointsChange());
+			boolean driverValidStatus = validResultStatus(driverStatus, expectedChange);
+			boolean constructorValidStatus = validResultStatus(constructorStatus, expectedChange);
+			return equalPointsChange && driverValidStatus && constructorValidStatus;
 		} catch (EmptyResultDataAccessException e) {
 			throw new RuntimeException("Should not call importStandings without having a race result");
 		}
 	}
 
-	private boolean importDriverStandings(Year year, RaceId newestRace) {
+	private boolean validResultStatus(ResultChangeStatus status, Points expectedChange) {
+		boolean hasChanged = status == ResultChangeStatus.POINTS_CHANGE;
+		boolean greatEnoughChange = status.getPointsChange().compareTo(expectedChange) >= 0;
+		return hasChanged && greatEnoughChange; 
+	}
+
+	private ResultChangeStatus importDriverStandings(Year year, RaceId newestRace) {
 		List<List<String>> standings = TableImporter.getDriverStandings(year.value);
 		if (standings.size() == 0) {
 			logger.info("Driver standings not available");
-			return false;
+			return ResultChangeStatus.NO_CHANGE;
 		}
 		standings = standings.subList(1, standings.size());
 		List<PositionedCompetitor> currentStandings = standings.stream()
@@ -322,9 +335,10 @@ public class Importer {
 				String.valueOf((int) Double.parseDouble(row.get(4)))
 				))
 			.toList();
-		if (!isDriverStandingsNew(currentStandings, year)) {
+		ResultChangeStatus status = isDriverStandingsNew(currentStandings, year);
+		if (status != ResultChangeStatus.POINTS_CHANGE) {
 			logger.info("Driver standings are not new, will not add new");
-			return false;
+			return ResultChangeStatus.NO_CHANGE;
 		}
 		for (PositionedCompetitor competitor : currentStandings) {
 			Driver driver = new Driver(competitor.name, db);
@@ -333,24 +347,24 @@ public class Importer {
 			db.insertDriverIntoStandings(newestRace, driver, position, points);
 		}
 		logger.info("Driver standings added for race '{}'", newestRace);
-		return true;
+		return status;
 	}
 
-	private boolean isDriverStandingsNew(List<PositionedCompetitor> standings, Year year) {
+	private ResultChangeStatus isDriverStandingsNew(List<PositionedCompetitor> standings, Year year) {
 		try {
 			RaceId previousRaceId = db.getLatestStandingsId(year);
 			List<PositionedCompetitor> previousStandings = db.getDriverStandings(previousRaceId);
 			return compareStandings(standings, previousStandings);
 		} catch (EmptyResultDataAccessException e) {
-			return true;
+			return changeWithSum(standings);
 		}
 	}
 
-	private boolean importConstructorStandings(Year year, RaceId newestRace) {
+	private ResultChangeStatus importConstructorStandings(Year year, RaceId newestRace) {
 		List<List<String>> standings = TableImporter.getConstructorStandings(year.value);
 		if (standings.size() == 0) {
 			logger.info("Constructor standings not available");
-			return false;
+			return ResultChangeStatus.NO_CHANGE;
 		}
 		standings = standings.subList(1, standings.size());
 		List<PositionedCompetitor> currentStandings = standings.stream()
@@ -361,9 +375,10 @@ public class Importer {
 				String.valueOf((int) Double.parseDouble(row.get(2)))
 				))
 			.toList();
-		if (!isConstructorStandingsNew(currentStandings, year)) {
+		ResultChangeStatus status = isConstructorStandingsNew(currentStandings, year);
+		if (status != ResultChangeStatus.POINTS_CHANGE) {
 			logger.info("Constructor standings are not new, will not add new");
-			return false;
+			return ResultChangeStatus.NO_CHANGE;
 		}
 		for (PositionedCompetitor competitor : currentStandings) {
 			int position = Integer.parseInt(competitor.position);
@@ -372,31 +387,52 @@ public class Importer {
 			db.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
 		}
 		logger.info("Constructor standings added for race '{}'", newestRace);
-		return true;
+		return status;
 	}
 
-	private boolean isConstructorStandingsNew(List<PositionedCompetitor> standings, Year year) {
+	private ResultChangeStatus isConstructorStandingsNew(List<PositionedCompetitor> standings, Year year) {
 		try {
 			RaceId previousRaceId = db.getLatestStandingsId(year);
 			List<PositionedCompetitor> previousStandings = db.getConstructorStandings(previousRaceId);
 			return compareStandings(standings, previousStandings);
 		} catch (EmptyResultDataAccessException e) {
-			return true;
+			return changeWithSum(standings);
 		}
 	}
 
-	private boolean compareStandings(List<PositionedCompetitor> standings, List<PositionedCompetitor> previousStandings) {
+	private ResultChangeStatus compareStandings(List<PositionedCompetitor> standings, List<PositionedCompetitor> previousStandings) {
+		ResultChangeStatus status = null;
 		if (standings.size() != previousStandings.size()) {
-			return true;
-		}
-		for (int i = 0; i < standings.size(); i++) {
-			PositionedCompetitor previousCompetitor = previousStandings.get(i);
-			PositionedCompetitor competitor = standings.get(i);
-			if (!previousCompetitor.equals(competitor)) {
-				return true;
+			status = ResultChangeStatus.POINTS_CHANGE;
+		} else {
+			for (int i = 0; i < standings.size(); i++) {
+				PositionedCompetitor previousCompetitor = previousStandings.get(i);
+				PositionedCompetitor competitor = standings.get(i);
+				if (!previousCompetitor.equals(competitor)) {
+					status = ResultChangeStatus.POINTS_CHANGE;
+					break;
+				}
+			}
+			if (status == null) {
+				status = ResultChangeStatus.NO_CHANGE;
 			}
 		}
-		return false;
+		int diff = compPoints(standings).value - compPoints(previousStandings).value;
+		status.setPointsChange(new Points(diff));
+		return status;
+	}
+
+	private ResultChangeStatus changeWithSum(List<PositionedCompetitor> competitors) {
+		ResultChangeStatus status = ResultChangeStatus.POINTS_CHANGE;
+		Points change = compPoints(competitors);
+		status.setPointsChange(change);
+		return status;
+	}
+
+	private Points compPoints(List<PositionedCompetitor> competitors) {
+		return competitors.stream()
+			.map(comp -> new Points(Integer.parseInt(comp.points)))
+			.reduce(new Points(), (points1, points2) -> points1.add(points2));
 	}
 
 	private String parseDriver(String driverName) {
@@ -415,5 +451,15 @@ public class Importer {
 		NO_CHANGE,
 		POINTS_CHANGE, 
 		OUTSIDE_POINTS_CHANGE;
+
+		private Points changeInPoints = new Points();
+
+		public void setPointsChange(Points changeInPoints) {
+			this.changeInPoints = changeInPoints;
+		}
+		
+		public Points getPointsChange() {
+			return changeInPoints;
+		}
 	}
 }
