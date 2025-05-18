@@ -6,12 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import java.io.StringWriter;
+import java.io.PrintWriter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.graph.GraphCache;
@@ -82,7 +86,7 @@ public class Importer {
 				boolean standingsNew = importStandings(year, changeStatus.getPointsChange());
 				if (!standingsNew) {
 					if (!changeStatus.equals(ResultChangeStatus.OUTSIDE_POINTS_CHANGE)) {
-						logger.error("Standings were not new. Rolling back.");
+						logger.info("Standings were not new.");
 						throw new RuntimeException("Standings were not up to date with race result.");	
 					} else {
 						graphCache.refresh();
@@ -98,6 +102,13 @@ public class Importer {
 			logger.info("Finished import of data to database");
 		} catch (InvalidYearException e) {
 			logger.error("Could not import data to the database because current year is not valid");
+		} catch (Exception e) {
+			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+			StringWriter stringWriter = new StringWriter();
+			PrintWriter printWriter = new PrintWriter(stringWriter);
+			e.printStackTrace(printWriter);
+			String errorMessage = stringWriter.toString();
+			logger.error("Exception while importing. Rolling back.\n{}", errorMessage);
 		}
 	}
 
