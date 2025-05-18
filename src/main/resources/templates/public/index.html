@@ -4,6 +4,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link th:if="${graph}" rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/chart.js">
 	<title>F1 Tipping</title>
 	<style>
 		#chart {
@@ -43,10 +44,16 @@
 				</ul>
 			</div>
 		</div>
-		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-		<canvas id="chart"></canvas>
+		<canvas id="chart" th:if="${graph}"></canvas>
 		<script th:if="${graph}" th:inline="javascript">
-			drawChart();
+			document.addEventListener("DOMContentLoaded", function () {
+					const script = document.createElement('script');
+					script.src = "https://cdn.jsdelivr.net/npm/chart.js";
+					script.onload = function () {
+						drawChart();
+					};
+					document.body.appendChild(script);
+			});
 			function drawChart() {
 				const scores = /*[[${graph.getScores()}]]*/[];
 				const ctx = document.getElementById('chart');
@@ -119,9 +126,6 @@
 					}
 				});
 			}
-		</script>
-		<script th:unless="${graph}">
-			const ctx = document.getElementById('chart').remove();
 		</script>
 	</main>
 	<footer th:insert="~{footer}"></footer>
