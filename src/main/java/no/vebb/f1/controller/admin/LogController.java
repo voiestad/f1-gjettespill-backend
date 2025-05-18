@@ -29,8 +29,10 @@ public class LogController {
 		model.addAttribute("title", "Logging");
 		Map<String, String> linkMap = new LinkedHashMap<>();
 		model.addAttribute("linkMap", linkMap);
-		linkMap.put("Error", "/admin/log/error");
 		linkMap.put("Info", "/admin/log/info");
+		linkMap.put("Importer", "/admin/log/importer");
+		linkMap.put("Error", "/admin/log/error");
+		linkMap.put("Cache", "/admin/log/cache");
 		return "util/linkList";
 	}
 
@@ -109,7 +111,7 @@ public class LogController {
 	}
 
 	private boolean isValidLogType(String type) {
-		return type.matches("error|info");
+		return type.matches("error|info|cache|importer");
 	}
 
 	private boolean isLogLineStart(String logLine) {
