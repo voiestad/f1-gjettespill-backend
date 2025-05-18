@@ -6,12 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import java.io.StringWriter;
+import java.io.PrintWriter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.graph.GraphCache;
@@ -82,7 +86,7 @@ public class Importer {
 				boolean standingsNew = importStandings(year, changeStatus.getPointsChange());
 				if (!standingsNew) {
 					if (!changeStatus.equals(ResultChangeStatus.OUTSIDE_POINTS_CHANGE)) {
-						logger.error("Standings were not new. Rolling back.");
+						logger.info("Standings were not new.");
 						throw new RuntimeException("Standings were not up to date with race result.");	
 					} else {
 						graphCache.refresh();
@@ -98,6 +102,13 @@ public class Importer {
 			logger.info("Finished import of data to database");
 		} catch (InvalidYearException e) {
 			logger.error("Could not import data to the database because current year is not valid");
+		} catch (Exception e) {
+			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+			StringWriter stringWriter = new StringWriter();
+			PrintWriter printWriter = new PrintWriter(stringWriter);
+			e.printStackTrace(printWriter);
+			String errorMessage = stringWriter.toString();
+			logger.error("Exception while importing. Rolling back.\n{}", errorMessage);
 		}
 	}
 
@@ -220,12 +231,17 @@ public class Importer {
 	}
 
 	private void insertStartingGridData(RaceId raceId, List<List<String>> startingGrid) {
-		for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
-			int position = Integer.parseInt(row.get(0));
-			String driver = parseDriver(row.get(2), raceId);
-			db.addDriver(driver);
-			Driver validDriver = new Driver(driver, db);
-			db.insertDriverStartingGrid(raceId, position, validDriver);
+		try {
+			for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
+				int position = Integer.parseInt(row.get(0));
+				String driver = parseDriver(row.get(2), raceId);
+				db.addDriver(driver);
+				Driver validDriver = new Driver(driver, db);
+				db.insertDriverStartingGrid(raceId, position, validDriver);
+			}
+
+		} catch (NumberFormatException | IndexOutOfBoundsException e) {
+			throw new RuntimeException("Failed parsing starting grid for race " + raceId + ".\n" + getTableString(startingGrid));
 		}
 	}
 
@@ -247,18 +263,22 @@ public class Importer {
 	}
 
 	private void insertRaceResultData(RaceId raceId, List<List<String>> raceResult) {
-		int finishingPosition = 1;
-		List<List<String>> disqualified = new ArrayList<>();
-		for (List<String> row : raceResult.subList(1, raceResult.size())) {
-			String position = row.get(0);
-			if (position.equals("DQ")) {
-				disqualified.add(row);	
-				continue;
+		try {
+			int finishingPosition = 1;
+			List<List<String>> disqualified = new ArrayList<>();
+			for (List<String> row : raceResult.subList(1, raceResult.size())) {
+				String position = row.get(0);
+				if (position.equals("DQ")) {
+					disqualified.add(row);	
+					continue;
+				}
+				insertRaceResultRow(raceId, row, finishingPosition++);
 			}
-			insertRaceResultRow(raceId, row, finishingPosition++);
-		}
-		for (List<String> row : disqualified) {
-			insertRaceResultRow(raceId, row, finishingPosition++);
+			for (List<String> row : disqualified) {
+				insertRaceResultRow(raceId, row, finishingPosition++);
+			}
+		} catch (NumberFormatException | IndexOutOfBoundsException e) {
+			throw new RuntimeException("Failed parsing race result for race " + raceId + ".\n" + getTableString(raceResult));
 		}
 	}
 
@@ -325,27 +345,31 @@ public class Importer {
 			return ResultChangeStatus.NO_CHANGE;
 		}
 		standings = standings.subList(1, standings.size());
-		List<PositionedCompetitor> currentStandings = standings.stream()
-			.map(row -> 
-			new PositionedCompetitor(
-				String.valueOf(Integer.parseInt(row.get(0))),
-				parseDriver(row.get(1), year), 
-				String.valueOf((int) Double.parseDouble(row.get(4)))
-				))
-			.toList();
-		ResultChangeStatus status = isDriverStandingsNew(currentStandings, year);
-		if (status != ResultChangeStatus.POINTS_CHANGE) {
-			logger.info("Driver standings are not new, will not add new");
-			return ResultChangeStatus.NO_CHANGE;
+		try {
+			List<PositionedCompetitor> currentStandings = standings.stream()
+				.map(row -> 
+				new PositionedCompetitor(
+					String.valueOf(Integer.parseInt(row.get(0))),
+					parseDriver(row.get(1), year), 
+					String.valueOf((int) Double.parseDouble(row.get(4)))
+					))
+				.toList();
+			ResultChangeStatus status = isDriverStandingsNew(currentStandings, year);
+			if (status != ResultChangeStatus.POINTS_CHANGE) {
+				logger.info("Driver standings are not new, will not add new");
+				return ResultChangeStatus.NO_CHANGE;
+			}
+			for (PositionedCompetitor competitor : currentStandings) {
+				Driver driver = new Driver(competitor.name, db);
+				int position = Integer.parseInt(competitor.position);
+				Points points = new Points(Integer.parseInt(competitor.points));
+				db.insertDriverIntoStandings(newestRace, driver, position, points);
+			}
+			logger.info("Driver standings added for race '{}'", newestRace);
+			return status;
+		} catch (NumberFormatException | IndexOutOfBoundsException e) {
+			throw new RuntimeException("Failed parsing driver standings.\n" + getTableString(standings));
 		}
-		for (PositionedCompetitor competitor : currentStandings) {
-			Driver driver = new Driver(competitor.name, db);
-			int position = Integer.parseInt(competitor.position);
-			Points points = new Points(Integer.parseInt(competitor.points));
-			db.insertDriverIntoStandings(newestRace, driver, position, points);
-		}
-		logger.info("Driver standings added for race '{}'", newestRace);
-		return status;
 	}
 
 	private ResultChangeStatus isDriverStandingsNew(List<PositionedCompetitor> standings, Year year) {
@@ -365,27 +389,31 @@ public class Importer {
 			return ResultChangeStatus.NO_CHANGE;
 		}
 		standings = standings.subList(1, standings.size());
-		List<PositionedCompetitor> currentStandings = standings.stream()
-			.map(row -> 
-			new PositionedCompetitor(
-				String.valueOf(Integer.parseInt(row.get(0))),
-				row.get(1),
-				String.valueOf((int) Double.parseDouble(row.get(2)))
-				))
-			.toList();
-		ResultChangeStatus status = isConstructorStandingsNew(currentStandings, year);
-		if (status != ResultChangeStatus.POINTS_CHANGE) {
-			logger.info("Constructor standings are not new, will not add new");
-			return ResultChangeStatus.NO_CHANGE;
+		try {
+			List<PositionedCompetitor> currentStandings = standings.stream()
+				.map(row -> 
+				new PositionedCompetitor(
+					String.valueOf(Integer.parseInt(row.get(0))),
+					row.get(1),
+					String.valueOf((int) Double.parseDouble(row.get(2)))
+					))
+				.toList();
+			ResultChangeStatus status = isConstructorStandingsNew(currentStandings, year);
+			if (status != ResultChangeStatus.POINTS_CHANGE) {
+				logger.info("Constructor standings are not new, will not add new");
+				return ResultChangeStatus.NO_CHANGE;
+			}
+			for (PositionedCompetitor competitor : currentStandings) {
+				int position = Integer.parseInt(competitor.position);
+				Points points = new Points(Integer.parseInt(competitor.points));
+				Constructor validConstructor = new Constructor(competitor.name);
+				db.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
+			}
+			logger.info("Constructor standings added for race '{}'", newestRace);
+			return status;
+		} catch (NumberFormatException | IndexOutOfBoundsException e) {
+			throw new RuntimeException("Failed parsing constructor standings.\n" + getTableString(standings));
 		}
-		for (PositionedCompetitor competitor : currentStandings) {
-			int position = Integer.parseInt(competitor.position);
-			Points points = new Points(Integer.parseInt(competitor.points));
-			Constructor validConstructor = new Constructor(competitor.name);
-			db.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
-		}
-		logger.info("Constructor standings added for race '{}'", newestRace);
-		return status;
 	}
 
 	private ResultChangeStatus isConstructorStandingsNew(List<PositionedCompetitor> standings, Year year) {
@@ -443,6 +471,14 @@ public class Importer {
 
 	private String parseDriver(String driverName, Year year) {
 		return db.getAlternativeDriverName(parseDriver(driverName), year);
+	}
+
+	private String getTableString(List<List<String>> table) {
+		StringBuffer buffer = new StringBuffer();
+		for (int i = 0; i < table.size(); i++) {
+			buffer.append("Row: ").append(i+1).append('\n').append(table.get(i)).append('\n');
+		}
+		return buffer.toString();
 	}
 
 	private enum ResultChangeStatus {
