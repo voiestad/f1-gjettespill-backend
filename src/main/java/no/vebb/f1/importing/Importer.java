@@ -47,7 +47,7 @@ public class Importer {
 		this.db = db;
 	}
 
-	@Scheduled(fixedRate = TimeUtil.TEN_MINUTES, initialDelay = TimeUtil.SECOND * 5)
+	@Scheduled(fixedDelay = TimeUtil.TEN_MINUTES, initialDelay = TimeUtil.SECOND * 5)
 	@Transactional
 	public void importData() {
 		logger.info("Starting import of data to database");

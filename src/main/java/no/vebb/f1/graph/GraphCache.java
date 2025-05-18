@@ -42,7 +42,7 @@ public class GraphCache {
 
 	private static final Logger logger = LoggerFactory.getLogger(GraphCache.class);
 
-	@Scheduled(fixedRate = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.SECOND * 10)
+	@Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.SECOND * 10)
 	public void refresh() {
 		logger.info("Refreshing graph and leaderboard");
 		try {
