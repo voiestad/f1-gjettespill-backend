@@ -3,7 +3,8 @@
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
   	<timestamp key="byDay" datePattern="yyyyMMdd"/>
 
-  	<appender name="FILE1" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  	<appender name="INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<filter class="no.vebb.f1.filters.GenericFilter" />
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<fileNamePattern>logs/info/%d{yyyy-MM-dd}.log</fileNamePattern>
 			<maxHistory>90</maxHistory> 
@@ -15,7 +16,8 @@
 		</encoder>
   	</appender>
 
-	<appender name="FILE2" class="ch.qos.logback.core.rolling.RollingFileAppender">
+	<appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<filter class="no.vebb.f1.filters.GenericFilter" />
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<fileNamePattern>logs/error/%d{yyyy-MM-dd}.log</fileNamePattern>
 			<maxHistory>90</maxHistory> 
@@ -43,9 +45,37 @@
 		</encoder>
   	</appender>
 
+	<appender name="IMPORTING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<filter class="no.vebb.f1.filters.ImporterFilter" />
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logs/importer/%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>90</maxHistory> 
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+		<immediateFlush>true</immediateFlush>
+		<encoder>
+	  		<pattern>${FILE_LOG_PATTERN}</pattern>
+		</encoder>
+  	</appender>
+
+	<appender name="CACHING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<filter class="no.vebb.f1.filters.GraphCacheFilter" />
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logs/cache/%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>90</maxHistory> 
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+		<immediateFlush>true</immediateFlush>
+		<encoder>
+	  		<pattern>${FILE_LOG_PATTERN}</pattern>
+		</encoder>
+  	</appender>
+
   	<root level="INFO">
 		<appender-ref ref="STDOUT" />
-		<appender-ref ref="FILE1" />
-		<appender-ref ref="FILE2" />
+		<appender-ref ref="INFO" />
+		<appender-ref ref="ERROR" />
+		<appender-ref ref="IMPORTING" />
+		<appender-ref ref="CACHING" />
   	</root>
 </configuration>
