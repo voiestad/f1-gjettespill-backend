@@ -120,7 +120,7 @@ public class Database {
 	}
 
 	/**
-	 * Gets the latest race number that has either had a race.
+	 * Gets the latest race number that has had a race.
 	 * 
 	 * @param year of season
 	 * @return race number of race

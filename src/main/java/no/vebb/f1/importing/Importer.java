@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +46,6 @@ public class Importer {
 		this.db = db;
 	}
 
-	@Scheduled(fixedRate = TimeUtil.TEN_MINUTES, initialDelay = TimeUtil.SECOND * 5)
 	@Transactional
 	public void importData() {
 		logger.info("Starting import of data to database");

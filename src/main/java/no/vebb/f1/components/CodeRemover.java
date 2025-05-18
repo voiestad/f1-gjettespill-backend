@@ -13,7 +13,7 @@ public class CodeRemover {
 	@Autowired
 	private Database db;
 
-	@Scheduled(fixedRate = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
+	@Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
 	public void removeExpiredCodes() {
 		db.removeExpiredVerificationCodes();
 		db.removeExpiredReferralCodes();
