@@ -50,22 +50,37 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 	private Duration getDelay() {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			RaceId upcomingRaceId = db.getLatestRaceForPlaceGuess(year).id;
-			long timeLeft = db.getTimeLeftToGuessRace(upcomingRaceId);
-			int timeLeftHours = (int) (timeLeft / 3600);
-			boolean isOutsideRaceWeekend = timeLeftHours > 60 || timeLeftHours < -24;
-			if (isOutsideRaceWeekend) {
-				return Duration.ofMillis(TimeUtil.HOUR * 8);
+			RaceId currentRaceId = db.getLatestRaceForPlaceGuess(year).id;
+			Duration delay = getDelay(currentRaceId);
+			if (delay != null) {
+				return delay;
 			}
-			boolean isResultImported = upcomingRaceId.equals(db.getLatestRaceId(year));
+			boolean isResultImported = currentRaceId.equals(db.getLatestRaceId(year));
 			if (isResultImported) {
 				return Duration.ofMillis(TimeUtil.HALF_HOUR);
+			}
+			RaceId upcomingRaceId = db.getUpcomingRaceId(year);
+			if (!currentRaceId.equals(upcomingRaceId)) {
+				delay = getDelay(upcomingRaceId);
+			}
+			if (delay != null) {
+				return delay;
 			}
 		} catch (InvalidYearException e) {
 			return Duration.ofMillis(TimeUtil.DAY);
 		} catch (EmptyResultDataAccessException e) {
 		}
 		return Duration.ofMillis(TimeUtil.TEN_MINUTES);
+	}
+
+	private Duration getDelay(RaceId raceId) {
+		long timeLeft = db.getTimeLeftToGuessRace(raceId);
+		int timeLeftHours = (int) (timeLeft / 3600);
+		boolean isOutsideRaceWeekend = timeLeftHours > 36 || timeLeftHours < -24;
+		if (isOutsideRaceWeekend) {
+			return Duration.ofMillis(TimeUtil.HOUR * 8);
+		}
+		return null;
 	}
 	
 }

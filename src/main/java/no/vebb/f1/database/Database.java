@@ -957,6 +957,17 @@ public class Database {
 		return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year));
 	}
 
+	public RaceId getUpcomingRaceId(Year year) {
+		final String getRaceResultId = """
+			SELECT id
+			FROM RaceOrder
+			WHERE id NOT IN (SELECT DISTINCT race_number FROM RaceResult)
+			ORDER BY position ASC
+			LIMIT 1
+			""";
+		return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year));
+	}
+
 	/**
 	 * Gets the id of the latest race result of a season.
 	 * 
