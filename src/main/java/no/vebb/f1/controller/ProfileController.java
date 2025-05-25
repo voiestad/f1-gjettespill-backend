@@ -51,7 +51,7 @@ public class ProfileController {
 	 * 
 	 * @return links to all users
 	 */
-	@GetMapping
+	@GetMapping("/links")
 	public ResponseEntity<LinkListResponse> users() {
 		LinkListResponse res = new LinkListResponse();
 		String title = "Brukere";
@@ -79,7 +79,7 @@ public class ProfileController {
 	public ResponseEntity<TablesResponse> guesserProfile(@PathVariable("id") UUID id) {
 		Optional<User> optUser = userService.loadUser(id);
 		if (optUser.isEmpty()) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 		User user = optUser.get();
 		return getGuesserProfile(user);

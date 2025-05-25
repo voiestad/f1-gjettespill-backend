@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.StatsUtil;
@@ -20,9 +21,11 @@ import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.util.response.LinkListResponse;
+import no.vebb.f1.util.response.TablesResponse;
 
-@Controller
-@RequestMapping("/stats")
+@RestController
+@RequestMapping("/api/public/stats")
 public class StatsController {
 
 	@Autowired
@@ -31,39 +34,41 @@ public class StatsController {
 	@Autowired
 	private StatsUtil statsUtil;
 
-	@GetMapping
-	public String chooseYear(Model model) {
+	@GetMapping("/links")
+	public ResponseEntity<LinkListResponse> chooseYear() {
+		LinkListResponse res = new LinkListResponse();
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		model.addAttribute("linkMap", linkMap);
-		model.addAttribute("title", "Velg år");
-		model.addAttribute("tabTitle", "Statistikk");
+		res.title = "Statistikk";
+		res.heading = "Velg år";
+		res.links = linkMap;
 		List<Year> years = db.getAllValidYears();
 		for (Year year : years) {
 			linkMap.put(String.valueOf(year), "/stats/" + year);
 		}
-		return "util/linkList";
+		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
 	@GetMapping("/{year}")
-	public String chooseRace(@PathVariable("year") int year, Model model) {
+	public ResponseEntity<LinkListResponse> chooseRace(@PathVariable("year") int year) {
 		try {
+			LinkListResponse res = new LinkListResponse();
 			Map<String, String> linkMap = new LinkedHashMap<>();
-			model.addAttribute("linkMap", linkMap);
-			model.addAttribute("title", "Velg løp");
-			model.addAttribute("tabTitle", "Statistikk");
+			res.title = "Statistikk";
+			res.heading = "Velg løp";
+			res.links = linkMap;
 			Year seasonYear = new Year(year, db);
 			List<CutoffRace> races = db.getCutoffRaces(seasonYear);
 			for (CutoffRace race : races) {
 				linkMap.put(race.position + ". " + race.name, "/stats/" + year + "/" + race.id);
 			}
-			return "util/linkList";
+			return new ResponseEntity<>(res, HttpStatus.OK);
 		} catch (InvalidYearException e) {
-			return "redirect:/stats";	
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 	}
 
 	@GetMapping("/{year}/{raceId}")
-	public String manageRacesInSeason(@PathVariable("raceId") int raceId, @PathVariable("year") int year, Model model) {
+	public ResponseEntity<TablesResponse> manageRacesInSeason(@PathVariable("raceId") int raceId, @PathVariable("year") int year) {
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
 			
@@ -74,14 +79,17 @@ public class StatsController {
 			tables.add(statsUtil.getConstructorStandingsTable(validRaceId));
 			tables.add(statsUtil.getFlagTable(validRaceId));
 			
-			model.addAttribute("tables", tables);
+			TablesResponse res = new TablesResponse();
+			res.tables = tables;
 
 			int position = db.getPositionOfRace(validRaceId);
 			String raceName = db.getRaceName(validRaceId);
-			model.addAttribute("title", String.format("%d. %s %d", position, raceName, year));
-			return "util/tables";
+			String title = String.format("%d. %s %d", position, raceName, year);
+			res.title = title;
+			res.heading = title;
+			return new ResponseEntity<>(res, HttpStatus.OK);
 		} catch (InvalidRaceException e) {
-			return "redirect:/stats/" + year;
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 }
