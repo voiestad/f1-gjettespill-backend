@@ -50,37 +50,46 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 	private Duration getDelay() {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			RaceId currentRaceId = db.getLatestRaceForPlaceGuess(year).id;
-			Duration delay = getDelay(currentRaceId);
+			Duration delay = getDelayCurrentRace(year);
 			if (delay != null) {
 				return delay;
 			}
-			boolean isResultImported = currentRaceId.equals(db.getLatestRaceId(year));
-			if (isResultImported) {
-				return Duration.ofMillis(TimeUtil.HALF_HOUR);
-			}
-			RaceId upcomingRaceId = db.getUpcomingRaceId(year);
-			if (!currentRaceId.equals(upcomingRaceId)) {
-				delay = getDelay(upcomingRaceId);
-			}
-			if (delay != null) {
-				return delay;
-			}
+			return getDelayUpcomingRace(year);
 		} catch (InvalidYearException e) {
 			return Duration.ofMillis(TimeUtil.DAY);
-		} catch (EmptyResultDataAccessException e) {
 		}
-		return Duration.ofMillis(TimeUtil.TEN_MINUTES);
 	}
-
-	private Duration getDelay(RaceId raceId) {
-		long timeLeft = db.getTimeLeftToGuessRace(raceId);
-		int timeLeftHours = (int) (timeLeft / 3600);
-		boolean isOutsideRaceWeekend = timeLeftHours > 36 || timeLeftHours < -24;
-		if (isOutsideRaceWeekend) {
-			return Duration.ofMillis(TimeUtil.HOUR * 8);
+	
+	private Duration getDelayCurrentRace(Year year) {
+		try {
+			RaceId currentRaceId = db.getLatestStartingGridRaceId(year);
+			long timeLeft = db.getTimeLeftToGuessRaceHours(currentRaceId);
+			boolean isResultImported = currentRaceId.equals(db.getLatestRaceId(year));
+			boolean isImportPeriod = timeLeft <= 36;
+			boolean isRefreshPeriod = timeLeft >= -24;
+			if (isImportPeriod && !isResultImported) {
+				return Duration.ofMillis(TimeUtil.TEN_MINUTES);
+			}
+			if (isRefreshPeriod && isResultImported) {
+				return Duration.ofMillis(TimeUtil.HALF_HOUR);
+			}
+		} catch (EmptyResultDataAccessException e) {
 		}
 		return null;
 	}
-	
+
+	private Duration getDelayUpcomingRace(Year year) {
+		try {
+			RaceId upcomingRaceId = db.getUpcomingRaceId(year);
+			long timeLeft = db.getTimeLeftToGuessRaceHours(upcomingRaceId);
+			boolean shouldImport = timeLeft <= 36;
+			if (shouldImport) {
+				return Duration.ofMillis(TimeUtil.TEN_MINUTES);
+			}
+			return Duration.ofMillis(TimeUtil.HOUR * 8);
+		} catch (EmptyResultDataAccessException e) {
+			return Duration.ofMillis(TimeUtil.DAY); 
+		}
+	}
+
 }

@@ -492,6 +492,10 @@ public class Database {
 		return Duration.between(now, cutoff).toSeconds();
 	}
 
+	public int getTimeLeftToGuessRaceHours(RaceId raceId) {
+		return getTimeLeftToGuessRaceHours(raceId) / 3600;
+	}
+
 	/**
 	 * Gets number of seconds remaining to guess in the year.
 	 * 
