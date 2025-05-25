@@ -958,14 +958,15 @@ public class Database {
 	}
 
 	public RaceId getUpcomingRaceId(Year year) {
-		final String getRaceResultId = """
+		final String sql = """
 			SELECT id
 			FROM RaceOrder
 			WHERE id NOT IN (SELECT DISTINCT race_number FROM RaceResult)
+			AND year = ?
 			ORDER BY position ASC
 			LIMIT 1
 			""";
-		return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year));
+		return new RaceId(jdbcTemplate.queryForObject(sql, Integer.class, year));
 	}
 
 	/**
