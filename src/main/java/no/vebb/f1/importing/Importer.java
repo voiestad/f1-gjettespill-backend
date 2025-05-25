@@ -142,7 +142,12 @@ public class Importer {
 	public void importRaceData(RaceId raceId) {
 		logger.info("Race data from '{}' manually reloaded by admin", raceId);
 		importStartingGridData(raceId);
-		importRaceResultData(raceId);
+		ResultChangeStatus changeStatus = importRaceResultData(raceId);
+		if (!changeStatus.equals(ResultChangeStatus.NO_CHANGE)) {
+			logger.info("Changes to the race result");
+		} else {
+			logger.info("No change in race result");
+		}
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			RaceId newestRaceId = db.getLatestRaceId(year);
@@ -153,6 +158,7 @@ public class Importer {
 		} catch (InvalidYearException e) {
 		} catch (EmptyResultDataAccessException e) {
 		}
+		graphCache.refresh();
 	}
 
 	private void importStartingGridData(RaceId raceId) {
