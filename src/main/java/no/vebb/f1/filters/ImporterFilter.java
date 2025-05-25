@@ -10,6 +10,9 @@ public class ImporterFilter extends Filter<ILoggingEvent> {
 	public FilterReply decide(ILoggingEvent event) {
 		if (event.getLoggerName().equals("no.vebb.f1.importing.Importer")) {
 			return FilterReply.ACCEPT;
+		} 
+		if (event.getLoggerName().equals("no.vebb.f1.importing.TableImporter")) {
+			return FilterReply.ACCEPT;
 		}
 		return FilterReply.DENY;
 	}
