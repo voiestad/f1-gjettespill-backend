@@ -9,15 +9,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.scoring.UserScore;
+import no.vebb.f1.user.PublicUser;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
@@ -25,12 +27,14 @@ import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.util.response.LinkListResponse;
+import no.vebb.f1.util.response.TablesResponse;
 
 /**
  * Class is responsible for displaying stats about users guesses.
  */
-@Controller
-@RequestMapping("/user")
+@RestController
+@RequestMapping("/api/public/user")
 public class ProfileController {
 
 	@Autowired
@@ -45,19 +49,21 @@ public class ProfileController {
 	/**
 	 * Handles GET request for /user.
 	 * 
-	 * @param model
 	 * @return links to all users
 	 */
 	@GetMapping
-	public String users(Model model) {
-		model.addAttribute("title", "Brukere");
+	public ResponseEntity<LinkListResponse> users() {
+		LinkListResponse res = new LinkListResponse();
+		String title = "Brukere";
+		res.title = title;
+		res.heading = title;
 		Map<String, String> linkMap = new LinkedHashMap<>();
-		model.addAttribute("linkMap", linkMap);
 		List<User> users = db.getAllUsers();
 		for (User user : users) {
 			linkMap.put(user.username, "/user/" + user.id);
 		}
-		return "util/linkList";
+		res.links = linkMap;
+		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
 	/**
@@ -67,17 +73,16 @@ public class ProfileController {
 	 * the logged in user. Else it will display stats from the users guesses.
 	 * 
 	 * @param id    of user
-	 * @param model
 	 * @return guessing profile
 	 */
 	@GetMapping("/{id}")
-	public String guesserProfile(@PathVariable("id") UUID id, Model model) {
+	public ResponseEntity<TablesResponse> guesserProfile(@PathVariable("id") UUID id) {
 		Optional<User> optUser = userService.loadUser(id);
 		if (optUser.isEmpty()) {
-			return "redirect:/";
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		User user = optUser.get();
-		return getGuesserProfile(model, user);
+		return getGuesserProfile(user);
 	}
 
 	/**
@@ -86,70 +91,78 @@ public class ProfileController {
 	 * redirected to /.
 	 */
 	@GetMapping("/myprofile")
-	public String myProfile(Model model) {
+	public ResponseEntity<TablesResponse> myProfile() {
 		Optional<User> optUser = userService.loadUser();
 		if (optUser.isEmpty()) {
-			return "redirect:/";
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		User user = optUser.get();
-		return getGuesserProfile(model, user);
+		return getGuesserProfile(user);
 	}
 
-	private String getGuesserProfile(Model model, User user) {
+	private ResponseEntity<TablesResponse> getGuesserProfile(User user) {
+		TablesResponse res = new TablesResponse();
 		if (!cutoff.isAbleToGuessCurrentYear() || userService.isLoggedInUser(user)) {
 			try {
 				Year year = new Year(TimeUtil.getCurrentYear(), db);
 				UserScore userScore = new UserScore(user.id, year, db);
-				model.addAttribute("tables", userScore.getAllTables());
+				res.tables = userScore.getAllTables();
 			} catch (InvalidYearException e) {
 			}
 		} else {
 			String title = "Tippingen er tilgjenglig snart!";
 			Table table = new Table(title, Arrays.asList(), Arrays.asList());
 			List<Table> tables = Arrays.asList(table);
-			model.addAttribute("tables", tables);
+			res.tables = tables;
 		}
 
-		model.addAttribute("title", user.username);
-		model.addAttribute("loggedOut", !userService.isLoggedIn());
-		return "util/tables";
+		res.title =  user.username;
+		res.heading =  user.username;
+		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
 	@GetMapping("/compare")
-	public String compareUsers(Model model,
+	public ResponseEntity<TablesResponse> compareUsers(
 			@RequestParam(value = "year", required = false) Integer year,
 			@RequestParam(value = "user1", required = false) UUID userId1,
 			@RequestParam(value = "user2", required = false) UUID userId2) {
+		TablesResponse res = new TablesResponse();
 		Optional<User> optUser1 = userService.loadUser(userId1);
 		Optional<User> optUser2 = userService.loadUser(userId2);
 		List<Table> tables = new ArrayList<>();
-		model.addAttribute("title", "Sammenlign brukere");
-		model.addAttribute("tables", tables);
-		model.addAttribute("users", db.getAllUsers());
-		model.addAttribute("years", db.getAllValidYears());
-		model.addAttribute("selectedUser1", userId1);
-		model.addAttribute("selectedUser2", userId2);
-		model.addAttribute("selectedYear", year);
+		String title = "Sammenlign brukere";
+		res.title = title;
+		res.heading = title;
+		res.tables = tables;
 		
 		if (optUser1.isEmpty() || optUser2.isEmpty() || year == null) {
-			return "public/compare";
+			return new ResponseEntity<>(res, HttpStatus.OK);
 		}
 		try {
 			Year seasonYear = new Year(year, db);
 			if (cutoff.isAbleToGuessYear(seasonYear)) {
-				String title = "Tippingen er tilgjenglig snart!";
-				tables.add(new Table(title, Arrays.asList(), Arrays.asList()));
-				return "public/compare";
+				String tableTitle = "Tippingen er tilgjenglig snart!";
+				tables.add(new Table(tableTitle, Arrays.asList(), Arrays.asList()));
+				return new ResponseEntity<>(res, HttpStatus.OK);
 			}
 			User user1 = optUser1.get();
 			User user2 = optUser2.get();
 			UserScore userScore1 = new UserScore(user1.id, seasonYear, db);
 			UserScore userScore2 = new UserScore(user2.id, seasonYear, db);
 			tables.addAll(userScore1.comparisonTables(userScore2));
-			model.addAttribute("title", String.format("%s vs %s", user1.username, user2.username));
+			title = String.format("%s vs %s", user1.username, user2.username);
+			res.title = title;
+			res.heading = title;
 		} catch (InvalidYearException e) {
 		}
-		return "public/compare";
+		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
+	@GetMapping("/list")
+	public ResponseEntity<List<PublicUser>> listUsers() {
+		List<PublicUser> res = db.getAllUsers().stream()
+			.map(user -> new PublicUser(user))
+			.toList();
+		return new ResponseEntity<>(res, HttpStatus.OK);
+	}
 }
