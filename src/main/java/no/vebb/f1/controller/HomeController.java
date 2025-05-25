@@ -33,7 +33,7 @@ public class HomeController {
 	 * 
 	 * @return home page
 	 */
-	@GetMapping("/api/home")
+	@GetMapping("/api/public/home")
 	public ResponseEntity<HomePageResponse> home() {
 		HomePageResponse res = new HomePageResponse();
 		Table leaderboard = graphCache.getleaderboard();

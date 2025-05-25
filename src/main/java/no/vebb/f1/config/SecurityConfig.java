@@ -31,7 +31,8 @@ public class SecurityConfig {
 				"/error",
 				"/privacy",
 				"/stats/**",
-				"/bingo")
+				"/bingo",
+				"/api/public/**")
 				.permitAll();
 			auth.anyRequest().authenticated();	
 		})
