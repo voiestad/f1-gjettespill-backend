@@ -493,7 +493,7 @@ public class Database {
 	}
 
 	public int getTimeLeftToGuessRaceHours(RaceId raceId) {
-		return getTimeLeftToGuessRaceHours(raceId) / 3600;
+		return (int) (getTimeLeftToGuessRace(raceId) / 3600L);
 	}
 
 	/**
