@@ -63,7 +63,7 @@ public class StatsController {
 			}
 			return new ResponseEntity<>(res, HttpStatus.OK);
 		} catch (InvalidYearException e) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 

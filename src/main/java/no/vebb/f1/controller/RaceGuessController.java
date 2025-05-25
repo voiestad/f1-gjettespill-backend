@@ -6,10 +6,11 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.Cutoff;
@@ -20,12 +21,13 @@ import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
+import no.vebb.f1.util.response.TablesResponse;
 
 /**
  * Class is responsible for displaying guesses for the users for races.
  */
-@Controller
-@RequestMapping("/race-guess")
+@RestController
+@RequestMapping("/api/public/race-guess")
 public class RaceGuessController {
 
 	@Autowired
@@ -40,19 +42,19 @@ public class RaceGuessController {
 	 * latest starting grid of the current year has passed.
 	 */
 	@GetMapping
-	public String guessOverview(Model model) {
+	public ResponseEntity<TablesResponse> guessOverview() {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			CutoffRace race = db.getLatestRaceForPlaceGuess(year);
 			if (cutoff.isAbleToGuessRace(race.id)) {
-				return "redirect:/";
+				return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
 			}
-			String title = String.format("%d. %s %d", race.position, race.name, year.value);
-			model.addAttribute("title", title);
-			model.addAttribute("tabTitle", "Tippet på løp");
+			TablesResponse res = new TablesResponse();
+			res.title = "Tippet på løp";
+			res.heading = String.format("%d. %s %d", race.position, race.name, year.value);
 
 			List<Table> tables = new ArrayList<>();
-
+			res.tables = tables;
 			Category[] categories = { new Category("FIRST", db), new Category("TENTH", db) };
 			List<String> header = Arrays.asList("Navn", "Tippet", "Startet");
 			for (Category category : categories) {
@@ -64,14 +66,11 @@ public class RaceGuessController {
 				tables.add(table);
 			}
 
-			model.addAttribute("tables", tables);
-			return "util/tables";
+			return new ResponseEntity<>(res, HttpStatus.OK);
 		} catch (InvalidYearException e) {
-			return "redirect:/";
 		} catch (EmptyResultDataAccessException e) {
-			return "redirect:/";
 		} catch (NoAvailableRaceException e) {
-			return "redirect:/";
 		}
+		return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
 	}
 }
