@@ -8,8 +8,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TableImporter {
+
+	private static final Logger logger = LoggerFactory.getLogger(TableImporter.class);
 
 	public static List<List<String>> getTable(String url) {
 		List<List<String>> table = new ArrayList<>();
@@ -32,6 +36,7 @@ public class TableImporter {
 				}
 			}
 		} catch (IOException e) {
+			logger.info("Failed to import from: '{}'", url);
 		}
 		return table;
 	}
