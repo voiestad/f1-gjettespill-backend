@@ -1,9 +1,5 @@
 package no.vebb.f1.controller.admin.season;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Controller;
@@ -16,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.scoring.ScoringTables;
-import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Points;
@@ -44,24 +38,9 @@ public class ManagePointsSystemController {
 			@RequestParam(value = "category", required = false) String selectedCategory,
 			@RequestParam(value = "diff", required = false, defaultValue = "0") int diff,
 			@RequestParam(value = "points", required = false, defaultValue = "0") int points) {
-		Year seasonYear = new Year(year, db);
+		new Year(year, db);
 
-		List<Category> categories = db.getCategories();
-		Map<String, String> categoryMap = new LinkedHashMap<>();
-		for (Category category : categories) {
-			String translation = db.translateCategory(category);
-			categoryMap.put(category.value, translation);
-		}
-		model.addAttribute("categories", categoryMap);
-		model.addAttribute("selectedCategory", selectedCategory);
-		model.addAttribute("diff", diff);
-		model.addAttribute("points", points);
-
-		List<Table> tables = ScoringTables.getScoreMappingTables(seasonYear, db);
-		model.addAttribute("tables", tables);
-
-		model.addAttribute("title", "Poengsystem " + year);
-		model.addAttribute("year", year);
+		// Return available categories
 		return "admin/managePointsSystem";
 	}
 

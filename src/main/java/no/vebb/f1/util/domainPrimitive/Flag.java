@@ -1,5 +1,7 @@
 package no.vebb.f1.util.domainPrimitive;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.exception.InvalidFlagException;
 
@@ -23,6 +25,11 @@ public class Flag {
 			throw new InvalidFlagException("Flag : " + value + " is not a valid flag");
 		}
 	}
+
+	@JsonValue
+    public String toValue() {
+        return value;
+    }
 
 	@Override
 	public String toString() {

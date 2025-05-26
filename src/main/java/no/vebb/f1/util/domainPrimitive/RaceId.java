@@ -1,5 +1,7 @@
 package no.vebb.f1.util.domainPrimitive;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.exception.InvalidRaceException;
 
@@ -22,6 +24,11 @@ public class RaceId {
 			throw new InvalidRaceException("RaceId : " + value + " is not a race ID");
 		}
 	}
+
+	@JsonValue
+    public int toValue() {
+        return value;
+    }
 
 	@Override
 	public String toString() {

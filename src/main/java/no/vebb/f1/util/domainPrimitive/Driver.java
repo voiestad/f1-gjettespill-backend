@@ -1,5 +1,7 @@
 package no.vebb.f1.util.domainPrimitive;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.exception.InvalidDriverException;
 
@@ -33,6 +35,11 @@ public class Driver {
 			throw new InvalidDriverException("Driver : '" + this + "' is not a valid driver in '" + year + "'");
 		}
 	}
+	
+	@JsonValue
+    public String toValue() {
+        return value;
+    }
 
 	@Override
 	public String toString() {

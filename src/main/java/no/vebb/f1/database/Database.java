@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,26 +14,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.util.*;
-import no.vebb.f1.util.collection.BingoSquare;
-import no.vebb.f1.util.collection.ColoredCompetitor;
-import no.vebb.f1.util.collection.CutoffRace;
-import no.vebb.f1.util.collection.Flags;
-import no.vebb.f1.util.collection.PositionedCompetitor;
-import no.vebb.f1.util.collection.RegisteredFlag;
-import no.vebb.f1.util.collection.UserRaceGuess;
-import no.vebb.f1.util.collection.ValuedCompetitor;
-import no.vebb.f1.util.domainPrimitive.Category;
-import no.vebb.f1.util.domainPrimitive.Color;
-import no.vebb.f1.util.domainPrimitive.Constructor;
-import no.vebb.f1.util.domainPrimitive.Diff;
-import no.vebb.f1.util.domainPrimitive.Driver;
-import no.vebb.f1.util.domainPrimitive.Flag;
-import no.vebb.f1.util.domainPrimitive.MailOption;
-import no.vebb.f1.util.domainPrimitive.Points;
-import no.vebb.f1.util.domainPrimitive.RaceId;
-import no.vebb.f1.util.domainPrimitive.SessionType;
-import no.vebb.f1.util.domainPrimitive.Username;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.util.collection.*;
+import no.vebb.f1.util.domainPrimitive.*;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserMail;
@@ -842,33 +823,9 @@ public class Database {
 	 * Ordered ascendingly by username
 	 * 
 	 * @param year of season
-	 * @return names of guessers
-	 */
-	public List<String> getSeasonGuessers(Year year) {
-		final String getGussers = """
-			SELECT DISTINCT u.username as username, u.id as id
-			FROM User u
-			JOIN FlagGuess fg ON fg.guesser = u.id
-			JOIN DriverGuess dg ON dg.guesser = u.id
-			JOIN ConstructorGuess cg ON cg.guesser = u.id
-			WHERE fg.year = ? AND dg.year = ? AND cg.year = ?
-			ORDER BY u.username ASC
-			""";
-		
-		return jdbcTemplate.queryForList(getGussers, year, year, year).stream()
-			.map(row -> (String) row.get("username"))
-			.toList();
-	}
-
-	/**
-	 * Gets a list of every person that has guessed in a season. To qualify they have to have guessed
-	 * on flags, drivers and constructors.
-	 * Ordered ascendingly by username
-	 * 
-	 * @param year of season
 	 * @return id of guessers
 	 */
-	public List<UUID> getSeasonGuesserIds(Year year) {
+	public List<User> getSeasonGuessers(Year year) {
 		final String getGussers = """
 			SELECT DISTINCT u.id as id
 			FROM User u
@@ -879,7 +836,9 @@ public class Database {
 			ORDER BY u.username ASC
 			""";
 		
-		return jdbcTemplate.queryForList(getGussers, UUID.class, year, year, year);
+		return jdbcTemplate.queryForList(getGussers, UUID.class, year, year, year).stream()
+			.map(id -> getUserFromId(id))
+			.toList();
 	}
 
 	/**
@@ -1346,6 +1305,23 @@ public class Database {
 		return races;
 	}
 
+	public List<Race> getRacesYear(Year year) {
+		final String getCutoffRaces = """
+			SELECT r.id as id, r.name as name, ro.year as year, ro.position as position
+			FROM RaceOrder ro
+			JOIN Race r ON ro.id = r.id
+			WHERE ro.year = ?
+			ORDER BY ro.position ASC
+			""";
+		return jdbcTemplate.queryForList(getCutoffRaces, year).stream()
+			.map(row -> new Race(
+				(int) row.get("position"),
+				(String) row.get("name"),
+				new RaceId((int) row.get("id")),
+				year))
+			.toList();
+	}
+
 	/**
 	 * Gets the cutoff of the year in LocalDataTime.
 	 * 
@@ -1603,8 +1579,12 @@ public class Database {
 	}
 
 	public String getEmail(UUID userId) {
-		final String sql = "SELECT email FROM MailingList WHERE user_id = ?";
-		return jdbcTemplate.queryForObject(sql, String.class, userId);	
+		try {
+			final String sql = "SELECT email FROM MailingList WHERE user_id = ?";
+			return jdbcTemplate.queryForObject(sql, String.class, userId);	
+		} catch (EmptyResultDataAccessException e) {
+			return null;
+		}
 	}
 
 	public List<UserMail> getMailingList(RaceId raceId) {
@@ -1737,7 +1717,7 @@ public class Database {
 		}
 	}
 
-	public List<List<String>> userGuessDataDriver(UUID userId) {
+	public List<CompetitorGuessYear<Driver>> userGuessDataDriver(UUID userId) {
 		final String sql = """
 			SELECT position, driver, year
 			FROM DriverGuess
@@ -1745,14 +1725,15 @@ public class Database {
 			ORDER BY year DESC, position ASC
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
-			.map(row -> Arrays.asList(
-				String.valueOf((int) row.get("position")),
-				(String) row.get("driver"),
-				String.valueOf((int) row.get("year"))
+			.map(row -> 
+				new CompetitorGuessYear<>(
+					(int) row.get("position"),
+					new Driver((String) row.get("driver")),
+					new Year((int) row.get("year"))
 			)).toList();
 	}
 
-	public List<List<String>> userGuessDataConstructor(UUID userId) {
+	public List<CompetitorGuessYear<Constructor>> userGuessDataConstructor(UUID userId) {
 		final String sql = """
 			SELECT position, constructor, year
 			FROM ConstructorGuess
@@ -1760,14 +1741,15 @@ public class Database {
 			ORDER BY year DESC, position ASC
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
-			.map(row -> Arrays.asList(
-				String.valueOf((int) row.get("position")),
-				(String) row.get("constructor"),
-				String.valueOf((int) row.get("year"))
+			.map(row -> 
+				new CompetitorGuessYear<>(
+					(int) row.get("position"),
+					new Constructor((String) row.get("constructor")),
+					new Year((int) row.get("year"))
 			)).toList();
 	}
 
-	public List<List<String>> userGuessDataFlag(UUID userId) {
+	public List<FlagGuessYear> userGuessDataFlag(UUID userId) {
 		final String sql = """
 			SELECT flag, amount, year
 			FROM FlagGuess
@@ -1775,15 +1757,15 @@ public class Database {
 			ORDER BY year DESC, flag ASC
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
-			.map(row -> Arrays.asList(
-				translateFlagName(new Flag((String) row.get("flag"))),
-				String.valueOf((int) row.get("amount")),
-				String.valueOf((int) row.get("year"))
+			.map(row -> new FlagGuessYear(
+				new Flag((String) row.get("flag")),
+				(int) row.get("amount"),
+				new Year((int) row.get("year"))
 			)).toList();
 
 	}
 
-	public List<List<String>> userGuessDataDriverPlace(UUID userId) {
+	public List<PlaceGuess> userGuessDataDriverPlace(UUID userId) {
 		final String sql = """
 			SELECT dpg.category AS category, dpg.driver AS driver, r.name AS race_name, ro.year AS year
 			FROM DriverPlaceGuess dpg
@@ -1793,15 +1775,15 @@ public class Database {
 			ORDER BY ro.year DESC, ro.position ASC, category ASC
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
-		.map(row -> Arrays.asList(
-			translateCategory(new Category((String) row.get("category"))),
-			(String) row.get("driver"),
+		.map(row -> new PlaceGuess(
+			new Category((String) row.get("category")),
+			new Driver((String) row.get("driver")),
 			(String) row.get("race_name"),
-			String.valueOf((int) row.get("year"))
+			new Year((int) row.get("year"))
 		)).toList();
 	}
 
-	public List<List<String>> userDataNotified(UUID userId) {
+	public List<UserNotifiedCount> userDataNotified(UUID userId) {
 		final String sql = """
 			SELECT r.name AS name, count(*) as notified_count, ro.year AS year
 			FROM Notified n
@@ -1812,10 +1794,10 @@ public class Database {
 			ORDER BY ro.year DESC, ro.position ASC
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
-		.map(row -> Arrays.asList(
+		.map(row -> new UserNotifiedCount(
 			(String) row.get("name"),
-			String.valueOf((int) row.get("notified_count")),
-			String.valueOf((int) row.get("year"))
+			(int) row.get("notified_count"),
+			new Year((int) row.get("year"))
 		)).toList();
 	}
 
@@ -2073,7 +2055,7 @@ public class Database {
 		return getAlternativeDriverName(driver, year);
 	}
 
-	private Year getYearFromRaceId(RaceId raceId) {
+	public Year getYearFromRaceId(RaceId raceId) {
 		final String sql = "SELECT year FROM RaceOrder WHERE id = ?";
 		return new Year(jdbcTemplate.queryForObject(sql, Integer.class, raceId));
 	}

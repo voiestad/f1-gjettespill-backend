@@ -1,10 +1,8 @@
 package no.vebb.f1.graph;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,12 +12,13 @@ import org.springframework.stereotype.Component;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.scoring.UserScore;
+import no.vebb.f1.user.PublicUser;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Guesser;
-import no.vebb.f1.util.collection.Table;
+import no.vebb.f1.util.collection.RankedGuesser;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -36,9 +35,9 @@ public class GraphCache {
 	@Autowired
 	private Cutoff cutoff;
 
-	private volatile Graph graph;
+	private volatile List<GuesserPointsSeason> graph;
 
-	private volatile Table leaderboard;
+	private volatile List<RankedGuesser> leaderboard;
 
 	private static final Logger logger = LoggerFactory.getLogger(GraphCache.class);
 
@@ -53,14 +52,14 @@ public class GraphCache {
 		}
 	}
 
-	public Graph getGraph() {
+	public List<GuesserPointsSeason> getGraph() {
 		if (graph == null) {
 			setGraph();
 		}
 		return graph;
 	}
 
-	public Table getleaderboard() {
+	public List<RankedGuesser> getleaderboard() {
 		if (leaderboard == null) {
 			setLeaderboard();
 		}
@@ -77,21 +76,22 @@ public class GraphCache {
 		logger.info("Leaderboard set");
 	}
 
-	private Graph getGraphHelper() {
-		Graph graph = new Graph();
-		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		List<UUID> guessers = db.getSeasonGuesserIds(year);
-		List<String> guessersNames = db.getSeasonGuessers(year);
-		graph.guessers = guessersNames;
-		List<RaceId> raceIds = getSeasonRaceIds(year);
-		List<List<Integer>> scores = new ArrayList<>();
-		for (UUID id : guessers) {
-			scores.add(
-				raceIds.stream()
-					.map(raceId -> new UserScore(id, year, raceId, db).getScore().value)
-					.toList());
+	private List<GuesserPointsSeason> getGraphHelper() {
+		if (cutoff.isAbleToGuessCurrentYear()) {
+			return null;
 		}
-		graph.scores = scores;
+		List<GuesserPointsSeason> graph = new ArrayList<>();
+		Year year = new Year(TimeUtil.getCurrentYear(), db);
+		List<User> guessers = db.getSeasonGuessers(year);
+		List<RaceId> raceIds = getSeasonRaceIds(year);
+		for (User guesser : guessers) {
+			graph.add(new GuesserPointsSeason(
+				guesser.username,
+				raceIds.stream()
+					.map(raceId -> new UserScore(new PublicUser(guesser), year, raceId, db).getScore().value)
+					.toList())
+				);
+		}
 		return graph;
 	}
 
@@ -102,18 +102,17 @@ public class GraphCache {
 		return raceIds;
 	}
 
-	private Table getLeaderboardHelper() {
-		List<String> header = Arrays.asList("Plass", "Navn", "Poeng");
-		List<List<String>> body = new ArrayList<>();
+	private List<RankedGuesser> getLeaderboardHelper() {
+		List<RankedGuesser> result = new ArrayList<>();
 		if (cutoff.isAbleToGuessCurrentYear()) {
-			return new Table("Sesongen starter snart", new ArrayList<>(), new ArrayList<>());
+			return null;
 		}
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			List<Guesser> leaderboard = db.getAllUserIds().stream()
 				.map(id -> {
-					UserScore userScore = new UserScore(id, year, db);
 					User user = userService.loadUser(id).get();
+					UserScore userScore = new UserScore(new PublicUser(user), year, db);
 					return new Guesser(user.username, userScore.getScore(), id);
 				})
 				.filter(guesser -> guesser.points.value > 0)
@@ -122,20 +121,15 @@ public class GraphCache {
 
 			for (int i = 0; i < leaderboard.size(); i++) {
 				Guesser guesser = leaderboard.get(i);
-				String ranking = String.valueOf(i+1);
+				int rank = i+1;
 				if (i > 0 && guesser.points.equals(leaderboard.get(i-1).points)) {
-					ranking = body.get(i-1).get(0);
+					rank = result.get(i-1).rank;
 				}
-				body.add(Arrays.asList(
-					ranking,
-					guesser.username,
-					String.valueOf(guesser.points),
-					guesser.id.toString()
-				));
+				result.add(new RankedGuesser(guesser, rank));
 			}
-			return new Table("Rangering", header, body);
+			return result;
 		} catch (InvalidYearException e) {
-			return new Table("Det vil snart være mulig å tippe", new ArrayList<>(), new ArrayList<>());
+			return null;
 		}
 	}
 }

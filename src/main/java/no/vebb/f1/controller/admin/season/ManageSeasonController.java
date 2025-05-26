@@ -1,6 +1,5 @@
 package no.vebb.f1.controller.admin.season;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
 import no.vebb.f1.util.Cutoff;
-import no.vebb.f1.util.StatsUtil;
 import no.vebb.f1.util.collection.CutoffRace;
-import no.vebb.f1.util.collection.Table;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidRaceException;
@@ -29,9 +26,6 @@ public class ManageSeasonController {
 	
 	@Autowired
 	private Database db;
-
-	@Autowired
-	private StatsUtil statsUtil;
 
 	@GetMapping
 	public String manageRacesInSeason(@RequestParam(value = "success", required = false) Boolean success,
@@ -49,33 +43,6 @@ public class ManageSeasonController {
 		model.addAttribute("title", "Løp " + year);
 		model.addAttribute("year", year);
 		return "admin/manageSeason";
-	}
-
-	@GetMapping("/{raceId}")
-	public String manageRacesInSeason(@PathVariable("raceId") int raceId, @PathVariable("year") int year, Model model) {
-		Year seasonYear = new Year(year, db);
-		try {
-			RaceId validRaceId = new RaceId(raceId, db);
-			boolean isRaceInSeason = db.isRaceInSeason(validRaceId, seasonYear);
-			if (!isRaceInSeason) {
-				return "redirect:/admin/season/" + year + "/manage?success=false";
-			}	
-			
-			List<Table> tables = new ArrayList<>();
-			tables.add(statsUtil.getStartingGridTable(validRaceId));
-			tables.add(statsUtil.getRaceResultTable(validRaceId));
-			tables.add(statsUtil.getDriverStandingsTable(validRaceId));
-			tables.add(statsUtil.getConstructorStandingsTable(validRaceId));
-			tables.add(statsUtil.getFlagTable(validRaceId));
-			
-			model.addAttribute("tables", tables);
-			int position = db.getPositionOfRace(validRaceId);
-			String raceName = db.getRaceName(validRaceId);
-			model.addAttribute("title", position + ". " + raceName + " " + year);
-			return "util/tables";
-		} catch (InvalidRaceException e) {
-			return "redirect:/admin/season/" + year + "/manage?success=false";
-		}
 	}
 
 	@PostMapping("/reload")

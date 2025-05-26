@@ -1,5 +1,7 @@
 package no.vebb.f1.util.domainPrimitive;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.exception.InvalidYearException;
 
@@ -23,6 +25,11 @@ public class Year {
 			throw new InvalidYearException("Year : " + value + " is not a valid season");
 		}
 	}
+
+	@JsonValue
+    public int toValue() {
+        return value;
+    }
 
 	@Override
 	public String toString() {
