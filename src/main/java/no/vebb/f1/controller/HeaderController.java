@@ -1,12 +1,12 @@
-package no.vebb.f1.components;
+package no.vebb.f1.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
@@ -15,9 +15,10 @@ import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
+import no.vebb.f1.util.response.HeaderResponse;
 
-@Component
-public class HeaderInterceptor implements HandlerInterceptor  {
+@RestController
+public class HeaderController {
 
 	@Autowired
 	private Database db;
@@ -27,15 +28,15 @@ public class HeaderInterceptor implements HandlerInterceptor  {
 
 	@Autowired
 	private UserService userService;
-
-	@SuppressWarnings("null")
-	@Override
-	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-		request.setAttribute("loggedOut", !userService.isLoggedIn());
-		request.setAttribute("raceGuess", isRaceGuess());
-		request.setAttribute("isAdmin", userService.isAdmin());
-		request.setAttribute("isAbleToGuess", cutoff.isAbleToGuessCurrentYear() || isRaceToGuess());
-		return true;
+	
+	@GetMapping("/api/public/header")
+	public ResponseEntity<HeaderResponse> preHandle() {
+		HeaderResponse res = new HeaderResponse();
+		res.isLoggedIn = userService.isLoggedIn();
+		res.isRaceGuess = isRaceGuess();
+		res.isAdmin =  userService.isAdmin();
+		res.isAbleToGuess = cutoff.isAbleToGuessCurrentYear() || isRaceToGuess();
+		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
 	private boolean isRaceGuess() {
