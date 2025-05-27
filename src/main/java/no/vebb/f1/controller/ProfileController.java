@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
@@ -26,7 +25,6 @@ import no.vebb.f1.util.exception.InvalidYearException;
  * Class is responsible for displaying stats about users guesses.
  */
 @RestController
-@RequestMapping("/api/public/user")
 public class ProfileController {
 
 	@Autowired
@@ -47,7 +45,7 @@ public class ProfileController {
 	 * @param id    of user
 	 * @return guessing profile
 	 */
-	@GetMapping("/{id}")
+	@GetMapping("/api/public/user/{id}")
 	public ResponseEntity<UserScore> guesserProfile(@PathVariable("id") UUID id) {
 		Optional<User> optUser = userService.loadUser(id);
 		if (optUser.isEmpty()) {
@@ -62,7 +60,7 @@ public class ProfileController {
 	 * guesses of the user. If the user is not logged in, the user will be
 	 * redirected to /.
 	 */
-	@GetMapping("/myprofile")
+	@GetMapping("/api/user/myprofile")
 	public ResponseEntity<UserScore> myProfile() {
 		Optional<User> optUser = userService.loadUser();
 		if (optUser.isEmpty()) {
@@ -84,7 +82,7 @@ public class ProfileController {
 		return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 	}
 
-	@GetMapping("/list")
+	@GetMapping("/api/public/user/list")
 	public ResponseEntity<List<PublicUser>> listUsers() {
 		List<PublicUser> res = db.getAllUsers().stream()
 			.map(user -> new PublicUser(user))

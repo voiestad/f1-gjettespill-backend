@@ -4,15 +4,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
@@ -22,8 +22,8 @@ import no.vebb.f1.util.exception.InvalidUsernameException;
 /**
  * Class is responsible for registering username for new users.
  */
-@Controller
-@RequestMapping("/username")
+@RestController
+@RequestMapping("/api/username")
 public class UsernameController {
 
 	private static final Logger logger = LoggerFactory.getLogger(UsernameController.class);
@@ -31,23 +31,8 @@ public class UsernameController {
 	@Autowired
 	private Database db;
 
-	private final String url = "/username";
-
 	@Autowired
 	private UserService userService;
-
-	/**
-	 * Handles GET requests for /username. Gives a form to set username.
-	 */
-	@GetMapping
-	public String registerUsernameForm(Model model) {
-		if (userService.isLoggedIn()) {
-			return "redirect:/";
-		}
-		model.addAttribute("url", url);
-		model.addAttribute("newUser", true);
-		return "user/registerUsername";
-	}
 
 	/**
 	 * Handles POST requests for /username. If the username is valid, it adds the
@@ -56,16 +41,15 @@ public class UsernameController {
 	 */
 	@PostMapping
 	@Transactional
-	public String registerUsername(@AuthenticationPrincipal OAuth2User principal,
+	public ResponseEntity<String> registerUsername(@AuthenticationPrincipal OAuth2User principal,
 			@RequestParam("username") String username,
-			@RequestParam("referralCode") long referralCode,
-			Model model) {
-		model.addAttribute("url", url);
-		model.addAttribute("newUser", true);
+			@RequestParam("referralCode") long referralCode) {
+		if (userService.isLoggedIn()) {
+			return new ResponseEntity<>("Brukernavn er allerede satt.`", HttpStatus.FORBIDDEN);
+		}
 		if (!db.isValidReferralCode(referralCode)) {
-			model.addAttribute("error", "Ikke gyldig invitasjonskode.");
 			logger.warn("Someone tried to use an invalid referral code.");
-			return "user/registerUsername";
+			return new ResponseEntity<>("Ikke gyldig invitasjonskode.", HttpStatus.BAD_REQUEST);
 		}
 		try {
 			final String googleId = principal.getName();
@@ -78,10 +62,9 @@ public class UsernameController {
 				db.addUser(validUsername, googleId);
 			}
 		} catch (InvalidUsernameException e) {
-			model.addAttribute("error", e.getMessage());
-			return "user/registerUsername";
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
 		}
-		return "redirect:/";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 }
