@@ -29,13 +29,14 @@ import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidEmailException;
 import no.vebb.f1.util.exception.InvalidUsernameException;
+import no.vebb.f1.util.response.MailOptionsResponse;
 
 /**
  * Class is responsible for managing the user settings. Like changing username
  * and deleting user.
  */
 @RestController
-@RequestMapping("/settings")
+@RequestMapping("/api/settings")
 public class UserSettingsController {
 
 	private static final Logger logger = LoggerFactory.getLogger(UserSettingsController.class);
@@ -49,24 +50,6 @@ public class UserSettingsController {
 	@Autowired
 	private UserMailService userMailService;
 
-	private final String usernameUrl = "/settings/username";
-
-	/**
-	 * Handles GET requests for /settings. Gives a list of links to further navigate
-	 * the settings.
-	 */
-	@GetMapping
-	public String settings(Model model) {
-		model.addAttribute("title", "Innstillinger");
-		Map<String, String> linkMap = new LinkedHashMap<>();
-		linkMap.put("Se brukerinformasjon", "/settings/info");
-		linkMap.put("Påminnelser", "/settings/mail");
-		linkMap.put("Inviter brukere", "/settings/referral");
-		linkMap.put("Endre brukernavn", "/settings/username");
-		linkMap.put("Slett bruker", "/settings/delete");
-		model.addAttribute("linkMap", linkMap);
-		return "util/linkList";
-	}
 
 	/**
 	 * Handles GET requests for /settings/info. Gives the user information about
@@ -81,46 +64,27 @@ public class UserSettingsController {
 	}
 
 	/**
-	 * Handles GET requests for /settings/username. Gives the form for changing
-	 * username.
-	 */
-	@GetMapping("/username")
-	public String changeUsername(Model model) {
-		model.addAttribute("url", usernameUrl);
-		return "user/registerUsername";
-	}
-
-	/**
 	 * Handles POST requests for /settings/username. If the username is valid, it
 	 * changes the username in the database. Otherwise, it gives an error message to
 	 * the user.
 	 */
-	@PostMapping("/username")
+	@PostMapping("/username/change")
 	@Transactional
-	public String changeUsername(String username, Model model) {
+	public ResponseEntity<?> changeUsername(String username) {
 		try {
 			Username validUsername = new Username(username, db);
 			final UUID id = userService.loadUser().get().id;
 			db.updateUsername(validUsername, id);
+			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidUsernameException e) {
-			model.addAttribute("error", e.getMessage());
-			model.addAttribute("url", usernameUrl);
-			return "user/registerUsername";
+			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
-
-		return "redirect:/settings";
 	}
 
-	/**
-	 * Handles GET requests for /settings/delete. Gives a form to confirm deletion
-	 * of account.
-	 */
-	@GetMapping("/delete")
-	public String deleteAccount(Model model) {
+	@GetMapping("/username")
+	public ResponseEntity<String> getUsername() {
 		String username = userService.loadUser().get().username;
-		model.addAttribute("username", username);
-
-		return "user/deleteAccount";
+		return new ResponseEntity<>(username, HttpStatus.OK);
 	}
 
 	/**
@@ -131,133 +95,134 @@ public class UserSettingsController {
 	 */
 	@PostMapping("/delete")
 	@Transactional
-	public String deleteAccount(Model model, @RequestParam("username") String username, HttpServletRequest request) {
+	public ResponseEntity<?> deleteAccount(Model model, @RequestParam("username") String username, HttpServletRequest request) {
 		User user = userService.loadUser().get();
 		String actualUsername = user.username;
 		if (!username.equals(actualUsername)) {
 			model.addAttribute("username", actualUsername);
 			model.addAttribute("error", "Brukernavn er feil");
-			return "user/deleteAccount";
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		db.deleteUser(user.id);
 
 		request.getSession().invalidate();
 		SecurityContextHolder.clearContext();
 
-		return "redirect:/";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	@GetMapping("/mail")
-	public String mailingList(Model model) {
+	public ResponseEntity<MailOptionsResponse> mailingList() {
 		User user = userService.loadUser().get();
 		boolean hasMail = db.userHasEmail(user.id);
-		model.addAttribute("hasMail", hasMail);
-		if (hasMail) {
-			Map<Integer, Boolean> mailOptions = new LinkedHashMap<>();
-			model.addAttribute("mailOptions", mailOptions);
-			List<MailOption> options = db.getMailingOptions();
-			for (MailOption option : options) {
-				mailOptions.put(option.value, false);
-			}
-			List<MailOption> preferences = db.getMailingPreference(user.id);
-			for (MailOption preference : preferences) {
-				mailOptions.put(preference.value, true);
-			}
+		if (!hasMail) {
+			MailOptionsResponse res = new MailOptionsResponse(false, null);
+			return new ResponseEntity<>(res, HttpStatus.OK);
 		}
-		return "user/mail";
+		Map<Integer, Boolean> mailOptions = new LinkedHashMap<>();
+		List<MailOption> options = db.getMailingOptions();
+		for (MailOption option : options) {
+			mailOptions.put(option.value, false);
+		}
+		List<MailOption> preferences = db.getMailingPreference(user.id);
+		for (MailOption preference : preferences) {
+			mailOptions.put(preference.value, true);
+		}
+		MailOptionsResponse res = new MailOptionsResponse(true, mailOptions);
+		return new ResponseEntity<>(res, HttpStatus.OK);
+		
 	}
 
 	@PostMapping("/mail/add")
 	@Transactional
-	public String addMailingList(Model model, @RequestParam("email") String email) {
+	public ResponseEntity<?> addMailingList(Model model, @RequestParam("email") String email) {
 		try {
 			User user = userService.loadUser().get();
 			UserMail userMail = new UserMail(user, email);
 			userMailService.sendVerificationCode(userMail);
-			return "redirect:/settings/mail/verification";
+			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidEmailException e) {
-			return "redirect:/settings/mail";
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 	}
 	
 	@PostMapping("/mail/remove")
 	@Transactional
-	public String removeMailingList(Model model) {
+	public ResponseEntity<?> removeMailingList(Model model) {
 		User user = userService.loadUser().get();
 		db.clearUserFromMailing(user.id);
-		return "redirect:/settings/mail";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	@GetMapping("/mail/verification")
-	public String verificationCodeForm() {
+	public ResponseEntity<?> verificationCodeForm() {
 		User user = userService.loadUser().get();
 		if (!db.hasVerificationCode(user.id)) {
-			return "redirect:/settings/mail";
+			return new ResponseEntity<>(HttpStatus.OK);
 		}
-		return "user/verificationCode";
+		return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 	}
 
 	@PostMapping("/mail/verification")
 	@Transactional
-	public String verificationCode(Model model, @RequestParam("code") int code, HttpServletRequest request) {
+	public ResponseEntity<?> verificationCode(Model model, @RequestParam("code") int code, HttpServletRequest request) {
 		User user = userService.loadUser().get();
 		boolean isValidVerificationCode = db.isValidVerificationCode(user.id, code);
 		if (isValidVerificationCode) {
 			logger.info("Successfully verified email of user '{}'", user.id);
-			return "redirect:/settings/mail";
+			return new ResponseEntity<>(HttpStatus.OK);
 		}
 		logger.warn("User '{}' put the wrong verification code", user.id);
 		
-		return "redirect:/settings/mail/verification";
+		return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 	}
 
 	@PostMapping("/mail/option/add")
 	@Transactional
-	public String addMailingOption(@RequestParam("option") int option) {
+	public ResponseEntity<?> addMailingOption(@RequestParam("option") int option) {
 		try {
 			User user = userService.loadUser().get();
 			MailOption mailOption = new MailOption(option, db);
 			db.addMailOption(user.id, mailOption);
 		} catch (InvalidEmailException e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		return "redirect:/settings/mail";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
 	@PostMapping("/mail/option/remove")
 	@Transactional
-	public String removeMailingOption(@RequestParam("option") int option) {
+	public ResponseEntity<?> removeMailingOption(@RequestParam("option") int option) {
 		try {
 			User user = userService.loadUser().get();
 			MailOption mailOption = new MailOption(option, db);
 			db.removeMailOption(user.id, mailOption);
 		} catch (InvalidEmailException e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		return "redirect:/settings/mail";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	@GetMapping("/referral")
-	public String generateReferralCodeForm(Model model) {
+	public ResponseEntity<Long> getReferralCode() {
 		UUID userId = userService.loadUser().get().id;
 		Long referralCode = db.getReferralCode(userId);
-		if (referralCode != null) {
-			model.addAttribute("referralCode", referralCode);
-		}
-		return "user/referralCode";
+		return new ResponseEntity<>(referralCode, HttpStatus.OK);
 	}
 	
 	@PostMapping("/referral/add")
 	@Transactional
-	public String generateReferralCode() {
+	public ResponseEntity<?> generateReferralCode() {
 		UUID userId = userService.loadUser().get().id;
 		db.addReferralCode(userId);
-		return "redirect:/settings/referral";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
 	@PostMapping("/referral/delete")
 	@Transactional
-	public String removeReferralCode() {
+	public ResponseEntity<?> removeReferralCode() {
 		UUID userId = userService.loadUser().get().id;
 		db.removeReferralCode(userId);
-		return "redirect:/settings/referral";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 }
