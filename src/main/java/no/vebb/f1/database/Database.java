@@ -1322,6 +1322,23 @@ public class Database {
 			.toList();
 	}
 
+	public Race getRaceFromId(RaceId raceId) {
+		final String sql = """
+			SELECT r.id as id, r.name as name, ro.year as year, ro.position as position
+			FROM RaceOrder ro
+			JOIN Race r ON ro.id = r.id
+			WHERE ro.id = ?
+			ORDER BY ro.position ASC
+			""";
+		Map<String, Object> sqlRes = jdbcTemplate.queryForMap(sql, raceId);
+		return new Race(
+			(int) sqlRes.get("position"),
+			(String) sqlRes.get("name"),
+			new RaceId((int) sqlRes.get("id")),
+			new Year((int) sqlRes.get("year"))
+		);
+	}
+
 	/**
 	 * Gets the cutoff of the year in LocalDataTime.
 	 * 

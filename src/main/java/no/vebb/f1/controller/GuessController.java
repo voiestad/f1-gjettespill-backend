@@ -1,9 +1,8 @@
 package no.vebb.f1.controller;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -11,20 +10,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Flags;
+import no.vebb.f1.util.collection.Race;
 import no.vebb.f1.util.collection.ColoredCompetitor;
+import no.vebb.f1.util.collection.CutoffCompetitors;
+import no.vebb.f1.util.collection.CutoffCompetitorsSelected;
+import no.vebb.f1.util.collection.CutoffFlags;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Driver;
@@ -34,8 +38,8 @@ import no.vebb.f1.util.exception.InvalidConstructorException;
 import no.vebb.f1.util.exception.InvalidDriverException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 
-@Controller
-@RequestMapping("/guess")
+@RestController
+@RequestMapping("/api/guess")
 public class GuessController {
 
 	private static final Logger logger = LoggerFactory.getLogger(GuessController.class);
@@ -53,29 +57,19 @@ public class GuessController {
 	 * Handles GET requests for /guess. Gives a list of links to the categories that
 	 * are currently available for guessing.
 	 */
-	@GetMapping
-	public String guess(@RequestParam(value = "success", required = false) Boolean success, Model model) {
-		if (success != null) {
-			if (success) {
-				model.addAttribute("successMessage", "Tippingen din ble lagret");
-			} else {
-				model.addAttribute("successMessage",
-						"Tippingen feilet, vennligst prøv igjen eller kontakt administrator");
-			}
-		}
-		model.addAttribute("title", "Velg kategori");
-		Map<String, String> linkMap = new LinkedHashMap<>();
+	@GetMapping("/categories")
+	public ResponseEntity<List<Category>> guess() {
+		List<Category> res = new ArrayList<>();
 		if (cutoff.isAbleToGuessCurrentYear()) {
-			linkMap.put("Ranger sjåfører", "/guess/drivers");
-			linkMap.put("Ranger konstruktører", "/guess/constructors");
-			linkMap.put("Tipp antall", "/guess/flags");
+			res.add(new Category("DRIVER"));
+			res.add(new Category("CONSTRUCTOR"));
+			res.add(new Category("FLAG"));
 		}
 		if (isRaceToGuess()) {
-			linkMap.put("Tipp 1.plass", "/guess/winner");
-			linkMap.put("Tipp 10.plass", "/guess/tenth");
+			res.add(new Category("FIRST"));
+			res.add(new Category("TENTH"));
 		}
-		model.addAttribute("linkMap", linkMap);
-		return "util/linkList";
+		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
 	/**
@@ -83,19 +77,16 @@ public class GuessController {
 	 * gives a list of drivers to rank and the time left to guess.
 	 */
 	@GetMapping("/drivers")
-	public String rankDrivers(Model model) {
+	public ResponseEntity<CutoffCompetitors<Driver>> rankDrivers() {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess";
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		UUID id = userService.loadUser().get().id;
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
 		List<ColoredCompetitor<Driver>> competitors = db.getDriversGuess(id, year);
-		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
-		model.addAttribute("competitors", competitors);
-		model.addAttribute("title", "Ranger sjåførene");
-		model.addAttribute("type", "drivers");
-		return "guess/ranking";
+		CutoffCompetitors<Driver> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
+		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
 	/**
@@ -104,9 +95,9 @@ public class GuessController {
 	 */
 	@PostMapping("/drivers")
 	@Transactional
-	public String rankDrivers(@RequestParam List<String> rankedCompetitors, Model model) {
+	public ResponseEntity<?> rankDrivers(@RequestParam List<String> rankedCompetitors) {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess?success=false";
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		try {
@@ -118,7 +109,7 @@ public class GuessController {
 			String error = validateGuessList(guessedDrivers, competitors);
 			if (error != null) {
 				logger.warn(error);
-				return "redirect:/guess?success=false";
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
 			int position = 1;
 			UUID id = userService.loadUser().get().id;
@@ -128,9 +119,9 @@ public class GuessController {
 			}
 			logger.info("User '{}' guessed on '{}' on year '{}'", id, "driver", year);
 		} catch (InvalidDriverException e) {
-			return "redirect:/guess?success=false";
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		return "redirect:/guess?success=true";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	/**
@@ -139,19 +130,16 @@ public class GuessController {
 	 * gives a list of constructors to rank and the time left to guess.
 	 */
 	@GetMapping("/constructors")
-	public String rankConstructors(Model model) {
+	public ResponseEntity<CutoffCompetitors<Constructor>> rankConstructors() {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess";
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		UUID id = userService.loadUser().get().id;
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
 		List<ColoredCompetitor<Constructor>> competitors = db.getConstructorsGuess(id, year);
-		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
-		model.addAttribute("competitors", competitors);
-		model.addAttribute("title", "Ranger konstruktørene");
-		model.addAttribute("type", "constructors");
-		return "guess/ranking";
+		CutoffCompetitors<Constructor> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
+		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
 	/**
@@ -161,9 +149,9 @@ public class GuessController {
 	 */
 	@PostMapping("/constructors")
 	@Transactional
-	public String rankConstructors(@RequestParam List<String> rankedCompetitors, Model model) {
+	public ResponseEntity<?> rankConstructors(@RequestParam List<String> rankedCompetitors) {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess?success=false";
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		try {
@@ -175,7 +163,7 @@ public class GuessController {
 			String error = validateGuessList(guessedConstructors, competitors);
 			if (error != null) {
 				logger.warn(error);
-				return "redirect:/guess?success=false";
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
 			int position = 1;
 			UUID id = userService.loadUser().get().id;
@@ -185,9 +173,9 @@ public class GuessController {
 			}
 			logger.info("User '{}' guessed on '{}' on year '{}'", id, "constructor", year);
 		} catch (InvalidConstructorException e) {
-			return "redirect:/guess?success=false";
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		return "redirect:/guess?success=true";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	private <T> String validateGuessList(List<T> guessed, Set<T> original) {
@@ -212,10 +200,9 @@ public class GuessController {
 	 * list of drivers that can be chosen.
 	 */
 	@GetMapping("/tenth")
-	public String guessTenth(Model model) {
-		model.addAttribute("type", "tenth");
+	public ResponseEntity<CutoffCompetitorsSelected<Driver>> guessTenth() {
 		Category category = new Category("TENTH", db);
-		return handleGetChooseDriver(model, category, "Tipp 10.plass i ");
+		return handleGetChooseDriver(category);
 	}
 
 	/**
@@ -224,9 +211,9 @@ public class GuessController {
 	 */
 	@PostMapping("/tenth")
 	@Transactional
-	public String guessTenth(@RequestParam String driver, Model model) {
+	public ResponseEntity<?> guessTenth(@RequestParam String driver) {
 		Category category = new Category("TENTH", db);
-		return handlePostChooseDriver(model, driver, category);
+		return handlePostChooseDriver(driver, category);
 	}
 
 	/**
@@ -234,10 +221,9 @@ public class GuessController {
 	 * list of drivers that can be chosen.
 	 */
 	@GetMapping("/winner")
-	public String guessWinner(Model model) {
-		model.addAttribute("type", "winner");
+	public ResponseEntity<CutoffCompetitorsSelected<Driver>> guessWinner() {
 		Category category = new Category("FIRST", db);
-		return handleGetChooseDriver(model, category, "Tipp vinneren i ");
+		return handleGetChooseDriver(category);
 	}
 
 	/**
@@ -246,50 +232,49 @@ public class GuessController {
 	 */
 	@PostMapping("/winner")
 	@Transactional
-	public String guessWinner(@RequestParam String driver, Model model) {
+	public ResponseEntity<?> guessWinner(@RequestParam String driver) {
 		Category category = new Category("FIRST", db);
-		return handlePostChooseDriver(model, driver, category);
+		return handlePostChooseDriver(driver, category);
 	}
 
-	private String handleGetChooseDriver(Model model, Category category, String title) {
+	private ResponseEntity<CutoffCompetitorsSelected<Driver>> handleGetChooseDriver(Category category) {
 		try {
-			RaceId raceId = getRaceIdToGuess();
-			model.addAttribute("title", title + db.getRaceName(raceId));
-			long timeLeftToGuess = db.getTimeLeftToGuessRace(raceId);
-			model.addAttribute("timeLeftToGuess", timeLeftToGuess);
-
-			List<ColoredCompetitor<Driver>> drivers = db.getDriversFromStartingGridWithColors(raceId);
-			model.addAttribute("items", drivers);
+			Race race = db.getRaceFromId(getRaceIdToGuess());
+			long timeLeftToGuess = db.getTimeLeftToGuessRace(race.id());
+			List<ColoredCompetitor<Driver>> drivers = db.getDriversFromStartingGridWithColors(race.id());
 			UUID id = userService.loadUser().get().id;
-			String driver = db.getGuessedDriverPlace(raceId, category, id).toString();
-			model.addAttribute("guessedDriver", driver);
+			try {
+				Driver driver = db.getGuessedDriverPlace(race.id(), category, id);
+				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, driver, timeLeftToGuess);
+				return new ResponseEntity<>(res, HttpStatus.OK);
+			} catch (EmptyResultDataAccessException e) {
+				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, null, timeLeftToGuess);
+				return new ResponseEntity<>(res, HttpStatus.OK);
+			}
 		} catch (NoAvailableRaceException e) {
-			return "redirect:/guess";
-		} catch (EmptyResultDataAccessException e) {
-			model.addAttribute("guessedDriver", "");
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
-
-		return "guess/chooseDriver";
 	}
 
-	private String handlePostChooseDriver(Model model, String driver, Category category) {
+	private ResponseEntity<?> handlePostChooseDriver(String driver, Category category) {
 		try {
 			RaceId raceId = getRaceIdToGuess();
 			Driver validDriver = new Driver(driver, db);
 			Set<Driver> driversCheck = new HashSet<>(db.getDriversFromStartingGrid(raceId));
 			if (!driversCheck.contains(validDriver)) {
 				logger.warn("'{}', invalid winner driver inputted by user.", driver);
-				return "redirect:/guess?success=false";
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
 			UUID id = userService.loadUser().get().id;
 			db.addDriverPlaceGuess(id, raceId, validDriver, category);
 			logger.info("User '{}' guessed on category '{}' on race '{}'", id, category, raceId);
-			return "redirect:/guess?success=true";
+			return new ResponseEntity<>(HttpStatus.OK);
 
 		} catch (NoAvailableRaceException e) {
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		} catch (InvalidDriverException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		return "redirect:/guess?success=false";
 	}
 
 	private RaceId getRaceIdToGuess() throws NoAvailableRaceException {
@@ -309,16 +294,15 @@ public class GuessController {
 	 * users previous guesses.
 	 */
 	@GetMapping("/flags")
-	public String guessFlags(Model model) {
+	public ResponseEntity<CutoffFlags> guessFlags() {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess";
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
-		model.addAttribute("timeLeftToGuess", timeLeftToGuess);
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		Flags flags = db.getFlagGuesses(userService.loadUser().get().id, year);
-		model.addAttribute("flags", flags);
-		return "guess/guessFlags";
+		CutoffFlags res = new CutoffFlags(flags, timeLeftToGuess);
+		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
 	/**
@@ -327,21 +311,20 @@ public class GuessController {
 	 */
 	@PostMapping("/flags")
 	@Transactional
-	public String guessFlags(@RequestParam int yellow, @RequestParam int red,
-			@RequestParam int safetyCar, Model model) {
+	public ResponseEntity<?> guessFlags(@RequestParam int yellow, @RequestParam int red,
+			@RequestParam int safetyCar) {
+		if (!cutoff.isAbleToGuessCurrentYear()) {
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		}
 		Flags flags = new Flags(yellow, red, safetyCar);
 		if (!flags.hasValidValues()) {
-			model.addAttribute("error", "Verdier kan ikke være negative");
-			return "guess/guessFlags";
-		}
-		if (!cutoff.isAbleToGuessCurrentYear()) {
-			return "redirect:/guess?success=false";
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), db);
 		UUID id = userService.loadUser().get().id;
 		db.addFlagGuesses(id, year, flags);
 		logger.info("User '{}' guessed on flags on year '{}'", id, year);
-		return "redirect:/guess?success=true";
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	private boolean isRaceToGuess() {

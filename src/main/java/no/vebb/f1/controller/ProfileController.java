@@ -81,7 +81,7 @@ public class ProfileController {
 			} catch (InvalidYearException e) {
 			}
 		}
-		return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+		return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 	}
 
 	@GetMapping("/list")

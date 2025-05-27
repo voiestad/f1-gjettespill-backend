@@ -39,7 +39,7 @@ public class ScoreController {
 			return new ResponseEntity<>(res, HttpStatus.OK); 
 		} catch (InvalidYearException e) {	
 		}
-		return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+		return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 	}
 
 }

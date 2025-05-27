@@ -42,7 +42,7 @@ public class RaceGuessController {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			CutoffRace race = db.getLatestRaceForPlaceGuess(year);
 			if (cutoff.isAbleToGuessRace(race.id)) {
-				return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}
 			var first = db.getUserGuessesDriverPlace(race.id, new Category("FIRST", db));
 			var tenth = db.getUserGuessesDriverPlace(race.id, new Category("TENTH", db));
@@ -54,6 +54,6 @@ public class RaceGuessController {
 		} catch (EmptyResultDataAccessException e) {
 		} catch (NoAvailableRaceException e) {
 		}
-		return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+		return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 	}
 }
