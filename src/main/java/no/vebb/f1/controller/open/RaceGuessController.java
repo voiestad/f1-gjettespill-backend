@@ -1,4 +1,4 @@
-package no.vebb.f1.controller;
+package no.vebb.f1.controller.open;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;

@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,7 +55,7 @@ public class UserSettingsController {
 	 * their username, user ID and Google ID that is associated with their user.
 	 */
 	@GetMapping("/info")
-	public ResponseEntity<UserInformation> userInformation(Model model) {
+	public ResponseEntity<UserInformation> userInformation() {
 		User user = userService.loadUser().get();
 		UserInformation userInfo = new UserInformation(user, db);
 		return new ResponseEntity<>(userInfo, HttpStatus.OK);
@@ -95,12 +94,10 @@ public class UserSettingsController {
 	 */
 	@PostMapping("/delete")
 	@Transactional
-	public ResponseEntity<?> deleteAccount(Model model, @RequestParam("username") String username, HttpServletRequest request) {
+	public ResponseEntity<?> deleteAccount(@RequestParam("username") String username, HttpServletRequest request) {
 		User user = userService.loadUser().get();
 		String actualUsername = user.username;
 		if (!username.equals(actualUsername)) {
-			model.addAttribute("username", actualUsername);
-			model.addAttribute("error", "Brukernavn er feil");
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		db.deleteUser(user.id);
@@ -135,7 +132,7 @@ public class UserSettingsController {
 
 	@PostMapping("/mail/add")
 	@Transactional
-	public ResponseEntity<?> addMailingList(Model model, @RequestParam("email") String email) {
+	public ResponseEntity<?> addMailingList(@RequestParam("email") String email) {
 		try {
 			User user = userService.loadUser().get();
 			UserMail userMail = new UserMail(user, email);
@@ -148,7 +145,7 @@ public class UserSettingsController {
 	
 	@PostMapping("/mail/remove")
 	@Transactional
-	public ResponseEntity<?> removeMailingList(Model model) {
+	public ResponseEntity<?> removeMailingList() {
 		User user = userService.loadUser().get();
 		db.clearUserFromMailing(user.id);
 		return new ResponseEntity<>(HttpStatus.OK);
@@ -165,7 +162,7 @@ public class UserSettingsController {
 
 	@PostMapping("/mail/verification")
 	@Transactional
-	public ResponseEntity<?> verificationCode(Model model, @RequestParam("code") int code, HttpServletRequest request) {
+	public ResponseEntity<?> verificationCode(@RequestParam("code") int code, HttpServletRequest request) {
 		User user = userService.loadUser().get();
 		boolean isValidVerificationCode = db.isValidVerificationCode(user.id, code);
 		if (isValidVerificationCode) {

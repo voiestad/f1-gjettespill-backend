@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.util.exception.NoUsernameException;
 import no.vebb.f1.util.exception.NotAdminException;
 
 @Service
@@ -55,6 +56,12 @@ public class UserService {
 	public void adminCheck() throws NotAdminException {
 		if (!isAdmin()) {
 			throw new NotAdminException("User is not admin and does not have the required permission for this page");
+		}
+	}
+	
+	public void usernameCheck() throws NoUsernameException {
+		if (!isLoggedIn()) {
+			throw new NoUsernameException("User is not admin and does not have the required permission for this page");
 		}
 	}
 

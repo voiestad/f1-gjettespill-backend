@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.exception.NoUsernameException;
 import no.vebb.f1.util.exception.NotAdminException;
 
 @Aspect
@@ -17,5 +18,10 @@ public class GlobalAspect {
     @Before("execution(public * no.vebb.f1.controller.admin..*(..))")
     public void adminCheck() throws NotAdminException {
         userService.adminCheck();
+    }
+
+    @Before("execution(public * no.vebb.f1.controller..*(..)) && !execution(public * no.vebb.f1.controller.open..*(..))")
+    public void usernameCheck() throws NoUsernameException {
+        userService.usernameCheck();
     }
 }

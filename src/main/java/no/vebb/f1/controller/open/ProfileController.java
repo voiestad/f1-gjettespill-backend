@@ -1,4 +1,4 @@
-package no.vebb.f1.controller;
+package no.vebb.f1.controller.open;
 
 import java.util.List;
 import java.util.Optional;
