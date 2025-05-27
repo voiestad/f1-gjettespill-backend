@@ -1,27 +1,27 @@
-package no.vebb.f1.components;
+package no.vebb.f1.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
+import no.vebb.f1.util.collection.Breadcrumb;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 
-@Component
-public class BreadcrumbInterceptor implements HandlerInterceptor {
+@RestController
+public class BreadcrumbController {
 
 	@Autowired
 	private Database db;
@@ -29,28 +29,28 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 	@Autowired
 	private UserService userService;
 
-	@SuppressWarnings("null")
-	@Override
-	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-		Map<String, String> breadcrumbs = new LinkedHashMap<>();
-		request.setAttribute("breadcrumbs", breadcrumbs);
-		String path = request.getRequestURI();
-		if (path.equals("/")) {
-			breadcrumbs.put("Hjem", null);
-			return true;
+	@GetMapping("/api/public/breadcrumbs")
+	public ResponseEntity<List<Breadcrumb>> preHandle(@RequestParam("path") String path) {
+		if (!path.matches("^\\/[a-zA-Z0-9\\/\\-]*")) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		addBreadcrumbs(breadcrumbs, path);
-		return true;
+		List<Breadcrumb> breadcrumbs = new ArrayList<>();
+		if (path.equals("/")) {
+			breadcrumbs.add(new Breadcrumb("Hjem", null));
+		} else {
+			addBreadcrumbs(breadcrumbs, path);
+		}
+		return new ResponseEntity<>(breadcrumbs, HttpStatus.OK);
 	}
 
-	private void addBreadcrumbs(Map<String, String> breadcrumbs, String path) {
-		breadcrumbs.put("Hjem", "/");
+	private void addBreadcrumbs(List<Breadcrumb> breadcrumbs, String path) {
+		breadcrumbs.add(new Breadcrumb("Hjem", "/"));
 		List<String> subPaths = getSubPaths(path);
 		subPaths.remove(subPaths.size() - 1);
 		for (String subPath : subPaths) {
-			breadcrumbs.put(getNameForPath(subPath), subPath);
+			breadcrumbs.add(new Breadcrumb(getNameForPath(subPath), subPath));
 		}
-		breadcrumbs.put(getNameForPath(path), null);
+		breadcrumbs.add(new Breadcrumb(getNameForPath(path), null));
 	}
 
 	private List<String> getSubPaths(String path) {
@@ -100,7 +100,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			case "bingo":
 				return getBingoPath(segments);
 			default:
-				return "no path";
+				return null;
 		}
 	}
 
@@ -121,7 +121,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			case "backup":
 				return "Sikkerhetskopi";
 		}
-		return "no path";
+		return null;
 	}
 
 	private String getFlagPath(Iterator<String> segments) {
@@ -136,7 +136,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			try {
 				return String.valueOf(Integer.parseInt(year));
 			} catch (NumberFormatException e) {
-				return "no path";
+				return null;
 			}
 		}
 		String id = segments.next();
@@ -146,7 +146,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			String raceName = db.getRaceName(raceId);
 			return position + ". " + raceName;
 		}
-		return "no path";
+		return null;
 	}
 
 	private String getLogPath(Iterator<String> segments) {
@@ -162,12 +162,9 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		}
 		String file = segments.next();
 		if (!segments.hasNext()) {
-			if (file.length() > 4) {
-				return file.substring(0, file.length()-4);
-			}
 			return file;
 		}
-		return "no path";
+		return null;
 	}
 
 	private String getSeasonPath(Iterator<String> segments) {
@@ -192,7 +189,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			case "manage":
 				return getManagePath(segments);
 		}
-		return "no path";
+		return null;
 	}
 
 	private String getCompetitorsPath(Iterator<String> segments) {
@@ -207,21 +204,21 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			case "alias":
 				return "Alternative navn";
 		}
-		return "no path";
+		return null;
 	}
 	
 	private String getPointsPath(Iterator<String> segments) {
 		if (!segments.hasNext()) {
 			return "Poengsystem";
 		}
-		return "no path";
+		return null;
 	}
 
 	private String getCutoffPath(Iterator<String> segments) {
 		if (!segments.hasNext()) {
 			return "Frister";
 		}
-		return "no path";
+		return null;
 	}
 
 	private String getManagePath(Iterator<String> segments) {
@@ -238,7 +235,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			String raceName = db.getRaceName(raceId);
 			return position + ". " + raceName;
 		}
-		return "no path";
+		return null;
 	}
 
 	private String getUserPath(Iterator<String> segments) {
@@ -259,7 +256,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			}
 			return optUser.get().username;
 		} catch (IllegalArgumentException e) {
-			return "no path";
+			return null;
 		}
 	}
 
@@ -280,7 +277,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			case "flags":
 				return "Antall";
 		}
-		return "no path";
+		return null;
 	}
 
 	private String getSettingsPath(Iterator<String> segments) {
@@ -300,7 +297,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			case "referral":
 				return "Inviter brukere";
 		}
-		return "no path";
+		return null;
 	}
 
 	private String getStatsPath(Iterator<String> segments) {
@@ -319,7 +316,7 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 			String raceName = db.getRaceName(raceId);
 			return position + ". " + raceName;
 		}
-		return "no path";
+		return null;
 	}
 	
 	private String getBingoPath(Iterator<String> segments) {
@@ -336,6 +333,6 @@ public class BreadcrumbInterceptor implements HandlerInterceptor {
 		if (!segments.hasNext()) {
 			return year;
 		}
-		return "no path";
+		return null;
 	}
 }

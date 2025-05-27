@@ -47,7 +47,7 @@ public class LogController {
 		List<String> files = getFilesInFolder(type);
 		Collections.sort(files, Collections.reverseOrder());
 		for (String file : files) {
-			linkMap.put(file.substring(0, 10),String.format("/admin/log/%s/%s", type, file));
+			linkMap.put(file.substring(0, 10),String.format("/admin/log/%s/%s", type, file.substring(0, 10)));
 		}
 		return "util/linkList";
 	}
@@ -61,7 +61,7 @@ public class LogController {
 		model.addAttribute("title", String.format("%s log: %s", 
 			type.substring(0, 1).toUpperCase() + type.substring(1),
 			logFile.substring(0, 10)));
-		File file = new File(String.format("%s/%s/%s", logPath, type, logFile));
+		File file = new File(String.format("%s/%s/%s", logPath, type, logFile + ".log"));
 		try {
 			Scanner scanner = new Scanner(file);
 			Stack<StringBuffer> stack = new Stack<>();
@@ -107,7 +107,7 @@ public class LogController {
 			return false;
 		}
 		List<String> files = getFilesInFolder(type);
-		return files.contains(file);
+		return files.contains(file + ".log");
 	}
 
 	private boolean isValidLogType(String type) {
