@@ -1,18 +1,16 @@
 package no.vebb.f1.controller;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
@@ -21,8 +19,7 @@ import no.vebb.f1.util.collection.BingoSquare;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
-@Controller
-@RequestMapping("/bingo")
+@RestController
 public class BingoController {
 	
 	final String REGEX = "[^A-Za-z0-9æøåÆØÅ,.'\"\\- ]";
@@ -33,103 +30,78 @@ public class BingoController {
 	@Autowired
 	private UserService userService;
 
-	@GetMapping
-	public String displayBingocard(Model model) {
+	@GetMapping("/api/public/bingo")
+	public ResponseEntity<List<BingoSquare>> getCurrentBingoCard() {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			model.addAttribute("bingoCard", db.getBingoCard(year));
-			model.addAttribute("isBingomaster", userService.isBingomaster());
-			model.addAttribute("title", "Bingo");
+			return new ResponseEntity<>(db.getBingoCard(year), HttpStatus.OK);
 		} catch (InvalidYearException e) {
-		}
-		return "bingo/bingo";
-	}
-
-	@GetMapping("/admin")
-	public String chooseBingoYear(Model model) {
-		model.addAttribute("title", "Administrer bingo");
-		Map<String, String> linkMap = new LinkedHashMap<>();
-		model.addAttribute("linkMap", linkMap);
-		List<Year> years = db.getAllValidYears();
-		for (Year year : years) {
-			linkMap.put(String.valueOf(year), "/bingo/admin/" + year);
-		}
-		return "util/linkList";
-	}
-
-	@GetMapping("/admin/{year}")
-	public String administrateBingoCard(@PathVariable("year") int year, Model model) {
-		if (!userService.isBingomaster()) {
-			return "redirect:/bingo";
-		}
-		try {
-			Year validSeason = new Year(year, db);
-			model.addAttribute("bingoCard", db.getBingoCard(validSeason));
-			model.addAttribute("year", year);
-			model.addAttribute("title", "Bingo " + year);
-			return "bingo/bingoCardAdmin";
-		} catch (InvalidYearException e) {
-			return "redirect:/bingo/admin";
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 	}
 
-	@PostMapping("/admin/{year}/add-card")
+	@GetMapping("/bingomaster")
+	public ResponseEntity<Boolean> isBingoMaster() {
+		return new ResponseEntity<>(userService.isBingomaster(), HttpStatus.OK);
+	}
+
+	@PostMapping("/bingomaster/add-card/{year}")
 	@Transactional
-	public String addBingoSquare(@PathVariable("year") int year) {
+	public ResponseEntity<?> addBingoSquare(@PathVariable("year") int year) {
 		if (!userService.isBingomaster()) {
-			return "redirect:/bingo";
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		try {
 			Year validSeason = new Year(year, db);
 			if (db.isBingoCardAdded(validSeason)) {
-				return "redirect:/bingo/admin/" + year;
+				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}
 			for (int id = 0; id < 25; id++) {
 				BingoSquare bingoSquare = new BingoSquare("", false, id, validSeason);
 				db.addBingoSquare(bingoSquare);
 			}
-			return "redirect:/bingo/admin/" + year;
+			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidYearException e) {
-			return "redirect:/bingo/admin";
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 	}
 
-	@PostMapping("/admin/{year}/set")
+	@PostMapping("/bingomaster/set/{year}")
 	@Transactional
-	public String updateBingoSquareText(@PathVariable("year") int year,
+	public ResponseEntity<?> updateBingoSquareText(@PathVariable("year") int year,
 		@RequestParam("id") int id, @RequestParam("text") String text) {
 		if (!userService.isBingomaster()) {
-			return "redirect:/bingo";
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		try {
 			Year validSeason = new Year(year, db);
 			if (!db.isBingoCardAdded(validSeason)) {
-				return "redirect:/bingo/admin/" + year;
+				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}
 			if (id < 0 || id >= 25) {
-				return "redirect:/bingo/admin/" + year;
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
 			String validatedText = validate(text);
 			db.setTextBingoSquare(validSeason, id, validatedText);;
-			return "redirect:/bingo/admin/" + year + "#" + id;
+			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidYearException e) {
-			return "redirect:/bingo/admin";
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 	}
 
-	@PostMapping("/admin/{year}/mark")
+	@PostMapping("/bingomaster/mark/{year}")
 	@Transactional
-	public String markBingoSquare(@PathVariable("year") int year, 
+	public ResponseEntity<?> markBingoSquare(@PathVariable("year") int year, 
 		@RequestParam("id") int id) {
 		if (!userService.isBingomaster()) {
-			return "redirect:/bingo";
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		try {
 			Year validSeason = new Year(year, db);
 			db.toogleMarkBingoSquare(validSeason, id);
-			return "redirect:/bingo/admin/" + year + "#" + id;
+			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidYearException e) {
-			return "redirect:/bingo/admin";
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 	}
 

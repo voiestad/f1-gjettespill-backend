@@ -7,16 +7,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 
-@Controller
+@RestController
 public class F1ErrorController implements ErrorController {
 
 	private static final Logger logger = LoggerFactory.getLogger(F1ErrorController.class);
@@ -29,7 +29,7 @@ public class F1ErrorController implements ErrorController {
 	 * be handled properly elsewhere.
 	 */
 	@RequestMapping("/error")
-	public String error(HttpServletRequest request, Model model) {
+	public ResponseEntity<?> error(HttpServletRequest request) {
 		Optional<User> user = userService.loadUser();
 		String userId = user.map(u -> u.id.toString()).orElse("unknown");
 		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
@@ -42,19 +42,14 @@ public class F1ErrorController implements ErrorController {
 		
 			if (statusCode.equals(HttpStatus.NOT_FOUND.value())) {
 				logger.error("User '{}' received a 404 error and tried accessing '{}', coming from '{}'.", userId, url, referer);
-				model.addAttribute("errorTitle", "Beklager, vi kunne ikke finne siden du lette etter...");
-				model.addAttribute("serverFault", false);
-				return "error";
 			} else if (statusCode.equals(HttpStatus.INTERNAL_SERVER_ERROR.value())) {
 				logger.error("User '{}' received a 500 error while accessing '{}', coming from '{}'.", userId, url, referer);
-				model.addAttribute("errorTitle", "Det oppstå en feil hos tjeneren...");
-				model.addAttribute("serverFault", true);
-				return "error";
+			} else {
+				logger.error("User '{}' received an unknown error at '{}', coming from '{}'. With status code '{}'", userId, url, referer, statusCode);
 			}
+			return new ResponseEntity<>(HttpStatus.valueOf(statusCode));
 		}
-		logger.error("User '{}' received an error unknown error at '{}', coming from '{}'.", userId, url, referer);
-		model.addAttribute("errorTitle", "Det oppstå en ukjent feil...");
-		model.addAttribute("serverFault", true);
-		return "error";
+		logger.error("User '{}' received an unknown error at '{}', coming from '{}'.", userId, url, referer);
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 }
