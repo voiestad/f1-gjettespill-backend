@@ -16,8 +16,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-	@Value("${f1.oauth2.success-redirect-uri}")
-	private String redirectUri;
+	@Value("${f1.login.success-redirect-uri}")
+	private String loginRedirectUri;
+	@Value("${f1.logout.success-redirect-uri}")
+	private String logoutRedirectUri;
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -41,9 +43,9 @@ public class SecurityConfig {
 			auth.anyRequest().authenticated();	
 		})
 		.oauth2Login(o ->
-			o.defaultSuccessUrl(redirectUri, true)
+			o.defaultSuccessUrl(loginRedirectUri, true)
 		)
-		.logout(logout -> logout.logoutSuccessUrl(redirectUri))
+		.logout(logout -> logout.logoutSuccessUrl(logoutRedirectUri))
 		.build();
 	}
 
