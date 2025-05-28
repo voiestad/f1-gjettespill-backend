@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.vebb.f1.util.exception.InvalidRaceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class BreadcrumbController {
 
 	@GetMapping("/api/public/breadcrumbs")
 	public ResponseEntity<List<Breadcrumb>> preHandle(@RequestParam("path") String path) {
-		if (!path.matches("^\\/[a-zA-Z0-9\\/\\-]*")) {
+		if (!path.matches("^/[a-zA-Z0-9/\\-]*")) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		List<Breadcrumb> breadcrumbs = new ArrayList<>();
@@ -72,36 +73,22 @@ public class BreadcrumbController {
 	private String getNameForPath(String path) {
 		Iterator<String> segments = Arrays.asList(path.split("/")).iterator();
 		segments.next(); // First is always blank
-		switch (segments.next()) {
-			case "admin":
-				return getAdminPath(segments);
-			case "user":
-				return getUserPath(segments);
-			case "race-guess":
-				return "Tippet på løp";
-			case "score":
-				return "Poengberegning";
-			case "contact":
-				return "Kontakt";
-			case "about":
-				return "Om siden";
-			case "guess":
-				return getGuessPath(segments);
-			case "error":
-				return "Feil";
-			case "settings":
-				return getSettingsPath(segments);
-			case "username":
-				return "Velg brukernavn";
-			case "privacy":
-				return "Personvernerklæring";
-			case "stats":
-				return getStatsPath(segments);
-			case "bingo":
-				return getBingoPath(segments);
-			default:
-				return null;
-		}
+        return switch (segments.next()) {
+            case "admin" -> getAdminPath(segments);
+            case "user" -> getUserPath(segments);
+            case "race-guess" -> "Tippet på løp";
+            case "score" -> "Poengberegning";
+            case "contact" -> "Kontakt";
+            case "about" -> "Om siden";
+            case "guess" -> getGuessPath(segments);
+            case "error" -> "Feil";
+            case "settings" -> getSettingsPath(segments);
+            case "username" -> "Velg brukernavn";
+            case "privacy" -> "Personvernerklæring";
+            case "stats" -> getStatsPath(segments);
+            case "bingo" -> getBingoPath(segments);
+            default -> null;
+        };
 	}
 
 	private String getAdminPath(Iterator<String> segments) {
@@ -109,20 +96,15 @@ public class BreadcrumbController {
 			return "Admin portal";
 		}
 		String category = segments.next();
-		switch (category) {
-			case "flag":
-				return getFlagPath(segments);
-			case "season":
-				return getSeasonPath(segments);
-			case "bingo":
-				return "Bingo";
-			case "log":
-				return getLogPath(segments);
-			case "backup":
-				return "Sikkerhetskopi";
-		}
-		return null;
-	}
+        return switch (category) {
+            case "flag" -> getFlagPath(segments);
+            case "season" -> getSeasonPath(segments);
+            case "bingo" -> "Bingo";
+            case "log" -> getLogPath(segments);
+            case "backup" -> "Sikkerhetskopi";
+            default -> null;
+        };
+    }
 
 	private String getFlagPath(Iterator<String> segments) {
 		if (!segments.hasNext()) {
@@ -139,14 +121,7 @@ public class BreadcrumbController {
 				return null;
 			}
 		}
-		String id = segments.next();
-		if (!segments.hasNext()) {
-			RaceId raceId = new RaceId(Integer.parseInt(id), db);
-			int position = db.getPositionOfRace(raceId);
-			String raceName = db.getRaceName(raceId);
-			return position + ". " + raceName;
-		}
-		return null;
+		return getRaceName(segments);
 	}
 
 	private String getLogPath(Iterator<String> segments) {
@@ -179,33 +154,26 @@ public class BreadcrumbController {
 			return year;
 		}
 		String category = segments.next();
-		switch (category) {
-			case "competitors":
-				return getCompetitorsPath(segments);
-			case "points":
-				return getPointsPath(segments);
-			case "cutoff":
-				return getCutoffPath(segments);
-			case "manage":
-				return getManagePath(segments);
-		}
-		return null;
-	}
+        return switch (category) {
+            case "competitors" -> getCompetitorsPath(segments);
+            case "points" -> getPointsPath(segments);
+            case "cutoff" -> getCutoffPath(segments);
+            case "manage" -> getManagePath(segments);
+            default -> null;
+        };
+    }
 
 	private String getCompetitorsPath(Iterator<String> segments) {
 		if (!segments.hasNext()) {
 			return "Deltakere";
 		}
-		switch (segments.next()) {
-			case "constructors":
-				return "Konstruktører";
-			case "drivers":
-				return "Sjåfører";
-			case "alias":
-				return "Alternative navn";
-		}
-		return null;
-	}
+        return switch (segments.next()) {
+            case "constructors" -> "Konstruktører";
+            case "drivers" -> "Sjåfører";
+            case "alias" -> "Alternative navn";
+            default -> null;
+        };
+    }
 	
 	private String getPointsPath(Iterator<String> segments) {
 		if (!segments.hasNext()) {
@@ -229,13 +197,7 @@ public class BreadcrumbController {
 		if (id.matches("reload|move|delete|add")) {
 			return "";
 		}
-		if (!segments.hasNext()) {
-			RaceId raceId = new RaceId(Integer.parseInt(id), db);
-			int position = db.getPositionOfRace(raceId);
-			String raceName = db.getRaceName(raceId);
-			return position + ". " + raceName;
-		}
-		return null;
+		return getRaceName(segments);
 	}
 
 	private String getUserPath(Iterator<String> segments) {
@@ -265,40 +227,30 @@ public class BreadcrumbController {
 			return "Tipping";
 		}
 		String category = segments.next();
-		switch (category) {
-			case "drivers":
-				return "Sjåførmesterskap";
-			case "constructors":
-				return "Konstruktørmesterskap";
-			case "tenth":
-				return "10.plass";
-			case "winner":
-				return "1.plass";
-			case "flags":
-				return "Antall";
-		}
-		return null;
-	}
+        return switch (category) {
+            case "drivers" -> "Sjåførmesterskap";
+            case "constructors" -> "Konstruktørmesterskap";
+            case "tenth" -> "10.plass";
+            case "winner" -> "1.plass";
+            case "flags" -> "Antall";
+            default -> null;
+        };
+    }
 
 	private String getSettingsPath(Iterator<String> segments) {
 		if (!segments.hasNext()) {
 			return "Innstillinger";
 		}
 		String setting = segments.next();
-		switch (setting) {
-			case "info":
-				return "Brukerinformasjon";
-			case "username":
-				return "Endre brukernavn";
-			case "delete":
-				return "Slett bruker";
-			case "mail":
-				return "Påminnelser";
-			case "referral":
-				return "Inviter brukere";
-		}
-		return null;
-	}
+        return switch (setting) {
+            case "info" -> "Brukerinformasjon";
+            case "username" -> "Endre brukernavn";
+            case "delete" -> "Slett bruker";
+            case "mail" -> "Påminnelser";
+            case "referral" -> "Inviter brukere";
+            default -> null;
+        };
+    }
 
 	private String getStatsPath(Iterator<String> segments) {
 		if (!segments.hasNext()) {
@@ -309,16 +261,24 @@ public class BreadcrumbController {
 		if (!segments.hasNext()) {
 			return year;
 		}
+		return getRaceName(segments);
+	}
+
+	private String getRaceName(Iterator<String> segments) {
 		String id = segments.next();
 		if (!segments.hasNext()) {
-			RaceId raceId = new RaceId(Integer.parseInt(id), db);
-			int position = db.getPositionOfRace(raceId);
-			String raceName = db.getRaceName(raceId);
-			return position + ". " + raceName;
+			try {
+				RaceId raceId = new RaceId(Integer.parseInt(id), db);
+				int position = db.getPositionOfRace(raceId);
+				String raceName = db.getRaceName(raceId);
+				return position + ". " + raceName;
+			} catch (InvalidRaceException e) {
+				return null;
+			}
 		}
 		return null;
 	}
-	
+
 	private String getBingoPath(Iterator<String> segments) {
 		if (!segments.hasNext()) {
 			return "Bingo";
