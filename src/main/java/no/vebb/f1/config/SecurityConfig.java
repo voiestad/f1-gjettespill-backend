@@ -43,7 +43,7 @@ public class SecurityConfig {
 		.oauth2Login(o ->
 			o.defaultSuccessUrl(redirectUri, true)
 		)
-		.logout(logout -> logout.logoutSuccessUrl("/"))
+		.logout(logout -> logout.logoutSuccessUrl(redirectUri))
 		.build();
 	}
 
