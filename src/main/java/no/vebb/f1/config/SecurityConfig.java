@@ -1,5 +1,6 @@
 package no.vebb.f1.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,7 +15,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-	
+
+	@Value("${f1.oauth2.success-redirect-uri}")
+	private String redirectUri;
+
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http.authorizeHttpRequests(auth -> {
@@ -37,7 +41,7 @@ public class SecurityConfig {
 			auth.anyRequest().authenticated();	
 		})
 		.oauth2Login(o ->
-			o.defaultSuccessUrl("http://localhost:5173/", true)
+			o.defaultSuccessUrl(redirectUri, true)
 		)
 		.logout(logout -> logout.logoutSuccessUrl("/"))
 		.build();
