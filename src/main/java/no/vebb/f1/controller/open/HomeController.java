@@ -2,6 +2,7 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
+import no.vebb.f1.util.response.HomePageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,29 +36,22 @@ public class HomeController {
 	 */
 	@GetMapping("/api/public/home")
 	public ResponseEntity<HomePageResponse> home() {
-		HomePageResponse res = new HomePageResponse();
 		List<RankedGuesser> leaderboard = graphCache.getleaderboard();
-		res.leaderboard = leaderboard;
+		List<String> guessers = null;
+		List<GuesserPointsSeason> graph = null;
 		try {
 			if (leaderboard == null) {
 				Year year = new Year(TimeUtil.getCurrentYear(), db);
-				List<String> guessers = db.getSeasonGuessers(year).stream()
+				guessers = db.getSeasonGuessers(year).stream()
 					.map(user -> user.username)
 					.toList();
-				res.guessers = guessers;
 			} else {
-				res.graph = graphCache.getGraph();	
+				graph = graphCache.getGraph();
 			}
 		} catch (InvalidYearException e) {
 		}
+		HomePageResponse res = new HomePageResponse(graph, leaderboard,  guessers);
 		return new ResponseEntity<>(res, HttpStatus.OK);
-	}
-
-	@SuppressWarnings("unused")
-	private class HomePageResponse {
-		public List<GuesserPointsSeason> graph;
-		public List<RankedGuesser> leaderboard;
-		public List<String> guessers;
 	}
 
 }
