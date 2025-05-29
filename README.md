@@ -25,6 +25,8 @@ spring.security.oauth2.client.registration.google.client-id={id}
 spring.security.oauth2.client.registration.google.client-secret={secret}
 spring.mail.username={email}
 spring.mail.password={app password}
+f1.login.success-redirect-uri={redirect URI}
+f1.logout.success-redirect-uri={redirect URI}
 ```
 
 ## Kjøre Applikasjonen
