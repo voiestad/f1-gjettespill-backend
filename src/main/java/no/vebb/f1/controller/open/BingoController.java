@@ -40,12 +40,12 @@ public class BingoController {
 		}
 	}
 
-	@GetMapping("/bingomaster")
+	@GetMapping("/api/bingomaster")
 	public ResponseEntity<Boolean> isBingoMaster() {
 		return new ResponseEntity<>(userService.isBingomaster(), HttpStatus.OK);
 	}
 
-	@PostMapping("/bingomaster/add-card/{year}")
+	@PostMapping("/api/bingomaster/add-card/{year}")
 	@Transactional
 	public ResponseEntity<?> addBingoSquare(@PathVariable("year") int year) {
 		if (!userService.isBingomaster()) {
@@ -66,7 +66,7 @@ public class BingoController {
 		}
 	}
 
-	@PostMapping("/bingomaster/set/{year}")
+	@PostMapping("/api/bingomaster/set/{year}")
 	@Transactional
 	public ResponseEntity<?> updateBingoSquareText(@PathVariable("year") int year,
 		@RequestParam("id") int id, @RequestParam("text") String text) {
@@ -89,7 +89,7 @@ public class BingoController {
 		}
 	}
 
-	@PostMapping("/bingomaster/mark/{year}")
+	@PostMapping("/api/bingomaster/mark/{year}")
 	@Transactional
 	public ResponseEntity<?> markBingoSquare(@PathVariable("year") int year, 
 		@RequestParam("id") int id) {
