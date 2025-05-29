@@ -3,9 +3,11 @@ package no.vebb.f1.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 /**
  * Class is responsible for configuring the security of the application.
@@ -40,8 +42,11 @@ public class SecurityConfig {
 				"/bingo",
 				"/api/public/**")
 				.permitAll();
-			auth.anyRequest().authenticated();	
+			auth.anyRequest().authenticated();
 		})
+		.exceptionHandling(exception ->
+			exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+		)
 		.oauth2Login(o ->
 			o.defaultSuccessUrl(loginRedirectUri, true)
 		)
