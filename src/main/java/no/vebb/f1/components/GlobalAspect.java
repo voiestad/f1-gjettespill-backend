@@ -20,7 +20,9 @@ public class GlobalAspect {
         userService.adminCheck();
     }
 
-    @Before("execution(public * no.vebb.f1.controller..*(..)) && !execution(public * no.vebb.f1.controller.open..*(..))")
+    @Before("execution(public * no.vebb.f1.controller..*(..)) && " +
+            "!execution(public * no.vebb.f1.controller.open..*(..)) && " +
+            "!execution(public * no.vebb.f1.controller.user.UserSettingsController.changeUsername(..))")
     public void usernameCheck() throws NoUsernameException {
         userService.usernameCheck();
     }
