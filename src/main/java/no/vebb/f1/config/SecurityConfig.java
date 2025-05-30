@@ -1,6 +1,5 @@
 package no.vebb.f1.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -17,11 +16,6 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-	@Value("${f1.login.success-redirect-uri}")
-	private String loginRedirectUri;
-	@Value("${f1.logout.success-redirect-uri}")
-	private String logoutRedirectUri;
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -48,9 +42,9 @@ public class SecurityConfig {
 			exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
 		)
 		.oauth2Login(o ->
-			o.defaultSuccessUrl(loginRedirectUri, true)
+			o.defaultSuccessUrl("/logged-in", true)
 		)
-		.logout(logout -> logout.logoutSuccessUrl(logoutRedirectUri))
+		.logout(logout -> logout.logoutSuccessUrl("/"))
 		.build();
 	}
 

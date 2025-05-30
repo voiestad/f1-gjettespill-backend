@@ -2,9 +2,6 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +24,6 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RestController
 @RequestMapping("/api/public")
 public class GeneralApiController {
-
-    private static final Logger logger = LoggerFactory.getLogger(GeneralApiController.class);
 
     @Autowired
     private Database db;
