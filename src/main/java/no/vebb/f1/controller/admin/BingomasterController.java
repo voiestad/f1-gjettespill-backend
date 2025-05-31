@@ -1,50 +1,54 @@
 package no.vebb.f1.controller.admin;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 
+import no.vebb.f1.user.PublicUser;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 
-@Controller
-@RequestMapping("/admin/bingo")
+@RestController
+@RequestMapping("/api/admin/bingo")
 public class BingomasterController {
-	
-	@Autowired
-	private Database db;
 
-	@Autowired
-	private UserService userService;
+    @Autowired
+    private Database db;
 
-	@GetMapping
-	public String administrateBingomasters(Model model) {
-		model.addAttribute("title", "Administrer bingomasters");
-		model.addAttribute("bingomasters", db.getBingomasters());
-		model.addAttribute("nonBingomasters", db.getNonBingomasters());
-		return "admin/bingomasters";
-	}
+    @Autowired
+    private UserService userService;
 
-	@PostMapping("/add")
-	public String addBingomaster(@RequestParam("bingomaster") UUID bingomaster) {
-		if (userService.loadUser(bingomaster).isPresent()) {
-			db.addBingomaster(bingomaster);
-		}
-		return "redirect:/admin/bingo";
-	}
-	
-	@PostMapping("/remove")
-	public String removeBingomaster(@RequestParam("bingomaster") UUID bingomaster) {
-		if (userService.loadUser(bingomaster).isPresent()) {
-			db.removeBingomaster(bingomaster);
-		}
-		return "redirect:/admin/bingo";
-	}
+    @GetMapping("/list")
+    public ResponseEntity<List<PublicUser>> getBingomasters() {
+        List<PublicUser> bingoMasters = db.getBingomasters().stream()
+                .map(PublicUser::new)
+                .toList();
+        return new ResponseEntity<>(bingoMasters, HttpStatus.OK);
+    }
+
+    @PostMapping("/add")
+    @Transactional
+    public ResponseEntity<?> addBingomaster(@RequestParam("bingomaster") UUID bingomaster) {
+        if (userService.loadUser(bingomaster).isPresent()) {
+            db.addBingomaster(bingomaster);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @PostMapping("/remove")
+    @Transactional
+    public ResponseEntity<?> removeBingomaster(@RequestParam("bingomaster") UUID bingomaster) {
+        if (userService.loadUser(bingomaster).isPresent()) {
+            db.removeBingomaster(bingomaster);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
 
 }
