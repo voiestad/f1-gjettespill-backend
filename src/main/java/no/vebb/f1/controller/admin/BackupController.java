@@ -14,14 +14,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/admin/api")
-public class AdminApiController {
+public class BackupController {
 
-	@GetMapping("/getbackup")
+	@GetMapping("/api/admin/getbackup")
 	public ResponseEntity<Resource> getBackup() {
 		try {
 			String backupFileName = getMostCurrentBackup();
