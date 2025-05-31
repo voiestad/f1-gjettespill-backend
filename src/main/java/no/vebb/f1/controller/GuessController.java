@@ -76,7 +76,7 @@ public class GuessController {
 	 * Handles GET requests for /guess/drivers. If it is still possible to guess,
 	 * gives a list of drivers to rank and the time left to guess.
 	 */
-	@GetMapping("/drivers")
+	@GetMapping("/driver")
 	public ResponseEntity<CutoffCompetitors<Driver>> rankDrivers() {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -93,7 +93,7 @@ public class GuessController {
 	 * Handles POST requests for /guess/drivers. If it is still possible to guess,
 	 * and input guess is valid, adds the guesses to the database.
 	 */
-	@PostMapping("/drivers")
+	@PostMapping("/driver")
 	@Transactional
 	public ResponseEntity<?> rankDrivers(@RequestParam List<String> rankedCompetitors) {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
@@ -118,10 +118,10 @@ public class GuessController {
 				position++;
 			}
 			logger.info("User '{}' guessed on '{}' on year '{}'", id, "driver", year);
+		return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidDriverException e) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	/**
@@ -129,7 +129,7 @@ public class GuessController {
 	 * guess,
 	 * gives a list of constructors to rank and the time left to guess.
 	 */
-	@GetMapping("/constructors")
+	@GetMapping("/constructor")
 	public ResponseEntity<CutoffCompetitors<Constructor>> rankConstructors() {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -147,7 +147,7 @@ public class GuessController {
 	 * guess,
 	 * and input guess is valid, adds the guesses to the database.
 	 */
-	@PostMapping("/constructors")
+	@PostMapping("/constructor")
 	@Transactional
 	public ResponseEntity<?> rankConstructors(@RequestParam List<String> rankedCompetitors) {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
@@ -220,7 +220,7 @@ public class GuessController {
 	 * Handles GET requests for /guess/winner. If it is possible to guess, gives a
 	 * list of drivers that can be chosen.
 	 */
-	@GetMapping("/winner")
+	@GetMapping("/first")
 	public ResponseEntity<CutoffCompetitorsSelected<Driver>> guessWinner() {
 		Category category = new Category("FIRST", db);
 		return handleGetChooseDriver(category);
@@ -230,7 +230,7 @@ public class GuessController {
 	 * Handles POST requests for /guess/winner. If it is possible to guess, gives a
 	 * and input driver is valid, adds the guess to the database.
 	 */
-	@PostMapping("/winner")
+	@PostMapping("/first")
 	@Transactional
 	public ResponseEntity<?> guessWinner(@RequestParam String driver) {
 		Category category = new Category("FIRST", db);
@@ -245,10 +245,10 @@ public class GuessController {
 			UUID id = userService.loadUser().get().id;
 			try {
 				Driver driver = db.getGuessedDriverPlace(race.id(), category, id);
-				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, driver, timeLeftToGuess);
+				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, driver, timeLeftToGuess, race);
 				return new ResponseEntity<>(res, HttpStatus.OK);
 			} catch (EmptyResultDataAccessException e) {
-				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, null, timeLeftToGuess);
+				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, null, timeLeftToGuess, race);
 				return new ResponseEntity<>(res, HttpStatus.OK);
 			}
 		} catch (NoAvailableRaceException e) {
@@ -293,7 +293,7 @@ public class GuessController {
 	 * Handles GET requests for /guess/flags. If it is possible to guess, gives the
 	 * users previous guesses.
 	 */
-	@GetMapping("/flags")
+	@GetMapping("/flag")
 	public ResponseEntity<CutoffFlags> guessFlags() {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -309,7 +309,7 @@ public class GuessController {
 	 * Handles POST requests for /guess/flags. If it is possible to guess and values
 	 * are valid, adds the guesses to the database.
 	 */
-	@PostMapping("/flags")
+	@PostMapping("/flag")
 	@Transactional
 	public ResponseEntity<?> guessFlags(@RequestParam int yellow, @RequestParam int red,
 			@RequestParam int safetyCar) {
