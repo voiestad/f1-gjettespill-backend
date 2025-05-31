@@ -2,16 +2,14 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
+import no.vebb.f1.util.domainPrimitive.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.database.Database;
@@ -59,5 +57,11 @@ public class GeneralApiController {
             return new ResponseEntity<>(UserStatus.NO_USERNAME, HttpStatus.OK);
         }
         return new ResponseEntity<>(UserStatus.LOGGED_OUT, HttpStatus.OK);
+    }
+
+    @GetMapping("/category/list")
+    public ResponseEntity<List<Category>> getCategories() {
+        List<Category> categories = db.getCategories();
+        return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 }
