@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import no.vebb.f1.util.response.ReferralCodeResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,6 +93,7 @@ public class UserSettingsController {
     private ResponseEntity<String> registerUsername(OAuth2User principal, Username username, Long referralCode) {
         if (referralCode != null && !db.isValidReferralCode(referralCode)) {
             logger.warn("Someone tried to use an invalid referral code.");
+            logger.warn("{}", referralCode);
             return new ResponseEntity<>("Ikke gyldig invitasjonskode.", HttpStatus.BAD_REQUEST);
         }
         final String googleId = principal.getName();
@@ -177,12 +179,9 @@ public class UserSettingsController {
     }
 
     @GetMapping("/mail/verification")
-    public ResponseEntity<?> verificationCodeForm() {
+    public ResponseEntity<Boolean> hasVerificationCode() {
         User user = userService.loadUser().get();
-        if (!db.hasVerificationCode(user.id)) {
-            return new ResponseEntity<>(HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(db.hasVerificationCode(user.id), HttpStatus.OK);
     }
 
     @PostMapping("/mail/verification")
@@ -226,18 +225,19 @@ public class UserSettingsController {
     }
 
     @GetMapping("/referral")
-    public ResponseEntity<Long> getReferralCode() {
+    public ResponseEntity<ReferralCodeResponse> getReferralCode() {
         UUID userId = userService.loadUser().get().id;
         Long referralCode = db.getReferralCode(userId);
-        return new ResponseEntity<>(referralCode, HttpStatus.OK);
+        ReferralCodeResponse code = new ReferralCodeResponse(referralCode);
+        return new ResponseEntity<>(code, HttpStatus.OK);
     }
 
     @PostMapping("/referral/add")
     @Transactional
-    public ResponseEntity<?> generateReferralCode() {
+    public ResponseEntity<ReferralCodeResponse> generateReferralCode() {
         UUID userId = userService.loadUser().get().id;
-        db.addReferralCode(userId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        ReferralCodeResponse code = new ReferralCodeResponse(db.addReferralCode(userId));
+        return new ResponseEntity<>(code, HttpStatus.OK);
     }
 
     @PostMapping("/referral/delete")

@@ -1715,7 +1715,7 @@ public class Database {
 		jdbcTemplate.update(sql, userId);
 	}
 
-	public void addReferralCode(UUID userId) {
+	public long addReferralCode(UUID userId) {
 		final String sql = """
 			INSERT OR REPLACE INTO ReferralCode 
 			(user_id, referral_code, cutoff) VALUES (?, ?, ?)
@@ -1723,6 +1723,7 @@ public class Database {
 		long referralCode = CodeGenerator.getReferralCode();
 		Instant cutoff = Instant.now().plus(Duration.ofHours(1));
 		jdbcTemplate.update(sql, userId, referralCode, cutoff);
+		return referralCode;
 	}
 
 	public Long getReferralCode(UUID userId) {

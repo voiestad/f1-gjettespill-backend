@@ -17,36 +17,43 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 @EnableWebSecurity
 public class SecurityConfig {
 
-	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		return http.authorizeHttpRequests(auth -> {
-			auth.requestMatchers(
-				"/",
-				"/favicon.ico",
-				"/logo.svg",
-				"/**.css",
-				"/user/**",
-				"/score/**",
-				"/race-guess/**",
-				"/contact",
-				"/about",
-				"/error",
-				"/privacy",
-				"/stats/**",
-				"/bingo",
-				"/api/public/**")
-				.permitAll();
-			auth.anyRequest().authenticated();
-		})
-		.exceptionHandling(exception ->
-			exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-		)
-		.oauth2Login(o ->
-			o.defaultSuccessUrl("/logged-in", true)
-		)
-		.logout(logout -> logout.logoutSuccessUrl("/"))
-		.build();
-	}
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http.authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(
+                                    "/",
+                                    "/favicon.ico",
+                                    "/logo.svg",
+                                    "/**.css",
+                                    "/user/**",
+                                    "/score/**",
+                                    "/race-guess/**",
+                                    "/contact",
+                                    "/about",
+                                    "/error",
+                                    "/privacy",
+                                    "/stats/**",
+                                    "/bingo",
+                                    "/api/public/**")
+                            .permitAll();
+                    auth.anyRequest().authenticated();
+                })
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                )
+                .oauth2Login(o ->
+                        o.defaultSuccessUrl("/logged-in", true)
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/api/logout")
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpStatus.NO_CONTENT.value());
+                        })
+                )
+            .
+
+    build();
+}
 
 
 }
