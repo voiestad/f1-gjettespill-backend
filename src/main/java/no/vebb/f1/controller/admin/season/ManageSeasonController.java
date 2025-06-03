@@ -25,12 +25,14 @@ public class ManageSeasonController {
     @Autowired
     private Database db;
 
+    @Autowired
+    private Importer importer;
+
     @PostMapping("/reload")
     @Transactional
     public ResponseEntity<?> reloadRace(@RequestParam("id") int raceId) {
         try {
             RaceId validRaceId = new RaceId(raceId, db);
-            Importer importer = new Importer(db);
             importer.importRaceData(validRaceId);
 
             return new ResponseEntity<>(HttpStatus.OK);
@@ -75,7 +77,6 @@ public class ManageSeasonController {
             if (currentPos == position) {
                 db.insertRaceOrder(validRaceId, year, currentPos);
             }
-            Importer importer = new Importer(db);
             importer.importData();
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidRaceException e) {
@@ -117,7 +118,6 @@ public class ManageSeasonController {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         } catch (InvalidRaceException ignored) {
         }
-        Importer importer = new Importer(db);
         importer.importRaceName(raceId, seasonYear);
         importer.importData();
         RaceId validRaceId = new RaceId(raceId, db);

@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.vebb.f1.graph.GraphCache;
+import no.vebb.f1.user.UserMailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,9 @@ public class SeasonController {
 
     @Autowired
     private Database db;
+
+    @Autowired
+    private Importer importer;
 
     @PostMapping("/add")
     @Transactional
@@ -47,7 +52,6 @@ public class SeasonController {
             races.add(i);
         }
 
-        Importer importer = new Importer(db);
         importer.importRaceNames(races, year);
         importer.importData();
 
