@@ -193,10 +193,6 @@ public class BreadcrumbController {
 		if (!segments.hasNext()) {
 			return "Administrer";
 		}
-		String id = segments.next();
-		if (id.matches("reload|move|delete|add")) {
-			return "";
-		}
 		return getRaceName(segments);
 	}
 
