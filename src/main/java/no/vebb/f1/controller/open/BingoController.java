@@ -40,6 +40,16 @@ public class BingoController {
 		}
 	}
 
+	@GetMapping("/api/public/bingo/{year}")
+	public ResponseEntity<List<BingoSquare>> getBingoCardYear(@PathVariable("year") int year) {
+		try {
+			Year validYear = new Year(year, db);
+			return new ResponseEntity<>(db.getBingoCard(validYear), HttpStatus.OK);
+		} catch (InvalidYearException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
 	@GetMapping("/api/bingomaster")
 	public ResponseEntity<Boolean> isBingoMaster() {
 		return new ResponseEntity<>(userService.isBingomaster(), HttpStatus.OK);
@@ -82,7 +92,7 @@ public class BingoController {
 				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
 			String validatedText = validate(text);
-			db.setTextBingoSquare(validSeason, id, validatedText);;
+			db.setTextBingoSquare(validSeason, id, validatedText);
 			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
