@@ -55,9 +55,9 @@ public class BingoController {
 		return new ResponseEntity<>(userService.isBingomaster(), HttpStatus.OK);
 	}
 
-	@PostMapping("/api/bingomaster/add-card/{year}")
+	@PostMapping("/api/bingomaster/add-card")
 	@Transactional
-	public ResponseEntity<?> addBingoSquare(@PathVariable("year") int year) {
+	public ResponseEntity<?> addBingoSquare(@RequestParam("year") int year) {
 		if (!userService.isBingomaster()) {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
@@ -76,9 +76,9 @@ public class BingoController {
 		}
 	}
 
-	@PostMapping("/api/bingomaster/set/{year}")
+	@PostMapping("/api/bingomaster/set")
 	@Transactional
-	public ResponseEntity<?> updateBingoSquareText(@PathVariable("year") int year,
+	public ResponseEntity<?> updateBingoSquareText(@RequestParam("year") int year,
 		@RequestParam("id") int id, @RequestParam("text") String text) {
 		if (!userService.isBingomaster()) {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -99,9 +99,9 @@ public class BingoController {
 		}
 	}
 
-	@PostMapping("/api/bingomaster/mark/{year}")
+	@PostMapping("/api/bingomaster/mark")
 	@Transactional
-	public ResponseEntity<?> markBingoSquare(@PathVariable("year") int year, 
+	public ResponseEntity<?> markBingoSquare(@RequestParam("year") int year,
 		@RequestParam("id") int id) {
 		if (!userService.isBingomaster()) {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
