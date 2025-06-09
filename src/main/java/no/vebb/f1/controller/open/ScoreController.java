@@ -7,8 +7,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
@@ -33,14 +33,25 @@ public class ScoreController {
 	 * are calculated.
 	 */
 	@GetMapping("/api/public/score")
-	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTables(Model model) {
+	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTables() {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			var res = getScoreMappingTables(year, db);
 			return new ResponseEntity<>(res, HttpStatus.OK); 
 		} catch (InvalidYearException e) {	
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+	}
+
+	@GetMapping("/api/public/score/{year}")
+	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTablesYear(@PathVariable("year") int year) {
+		try {
+			Year validYear = new Year(year, db);
+			var res = getScoreMappingTables(validYear, db);
+			return new ResponseEntity<>(res, HttpStatus.OK);
+		} catch (InvalidYearException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	private Map<Category, Map<Diff, Points>> getScoreMappingTables(Year year, Database db) {
