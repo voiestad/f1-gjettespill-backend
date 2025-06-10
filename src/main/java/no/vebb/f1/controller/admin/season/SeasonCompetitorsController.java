@@ -240,11 +240,14 @@ public class SeasonCompetitorsController {
     @PostMapping("/alias/delete")
     @Transactional
     public ResponseEntity<?> deleteAlternativeName(
-            @RequestParam("year") int year, @RequestParam("driver") String driver) {
+            @RequestParam("year") int year,
+            @RequestParam("driver") String driver,
+            @RequestParam("alternativeName") String alternativeName
+    ) {
         Year seasonYear = new Year(year, db);
         try {
             Driver validDriver = new Driver(driver, db, seasonYear);
-            db.deleteAlternativeName(validDriver, seasonYear);
+            db.deleteAlternativeName(validDriver, seasonYear, alternativeName);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidDriverException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

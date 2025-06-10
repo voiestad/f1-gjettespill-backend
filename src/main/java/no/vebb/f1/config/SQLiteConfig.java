@@ -87,9 +87,10 @@ public class SQLiteConfig {
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS DriverAlternativeName (
-					alternative_name TEXT PRIMARY KEY,
+					alternative_name TEXT NOT NULL,
 					driver TEXT NOT NULL,
 					year INTEGER NOT NULL,
+					PRIMARY KEY (alternative_name, year),
 					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE
 			);
 			""");

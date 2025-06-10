@@ -1121,7 +1121,6 @@ public class Database {
 	 * 
 	 * @param raceId
 	 * @param position of driver
-	 * @param name of driver
 	 */
 	public void insertDriverStartingGrid(RaceId raceId, int position, Driver driver) {
 		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
@@ -1982,7 +1981,7 @@ public class Database {
 		final String sql = """
 			INSERT OR REPLACE INTO BingoCard
 			(year, id, square_text, marked) 
-			VALUES (?, ?, ?, ?);= 
+			VALUES (?, ?, ?, ?); 
 			""";
 		jdbcTemplate.update(
 			sql,
@@ -2063,7 +2062,7 @@ public class Database {
 		for (Map<String, Object> row : sqlRes) {
 			String driverName = (String) row.get("driver");
 			String alternativeName = (String) row.get("alternative_name");
-			linkedMap.put(driverName, alternativeName);
+			linkedMap.put(alternativeName, driverName);
 		}
 		return linkedMap;
 	}
@@ -2083,9 +2082,9 @@ public class Database {
 		jdbcTemplate.update(sql, driver, alternativeName, year);
 	}
 
-	public void deleteAlternativeName(Driver driver, Year year) {
-		final String sql = "DELETE FROM DriverAlternativeName WHERE driver = ? AND year = ?";
-		jdbcTemplate.update(sql, driver, year);
+	public void deleteAlternativeName(Driver driver, Year year, String alternativeName) {
+		final String sql = "DELETE FROM DriverAlternativeName WHERE driver = ? AND year = ? AND alternative_name = ?";
+		jdbcTemplate.update(sql, driver, year, alternativeName);
 	}
 
 	public List<UUID> getAdmins() {
