@@ -3,6 +3,7 @@ package no.vebb.f1.controller.admin.season;
 import java.util.List;
 import java.util.Map;
 
+import no.vebb.f1.util.collection.ColoredCompetitor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -121,9 +122,9 @@ public class SeasonCompetitorsController {
     }
 
     @GetMapping("/constructors/list/{year}")
-    public ResponseEntity<List<Constructor>> listConstructors(@PathVariable("year") int year) {
+    public ResponseEntity<List<ColoredCompetitor<Constructor>>> listConstructors(@PathVariable("year") int year) {
         Year seasonYear = new Year(year, db);
-        List<Constructor> constructors = db.getConstructorsYear(seasonYear);
+        List<ColoredCompetitor<Constructor>> constructors = db.getConstructorsYearWithColors(seasonYear);
         return new ResponseEntity<>(constructors, HttpStatus.OK);
     }
 
@@ -168,8 +169,10 @@ public class SeasonCompetitorsController {
 
     @PostMapping("/constructors/move")
     @Transactional
-    public ResponseEntity<?> moveConstructorFromSeason(@RequestParam("year") int year,
-                                                       @RequestParam("constructor") String constructor, @RequestParam("newPosition") int position) {
+    public ResponseEntity<?> moveConstructorFromSeason(
+            @RequestParam("year") int year,
+            @RequestParam("constructor") String constructor,
+            @RequestParam("newPosition") int position) {
         Year seasonYear = new Year(year, db);
         try {
             Constructor validConstructor = new Constructor(constructor, db);
@@ -203,8 +206,10 @@ public class SeasonCompetitorsController {
 
     @PostMapping("/constructors/add-color")
     @Transactional
-    public ResponseEntity<?> addColorConstructor(@RequestParam("year") int year, @RequestParam("constructor") String constructor,
-                                                 @RequestParam("color") String color) {
+    public ResponseEntity<?> addColorConstructor(
+            @RequestParam("year") int year,
+            @RequestParam("constructor") String constructor,
+            @RequestParam("color") String color) {
         Year seasonYear = new Year(year, db);
         try {
             db.addColorConstructor(new Constructor(constructor, db, seasonYear), seasonYear, new Color(color));
