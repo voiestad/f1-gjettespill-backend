@@ -67,11 +67,11 @@ public class TableImporter {
 		try {
 			Document doc = Jsoup.connect(url).ignoreContentType(true).get();
 			doc.outputSettings().charset("UTF-8");
-			Elements pTags = doc.getElementsByClass("f1-text");
-			if (pTags == null || pTags.size() < 2) {
+			Elements pTags = doc.getElementsByClass("typography-module_body-xs-semibold__Fyfwn");
+			if (pTags == null || pTags.isEmpty()) {
 				return name;
 			}
-			name = pTags.get(1).text().split(",")[1].strip();
+			name = pTags.get(0).text().split(",")[1].strip();
 		} catch (IOException e) {
 		}
 		return name;
