@@ -163,7 +163,7 @@ public class Importer {
 
 	private void importStartingGridData(RaceId raceId) {
 		List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId.value);
-		if (startingGrid.isEmpty()) {
+		if (startingGrid.size() <= 1) {
 			return;
 		}
 		insertStartingGridData(raceId, startingGrid);
@@ -171,7 +171,7 @@ public class Importer {
 
 	private ResultChangeStatus importRaceResultData(RaceId raceId) {
 		List<List<String>> raceResult = TableImporter.getRaceResult(raceId.value);
-		if (raceResult.isEmpty()) {
+		if (raceResult.size() <= 1) {
 			return ResultChangeStatus.NO_CHANGE;
 		}
 		List<PositionedCompetitor> preList = db.getRaceResult(raceId);
@@ -227,7 +227,7 @@ public class Importer {
 				continue;
 			}
 			List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId.value);
-			if (startingGrid.isEmpty()) {
+			if (startingGrid.size() <= 1) {
 				break;
 			}
 			insertStartingGridData(raceId, startingGrid);
@@ -259,7 +259,7 @@ public class Importer {
 				throw new RuntimeException("Race is already added and was attempted added again");
 			}
 			List<List<String>> raceResult = TableImporter.getRaceResult(raceId.value);
-			if (raceResult.isEmpty()) {
+			if (raceResult.size() <= 1) {
 				break;
 			}
 			insertRaceResultData(raceId, raceResult);
@@ -315,6 +315,7 @@ public class Importer {
 			throw new RuntimeException("Race name was already added");
 		}
 		String raceName = TableImporter.getGrandPrixName(raceId);
+		// TODO: Use exception and not empty string check
 		if (raceName.equals("")) {
 			return false;
 		}
@@ -346,7 +347,7 @@ public class Importer {
 
 	private ResultChangeStatus importDriverStandings(Year year, RaceId newestRace) {
 		List<List<String>> standings = TableImporter.getDriverStandings(year.value);
-		if (standings.size() == 0) {
+		if (standings.size() <= 1) {
 			logger.info("Driver standings not available");
 			return ResultChangeStatus.NO_CHANGE;
 		}
@@ -390,7 +391,7 @@ public class Importer {
 
 	private ResultChangeStatus importConstructorStandings(Year year, RaceId newestRace) {
 		List<List<String>> standings = TableImporter.getConstructorStandings(year.value);
-		if (standings.size() == 0) {
+		if (standings.size() <= 1) {
 			logger.info("Constructor standings not available");
 			return ResultChangeStatus.NO_CHANGE;
 		}
