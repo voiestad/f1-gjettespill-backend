@@ -53,10 +53,6 @@ public class GuessController {
 	@Autowired
 	private Cutoff cutoff;
 
-	/**
-	 * Handles GET requests for /guess. Gives a list of links to the categories that
-	 * are currently available for guessing.
-	 */
 	@GetMapping("/categories")
 	public ResponseEntity<List<Category>> guess() {
 		List<Category> res = new ArrayList<>();
@@ -89,10 +85,6 @@ public class GuessController {
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
-	/**
-	 * Handles POST requests for /guess/drivers. If it is still possible to guess,
-	 * and input guess is valid, adds the guesses to the database.
-	 */
 	@PostMapping("/driver")
 	@Transactional
 	public ResponseEntity<?> rankDrivers(@RequestParam List<String> rankedCompetitors) {
@@ -124,11 +116,6 @@ public class GuessController {
 		}
 	}
 
-	/**
-	 * Handles GET requests for /guess/constructors. If it is still possible to
-	 * guess,
-	 * gives a list of constructors to rank and the time left to guess.
-	 */
 	@GetMapping("/constructor")
 	public ResponseEntity<CutoffCompetitors<Constructor>> rankConstructors() {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
@@ -142,11 +129,6 @@ public class GuessController {
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
-	/**
-	 * Handles POST requests for /guess/constructors. If it is still possible to
-	 * guess,
-	 * and input guess is valid, adds the guesses to the database.
-	 */
 	@PostMapping("/constructor")
 	@Transactional
 	public ResponseEntity<?> rankConstructors(@RequestParam List<String> rankedCompetitors) {
@@ -195,20 +177,12 @@ public class GuessController {
 		return null;
 	}
 
-	/**
-	 * Handles GET requests for /guess/tenth. If it is possible to guess, gives a
-	 * list of drivers that can be chosen.
-	 */
 	@GetMapping("/tenth")
 	public ResponseEntity<CutoffCompetitorsSelected<Driver>> guessTenth() {
 		Category category = new Category("TENTH", db);
 		return handleGetChooseDriver(category);
 	}
 
-	/**
-	 * Handles POST requests for /guess/tenth. If it is possible to guess, gives a
-	 * and input driver is valid, adds the guess to the database.
-	 */
 	@PostMapping("/tenth")
 	@Transactional
 	public ResponseEntity<?> guessTenth(@RequestParam String driver) {
@@ -216,20 +190,12 @@ public class GuessController {
 		return handlePostChooseDriver(driver, category);
 	}
 
-	/**
-	 * Handles GET requests for /guess/winner. If it is possible to guess, gives a
-	 * list of drivers that can be chosen.
-	 */
 	@GetMapping("/first")
 	public ResponseEntity<CutoffCompetitorsSelected<Driver>> guessWinner() {
 		Category category = new Category("FIRST", db);
 		return handleGetChooseDriver(category);
 	}
 
-	/**
-	 * Handles POST requests for /guess/winner. If it is possible to guess, gives a
-	 * and input driver is valid, adds the guess to the database.
-	 */
 	@PostMapping("/first")
 	@Transactional
 	public ResponseEntity<?> guessWinner(@RequestParam String driver) {
@@ -289,10 +255,6 @@ public class GuessController {
 		}
 	}
 
-	/**
-	 * Handles GET requests for /guess/flags. If it is possible to guess, gives the
-	 * users previous guesses.
-	 */
 	@GetMapping("/flag")
 	public ResponseEntity<CutoffFlags> guessFlags() {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
@@ -304,11 +266,7 @@ public class GuessController {
 		CutoffFlags res = new CutoffFlags(flags, timeLeftToGuess);
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
-
-	/**
-	 * Handles POST requests for /guess/flags. If it is possible to guess and values
-	 * are valid, adds the guesses to the database.
-	 */
+	
 	@PostMapping("/flag")
 	@Transactional
 	public ResponseEntity<?> guessFlags(@RequestParam int yellow, @RequestParam int red,

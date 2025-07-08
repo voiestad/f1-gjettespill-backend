@@ -10,7 +10,7 @@ import no.vebb.f1.util.domainPrimitive.Year;
 
 public class DiffPointsMap {
 	  
-	private Map<Diff, Points> map;
+	private final Map<Diff, Points> map;
 
 	public DiffPointsMap(Category category, Year year, Database db) {
 		map = db.getDiffPointsMap(year, category);

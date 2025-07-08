@@ -16,9 +16,6 @@ import no.vebb.f1.util.exception.InvalidCategoryException;
 import no.vebb.f1.util.exception.InvalidDiffException;
 import no.vebb.f1.util.exception.InvalidPointsException;
 
-/**
- * Class is responsible for changing the points system for a specified year.
- */
 @RestController
 @RequestMapping("/api/admin/season/points")
 public class ManagePointsSystemController {

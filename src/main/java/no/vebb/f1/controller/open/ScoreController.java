@@ -19,19 +19,12 @@ import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
-/**
- * Class is responsible for showing the scoring system to the users.
- */
 @RestController
 public class ScoreController {
 
 	@Autowired
 	private Database db;
 
-	/**
-	 * Handles GET requests for /score. Gives a list of tables showing how scores
-	 * are calculated.
-	 */
 	@GetMapping("/api/public/score")
 	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTables() {
 		try {

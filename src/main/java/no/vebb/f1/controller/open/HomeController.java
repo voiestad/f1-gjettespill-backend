@@ -17,9 +17,6 @@ import no.vebb.f1.util.collection.RankedGuesser;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
-/**
- * Controller for home and contact page.
- */
 @RestController
 public class HomeController {
 
@@ -28,12 +25,7 @@ public class HomeController {
 
 	@Autowired
 	private GraphCache graphCache;
-
-	/**
-	 * Handles GET request for home page.
-	 * 
-	 * @return home page
-	 */
+	
 	@GetMapping("/api/public/home")
 	public ResponseEntity<HomePageResponse> home() {
 		List<RankedGuesser> leaderboard = graphCache.getleaderboard();
@@ -48,7 +40,7 @@ public class HomeController {
 			} else {
 				graph = graphCache.getGraph();
 			}
-		} catch (InvalidYearException e) {
+		} catch (InvalidYearException ignored) {
 		}
 		HomePageResponse res = new HomePageResponse(graph, leaderboard,  guessers);
 		return new ResponseEntity<>(res, HttpStatus.OK);

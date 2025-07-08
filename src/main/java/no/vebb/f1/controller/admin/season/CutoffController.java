@@ -20,9 +20,6 @@ import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidRaceException;
 
-/**
- * CutoffController is responsible for changing cutoff for races and season.
- */
 @RestController
 @RequestMapping("/api/admin/season/cutoff")
 public class CutoffController {
@@ -33,14 +30,6 @@ public class CutoffController {
     @Autowired
     private GraphCache graphCache;
 
-    /**
-     * Handles GET requests for managing cutoff for the given season. Gives a list
-     * of cutoffs for each race of the season and the cutoff for the season. Will
-     * redirect to / if user is not admin and /admin/season if year is invalid.
-     *
-     * @param year of season
-     * @return cutoff template
-     */
     @GetMapping("/list/{year}")
     public ResponseEntity<CutoffResponse> manageCutoff(@PathVariable("year") int year) {
         Year seasonYear = new Year(year, db);
@@ -50,15 +39,6 @@ public class CutoffController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    /**
-     * Handels POST mapping for setting the cutoff for a race. Will
-     * redirect to / if user is not admin and /admin/season if year is invalid. If
-     * race ID is or time has invalid format, nothing will change in the database.
-     *
-     * @param raceId of race
-     * @param cutoff to set for the race in local time
-     * @return redirect to origin if user is admin and season valid
-     */
     @PostMapping("/set/race")
     @Transactional
     public ResponseEntity<String> setCutoffRace(
@@ -74,15 +54,6 @@ public class CutoffController {
         }
     }
 
-    /**
-     * Handels POST mapping for setting the cutoff for a season. Will
-     * redirect to / if user is not admin and /admin/season if year is invalid. If
-     * time has invalid format, nothing will change in the database.
-     *
-     * @param year   of season
-     * @param cutoff to set for the race in local time
-     * @return redirect to origin if user is admin and season valid
-     */
     @PostMapping("/set/year")
     @Transactional
     public ResponseEntity<String> setCutoffYear(

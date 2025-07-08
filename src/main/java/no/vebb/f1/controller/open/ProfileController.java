@@ -24,9 +24,6 @@ import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
-/**
- * Class is responsible for displaying stats about users guesses.
- */
 @RestController
 public class ProfileController {
 
@@ -39,15 +36,6 @@ public class ProfileController {
     @Autowired
     private Database db;
 
-    /**
-     * Handles GET request for /user/{id} where id is the UUID of the guesser.
-     * If user does not exist, redirects to /. If users are still able to guess
-     * before season starts, the page will be blank if the page does not belongs to
-     * the logged in user. Else it will display stats from the users guesses.
-     *
-     * @param id of user
-     * @return guessing profile
-     */
     @GetMapping("/api/public/user/{id}")
     public ResponseEntity<UserScore> guesserProfile(
             @PathVariable("id") UUID id,
@@ -60,11 +48,6 @@ public class ProfileController {
         return getGuesserProfile(user, raceId);
     }
 
-    /**
-     * Handles GET request for /user/myprofile. Displays an overview of the
-     * guesses of the user. If the user is not logged in, the user will be
-     * redirected to /.
-     */
     @GetMapping("/api/user/myprofile")
     public ResponseEntity<UserScore> myProfile(
             @RequestParam(value = "raceId", required = false) Integer raceId) {

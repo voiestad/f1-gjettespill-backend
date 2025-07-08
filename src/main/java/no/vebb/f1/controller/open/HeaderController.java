@@ -44,23 +44,17 @@ public class HeaderController {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
 			RaceId raceId = db.getLatestRaceForPlaceGuess(year).id;
 			return !cutoff.isAbleToGuessRace(raceId);
-		} catch (InvalidYearException e) {
-			return false;
-		} catch (EmptyResultDataAccessException e) {
-			return false;
-		} catch (NoAvailableRaceException e) {
+		} catch (InvalidYearException | NoAvailableRaceException | EmptyResultDataAccessException e) {
 			return false;
 		}
-	}
+    }
 
 	private boolean isRaceToGuess() {
 		try {
 			RaceId raceId = db.getCurrentRaceIdToGuess();
 			return cutoff.isAbleToGuessRace(raceId);
-		} catch (EmptyResultDataAccessException e) {
-			return false;
-		} catch (NoAvailableRaceException e) {
+		} catch (EmptyResultDataAccessException | NoAvailableRaceException e) {
 			return false;
 		}
-	}
+    }
 }

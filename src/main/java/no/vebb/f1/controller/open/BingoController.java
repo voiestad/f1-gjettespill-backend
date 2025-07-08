@@ -50,7 +50,7 @@ public class BingoController {
 		}
 	}
 
-	@GetMapping("/api/bingomaster")
+	@GetMapping("/api/public/bingomaster")
 	public ResponseEntity<Boolean> isBingoMaster() {
 		return new ResponseEntity<>(userService.isBingomaster(), HttpStatus.OK);
 	}

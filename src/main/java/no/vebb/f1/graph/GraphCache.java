@@ -98,7 +98,7 @@ public class GraphCache {
 	private List<RaceId> getSeasonRaceIds(Year year) {
 		List<RaceId> raceIds = new ArrayList<>();
 		raceIds.add(null);
-		db.getRaceIdsFinished(year).forEach(id -> raceIds.add(id));
+        raceIds.addAll(db.getRaceIdsFinished(year));
 		return raceIds;
 	}
 

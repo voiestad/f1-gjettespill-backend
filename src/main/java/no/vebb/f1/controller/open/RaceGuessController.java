@@ -18,9 +18,6 @@ import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.util.response.RaceGuessResponse;
 
-/**
- * Class is responsible for displaying guesses for the users for races.
- */
 @RestController
 @RequestMapping("/api/public/race-guess")
 public class RaceGuessController {
@@ -31,11 +28,6 @@ public class RaceGuessController {
 	@Autowired
 	private Database db;
 
-	/**
-	 * Handles GET requests for /race-guess. If there is the guesses are not
-	 * available, redirects to /. A race is only available when the cutoff of the
-	 * latest starting grid of the current year has passed.
-	 */
 	@GetMapping
 	public ResponseEntity<RaceGuessResponse> guessOverview() {
 		try {
@@ -50,10 +42,8 @@ public class RaceGuessController {
 			RaceGuessResponse res = new RaceGuessResponse(raceName, first, tenth);
 
 			return new ResponseEntity<>(res, HttpStatus.OK);
-		} catch (InvalidYearException e) {
-		} catch (EmptyResultDataAccessException e) {
-		} catch (NoAvailableRaceException e) {
+		} catch (InvalidYearException | EmptyResultDataAccessException | NoAvailableRaceException ignored) {
 		}
-		return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 	}
 }

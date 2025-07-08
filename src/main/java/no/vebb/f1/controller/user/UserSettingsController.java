@@ -34,10 +34,6 @@ import no.vebb.f1.util.exception.InvalidEmailException;
 import no.vebb.f1.util.exception.InvalidUsernameException;
 import no.vebb.f1.util.response.MailOptionsResponse;
 
-/**
- * Class is responsible for managing the user settings. Like changing username
- * and deleting user.
- */
 @RestController
 @RequestMapping("/api/settings")
 public class UserSettingsController {
@@ -53,11 +49,6 @@ public class UserSettingsController {
     @Autowired
     private UserMailService userMailService;
 
-
-    /**
-     * Handles GET requests for /settings/info. Gives the user information about
-     * their username, user ID and Google ID that is associated with their user.
-     */
     @GetMapping("/info")
     public ResponseEntity<UserInformation> userInformation() {
         User user = userService.loadUser().get();
@@ -66,11 +57,6 @@ public class UserSettingsController {
 
     }
 
-    /**
-     * Handles POST requests for /settings/username. If the username is valid, it
-     * changes the username in the database. Otherwise, it gives an error message to
-     * the user.
-     */
     @PostMapping("/username/change")
     @Transactional
     public ResponseEntity<String> changeUsername(
@@ -113,12 +99,6 @@ public class UserSettingsController {
         return new ResponseEntity<>(username, HttpStatus.OK);
     }
 
-    /**
-     * Handles POST requests for /settings/delete. If the input username matches the
-     * username of the user the user is anonymized and Google ID removed. This
-     * revokes their access to the website. If the username is incorrect, the user
-     * gets an error message.
-     */
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deleteAccount(@RequestParam("username") String username, HttpServletRequest request) {

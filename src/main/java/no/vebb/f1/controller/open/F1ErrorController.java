@@ -24,10 +24,6 @@ public class F1ErrorController implements ErrorController {
 	@Autowired
 	private UserService userService;
 
-	/**
-	 * Handles GET requests for /error and therefore handles requests that could not
-	 * be handled properly elsewhere.
-	 */
 	@RequestMapping("/error")
 	public ResponseEntity<?> error(HttpServletRequest request) {
 		Optional<User> user = userService.loadUser();
