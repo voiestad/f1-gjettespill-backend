@@ -20,21 +20,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(
-                                    "/",
-                                    "/favicon.ico",
-                                    "/logo.svg",
-                                    "/**.css",
-                                    "/user/**",
-                                    "/score/**",
-                                    "/race-guess/**",
-                                    "/contact",
-                                    "/about",
-                                    "/error",
-                                    "/privacy",
-                                    "/stats/**",
-                                    "/bingo",
-                                    "/api/public/**")
+                    auth.requestMatchers("/api/public/**")
                             .permitAll();
                     auth.anyRequest().authenticated();
                 })
