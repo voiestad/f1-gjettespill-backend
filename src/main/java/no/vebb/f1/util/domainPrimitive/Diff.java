@@ -1,5 +1,7 @@
 package no.vebb.f1.util.domainPrimitive;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import no.vebb.f1.util.exception.InvalidDiffException;
 
 public class Diff {
@@ -14,6 +16,11 @@ public class Diff {
 		this.value = value;
 		validate();
 	}
+
+	@JsonValue
+    public int toValue() {
+        return value;
+    }
 
 	private void validate() throws InvalidDiffException {
 		if (value < 0) {

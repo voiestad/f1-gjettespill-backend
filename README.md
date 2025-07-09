@@ -1,5 +1,7 @@
-# F1 Tipping
+# F1 Tipping - Backend
 F1 Tipping er en tippeside der deltakerne tipper på sluttresultatene av Formel 1 sesongen. I tillegg tippes det på hvem som kommer på første- og tiendeplass i hvert løp gjennom året.
+
+Dette repoet er koden for backenden til nettsiden. Koden for frontenden ligger [her](https://github.com/Vebb02/f1-frontend).
 
 ## Oversikt
 1. [Utvikler](#utvikler)
@@ -25,6 +27,8 @@ spring.security.oauth2.client.registration.google.client-id={id}
 spring.security.oauth2.client.registration.google.client-secret={secret}
 spring.mail.username={email}
 spring.mail.password={app password}
+f1.login.success-redirect-uri={redirect URI}
+f1.logout.success-redirect-uri={redirect URI}
 ```
 
 ## Kjøre Applikasjonen

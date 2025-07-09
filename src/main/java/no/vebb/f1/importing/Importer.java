@@ -44,12 +44,6 @@ public class Importer {
 	@Autowired
 	private GraphCache graphCache;
 
-	public Importer() {}
-
-	public Importer(Database db) {
-		this.db = db;
-	}
-
 	@Transactional
 	public void importData() {
 		logger.info("Starting import of data to database");

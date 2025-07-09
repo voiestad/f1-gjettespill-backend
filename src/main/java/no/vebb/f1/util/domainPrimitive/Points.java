@@ -1,5 +1,7 @@
 package no.vebb.f1.util.domainPrimitive;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import no.vebb.f1.util.exception.InvalidPointsException;
 
 public class Points implements Comparable<Points> {
@@ -24,6 +26,11 @@ public class Points implements Comparable<Points> {
 	public Points add(Points other) {
 		return new Points(this.value + other.value);
 	}
+
+	@JsonValue
+    public int toValue() {
+        return value;
+    }
 
 	@Override
 	public int hashCode() {

@@ -1,34 +1,42 @@
 package no.vebb.f1.components;
 
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.util.exception.NoUsernameException;
 import no.vebb.f1.util.exception.NotAdminException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-	private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-	@Autowired
-	private UserService userService;
+    @Autowired
+    private UserService userService;
 
     @ExceptionHandler(InvalidYearException.class)
-    public String handleInvalidYear(InvalidYearException e) {
-        return "redirect:/admin/season";
+    public ResponseEntity<?> handleInvalidYear(InvalidYearException e) {
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-    
-	@ExceptionHandler(NotAdminException.class)
-    public String handleNotAdmin(NotAdminException e) {
-		UUID userId = userService.loadUser().get().id;
-		logger.warn("User '{}' tried accessing an admin page without the correct access rights", userId);
-        return "redirect:/";
+
+    @ExceptionHandler(NotAdminException.class)
+    public ResponseEntity<?> handleNotAdmin(NotAdminException e) {
+        userService.loadUser().ifPresentOrElse(
+                user -> logger.warn("User '{}' tried accessing an admin page without the correct access rights",
+                        user.id),
+                () -> logger.warn("Someone tried accessing an admin page without the correct access rights"));
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(NoUsernameException.class)
+    public ResponseEntity<?> handleNoUsername(NoUsernameException e) {
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 }

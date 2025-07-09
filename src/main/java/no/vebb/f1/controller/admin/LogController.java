@@ -6,85 +6,61 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.Stack;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequestMapping("/admin/log")
+@RestController
+@RequestMapping("/api/admin/log")
 public class LogController {
 	
 	private final String logPath = "logs";
 
-	@GetMapping
-	public String chooseLogCategory(Model model) {
-		model.addAttribute("title", "Logging");
-		Map<String, String> linkMap = new LinkedHashMap<>();
-		model.addAttribute("linkMap", linkMap);
-		linkMap.put("Info", "/admin/log/info");
-		linkMap.put("Importer", "/admin/log/importer");
-		linkMap.put("Error", "/admin/log/error");
-		linkMap.put("Cache", "/admin/log/cache");
-		return "util/linkList";
-	}
-
-	@GetMapping("/{type}")
-	public String chooseDate(Model model, @PathVariable("type") String type) {
-		model.addAttribute("title", "Logging");
-		Map<String, String> linkMap = new LinkedHashMap<>();
-		model.addAttribute("linkMap", linkMap);
-		if (!isValidLogType(type)) {
-			return "redirect:/admin/log";
+	@GetMapping("/list")
+	public ResponseEntity<List<String>> listDates(@RequestParam("type") String type) {
+		if (isInvalidLogType(type)) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		List<String> files = getFilesInFolder(type);
-		Collections.sort(files, Collections.reverseOrder());
-		for (String file : files) {
-			linkMap.put(file.substring(0, 10),String.format("/admin/log/%s/%s", type, file));
-		}
-		return "util/linkList";
+		List<String> files = getFilesInFolder(type).stream()
+				.map(file -> file.substring(0, 10))
+				.sorted(Collections.reverseOrder())
+				.toList();
+		return new ResponseEntity<>(files, HttpStatus.OK);
 	}
 	
-	@GetMapping("/{type}/{logFile}")
-	public String chooseInfoDate(Model model, @PathVariable("type") String type,
-		@PathVariable("logFile") String logFile) {
-		if (!isValidFile(type, logFile)) {
-			return "redirect:/admin/log/" + type;
+	@GetMapping("/file")
+	public ResponseEntity<String> getLogfileContent(@RequestParam("type") String type,
+									@RequestParam("date") String date) {
+		if (!isValidFile(type, date)) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		model.addAttribute("title", String.format("%s log: %s", 
-			type.substring(0, 1).toUpperCase() + type.substring(1),
-			logFile.substring(0, 10)));
-		File file = new File(String.format("%s/%s/%s", logPath, type, logFile));
+		File file = new File(String.format("%s/%s/%s", logPath, type, date + ".log"));
 		try {
 			Scanner scanner = new Scanner(file);
-			Stack<StringBuffer> stack = new Stack<>();
-			StringBuffer section = new StringBuffer();
+			Stack<StringBuilder> stack = new Stack<>();
+			StringBuilder section = new StringBuilder();
 			while (scanner.hasNextLine()) {
 				String logLine = scanner.nextLine();
 				if (isLogLineStart(logLine)) {
 					stack.add(section);
-					section = new StringBuffer();
+					section = new StringBuilder();
 				}
 				section.append(logLine).append('\n');
 			}
 			stack.add(section);
-			StringBuffer buffer = new StringBuffer();
+			StringBuilder buffer = new StringBuilder();
 			while (!stack.empty()) {
 				buffer.append(stack.pop());
 			}
-			model.addAttribute("text", buffer.toString());
 			scanner.close();
-		} catch (IOException e) {	
-			return "redirect:/admin/log/" + type;
+			return new ResponseEntity<>(buffer.toString(), HttpStatus.OK);
+		} catch (IOException e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		return "admin/log";
 	}
 
 	private List<String> getFilesInFolder(String folderName) {
@@ -102,28 +78,26 @@ public class LogController {
 		return fileNames;
 	}
 
-	private boolean isValidFile(String type, String file) {
-		if (!isValidLogType(type)) {
+	private boolean isValidFile(String type, String date) {
+		if (isInvalidLogType(type)) {
 			return false;
 		}
 		List<String> files = getFilesInFolder(type);
-		return files.contains(file);
+		return files.contains(date + ".log");
 	}
 
-	private boolean isValidLogType(String type) {
-		return type.matches("error|info|cache|importer");
+	private boolean isInvalidLogType(String type) {
+		return !type.matches("error|info|cache|importer");
 	}
 
 	private boolean isLogLineStart(String logLine) {
 		try {
 			String time = logLine.substring(0, 20);
 			LocalDateTime.parse(time);
-		} catch (DateTimeParseException e) {
-			return false;
-		} catch (IndexOutOfBoundsException e) {
+		} catch (DateTimeParseException | IndexOutOfBoundsException e) {
 			return false;
 		}
-		return true;
+        return true;
 	}
 
 }

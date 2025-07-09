@@ -81,10 +81,9 @@ public class NotificationMail {
 					break;
 				}
 			}
-		} catch (InvalidYearException e) {
-		} catch (EmptyResultDataAccessException e) {
+		} catch (InvalidYearException | EmptyResultDataAccessException ignored) {
 		}
-	}
+    }
 
 	private String getMessageContent(UserMail user, CutoffRace race, int timeLeft) {
 		String greet = String.format("Hei %s!", user.user.username);

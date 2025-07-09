@@ -6,7 +6,7 @@ public class CodeGenerator {
 	
 	private CodeGenerator(){}
 
-	private static SecureRandom random = new SecureRandom();
+	private static final SecureRandom random = new SecureRandom();
 
 	public static int getVerificationCode() {
 		return random.nextInt(900000000) + 100000000;
