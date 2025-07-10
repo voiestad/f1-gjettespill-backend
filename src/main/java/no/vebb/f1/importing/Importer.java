@@ -444,7 +444,7 @@ public class Importer {
 				status = ResultChangeStatus.NO_CHANGE;
 			}
 		}
-		int diff = compPoints(standings).value - compPoints(previousStandings).value;
+		int diff = Math.abs(compPoints(standings).value - compPoints(previousStandings).value);
 		status.setPointsChange(new Points(diff));
 		return status;
 	}
