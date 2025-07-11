@@ -8,6 +8,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import no.vebb.f1.util.IOUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class BackupController {
+
+	public static final Logger logger = LoggerFactory.getLogger(BackupController.class);
 
 	@GetMapping("/api/admin/getbackup")
 	public ResponseEntity<Resource> getBackup() {
@@ -38,7 +43,7 @@ public class BackupController {
 				.contentType(MediaType.APPLICATION_OCTET_STREAM)
 				.body(resource);
 		} catch (IOException | NoSuchElementException e) {
-			e.printStackTrace();
+			logger.warn("Could not get backup file", e);
 			return ResponseEntity.internalServerError()
 				.body(null);
 		}
@@ -47,12 +52,7 @@ public class BackupController {
 	private String getMostCurrentBackup() throws IOException, NoSuchElementException {
 		List<String> backups = new ArrayList<>();
 		File folder = new File("backup");
-		if (!folder.exists()) {
-			throw new IOException("Folder not found");
-		}
-		for (File file : folder.listFiles()) {
-			backups.add(file.getName());
-		}
+		IOUtil.getFileNamesInFolder(backups, folder);
 		return Collections.max(backups);
 	}
 }
