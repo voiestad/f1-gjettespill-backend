@@ -28,12 +28,14 @@ public class DatabaseBackup {
 
         File originalFile = new File(originalDbPath);
         File backupDir = new File("./backup");
-        if (!backupDir.exists()) {
-            backupDir.mkdirs();
-        }
-        File backupFile = new File(backupFilePath);
-
         try {
+            if (!backupDir.exists()) {
+                if (backupDir.mkdirs()) {
+			        logger.info("Could not make backup directory");
+                    throw new RuntimeException("Could not make backup directory");
+                }
+            }
+            File backupFile = new File(backupFilePath);
 			logger.info("Starting backup of database");
             Files.copy(originalFile.toPath(), backupFile.toPath());
 			logger.info("Successful backup of database to '{}'", backupFilePath);

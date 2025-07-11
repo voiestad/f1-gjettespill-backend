@@ -32,8 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 
-HELP.md
-
 secret.properties
 f1.db
 /backup
