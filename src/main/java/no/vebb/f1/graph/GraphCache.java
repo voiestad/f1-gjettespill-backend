@@ -13,7 +13,6 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.PublicUser;
 import no.vebb.f1.user.User;
-import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Guesser;
@@ -26,16 +25,14 @@ import no.vebb.f1.util.exception.InvalidYearException;
 public class GraphCache {
 
 	private final Database db;
-	private final UserService userService;
 	private final Cutoff cutoff;
 
 	private volatile List<GuesserPointsSeason> graph;
 	private volatile List<RankedGuesser> leaderboard;
 	private static final Logger logger = LoggerFactory.getLogger(GraphCache.class);
 
-	public GraphCache(Database db, UserService userService, Cutoff cutoff) {
+	public GraphCache(Database db, Cutoff cutoff) {
 		this.db = db;
-		this.userService = userService;
 		this.cutoff = cutoff;
 	}
 
@@ -84,7 +81,7 @@ public class GraphCache {
 		List<RaceId> raceIds = getSeasonRaceIds(year);
 		for (User guesser : guessers) {
 			graph.add(new GuesserPointsSeason(
-				guesser.username,
+							guesser.username(),
 				raceIds.stream()
 					.map(raceId -> new UserScore(new PublicUser(guesser), year, raceId, db).getScore().value)
 					.toList())
@@ -107,21 +104,20 @@ public class GraphCache {
 		}
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			List<Guesser> leaderboard = db.getAllUserIds().stream()
-				.map(id -> {
-					User user = userService.loadUser(id).get();
+			List<Guesser> leaderboard = db.getAllUsers().stream()
+				.map(user -> {
 					UserScore userScore = new UserScore(new PublicUser(user), year, db);
-					return new Guesser(user.username, userScore.getScore(), id);
+					return new Guesser(user.username(), userScore.getScore(), user.id());
 				})
-				.filter(guesser -> guesser.points.value > 0)
+				.filter(guesser -> guesser.points().value > 0)
 				.sorted(Collections.reverseOrder())
 				.toList();
 
 			for (int i = 0; i < leaderboard.size(); i++) {
 				Guesser guesser = leaderboard.get(i);
 				int rank = i+1;
-				if (i > 0 && guesser.points.equals(leaderboard.get(i-1).points)) {
-					rank = result.get(i-1).rank;
+				if (i > 0 && guesser.points().equals(leaderboard.get(i - 1).points())) {
+					rank = result.get(i - 1).rank();
 				}
 				result.add(new RankedGuesser(guesser, rank));
 			}

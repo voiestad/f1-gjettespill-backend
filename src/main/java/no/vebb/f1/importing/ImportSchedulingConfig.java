@@ -31,21 +31,7 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 	@Override
 	public void configureTasks(@SuppressWarnings("null") ScheduledTaskRegistrar taskRegistrar) {
 		taskRegistrar.setScheduler(Executors.newSingleThreadScheduledExecutor());
-		taskRegistrar.addTriggerTask(
-			importer::importData,
-			new Trigger() {
-
-				@Override
-				public Instant nextExecution(@SuppressWarnings("null") TriggerContext context) {
-					Instant lastCompletionTime = context.lastCompletion();
-					if (lastCompletionTime == null) {
-						return Instant.now().plus(Duration.ofMillis(TimeUtil.SECOND * 5));
-					}
-					return lastCompletionTime.plus(getDelay());
-				}
-				
-			}
-		);
+		taskRegistrar.addTriggerTask(importer::importData, new ImportTrigger());
 	}
 
 	private Duration getDelay() {
@@ -74,7 +60,7 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 			if (isRefreshPeriod && isResultImported) {
 				return Duration.ofMillis(TimeUtil.HALF_HOUR);
 			}
-		} catch (EmptyResultDataAccessException e) {
+		} catch (EmptyResultDataAccessException ignored) {
 		}
 		return null;
 	}
@@ -93,4 +79,17 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 		}
 	}
 
+	private class ImportTrigger implements Trigger {
+
+		@Override
+		public Instant nextExecution(TriggerContext context) {
+			Instant lastCompletionTime = context.lastCompletion();
+			if (lastCompletionTime == null) {
+				return Instant.now().plus(Duration.ofMillis(TimeUtil.SECOND * 5));
+			}
+			return lastCompletionTime.plus(getDelay());
+		}
+
+
+	}
 }

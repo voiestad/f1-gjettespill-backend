@@ -2,6 +2,7 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
+import no.vebb.f1.user.User;
 import no.vebb.f1.util.response.HomePageResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +37,7 @@ public class HomeController {
 			if (leaderboard == null) {
 				Year year = new Year(TimeUtil.getCurrentYear(), db);
 				guessers = db.getSeasonGuessers(year).stream()
-					.map(user -> user.username)
+					.map(User::username)
 					.toList();
 			} else {
 				graph = graphCache.getGraph();

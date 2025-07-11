@@ -79,7 +79,7 @@ public class ProfileController {
                 UserScore res = new UserScore(new PublicUser(user), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
-        } catch (InvalidYearException e) {
+        } catch (InvalidYearException ignored) {
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
@@ -91,7 +91,7 @@ public class ProfileController {
     @GetMapping("/api/public/user/list")
     public ResponseEntity<List<PublicUser>> listUsers() {
         List<PublicUser> res = db.getAllUsers().stream()
-                .map(user -> new PublicUser(user))
+                .map(PublicUser::new)
                 .toList();
         return new ResponseEntity<>(res, HttpStatus.OK);
     }

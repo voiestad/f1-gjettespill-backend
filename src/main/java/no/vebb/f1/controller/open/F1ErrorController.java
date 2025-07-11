@@ -28,7 +28,7 @@ public class F1ErrorController implements ErrorController {
 	@RequestMapping("/error")
 	public ResponseEntity<?> error(HttpServletRequest request) {
 		Optional<User> user = userService.loadUser();
-		String userId = user.map(u -> u.id.toString()).orElse("unknown");
+		String userId = user.map(u -> u.id().toString()).orElse("unknown");
 		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
 
 		String referer = (referer = request.getHeader("Referer")) == null ? "unknown" : referer;

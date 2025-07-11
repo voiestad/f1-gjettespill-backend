@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleNotAdmin() {
         userService.loadUser().ifPresentOrElse(
                 user -> logger.warn("User '{}' tried accessing an admin page without the correct access rights",
-                        user.id),
+                        user.id()),
                 () -> logger.warn("Someone tried accessing an admin page without the correct access rights"));
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }

@@ -50,7 +50,7 @@ public class UserSettingsController {
 
     @GetMapping("/info")
     public ResponseEntity<UserInformation> userInformation() {
-        User user = userService.loadUser().get();
+        User user = userService.getUser();
         UserInformation userInfo = new UserInformation(user, db);
         return new ResponseEntity<>(userInfo, HttpStatus.OK);
 
@@ -67,7 +67,7 @@ public class UserSettingsController {
             if (!userService.isLoggedIn()) {
                 return registerUsername(principal, validUsername, referralCode);
             }
-            final UUID id = userService.loadUser().get().id;
+            final UUID id = userService.getUser().id();
             db.updateUsername(validUsername, id);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidUsernameException e) {
@@ -94,19 +94,19 @@ public class UserSettingsController {
 
     @GetMapping("/username")
     public ResponseEntity<String> getUsername() {
-        String username = userService.loadUser().get().username;
+        String username = userService.getUser().username();
         return new ResponseEntity<>(username, HttpStatus.OK);
     }
 
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deleteAccount(@RequestParam("username") String username, HttpServletRequest request) {
-        User user = userService.loadUser().get();
-        String actualUsername = user.username;
+        User user = userService.getUser();
+        String actualUsername = user.username();
         if (!username.equals(actualUsername)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        db.deleteUser(user.id);
+        db.deleteUser(user.id());
 
         request.getSession().invalidate();
         SecurityContextHolder.clearContext();
@@ -116,8 +116,8 @@ public class UserSettingsController {
 
     @GetMapping("/mail")
     public ResponseEntity<MailOptionsResponse> mailingList() {
-        User user = userService.loadUser().get();
-        boolean hasMail = db.userHasEmail(user.id);
+        User user = userService.getUser();
+        boolean hasMail = db.userHasEmail(user.id());
         if (!hasMail) {
             MailOptionsResponse res = new MailOptionsResponse(false, null);
             return new ResponseEntity<>(res, HttpStatus.OK);
@@ -127,7 +127,7 @@ public class UserSettingsController {
         for (MailOption option : options) {
             mailOptions.put(option.value, false);
         }
-        List<MailOption> preferences = db.getMailingPreference(user.id);
+        List<MailOption> preferences = db.getMailingPreference(user.id());
         for (MailOption preference : preferences) {
             mailOptions.put(preference.value, true);
         }
@@ -140,7 +140,7 @@ public class UserSettingsController {
     @Transactional
     public ResponseEntity<?> addMailingList(@RequestParam("email") String email) {
         try {
-            User user = userService.loadUser().get();
+            User user = userService.getUser();
             UserMail userMail = new UserMail(user, email);
             userMailService.sendVerificationCode(userMail);
             return new ResponseEntity<>(HttpStatus.OK);
@@ -152,27 +152,27 @@ public class UserSettingsController {
     @PostMapping("/mail/remove")
     @Transactional
     public ResponseEntity<?> removeMailingList() {
-        User user = userService.loadUser().get();
-        db.clearUserFromMailing(user.id);
+        User user = userService.getUser();
+        db.clearUserFromMailing(user.id());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/mail/verification")
     public ResponseEntity<Boolean> hasVerificationCode() {
-        User user = userService.loadUser().get();
-        return new ResponseEntity<>(db.hasVerificationCode(user.id), HttpStatus.OK);
+        User user = userService.getUser();
+        return new ResponseEntity<>(db.hasVerificationCode(user.id()), HttpStatus.OK);
     }
 
     @PostMapping("/mail/verification")
     @Transactional
     public ResponseEntity<?> verificationCode(@RequestParam("code") int code) {
-        User user = userService.loadUser().get();
-        boolean isValidVerificationCode = db.isValidVerificationCode(user.id, code);
+        User user = userService.getUser();
+        boolean isValidVerificationCode = db.isValidVerificationCode(user.id(), code);
         if (isValidVerificationCode) {
-            logger.info("Successfully verified email of user '{}'", user.id);
+            logger.info("Successfully verified email of user '{}'", user.id());
             return new ResponseEntity<>(HttpStatus.OK);
         }
-        logger.warn("User '{}' put the wrong verification code", user.id);
+        logger.warn("User '{}' put the wrong verification code", user.id());
 
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -181,9 +181,9 @@ public class UserSettingsController {
     @Transactional
     public ResponseEntity<?> addMailingOption(@RequestParam("option") int option) {
         try {
-            User user = userService.loadUser().get();
+            User user = userService.getUser();
             MailOption mailOption = new MailOption(option, db);
-            db.addMailOption(user.id, mailOption);
+            db.addMailOption(user.id(), mailOption);
         } catch (InvalidEmailException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -194,9 +194,9 @@ public class UserSettingsController {
     @Transactional
     public ResponseEntity<?> removeMailingOption(@RequestParam("option") int option) {
         try {
-            User user = userService.loadUser().get();
+            User user = userService.getUser();
             MailOption mailOption = new MailOption(option, db);
-            db.removeMailOption(user.id, mailOption);
+            db.removeMailOption(user.id(), mailOption);
         } catch (InvalidEmailException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -205,7 +205,7 @@ public class UserSettingsController {
 
     @GetMapping("/referral")
     public ResponseEntity<ReferralCodeResponse> getReferralCode() {
-        UUID userId = userService.loadUser().get().id;
+        UUID userId = userService.getUser().id();
         Long referralCode = db.getReferralCode(userId);
         ReferralCodeResponse code = new ReferralCodeResponse(referralCode);
         return new ResponseEntity<>(code, HttpStatus.OK);
@@ -214,7 +214,7 @@ public class UserSettingsController {
     @PostMapping("/referral/add")
     @Transactional
     public ResponseEntity<ReferralCodeResponse> generateReferralCode() {
-        UUID userId = userService.loadUser().get().id;
+        UUID userId = userService.getUser().id();
         ReferralCodeResponse code = new ReferralCodeResponse(db.addReferralCode(userId));
         return new ResponseEntity<>(code, HttpStatus.OK);
     }
@@ -222,7 +222,7 @@ public class UserSettingsController {
     @PostMapping("/referral/delete")
     @Transactional
     public ResponseEntity<?> removeReferralCode() {
-        UUID userId = userService.loadUser().get().id;
+        UUID userId = userService.getUser().id();
         db.removeReferralCode(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }

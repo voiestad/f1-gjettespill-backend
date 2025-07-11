@@ -7,7 +7,7 @@ public class Username {
 	
 	public final String username;
 	public final String usernameUpper;
-	private Database db;
+	private final Database db;
 
 	public Username(String username, Database db) throws InvalidUsernameException {
 		username = username.strip();
@@ -18,7 +18,7 @@ public class Username {
 	}
 
 	private void validate() throws InvalidUsernameException {
-		if (username.equals("")) {
+		if (username.isEmpty()) {
 			throw new InvalidUsernameException("Brukernavn kan ikke være blankt.");
 		}
 

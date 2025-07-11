@@ -8,7 +8,7 @@ public class PublicUser {
 	public final String username;
 
 	public PublicUser(User user) {
-		this.id = user.id;
-		this.username = user.username;
+		this.id = user.id();
+		this.username = user.username();
 	}
 }

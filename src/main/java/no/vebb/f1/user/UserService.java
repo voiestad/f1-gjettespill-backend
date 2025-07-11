@@ -49,27 +49,31 @@ public class UserService {
 
 	public boolean isAdmin() {
 		Optional<User> user = loadUser();
-		if (user.isEmpty()) {
-			return false;
-		}
-		return db.isUserAdmin(user.get().id);
-	}
+        return user.filter(value -> db.isUserAdmin(value.id())).isPresent();
+    }
 
 	public void adminCheck() throws NotAdminException {
 		if (!isAdmin()) {
-			throw new NotAdminException("User is not admin and does not have the required permission for this page");
+			throw new NotAdminException("User is not admin and does not have the required permission for this end point");
 		}
 	}
 	
 	public void usernameCheck() throws NoUsernameException {
 		if (!isLoggedIn()) {
-			throw new NoUsernameException("User is not admin and does not have the required permission for this page");
+			throw new NoUsernameException("User does not have a username, which is required for this end point");
 		}
+	}
+	public User getUser() throws NoUsernameException {
+		Optional<User> user = loadUser();
+		if (user.isEmpty()) {
+			throw new NoUsernameException("User does not have a username, which is required for this end point");
+		}
+		return user.get();
 	}
 
 	public boolean isBingomaster() {
 		Optional<User> user = loadUser();
-        return user.filter(value -> db.isBingomaster(value.id)).isPresent();
+        return user.filter(value -> db.isBingomaster(value.id())).isPresent();
     }
 
 	public boolean isLoggedInUser(User user) {
@@ -78,7 +82,7 @@ public class UserService {
 			return false;
 		}
 		User loggedInUser = optUser.get();
-		return loggedInUser.id.equals(user.id);
+		return loggedInUser.id().equals(user.id());
 	}
 
 }

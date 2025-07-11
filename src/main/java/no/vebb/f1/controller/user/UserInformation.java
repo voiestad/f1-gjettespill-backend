@@ -26,13 +26,13 @@ public class UserInformation {
 
 	public UserInformation(User user, Database db) {
 		this.user = user;
-		this.email = db.getEmail(user.id);
-		this.driverGuess = db.userGuessDataDriver(user.id);
-		this.constructorGuess = db.userGuessDataConstructor(user.id);
-		this.flagGuess = db.userGuessDataFlag(user.id);
-		this.placeGuess = db.userGuessDataDriverPlace(user.id);
-		this.notifiedCount = db.userDataNotified(user.id);
-		this.emailPreferences = db.getMailingPreference(user.id).stream()
+		this.email = db.getEmail(user.id());
+		this.driverGuess = db.userGuessDataDriver(user.id());
+		this.constructorGuess = db.userGuessDataConstructor(user.id());
+		this.flagGuess = db.userGuessDataFlag(user.id());
+		this.placeGuess = db.userGuessDataDriverPlace(user.id());
+		this.notifiedCount = db.userDataNotified(user.id());
+		this.emailPreferences = db.getMailingPreference(user.id()).stream()
 				.map(option -> option.value)
 				.collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
 					Collections.reverse(list);

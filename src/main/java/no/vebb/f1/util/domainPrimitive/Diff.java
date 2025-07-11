@@ -54,9 +54,7 @@ public class Diff {
 		if (getClass() != obj.getClass())
 			return false;
 		Diff other = (Diff) obj;
-		if (value != other.value)
-			return false;
-		return true;
-	}
+        return value == other.value;
+    }
 	
 }

@@ -52,8 +52,6 @@ public class RaceId {
 		if (getClass() != obj.getClass())
 			return false;
 		RaceId other = (RaceId) obj;
-		if (value != other.value)
-			return false;
-		return true;
-	}
+        return value == other.value;
+    }
 }
