@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.exception.InvalidRaceException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,15 +26,15 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RestController
 public class ProfileController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final Cutoff cutoff;
+    private final Database db;
 
-    @Autowired
-    private Cutoff cutoff;
-
-    @Autowired
-    private Database db;
-
+    public ProfileController(UserService userService, Cutoff cutoff, Database db) {
+        this.userService = userService;
+        this.cutoff = cutoff;
+        this.db = db;
+    }
     @GetMapping("/api/public/user/{id}")
     public ResponseEntity<UserScore> guesserProfile(
             @PathVariable("id") UUID id,
@@ -80,7 +79,7 @@ public class ProfileController {
                 UserScore res = new UserScore(new PublicUser(user), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
-        } catch (InvalidYearException e) {
+        } catch (InvalidYearException ignored) {
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
@@ -92,7 +91,7 @@ public class ProfileController {
     @GetMapping("/api/public/user/list")
     public ResponseEntity<List<PublicUser>> listUsers() {
         List<PublicUser> res = db.getAllUsers().stream()
-                .map(user -> new PublicUser(user))
+                .map(PublicUser::new)
                 .toList();
         return new ResponseEntity<>(res, HttpStatus.OK);
     }

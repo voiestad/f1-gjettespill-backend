@@ -91,11 +91,11 @@ public class UserScore {
 			T competitor = competitors.get(i);
 			Integer guessedPos = guessedToPos.get(competitor);
 			if (guessedPos == null) {
-				result.add(new StandingsGuess<T>(actualPos, competitor, null, null, new Points()));
+				result.add(new StandingsGuess<>(actualPos, competitor, null, null, new Points()));
 			} else {
 				Diff diff = new Diff(Math.abs(actualPos - guessedPos));
 				Points points = map.getPoints(diff);
-				result.add(new StandingsGuess<T>(actualPos, competitor, guessedPos, diff, points));
+				result.add(new StandingsGuess<>(actualPos, competitor, guessedPos, diff, points));
 				competitorScore = competitorScore.add(points);
 			}
 		}
@@ -154,10 +154,10 @@ public class UserScore {
 		return summary.getTotal();
 	}
 
-	private record StandingsGuess<T>(int pos, T competitor, Integer guessed, Diff diff, Points points) {}
-	private record FlagGuess(Flag flag, int guessed, int actual, Diff diff, Points points) {}
-	private record PlaceGuess(int racePos, String raceName, String driver, int startPos, int finishPos, Diff diff, Points points) {}
-	private class Summary {
+	public record StandingsGuess<T>(int pos, T competitor, Integer guessed, Diff diff, Points points) {}
+	public record FlagGuess(Flag flag, int guessed, int actual, Diff diff, Points points) {}
+	public record PlaceGuess(int racePos, String raceName, String driver, int startPos, int finishPos, Diff diff, Points points) {}
+	public static class Summary {
 		public Points drivers = new Points();
 		public Points constructors = new Points();
 		public Points flag = new Points();

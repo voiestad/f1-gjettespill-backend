@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -22,12 +21,13 @@ import no.vebb.f1.util.CodeGenerator;
 public class UserMailService {
 
 	private static final Logger logger = LoggerFactory.getLogger(UserMailService.class);
+	private final JavaMailSender mailSender;
+	private final Database db;
 
-	@Autowired
-	private JavaMailSender mailSender;
-
-	@Autowired
-	private Database db;
+	public UserMailService(JavaMailSender mailSender, Database db) {
+		this.mailSender = mailSender;
+		this.db = db;
+	}
 
 	@Value("${spring.mail.username}")
 	private String fromEmail;
@@ -41,37 +41,35 @@ public class UserMailService {
 		try {
 			MimeMessage message = mailSender.createMimeMessage();
 			message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
-			message.addRecipients(RecipientType.TO, user.email);
+			message.addRecipients(RecipientType.TO, user.email());
 			message.setSubject("Verifikasjonskode F1 Tipping");
 			message.setContent(String.format("Hei %s!\n\nHer er din verifikasjonskode: %s\n\nDen er gyldig i 10 minutter.",
-					user.user.username, formattedCode), "text/plain; charset=UTF-8");
+					user.user().username(), formattedCode), "text/plain; charset=UTF-8");
 			mailSender.send(message);
-			logger.info("Successfully sent verification code to '{}'", user.user.id);
-		} catch (MessagingException e) {
-		} catch (UnsupportedEncodingException e) {
+			logger.info("Successfully sent verification code to '{}'", user.user().id());
+		} catch (MessagingException | UnsupportedEncodingException ignored) {
 		}
-	}
+    }
 
 	public void sendServerMessageToAdmins(String messageForAdmin) {
 		List<UUID> admins = db.getAdmins();
 		List<UserMail> adminsWithMail = admins.stream()
-			.filter(admin -> db.userHasEmail(admin))
-			.map(admin -> db.getUserFromId(admin))
-			.map(admin -> new UserMail(admin, db.getEmail(admin.id)))
+			.filter(db::userHasEmail)
+			.map(db::getUserFromId)
+			.map(admin -> new UserMail(admin, db.getEmail(admin.id())))
 			.toList();
 		for (UserMail admin : adminsWithMail) {
 			try {
 				MimeMessage message = mailSender.createMimeMessage();
 				message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
-				message.addRecipients(RecipientType.TO, admin.email);
+				message.addRecipients(RecipientType.TO, admin.email());
 				message.setSubject("Server melding F1 Tipping");
 				message.setContent(String.format("Hei administrator!\n\nDette er en automatisk generert melding:\n%s",
 						messageForAdmin), "text/plain; charset=UTF-8");
 				mailSender.send(message);
-				logger.info("Successfully sent server message to '{}'", admin.user.id);
-			} catch (MessagingException e) {
-			} catch (UnsupportedEncodingException e) {
+				logger.info("Successfully sent server message to '{}'", admin.user().id());
+			} catch (MessagingException | UnsupportedEncodingException ignored) {
 			}
-		}
+        }
 	}
 }

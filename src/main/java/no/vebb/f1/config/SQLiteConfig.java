@@ -144,9 +144,9 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-                INSERT INTO Flag (name) 
+                INSERT INTO Flag (name)
                 VALUES
-                    ('Yellow Flag'), 
+                    ('Yellow Flag'),
                     ('Red Flag'),
                     ('Safety Car')
                 ON CONFLICT(name) DO NOTHING;
@@ -190,9 +190,9 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-                INSERT INTO Category (name) 
+                INSERT INTO Category (name)
                 VALUES
-                    ('DRIVER'), 
+                    ('DRIVER'),
                     ('CONSTRUCTOR'),
                     ('FLAG'),
                     ('FIRST'),
@@ -220,9 +220,9 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-                INSERT INTO CategoryTranslation (category, translation) 
+                INSERT INTO CategoryTranslation (category, translation)
                 VALUES
-                    ('DRIVER', 'Sjåfører'), 
+                    ('DRIVER', 'Sjåfører'),
                     ('CONSTRUCTOR', 'Konstruktører'),
                     ('FLAG', 'Antall'),
                     ('FIRST', '1.plass'),
@@ -245,9 +245,9 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-                INSERT INTO SessionType (name) 
+                INSERT INTO SessionType (name)
                 VALUES
-                    ('RACE'), 
+                    ('RACE'),
                     ('SPRINT')
                 ON CONFLICT(name) DO NOTHING;
             """);
@@ -259,9 +259,9 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-                INSERT INTO SessionTypeTranslation (session_type, translation) 
+                INSERT INTO SessionTypeTranslation (session_type, translation)
                 VALUES
-                    ('RACE', 'Løp'), 
+                    ('RACE', 'Løp'),
                     ('SPRINT', 'Sprint')
                 ON CONFLICT(session_type) DO NOTHING;
             """);
@@ -285,9 +285,9 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-                INSERT INTO FlagTranslation (flag, translation) 
+                INSERT INTO FlagTranslation (flag, translation)
                 VALUES
-                    ('Yellow Flag', 'Gult Flagg'), 
+                    ('Yellow Flag', 'Gult Flagg'),
                     ('Red Flag', 'Rødt Flagg'),
                     ('Safety Car', 'Sikkerhetsbil')
                 ON CONFLICT(flag) DO NOTHING;
@@ -349,7 +349,7 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-                INSERT INTO MailOption (option) 
+                INSERT INTO MailOption (option)
                 VALUES
                     (1),
                     (2),

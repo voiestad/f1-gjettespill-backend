@@ -11,7 +11,6 @@ import java.io.PrintWriter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,14 +34,15 @@ public class Importer {
 
 	private static final Logger logger = LoggerFactory.getLogger(Importer.class);
 
-	@Autowired
-	private Database db;
+	private final Database db;
+	private final UserMailService userMailService;
+	private final GraphCache graphCache;
 
-	@Autowired
-	private UserMailService userMailService;
-
-	@Autowired
-	private GraphCache graphCache;
+	public Importer(Database db, UserMailService userMailService, GraphCache graphCache) {
+		this.db = db;
+		this.userMailService = userMailService;
+		this.graphCache = graphCache;
+	}
 
 	@Transactional
 	public void importData() {
@@ -149,10 +149,9 @@ public class Importer {
 				logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
 				importStandings(year, new Points());
 			}
-		} catch (InvalidYearException e) {
-		} catch (EmptyResultDataAccessException e) {
+		} catch (InvalidYearException | EmptyResultDataAccessException ignored) {
 		}
-		graphCache.refresh();
+        graphCache.refresh();
 	}
 
 	private void importStartingGridData(RaceId raceId) {
@@ -199,8 +198,7 @@ public class Importer {
 		try {
 			RaceId raceId = db.getLatestStartingGridRaceId(year);
 			importStartingGridData(raceId);
-		} catch (EmptyResultDataAccessException e) {
-
+		} catch (EmptyResultDataAccessException ignored) {
 		}
 	}
 
@@ -310,7 +308,7 @@ public class Importer {
 		}
 		String raceName = TableImporter.getGrandPrixName(raceId);
 		// TODO: Use exception and not empty string check
-		if (raceName.equals("")) {
+		if (raceName.isEmpty()) {
 			return false;
 		}
 		db.insertRace(raceId, raceName);
@@ -361,9 +359,9 @@ public class Importer {
 				return ResultChangeStatus.NO_CHANGE;
 			}
 			for (PositionedCompetitor competitor : currentStandings) {
-				Driver driver = new Driver(competitor.name, db);
-				int position = Integer.parseInt(competitor.position);
-				Points points = new Points(Integer.parseInt(competitor.points));
+				Driver driver = new Driver(competitor.name(), db);
+				int position = Integer.parseInt(competitor.position());
+				Points points = new Points(Integer.parseInt(competitor.points()));
 				db.insertDriverIntoStandings(newestRace, driver, position, points);
 			}
 			logger.info("Driver standings added for race '{}'", newestRace);
@@ -405,9 +403,9 @@ public class Importer {
 				return ResultChangeStatus.NO_CHANGE;
 			}
 			for (PositionedCompetitor competitor : currentStandings) {
-				int position = Integer.parseInt(competitor.position);
-				Points points = new Points(Integer.parseInt(competitor.points));
-				Constructor validConstructor = new Constructor(competitor.name);
+				int position = Integer.parseInt(competitor.position());
+				Points points = new Points(Integer.parseInt(competitor.points()));
+				Constructor validConstructor = new Constructor(competitor.name());
 				db.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
 			}
 			logger.info("Constructor standings added for race '{}'", newestRace);
@@ -458,8 +456,8 @@ public class Importer {
 
 	private Points compPoints(List<PositionedCompetitor> competitors) {
 		return competitors.stream()
-			.map(comp -> new Points(Integer.parseInt(comp.points)))
-			.reduce(new Points(), (points1, points2) -> points1.add(points2));
+			.map(comp -> new Points(Integer.parseInt(comp.points())))
+			.reduce(new Points(), Points::add);
 	}
 
 	private String parseDriver(String driverName) {
@@ -475,7 +473,7 @@ public class Importer {
 	}
 
 	private String getTableString(List<List<String>> table) {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		for (int i = 0; i < table.size(); i++) {
 			buffer.append("Row: ").append(i+1).append('\n').append(table.get(i)).append('\n');
 		}

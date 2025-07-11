@@ -3,7 +3,6 @@ package no.vebb.f1.util;
 import java.time.Instant;
 import java.util.Calendar;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.database.Database;
@@ -15,8 +14,11 @@ import no.vebb.f1.util.exception.NoAvailableRaceException;
 @Service
 public class Cutoff {
 	
-	@Autowired
-	private Database db;
+	private final Database db;
+
+	public Cutoff(Database db) {
+		this.db = db;
+	}
 
 	public boolean isAbleToGuessCurrentYear() {
 		try {

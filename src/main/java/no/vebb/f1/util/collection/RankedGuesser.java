@@ -2,16 +2,14 @@ package no.vebb.f1.util.collection;
 
 import no.vebb.f1.util.exception.InvalidRankException;
 
-public class RankedGuesser {
+public record RankedGuesser(Guesser guesser, int rank) {
 
-	public final int rank;
-	public final Guesser guesser;	
-
-	public RankedGuesser(Guesser guesser, int rank) {
+	/**
+	 * @throws InvalidRankException if rank is non-positive
+	 */
+	public RankedGuesser {
 		if (rank <= 0) {
 			throw new InvalidRankException("Rank can't be non-positive");
 		}
-		this.rank = rank;
-		this.guesser = guesser;
 	}
 }

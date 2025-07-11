@@ -54,11 +54,8 @@ public class Flag {
 			return false;
 		Flag other = (Flag) obj;
 		if (value == null) {
-			if (other.value != null)
-				return false;
-		} else if (!value.equals(other.value))
-			return false;
-		return true;
-	}
+            return other.value == null;
+		} else return value.equals(other.value);
+    }
 	
 }

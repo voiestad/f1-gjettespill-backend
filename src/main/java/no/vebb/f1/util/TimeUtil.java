@@ -14,7 +14,6 @@ public class TimeUtil {
 	public static final long HALF_MINUTE = MINUTE / 2;
 	public static final long FIVE_MINUTES = MINUTE * 5;
 	public static final long TEN_MINUTES = MINUTE * 10;
-	public static final long FIFTEEN_MINUTES = MINUTE * 15;
 	public static final long HOUR = MINUTE * 60;
 	public static final long HALF_HOUR = HOUR / 2;
 	public static final long DAY = HOUR * 24;

@@ -3,8 +3,6 @@ package no.vebb.f1.util;
 import java.security.SecureRandom;
 
 public class CodeGenerator {
-	
-	private CodeGenerator(){}
 
 	private static final SecureRandom random = new SecureRandom();
 

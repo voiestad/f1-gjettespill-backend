@@ -2,7 +2,6 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,14 +20,14 @@ import no.vebb.f1.util.exception.InvalidYearException;
 
 @RestController
 public class BingoController {
-	
-	final String REGEX = "[^A-Za-z0-9æøåÆØÅ,.'\"\\- ]";
 
-	@Autowired
-	private Database db;
+    private final Database db;
+	private final UserService userService;
 
-	@Autowired
-	private UserService userService;
+	public BingoController(Database db, UserService userService) {
+		this.db = db;
+		this.userService = userService;
+	}
 
 	@GetMapping("/api/public/bingo")
 	public ResponseEntity<List<BingoSquare>> getCurrentBingoCard() {
@@ -116,8 +115,9 @@ public class BingoController {
 	}
 
 	private String validate(String text) {
+        String REGEX = "[^A-Za-z0-9æøåÆØÅ,.'\"\\- ]";
 		text = text.strip();
-		text = text.replaceAll(REGEX, "");
+        text = text.replaceAll(REGEX, "");
 		return text;
 	}
 }

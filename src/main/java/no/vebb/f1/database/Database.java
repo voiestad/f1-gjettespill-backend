@@ -21,10 +21,10 @@ import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserMail;
 
 @Service
-@SuppressWarnings("null")
+@SuppressWarnings("DataFlowIssue")
 public class Database {
 
-	private JdbcTemplate jdbcTemplate;
+	private final JdbcTemplate jdbcTemplate;
 
 	public Database(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
@@ -39,7 +39,7 @@ public class Database {
 	 * @throws EmptyResultDataAccessException if year cutoff does not exist
 	 */
 	public Instant getCutoffYear(Year year) throws EmptyResultDataAccessException {
-		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
+		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?;";
 		return Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, year));
 	}
 
@@ -52,7 +52,7 @@ public class Database {
 	 */
 	public Instant getCutoffRace(RaceId raceId) throws NoAvailableRaceException {
 		try {
-			final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
+			final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?;";
 			return Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceId));
 		} catch (EmptyResultDataAccessException e) {
 			throw new NoAvailableRaceException("There is no cutoff for the given raceId '" + raceId + "'");
@@ -66,7 +66,7 @@ public class Database {
 	 * @return true if user is admin
 	 */
 	public boolean isUserAdmin(UUID userId) {
-		final String sql = "SELECT COUNT(*) FROM Admin WHERE user_id = ?";
+		final String sql = "SELECT COUNT(*) FROM Admin WHERE user_id = ?;";
 		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
 	}
 
@@ -78,7 +78,7 @@ public class Database {
 	 * @throws EmptyResultDataAccessException if user not found in database
 	 */
 	public User getUserFromId(UUID userId) throws EmptyResultDataAccessException {
-		final String sql = "SELECT username, google_id FROM User WHERE id = ?";
+		final String sql = "SELECT username, google_id FROM User WHERE id = ?;";
 		Map<String, Object> sqlRes = jdbcTemplate.queryForMap(sql, userId);
 		String username = (String) sqlRes.get("username");
 		String googleId = (String) sqlRes.get("google_id");
@@ -93,7 +93,7 @@ public class Database {
 	 * @throws EmptyResultDataAccessException if user not found in database
 	 */
 	public User getUserFromGoogleId(String googleId) throws EmptyResultDataAccessException {
-		final String sql = "SELECT username, id FROM User WHERE google_id = ?";
+		final String sql = "SELECT username, id FROM User WHERE google_id = ?;";
 		Map<String, Object> sqlRes = jdbcTemplate.queryForMap(sql, googleId);
 		String username = (String) sqlRes.get("username");
 		UUID id = UUID.fromString((String) sqlRes.get("id"));
@@ -126,40 +126,8 @@ public class Database {
 	 * @return position of race
 	 */
 	public int getPositionOfRace(RaceId raceId) {
-		final String getRacePosition = "SELECT position FROM RaceOrder WHERE id = ?";
+		final String getRacePosition = "SELECT position FROM RaceOrder WHERE id = ?;";
 		return jdbcTemplate.queryForObject(getRacePosition, Integer.class, raceId);
-	}
-
-	/**
-	 * Translates a category from its backend representation to its display string.
-	 * 
-	 * @param category to translate
-	 * @return translation of category
-	 */
-	public String translateCategory(Category category) {
-		final String translationSql = """
-			SELECT translation
-			FROM CategoryTranslation
-			WHERE category = ?
-			""";
-
-		return jdbcTemplate.queryForObject(translationSql, String.class, category);
-	}
-
-	/**
-	 * Translates a flag from its backend representation to its display string.
-	 * 
-	 * @param flag to translate
-	 * @return translation of flag
-	 */
-	public String translateFlagName(Flag flag) {
-		final String translationSql = """
-			SELECT translation
-			FROM FlagTranslation
-			WHERE flag = ?
-			""";
-
-		return jdbcTemplate.queryForObject(translationSql, String.class, flag);
 	}
 
 	/**
@@ -179,7 +147,7 @@ public class Database {
 				JOIN FlagGuess fg ON f.name = fg.flag
 				JOIN RaceOrder ro ON fg.year = ro.year
 				WHERE ro.year = ? AND fg.guesser = ?
-				GROUP BY f.name
+				GROUP BY f.name;
 				""";
 			return jdbcTemplate.queryForList(sqlNoRace, year, userId);
 		} else {
@@ -190,7 +158,7 @@ public class Database {
 				JOIN RaceOrder ro ON fg.year = ro.year
 				LEFT JOIN FlagStats fs ON fs.flag = f.name AND fs.race_number = ro.id
 				WHERE ro.year = ? AND fg.guesser = ? AND ro.position <= ?
-				GROUP BY f.name
+				GROUP BY f.name;
 				""";
 			return jdbcTemplate.queryForList(sql, year, userId, racePos);
 		}
@@ -215,7 +183,7 @@ public class Database {
 			JOIN StartingGrid sg ON sg.race_number = r.id AND dpg.driver = sg.driver
 			JOIN RaceResult rr ON rr.race_number = r.id AND dpg.driver = rr.driver
 			WHERE dpg.category = ? AND dpg.guesser = ? AND ro.year = ? AND ro.position <= ?
-			ORDER BY ro.position ASC
+			ORDER BY ro.position;
 			""";
 		return jdbcTemplate.queryForList(sql, category, userId, year, racePos);
 	}
@@ -229,9 +197,9 @@ public class Database {
 	 * @return drivers ascendingly
 	 */
 	public List<Driver> getGuessedYearDriver(Year year, UUID userId) {
-		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guesser = ? ORDER BY position ASC";
+		final String guessedSql = "SELECT driver FROM DriverGuess WHERE year = ?  AND guesser = ? ORDER BY position";
 		return jdbcTemplate.queryForList(guessedSql, String.class, year, userId).stream()
-			.map(driver -> new Driver(driver))
+			.map(Driver::new)
 			.toList();
 	}
 
@@ -244,9 +212,14 @@ public class Database {
 	 * @return constructors ascendingly
 	 */
 	public List<Constructor> getGuessedYearConstructor(Year year, UUID userId) {
-		final String guessedSql = "SELECT constructor FROM ConstructorGuess WHERE year = ? AND guesser = ? ORDER BY position ASC";
+		final String guessedSql = """
+			SELECT constructor
+			FROM ConstructorGuess
+			WHERE year = ? AND guesser = ?
+			ORDER BY position;
+			""";
 		return jdbcTemplate.queryForList(guessedSql, String.class, year, userId).stream()
-			.map(constructor -> new Constructor(constructor))
+			.map(Constructor::new)
 			.toList();
 	}
 
@@ -261,15 +234,20 @@ public class Database {
 	 * @return drivers ascendingly
 	 */
 	public List<Driver> getDriverStandings(RaceId raceId, Year year) {
-		final String driverYearSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
-		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position ASC";
+		final String driverYearSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position;";
+		final String driverStandingsSql = "SELECT driver FROM DriverStandings WHERE race_number = ? ORDER BY position;";
+		List<String> result = getCompetitors(raceId, year, driverYearSql, driverStandingsSql);
+		return result.stream().map(Driver::new).toList();
+	}
+
+	private List<String> getCompetitors(RaceId raceId, Year year, final String competitorYearSql, final String competitorStandingsSql) {
 		List<String> result;
 		if (raceId == null) {
-			result = jdbcTemplate.queryForList(driverYearSql, String.class, year);
+			result = jdbcTemplate.queryForList(competitorYearSql, String.class, year);
 		} else {
-			result =jdbcTemplate.queryForList(driverStandingsSql, String.class, raceId);
+			result =jdbcTemplate.queryForList(competitorStandingsSql, String.class, raceId);
 		}
-		return result.stream().map(driver -> new Driver(driver)).toList();
+		return result;
 	}
 
 	/**
@@ -283,15 +261,15 @@ public class Database {
 	 * @return constructors ascendingly
 	 */
 	public List<Constructor> getConstructorStandings(RaceId raceId, Year year) {
-		final String constructorYearSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
-		final String constructorStandingsSql = "SELECT constructor FROM ConstructorStandings WHERE race_number = ? ORDER BY position ASC";
-		List<String> result;
-		if (raceId == null) {
-			result = jdbcTemplate.queryForList(constructorYearSql, String.class, year);
-		} else {
-			result =jdbcTemplate.queryForList(constructorStandingsSql, String.class, raceId);
-		}
-		return result.stream().map(constructor -> new Constructor(constructor)).toList();
+		final String constructorYearSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position;";
+		final String constructorStandingsSql = """
+			SELECT constructor
+			FROM ConstructorStandings
+			WHERE race_number = ?
+			ORDER BY position;
+			""";
+		List<String> result = getCompetitors(raceId, year, constructorYearSql, constructorStandingsSql);
+		return result.stream().map(Constructor::new).toList();
 	}
 
 	/**
@@ -302,7 +280,7 @@ public class Database {
 	 * @return true if username is in use
 	 */
 	public boolean isUsernameInUse(String usernameUpper) {
-		final String sqlCheckUsername = "SELECT COUNT(*) FROM User WHERE username_upper = ?";
+		final String sqlCheckUsername = "SELECT COUNT(*) FROM User WHERE username_upper = ?;";
 		return jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, usernameUpper) > 0;
 	}
 
@@ -316,7 +294,7 @@ public class Database {
 		final String updateUsername = """
 			UPDATE User
 			SET username = ?, username_upper = ?
-			WHERE id = ?
+			WHERE id = ?;
 			""";
 		jdbcTemplate.update(updateUsername, username.username, username.usernameUpper, userId);
 	}
@@ -331,7 +309,7 @@ public class Database {
 		final String deleteUser = """
 			UPDATE User
 			SET username = 'Anonym', username_upper = 'ANONYM', google_id = ?
-			WHERE id = ?
+			WHERE id = ?;
 			""";
 		clearUserFromMailing(userId);
 		removeBingomaster(userId);
@@ -342,11 +320,11 @@ public class Database {
 	 * Adds a user with the given username and google ID to the database.
 	 * Sets a random UUID as the users ID.
 	 * 
-	 * @param username
+	 * @param username of the user
 	 * @param googleId the ID provided by OAUTH
 	 */
 	public void addUser(Username username, String googleId) {
-		final String sqlInsertUsername = "INSERT INTO User (google_id, id,username, username_upper) VALUES (?, ?, ?, ?)";
+		final String sqlInsertUsername = "INSERT INTO User (google_id, id,username, username_upper) VALUES (?, ?, ?, ?);";
 		jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username.username, username.usernameUpper);
 	}
 
@@ -354,7 +332,7 @@ public class Database {
 	 * Gets the guesses of all users for the given race in the given category.
 	 * 
 	 * @param raceId of race
-	 * @param category
+	 * @param category for guesses
 	 * @return list of guesses
 	 */
 	public List<UserRaceGuess> getUserGuessesDriverPlace(RaceId raceId, Category category) {
@@ -364,7 +342,7 @@ public class Database {
 			JOIN User u ON u.id = dpg.guesser
 			JOIN StartingGrid sg ON sg.race_number = dpg.race_number AND sg.driver = dpg.driver
 			WHERE dpg.race_number = ? AND dpg.category = ?
-			ORDER BY u.username ASC
+			ORDER BY u.username;
 			""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getGuessSql, raceId, category);
 		return sqlRes.stream()
@@ -411,7 +389,7 @@ public class Database {
 			WHERE sg.race_number NOT IN (
 				SELECT rr.race_number
 				FROM RaceResult rr
-			)
+			);
 			""";
 		return new RaceId(jdbcTemplate.queryForObject(getRaceId, Integer.class));
 	}
@@ -425,7 +403,7 @@ public class Database {
 	 * @param flags the user guessed
 	 */
 	public void addFlagGuesses(UUID userId, Year year, Flags flags) {
-		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?)";
+		final String sql = "REPLACE INTO FlagGuess (guesser, flag, year, amount) values (?, ?, ?, ?);";
 		jdbcTemplate.update(sql, userId, "Yellow Flag", year, flags.yellow);
 		jdbcTemplate.update(sql, userId, "Red Flag", year, flags.red);
 		jdbcTemplate.update(sql, userId, "Safety Car", year, flags.safetyCar);
@@ -439,7 +417,7 @@ public class Database {
 	 * @return flag guesses
 	 */
 	public Flags getFlagGuesses(UUID userId, Year year) {
-		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?";
+		final String sql = "SELECT flag, amount FROM FlagGuess WHERE guesser = ? AND year = ?;";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, userId, year);
 		Flags flags = new Flags();
 		for (Map<String, Object> row : sqlRes) {
@@ -468,7 +446,7 @@ public class Database {
 	 */
 	public long getTimeLeftToGuessRace(RaceId raceId) {
 		Instant now = Instant.now();
-		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?";
+		final String getCutoff = "SELECT cutoff FROM RaceCutoff WHERE race_number = ?;";
 		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceId));
 		return Duration.between(now, cutoff).toSeconds();
 	}
@@ -484,7 +462,7 @@ public class Database {
 	 */
 	public long getTimeLeftToGuessYear() {
 		Instant now = Instant.now();
-		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?";
+		final String getCutoff = "SELECT cutoff FROM YearCutoff WHERE year = ?;";
 		Instant cutoffYear = Instant
 				.parse(jdbcTemplate.queryForObject(getCutoff, String.class, TimeUtil.getCurrentYear()));
 		return Duration.between(now, cutoffYear).toSeconds();
@@ -498,9 +476,9 @@ public class Database {
 	 * @return drivers ascendingly
 	 */
 	public List<Driver> getDriversFromStartingGrid(RaceId raceId) {
-		final String getDriversFromGrid = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position ASC";
+		final String getDriversFromGrid = "SELECT driver FROM StartingGrid WHERE race_number = ? ORDER BY position;";
 		return jdbcTemplate.queryForList(getDriversFromGrid, String.class, raceId).stream()
-			.map(driver -> new Driver(driver))
+			.map(Driver::new)
 			.toList();
 	}
 
@@ -511,10 +489,14 @@ public class Database {
 			LEFT JOIN DriverTeam dt ON dt.driver = sg.driver
 			LEFT JOIN ConstructorColor cc ON cc.constructor = dt.team
 			WHERE race_number = ?
-			ORDER BY position ASC
+			ORDER BY position;
 			""";
 		return jdbcTemplate.queryForList(getDriversFromGrid, raceId).stream()
-			.map(row -> new ColoredCompetitor<>(new Driver((String) row.get("driver")), new Color((String) row.get("color"))))
+			.map(row ->
+					new ColoredCompetitor<>(
+							new Driver((String) row.get("driver")),
+							new Color((String) row.get("color")))
+			)
 			.toList();
 	}
 
@@ -530,7 +512,7 @@ public class Database {
 		final String getPreviousGuessSql = """
 			SELECT driver
 			FROM DriverPlaceGuess
-			WHERE race_number = ? AND category = ? AND guesser = ?
+			WHERE race_number = ? AND category = ? AND guesser = ?;
 			""";
 		return new Driver(jdbcTemplate.queryForObject(getPreviousGuessSql, String.class, raceId, category, userId));
 	}
@@ -544,7 +526,7 @@ public class Database {
 	 * @param category which the user guessed on
 	 */
 	public void addDriverPlaceGuess(UUID userId, RaceId raceId, Driver driver, Category category) {
-		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?)";
+		final String insertGuessSql = "REPLACE INTO DriverPlaceGuess (guesser, race_number, driver, category) values (?, ?, ?, ?);";
 		jdbcTemplate.update(insertGuessSql, userId, raceId, driver, category);
 	}
 
@@ -562,7 +544,7 @@ public class Database {
 			LEFT JOIN DriverTeam dt ON dt.driver = dg.driver
 			LEFT JOIN ConstructorColor cc ON cc.constructor = dt.team
 			WHERE dg.guesser = ?
-			ORDER BY position ASC
+			ORDER BY position;
 			""";
 		final String getDriversSql = """
 			SELECT dy.driver as driver, cc.color as color
@@ -570,7 +552,7 @@ public class Database {
 			LEFT JOIN DriverTeam dt ON dt.driver = dy.driver
 			LEFT JOIN ConstructorColor cc ON cc.constructor = dt.team
 			WHERE dy.year = ?
-			ORDER BY position ASC
+			ORDER BY position;
 			""";
 		return getCompetitorGuess(userId, year, getGuessedSql, getDriversSql).stream()
 			.map(row -> new ColoredCompetitor<>(
@@ -592,14 +574,14 @@ public class Database {
 			FROM ConstructorGuess cg
 			LEFT JOIN ConstructorColor cc ON cc.constructor = cg.constructor
 			WHERE cg.guesser = ?
-			ORDER BY position ASC
+			ORDER BY position;
 			""";
 		final String getConstructorsSql = """
 			SELECT cy.constructor as constructor, cc.color as color
 			FROM ConstructorYear cy
 			LEFT JOIN ConstructorColor cc ON cc.constructor = cy.constructor
 			WHERE cy.year = ?
-			ORDER BY position ASC
+			ORDER BY position;
 			""";
 		return getCompetitorGuess(userId, year, getGuessedSql, getConstructorsSql).stream()
 			.map(row -> new ColoredCompetitor<>(
@@ -611,7 +593,7 @@ public class Database {
 	private List<Map<String, Object>> getCompetitorGuess(UUID userId, Year year, final String getGuessedSql,
 			final String getCompetitorsSql) {
 		List<Map<String, Object>> competitors = jdbcTemplate.queryForList(getGuessedSql, userId);
-		if (competitors.size() == 0) {
+		if (competitors.isEmpty()) {
 			return jdbcTemplate.queryForList(getCompetitorsSql, year);
 		}
 		return competitors;
@@ -624,9 +606,9 @@ public class Database {
 	 * @return drivers ascendingly
 	 */
 	public List<Driver> getDriversYear(Year year) {
-		final String getDriversSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position ASC";
+		final String getDriversSql = "SELECT driver FROM DriverYear WHERE year = ? ORDER BY position;";
 		return jdbcTemplate.queryForList(getDriversSql, String.class, year).stream()
-			.map(driver -> new Driver(driver))
+			.map(Driver::new)
 			.toList();
 	}
 
@@ -637,9 +619,9 @@ public class Database {
 	 * @return constructors ascendingly
 	 */
 	public List<Constructor> getConstructorsYear(Year year) {
-		final String getConstructorSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position ASC";
+		final String getConstructorSql = "SELECT constructor FROM ConstructorYear WHERE year = ? ORDER BY position;";
 		return jdbcTemplate.queryForList(getConstructorSql, String.class, year).stream()
-		.map(constructor -> new Constructor(constructor))
+		.map(Constructor::new)
 		.toList();
 	}
 
@@ -652,7 +634,7 @@ public class Database {
 	 * @param position guessed
 	 */
 	public void insertDriversYearGuess(UUID userId, Driver driver, Year year, int position) {
-		final String addRowDriver = "REPLACE INTO DriverGuess (guesser, driver, year, position) values (?, ?, ?, ?)";
+		final String addRowDriver = "REPLACE INTO DriverGuess (guesser, driver, year, position) values (?, ?, ?, ?);";
 		jdbcTemplate.update(addRowDriver, userId, driver, year, position);
 	}
 
@@ -665,7 +647,7 @@ public class Database {
 	 * @param position guessed
 	 */
 	public void insertConstructorsYearGuess(UUID userId, Constructor constructor, Year year, int position) {
-		final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?)";
+		final String addRowConstructor = "REPLACE INTO ConstructorGuess (guesser, constructor, year, position) values (?, ?, ?, ?);";
 		jdbcTemplate.update(addRowConstructor, userId, constructor, year, position);
 	}
 
@@ -675,10 +657,7 @@ public class Database {
 	 * @return categories 
 	 */
 	public List<Category> getCategories() {
-		final String sql = """
-			SELECT name
-			FROM Category
-			""";
+		final String sql = "SELECT name FROM Category;";
 		return jdbcTemplate.queryForList(sql, String.class).stream()
 			.map(name -> new Category(name, this))
 			.toList();
@@ -691,7 +670,7 @@ public class Database {
 	 * @return true if category is valid
 	 */
 	public boolean isValidCategory(String category) {
-		final String validateCategory = "SELECT COUNT(*) FROM Category WHERE name = ?";
+		final String validateCategory = "SELECT COUNT(*) FROM Category WHERE name = ?;";
 		return jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
 	}
 
@@ -708,7 +687,7 @@ public class Database {
 			SELECT points, diff
 			FROM DiffPointsMap
 			WHERE year = ? AND category = ?
-			ORDER BY diff ASC
+			ORDER BY diff;
 			""";
 
 		List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, year, category);
@@ -730,7 +709,7 @@ public class Database {
 	 * @return max diff
 	 */
 	public Diff getMaxDiffInPointsMap(Year year, Category category) {
-		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?";
+		final String getMaxDiff = "SELECT MAX(diff) FROM DiffPointsMap WHERE year = ? AND category = ?;";
 		return new Diff(jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year, category));
 	}
 
@@ -742,7 +721,7 @@ public class Database {
 	 * @param year of season
 	 */
 	public void addDiffToPointsMap(Category category, Diff diff, Year year) {
-		final String addDiff = "INSERT INTO DiffPointsMap (category, diff, points, year) VALUES (?, ?, ?, ?)";
+		final String addDiff = "INSERT INTO DiffPointsMap (category, diff, points, year) VALUES (?, ?, ?, ?);";
 		jdbcTemplate.update(addDiff, category, diff, 0, year);
 	}
 	
@@ -754,7 +733,7 @@ public class Database {
 	 * @param year of season
 	 */
 	public void removeDiffToPointsMap(Category category, Diff diff, Year year) {
-		final String deleteRowWithDiff = "DELETE FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
+		final String deleteRowWithDiff = "DELETE FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?;";
 		jdbcTemplate.update(deleteRowWithDiff, year, category, diff);
 	}
 
@@ -764,13 +743,13 @@ public class Database {
 	 * @param category name
 	 * @param diff to set new mapping for
 	 * @param year of season
-	 * @param points
+	 * @param points for getting the diff
 	 */
 	public void setNewDiffToPointsInPointsMap(Category category, Diff diff, Year year, Points points) {
 		final String setNewPoints = """
 			UPDATE DiffPointsMap
 			SET points = ?
-			WHERE diff = ? AND year = ? AND category = ?
+			WHERE diff = ? AND year = ? AND category = ?;
 			""";
 		jdbcTemplate.update(setNewPoints, points, diff, year, category);
 	}
@@ -783,18 +762,8 @@ public class Database {
 	 * @param year of season
 	 */
 	public boolean isValidDiffInPointsMap(Category category, Diff diff, Year year) {
-		final String validateDiff = "SELECT COUNT(*) FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?";
+		final String validateDiff = "SELECT COUNT(*) FROM DiffPointsMap WHERE year = ? AND category = ? AND diff = ?;";
 		return jdbcTemplate.queryForObject(validateDiff, Integer.class, year, category, diff) > 0;
-	}
-
-	/**
-	 * Gets a list of all the id of all users.
-	 * 
-	 * @return id of every user
-	 */
-	public List<UUID> getAllUserIds() {
-		final String getAllUsersSql = "SELECT id FROM User";
-		return jdbcTemplate.queryForList(getAllUsersSql, UUID.class);
 	}
 
 	/**
@@ -806,7 +775,7 @@ public class Database {
 		final String getAllUsersSql = """
 			SELECT id, username, google_id
 			FROM User
-			ORDER BY username_upper ASC
+			ORDER BY username_upper;
 			""";
 		return jdbcTemplate.queryForList(getAllUsersSql).stream()
 			.map(row -> 
@@ -833,11 +802,11 @@ public class Database {
 			JOIN DriverGuess dg ON dg.guesser = u.id
 			JOIN ConstructorGuess cg ON cg.guesser = u.id
 			WHERE fg.year = ? AND dg.year = ? AND cg.year = ?
-			ORDER BY u.username ASC
+			ORDER BY u.username;
 			""";
 		
 		return jdbcTemplate.queryForList(getGussers, UUID.class, year, year, year).stream()
-			.map(id -> getUserFromId(id))
+			.map(this::getUserFromId)
 			.toList();
 	}
 
@@ -853,10 +822,10 @@ public class Database {
 			FROM RaceOrder ro
 			JOIN RaceResult rr ON ro.id = rr.race_number
 			WHERE ro.year = ?
-			ORDER BY ro.position ASC
+			ORDER BY ro.position;
 			""";
 		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year).stream()
-			.map(id -> new RaceId(id))
+			.map(RaceId::new)
 			.toList();
 	}
 
@@ -872,7 +841,7 @@ public class Database {
 			SELECT id, year, position
 			FROM RaceOrder
 			WHERE id NOT IN (SELECT race_number FROM RaceResult)
-			ORDER BY year ASC, position ASC
+			ORDER BY year, position;
 			""";
 		
 		return jdbcTemplate.queryForList(sql).stream()
@@ -897,7 +866,7 @@ public class Database {
 			JOIN RaceOrder ro on ro.id = sg.race_number
 			WHERE ro.year = ?
 			ORDER BY ro.position DESC
-			LIMIT 1
+			LIMIT 1;
 			""";
 		return new RaceId(jdbcTemplate.queryForObject(getStartingGridId, Integer.class, year));
 	}
@@ -915,7 +884,7 @@ public class Database {
 			JOIN RaceOrder ro on ro.id = rr.race_number
 			WHERE ro.year = ?
 			ORDER BY ro.position DESC
-			LIMIT 1
+			LIMIT 1;
 			""";
 		return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year));
 	}
@@ -926,8 +895,8 @@ public class Database {
 			FROM RaceOrder
 			WHERE id NOT IN (SELECT DISTINCT race_number FROM RaceResult)
 			AND year = ?
-			ORDER BY position ASC
-			LIMIT 1
+			ORDER BY position
+			LIMIT 1;
 			""";
 		return new RaceId(jdbcTemplate.queryForObject(sql, Integer.class, year));
 	}
@@ -946,7 +915,7 @@ public class Database {
 			JOIN ConstructorStandings cs on cs.race_number = ro.id
 			WHERE ro.year = ?
 			ORDER BY ro.position DESC
-			LIMIT 1
+			LIMIT 1;
 			""";
 		return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year));
 	}
@@ -954,33 +923,33 @@ public class Database {
 	/**
 	 * Checks if starting grid for race already exists.
 	 * 
-	 * @param raceId
+	 * @param raceId to check
 	 * @return true if exists
 	 */
 	public boolean isStartingGridAdded(RaceId raceId) {
-		final String existCheck = "SELECT COUNT(*) FROM StartingGrid WHERE race_number = ?";
+		final String existCheck = "SELECT COUNT(*) FROM StartingGrid WHERE race_number = ?;";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 	}
 
 	/**
 	 * Checks if race result for race already exists.
 	 * 
-	 * @param raceId
+	 * @param raceId to check
 	 * @return true if exists
 	 */
 	public boolean isRaceResultAdded(RaceId raceId) {
-		final String existCheck = "SELECT COUNT(*) FROM RaceResult WHERE race_number = ?";
+		final String existCheck = "SELECT COUNT(*) FROM RaceResult WHERE race_number = ?;";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 	}
 	
 	/**
 	 * Checks if race already exists.
 	 * 
-	 * @param raceId
+	 * @param raceId to check
 	 * @return true if exists
 	 */
 	public boolean isRaceAdded(int raceId) {
-		final String existCheck = "SELECT COUNT(*) FROM Race WHERE id = ?";
+		final String existCheck = "SELECT COUNT(*) FROM Race WHERE id = ?;";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
 	}
 
@@ -990,7 +959,7 @@ public class Database {
 	 * @param driver name
 	 */
 	public void addDriver(String driver) {
-		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?)";
+		final String insertDriver = "INSERT OR IGNORE INTO Driver (name) VALUES (?);";
 		jdbcTemplate.update(insertDriver, driver);
 	}
 
@@ -1013,7 +982,7 @@ public class Database {
 	 * @return max position. 0 if empty.
 	 */
 	public int getMaxPosDriverYear(Year year) {
-		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM DriverYear WHERE year = ?";
+		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM DriverYear WHERE year = ?;";
 		return jdbcTemplate.queryForObject(getMaxPos, Integer.class, year);
 	}
 
@@ -1025,7 +994,7 @@ public class Database {
 	 * @param position of driver
 	 */
 	public void addDriverYear(Driver driver, Year year, int position) {
-		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?)";
+		final String addDriverYear = "INSERT INTO DriverYear (driver, year, position) VALUES (?, ?, ?);";
 		jdbcTemplate.update(addDriverYear, driver, year, position);
 	}
 
@@ -1036,7 +1005,7 @@ public class Database {
 	 * @param year of season
 	 */
 	public void deleteDriverYear(Driver driver, Year year) {
-		final String deleteDriver = "DELETE FROM DriverYear WHERE year = ? AND driver = ?";
+		final String deleteDriver = "DELETE FROM DriverYear WHERE year = ? AND driver = ?;";
 		jdbcTemplate.update(deleteDriver, year, driver);
 	}
 
@@ -1046,7 +1015,7 @@ public class Database {
 	 * @param year of season
 	 */
 	public void deleteAllDriverYear(Year year) {
-		final String deleteAllDrivers = "DELETE FROM DriverYear WHERE year = ?";
+		final String deleteAllDrivers = "DELETE FROM DriverYear WHERE year = ?;";
 		jdbcTemplate.update(deleteAllDrivers, year);
 	}
 	
@@ -1056,7 +1025,7 @@ public class Database {
 	 * @param constructor name
 	 */
 	public void addConstructor(String constructor) {
-		final String insertConstructor = "INSERT OR IGNORE INTO Constructor (name) VALUES (?)";
+		final String insertConstructor = "INSERT OR IGNORE INTO Constructor (name) VALUES (?);";
 		jdbcTemplate.update(insertConstructor, constructor);
 	}
 
@@ -1079,7 +1048,7 @@ public class Database {
 	 * @return max position. 0 if empty.
 	 */
 	public int getMaxPosConstructorYear(Year year) {
-		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM ConstructorYear WHERE year = ?";
+		final String getMaxPos = "SELECT COALESCE(MAX(position), 0) FROM ConstructorYear WHERE year = ?;";
 		return jdbcTemplate.queryForObject(getMaxPos, Integer.class, year);
 	}
 
@@ -1091,7 +1060,7 @@ public class Database {
 	 * @param position of constructor
 	 */
 	public void addConstructorYear(Constructor constructor, Year year, int position) {
-		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?)";
+		final String addConstructorYear = "INSERT INTO ConstructorYear (constructor, year, position) VALUES (?, ?, ?);";
 		jdbcTemplate.update(addConstructorYear, constructor, year, position);
 	}
 
@@ -1102,7 +1071,7 @@ public class Database {
 	 * @param year of season
 	 */
 	public void deleteConstructorYear(Constructor constructor, Year year) {
-		final String deleteConstructor = "DELETE FROM ConstructorYear WHERE year = ? AND constructor = ?";
+		final String deleteConstructor = "DELETE FROM ConstructorYear WHERE year = ? AND constructor = ?;";
 		jdbcTemplate.update(deleteConstructor, year, constructor);
 	}
 
@@ -1112,18 +1081,19 @@ public class Database {
 	 * @param year of season
 	 */
 	public void deleteAllConstructorYear(Year year) {
-		final String deleteAllConstructors = "DELETE FROM ConstructorYear WHERE year = ?";
+		final String deleteAllConstructors = "DELETE FROM ConstructorYear WHERE year = ?;";
 		jdbcTemplate.update(deleteAllConstructors, year);
 	}
 
 	/**
 	 * Insert driving to starting grid in given race and position.
 	 * 
-	 * @param raceId
+	 * @param raceId to add data to
 	 * @param position of driver
+	 * @param driver to add
 	 */
 	public void insertDriverStartingGrid(RaceId raceId, int position, Driver driver) {
-		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?)";
+		final String insertStartingGrid = "INSERT OR REPLACE INTO StartingGrid (race_number, position, driver) VALUES (?, ?, ?);";
 		jdbcTemplate.update(insertStartingGrid, raceId, position, driver);
 	}
 
@@ -1133,11 +1103,15 @@ public class Database {
 	 * @param raceId of race
 	 * @param position of driver
 	 * @param driver name
-	 * @param points
+	 * @param points the driver got
 	 * @param finishingPosition the position that driver finished race in
 	 */
 	public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, Points points, int finishingPosition) {
-		final String insertRaceResult = "INSERT OR REPLACE INTO RaceResult (race_number, position, driver, points, finishing_position) VALUES (?, ?, ?, ?, ?)";
+		final String insertRaceResult = """
+			INSERT OR REPLACE INTO RaceResult
+			(race_number, position, driver, points, finishing_position)
+			VALUES (?, ?, ?, ?, ?);
+			""";
 		jdbcTemplate.update(insertRaceResult, raceId, position, driver, points, finishingPosition);
 	}
 
@@ -1150,7 +1124,11 @@ public class Database {
 	 * @param points of driver
 	 */
 	public void insertDriverIntoStandings(RaceId raceId, Driver driver, int position, Points points) {
-		final String insertDriverStandings = "INSERT OR REPLACE INTO DriverStandings (race_number, driver, position, points) VALUES (?, ?, ?, ?)";
+		final String insertDriverStandings = """
+			INSERT OR REPLACE INTO DriverStandings
+			(race_number, driver, position, points)
+			VALUES (?, ?, ?, ?);
+			""";
 		jdbcTemplate.update(insertDriverStandings, raceId, driver, position, points);
 	}
 	
@@ -1163,7 +1141,11 @@ public class Database {
 	 * @param points of constructor
 	 */
 	public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, int position, Points points) {
-		final String insertConstructorStandings = "INSERT OR REPLACE INTO ConstructorStandings (race_number, constructor, position, points) VALUES (?, ?, ?, ?)";
+		final String insertConstructorStandings = """
+			INSERT OR REPLACE INTO ConstructorStandings
+			(race_number, constructor, position, points)
+			VALUES (?, ?, ?, ?);
+			""";
 		jdbcTemplate.update(insertConstructorStandings, raceId, constructor, position, points);
 	}
 
@@ -1174,7 +1156,7 @@ public class Database {
 	 * @param raceName of race
 	 */
 	public void insertRace(int raceId, String raceName) {
-		final String insertRaceName = "INSERT OR IGNORE INTO Race (id, name) VALUES (?, ?)";
+		final String insertRaceName = "INSERT OR IGNORE INTO Race (id, name) VALUES (?, ?);";
 		jdbcTemplate.update(insertRaceName, raceId, raceName);
 	}
 
@@ -1186,7 +1168,7 @@ public class Database {
 	 * @return max position
 	 */
 	public int getMaxRaceOrderPosition(Year year) {
-		final String sql = "SELECT MAX(position) FROM RaceOrder WHERE year = ?";
+		final String sql = "SELECT MAX(position) FROM RaceOrder WHERE year = ?;";
 		return jdbcTemplate.queryForObject(sql, Integer.class, year);
 	}
 
@@ -1198,7 +1180,7 @@ public class Database {
 	 * @param position of race
 	 */
 	public void insertRaceOrder(RaceId raceId, int year, int position) {
-		final String insertRaceOrder = "INSERT OR IGNORE INTO RaceOrder (id, year, position) VALUES (?, ?, ?)";
+		final String insertRaceOrder = "INSERT OR IGNORE INTO RaceOrder (id, year, position) VALUES (?, ?, ?);";
 		jdbcTemplate.update(insertRaceOrder, raceId, year, position);
 	}
 
@@ -1208,7 +1190,7 @@ public class Database {
 	 * @param raceId to delete
 	 */
 	public void deleteRace(RaceId raceId) {
-		final String deleteRace = "DELETE FROM Race WHERE id = ?";
+		final String deleteRace = "DELETE FROM Race WHERE id = ?;";
 		jdbcTemplate.update(deleteRace, raceId);
 	}
 
@@ -1220,7 +1202,7 @@ public class Database {
 	 * @return true if season is valid
 	 */
 	public boolean isValidSeason(int year) {
-		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?";
+		final String validateSeason = "SELECT COUNT(*) FROM RaceOrder WHERE year = ?;";
 		return jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
 	}
 
@@ -1233,7 +1215,7 @@ public class Database {
 	 * @return true if race is valid
 	 */
 	public boolean isRaceInSeason(RaceId raceId, Year year) {
-		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?";
+		final String validateRaceId = "SELECT COUNT(*) FROM RaceOrder WHERE year = ? AND id = ?;";
 		return jdbcTemplate.queryForObject(validateRaceId, Integer.class, year, raceId) > 0;
 	}
 
@@ -1244,9 +1226,9 @@ public class Database {
 	 * @return valid years
 	 */
 	public List<Year> getAllValidYears() {
-		final String sql = "SELECT DISTINCT year FROM RaceOrder ORDER BY year DESC";
+		final String sql = "SELECT DISTINCT year FROM RaceOrder ORDER BY year DESC;";
 		return jdbcTemplate.queryForList(sql, Integer.class).stream()
-			.map(year -> new Year(year))
+			.map(Year::new)
 			.toList();
 	}
 
@@ -1258,9 +1240,9 @@ public class Database {
 	 * @return id of races
 	 */
 	public List<RaceId> getRacesFromSeason(Year year) {
-		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ? ORDER BY position ASC";
+		final String getRaceIds = "SELECT id FROM RaceOrder WHERE year = ? ORDER BY position;";
 		return jdbcTemplate.queryForList(getRaceIds, Integer.class, year).stream()
-			.map(id -> new RaceId(id))
+			.map(RaceId::new)
 			.toList();
 	}
 
@@ -1270,7 +1252,7 @@ public class Database {
 	 * @param year of season
 	 */
 	public void removeRaceOrderFromSeason(Year year) {
-		final String removeOldOrderSql = "DELETE FROM RaceOrder WHERE year = ?";
+		final String removeOldOrderSql = "DELETE FROM RaceOrder WHERE year = ?;";
 		jdbcTemplate.update(removeOldOrderSql, year);
 	}
 
@@ -1289,7 +1271,7 @@ public class Database {
 			JOIN RaceOrder ro ON ro.id = rc.race_number
 			JOIN Race r ON ro.id = r.id
 			WHERE ro.year = ?
-			ORDER BY ro.position ASC
+			ORDER BY ro.position;
 			""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getCutoffRaces, year);
 		for (Map<String, Object> row : sqlRes) {
@@ -1310,7 +1292,7 @@ public class Database {
 			FROM RaceOrder ro
 			JOIN Race r ON ro.id = r.id
 			WHERE ro.year = ?
-			ORDER BY ro.position ASC
+			ORDER BY ro.position;
 			""";
 		return jdbcTemplate.queryForList(getCutoffRaces, year).stream()
 			.map(row -> new Race(
@@ -1327,7 +1309,7 @@ public class Database {
 			FROM RaceOrder ro
 			JOIN Race r ON ro.id = r.id
 			WHERE ro.id = ?
-			ORDER BY ro.position ASC
+			ORDER BY ro.position;
 			""";
 		Map<String, Object> sqlRes = jdbcTemplate.queryForMap(sql, raceId);
 		return new Race(
@@ -1355,7 +1337,7 @@ public class Database {
 	 * @param raceId of race
 	 */
 	public void setCutoffRace(Instant cutoffTime, RaceId raceId) {
-		final String setCutoffTime = "INSERT OR REPLACE INTO RaceCutoff (race_number, cutoff) VALUES (?, ?)";
+		final String setCutoffTime = "INSERT OR REPLACE INTO RaceCutoff (race_number, cutoff) VALUES (?, ?);";
 		jdbcTemplate.update(setCutoffTime, raceId, cutoffTime.toString());
 	}
 
@@ -1366,7 +1348,7 @@ public class Database {
 	 * @param year of season
 	 */
 	public void setCutoffYear(Instant cutoffTime, Year year) {
-		final String setCutoffTime = "INSERT OR REPLACE INTO YearCutoff (year, cutoff) VALUES (?, ?)";
+		final String setCutoffTime = "INSERT OR REPLACE INTO YearCutoff (year, cutoff) VALUES (?, ?);";
 		jdbcTemplate.update(setCutoffTime, year, cutoffTime);
 	}
 
@@ -1378,7 +1360,12 @@ public class Database {
 	 */
 	public List<RegisteredFlag> getRegisteredFlags(RaceId raceId) {
 		List<RegisteredFlag> registeredFlags = new ArrayList<>();
-		final String getRegisteredFlags = "SELECT flag, round, id, session_type FROM FlagStats WHERE race_number = ? ORDER BY session_type ASC, round ASC";
+		final String getRegisteredFlags = """
+			SELECT flag, round, id, session_type
+			FROM FlagStats
+			WHERE race_number = ?
+			ORDER BY session_type, round;
+			""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRegisteredFlags, raceId);
 		for (Map<String, Object> row : sqlRes) {
 			Flag type = new Flag((String) row.get("flag"));
@@ -1399,7 +1386,7 @@ public class Database {
 	 * @param raceId of race
 	 */
 	public void insertFlagStats(Flag flag, int round, RaceId raceId, SessionType sessionType) {
-		final String sql = "INSERT INTO FlagStats (flag, race_number, round, session_type) VALUES (?, ?, ?, ?)";
+		final String sql = "INSERT INTO FlagStats (flag, race_number, round, session_type) VALUES (?, ?, ?, ?);";
 		jdbcTemplate.update(sql, flag, raceId, round, sessionType);
 	}
 
@@ -1409,7 +1396,7 @@ public class Database {
 	 * @param flagId of stat
 	 */
 	public void deleteFlagStatsById(int flagId) {
-		final String sql = "DELETE FROM FlagStats WHERE id = ?";
+		final String sql = "DELETE FROM FlagStats WHERE id = ?;";
 		jdbcTemplate.update(sql, flagId);
 	}
 
@@ -1420,7 +1407,7 @@ public class Database {
 	 * @return name of race
 	 */
 	public String getRaceName(RaceId raceId) {
-		final String getRaceNameSql = "SELECT name FROM Race WHERE id = ?";
+		final String getRaceNameSql = "SELECT name FROM Race WHERE id = ?;";
 		return jdbcTemplate.queryForObject(getRaceNameSql, String.class, raceId);
 	}
 
@@ -1430,9 +1417,9 @@ public class Database {
 	 * @return name of flag types
 	 */
 	public List<Flag> getFlags() {
-		final String sql = "SELECT name FROM Flag";
+		final String sql = "SELECT name FROM Flag;";
 		return jdbcTemplate.queryForList(sql, String.class).stream()
-			.map(flag -> new Flag(flag))
+			.map(Flag::new)
 			.toList();
 	}
 
@@ -1448,7 +1435,7 @@ public class Database {
 			SELECT position, driver
 			FROM StartingGrid
 			WHERE race_number = ?
-			ORDER BY position ASC
+			ORDER BY position;
 			""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getStartingGrid, raceId);
 		List<PositionedCompetitor> startingGrid = new ArrayList<>();
@@ -1471,7 +1458,7 @@ public class Database {
 			SELECT position, driver, points
 			FROM RaceResult
 			WHERE race_number = ?
-			ORDER BY finishing_position ASC
+			ORDER BY finishing_position;
 			""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRaceResult, raceId);
 		List<PositionedCompetitor> raceResult = new ArrayList<>();
@@ -1495,14 +1482,14 @@ public class Database {
 			SELECT position, driver, points
 			FROM DriverStandings
 			WHERE race_number = ?
-			ORDER BY position ASC
+			ORDER BY position;
 			""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getDriverStandings, raceId);
 		List<PositionedCompetitor> standings = new ArrayList<>();
 		for (Map<String, Object> row : sqlRes) {
 			String position = String.valueOf((int) row.get("position"));
 			String driver = (String) row.get("driver");
-			String points = (String) row.get("points");;
+			String points = (String) row.get("points");
 			standings.add(new PositionedCompetitor(position, driver, points));
 		}
 		return standings;
@@ -1519,14 +1506,14 @@ public class Database {
 			SELECT position, constructor, points
 			FROM ConstructorStandings
 			WHERE race_number = ?
-			ORDER BY position ASC
+			ORDER BY position;
 			""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getConstructorStandings, raceId);
 		List<PositionedCompetitor> standings = new ArrayList<>();
 		for (Map<String, Object> row : sqlRes) {
 			String position = String.valueOf((int) row.get("position"));
 			String constructor = (String) row.get("constructor");
-			String points = (String) row.get("points");;
+			String points = (String) row.get("points");
 			standings.add(new PositionedCompetitor(position, constructor, points));
 		}
 		return standings;
@@ -1540,12 +1527,12 @@ public class Database {
 	 * @return true if driver is valid
 	 */
 	public boolean isValidDriverYear(Driver driver, Year year) {
-		final String existCheck = "SELECT COUNT(*) FROM DriverYear WHERE year = ? AND driver = ?";
+		final String existCheck = "SELECT COUNT(*) FROM DriverYear WHERE year = ? AND driver = ?;";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, year, driver) > 0;
 	}
 
 	public boolean isValidDriver(Driver driver) {
-		final String existCheck = "SELECT COUNT(*) FROM Driver WHERE name = ?";
+		final String existCheck = "SELECT COUNT(*) FROM Driver WHERE name = ?;";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, driver) > 0;
 	}
 	
@@ -1557,22 +1544,22 @@ public class Database {
 	 * @return true if constructor is valid
 	 */
 	public boolean isValidConstructorYear(Constructor constructor, Year year) {
-		final String existCheck = "SELECT COUNT(*) FROM ConstructorYear WHERE year = ? AND constructor = ?";
+		final String existCheck = "SELECT COUNT(*) FROM ConstructorYear WHERE year = ? AND constructor = ?;";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, year, constructor) > 0;
 	}
 	
 	public boolean isValidConstructor(Constructor constructor) {
-		final String existCheck = "SELECT COUNT(*) FROM Constructor WHERE name = ?";
+		final String existCheck = "SELECT COUNT(*) FROM Constructor WHERE name = ?;";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, constructor) > 0;
 	}
 
 	public boolean isValidFlag(String value) {
-		final String existCheck = "SELECT COUNT(*) FROM Flag WHERE name = ?";
+		final String existCheck = "SELECT COUNT(*) FROM Flag WHERE name = ?;";
 		return jdbcTemplate.queryForObject(existCheck, Integer.class, value) > 0;
 	}
 
 	private void addToMailingList(UUID userId, String email) {
-		final String sql = "INSERT OR REPLACE INTO MailingList (user_id, email) VALUES (?, ?)";
+		final String sql = "INSERT OR REPLACE INTO MailingList (user_id, email) VALUES (?, ?);";
 		jdbcTemplate.update(sql, userId, email);
 		removeVerificationCode(userId);
 	}
@@ -1584,19 +1571,19 @@ public class Database {
 	}
 	
 	private void deleteUserFromMailingList(UUID userId) {
-		final String sql = "DELETE FROM MailingList WHERE user_id = ?";
+		final String sql = "DELETE FROM MailingList WHERE user_id = ?;";
 		jdbcTemplate.update(sql, userId);
 	}
 
 
 	public boolean userHasEmail(UUID userId) {
-		final String sql = "SELECT COUNT(*) FROM MailingList WHERE user_id = ?";
+		final String sql = "SELECT COUNT(*) FROM MailingList WHERE user_id = ?;";
 		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
 	}
 
 	public String getEmail(UUID userId) {
 		try {
-			final String sql = "SELECT email FROM MailingList WHERE user_id = ?";
+			final String sql = "SELECT email FROM MailingList WHERE user_id = ?;";
 			return jdbcTemplate.queryForObject(sql, String.class, userId);	
 		} catch (EmptyResultDataAccessException e) {
 			return null;
@@ -1608,7 +1595,8 @@ public class Database {
 			SELECT u.google_id as google_id, u.id as id, u.username as username, ml.email as email
 			FROM User u
 			JOIN MailingList ml ON ml.user_id = u.id
-			WHERE u.id NOT IN (SELECT guesser FROM DriverPlaceGuess WHERE race_number = ? GROUP BY guesser HAVING COUNT(*) == 2);
+			WHERE u.id NOT IN
+			      (SELECT guesser FROM DriverPlaceGuess WHERE race_number = ? GROUP BY guesser HAVING COUNT(*) == 2);
 			""";
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, raceId);
 		return sqlRes.stream()
@@ -1624,24 +1612,27 @@ public class Database {
 	}
 
 	public void setNotified(RaceId raceId, UUID userId) {
-		final String sql = "INSERT OR IGNORE INTO Notified (user_id, race_number) VALUES (?, ?)";
+		final String sql = "INSERT OR IGNORE INTO Notified (user_id, race_number) VALUES (?, ?);";
 		jdbcTemplate.update(sql, userId, raceId);
 	}
 
 	public int getNotifiedCount(RaceId raceId, UUID userId) {
-		final String sql = "SELECT COUNT(*) FROM Notified WHERE user_id = ? AND race_number = ?";
+		final String sql = "SELECT COUNT(*) FROM Notified WHERE user_id = ? AND race_number = ?;";
 		return jdbcTemplate.queryForObject(sql, Integer.class, userId, raceId);
 	}
 
 	private void clearNotified(UUID userId) {
-		final String sql = "DELETE FROM Notified WHERE user_id = ?";
+		final String sql = "DELETE FROM Notified WHERE user_id = ?;";
 		jdbcTemplate.update(sql, userId);
 	}
 
 	public void addVerificationCode(UserMail userMail, int verificationCode) {
 		final String sql = """
-			INSERT OR REPLACE INTO VerificationCode (user_id, verification_code, email, cutoff) VALUES (?, ?, ?, ?)""";
-		jdbcTemplate.update(sql, userMail.user.id, verificationCode, userMail.email, Instant.now().plus(Duration.ofMinutes(10)).toString());
+			INSERT OR REPLACE INTO VerificationCode
+			(user_id, verification_code, email, cutoff)
+			VALUES (?, ?, ?, ?);
+			""";
+		jdbcTemplate.update(sql, userMail.user().id(), verificationCode, userMail.email(), Instant.now().plus(Duration.ofMinutes(10)).toString());
 	}
 
 	public void removeVerificationCode(UUID userId) {
@@ -1650,74 +1641,73 @@ public class Database {
 	}
 
 	public void removeExpiredVerificationCodes() {
-		final String sql = "SELECT cutoff, user_id FROM VerificationCode";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
-		
-		List<UUID> expired = sqlRes.stream()
-			.filter(row -> Instant.parse((String) row.get("cutoff")).compareTo(Instant.now()) < 0)
-			.map(row -> UUID.fromString((String) row.get("user_id")))
-			.toList();
+		final String sql = "SELECT cutoff, user_id FROM VerificationCode;";
+		List<UUID> expired = getExpiredCodes(sql);
 		for (UUID userId : expired) {
 			removeVerificationCode(userId);
 		}
 	}
 
 	public boolean hasVerificationCode(UUID userId) {
-		final String sql = "SELECT COUNT(*) FROM VerificationCode WHERE user_id = ?";
+		final String sql = "SELECT COUNT(*) FROM VerificationCode WHERE user_id = ?;";
 		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
 	}
 
 	public boolean isValidVerificationCode(UUID userId, int verificationCode) {
-		final String sql = "SELECT COUNT(*) FROM VerificationCode WHERE user_id = ? AND verification_code = ?";
+		final String sql = "SELECT COUNT(*) FROM VerificationCode WHERE user_id = ? AND verification_code = ?;";
 		boolean isValidCode = jdbcTemplate.queryForObject(sql, Integer.class, userId, verificationCode) > 0;
 		if (!isValidCode) {
 			return false;
 		}
-		final String getCutoffSql = "SELECT cutoff FROM VerificationCode WHERE user_id = ?";
+		final String getCutoffSql = "SELECT cutoff FROM VerificationCode WHERE user_id = ?;";
 		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoffSql, String.class, userId));
 		boolean isValidCutoff = cutoff.compareTo(Instant.now()) > 0;
 		if (!isValidCutoff) {
 			return false;
 		}
-		final String emailSql = "SELECT email FROM VerificationCode WHERE user_id = ?";
+		final String emailSql = "SELECT email FROM VerificationCode WHERE user_id = ?;";
 		String email = jdbcTemplate.queryForObject(emailSql, String.class, userId);
 		addToMailingList(userId, email);
 		return true;
 	}
 
 	public boolean isValidReferralCode(long referralCode) {
-		final String sql = "SELECT COUNT(*) FROM ReferralCode WHERE referral_code = ?";
+		final String sql = "SELECT COUNT(*) FROM ReferralCode WHERE referral_code = ?;";
 		boolean isValidCode = jdbcTemplate.queryForObject(sql, Integer.class, referralCode) > 0;
 		if (!isValidCode) {
 			return false;
 		}
-		final String getCutoffSql = "SELECT cutoff FROM ReferralCode WHERE referral_code = ?";
+		final String getCutoffSql = "SELECT cutoff FROM ReferralCode WHERE referral_code = ?;";
 		Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoffSql, String.class, referralCode));
 		return cutoff.compareTo(Instant.now()) > 0;
 	}
 
 	public void removeExpiredReferralCodes() {
-		final String sql = "SELECT cutoff, user_id FROM ReferralCode";
-		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
-		
-		List<UUID> expired = sqlRes.stream()
-			.filter(row -> Instant.parse((String) row.get("cutoff")).compareTo(Instant.now()) < 0)
-			.map(row -> UUID.fromString((String) row.get("user_id")))
-			.toList();
+		final String sql = "SELECT cutoff, user_id FROM ReferralCode;";
+		List<UUID> expired = getExpiredCodes(sql);
 		for (UUID userId : expired) {
 			removeReferralCode(userId);
 		}
 	}
 
+	private List<UUID> getExpiredCodes(final String sql) {
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
+		return sqlRes.stream()
+			.filter(row -> Instant.parse((String) row.get("cutoff")).compareTo(Instant.now()) < 0)
+			.map(row -> UUID.fromString((String) row.get("user_id")))
+			.toList();
+	}
+
 	public void removeReferralCode(UUID userId) {
-		final String sql = "DELETE FROM ReferralCode WHERE user_id = ?";
+		final String sql = "DELETE FROM ReferralCode WHERE user_id = ?;";
 		jdbcTemplate.update(sql, userId);
 	}
 
 	public long addReferralCode(UUID userId) {
 		final String sql = """
-			INSERT OR REPLACE INTO ReferralCode 
-			(user_id, referral_code, cutoff) VALUES (?, ?, ?)
+			INSERT OR REPLACE INTO ReferralCode
+			(user_id, referral_code, cutoff)
+			VALUES (?, ?, ?);
 			""";
 		long referralCode = CodeGenerator.getReferralCode();
 		Instant cutoff = Instant.now().plus(Duration.ofHours(1));
@@ -1726,7 +1716,7 @@ public class Database {
 	}
 
 	public Long getReferralCode(UUID userId) {
-		final String sql = "SELECT referral_code FROM ReferralCode WHERE user_id = ?";
+		final String sql = "SELECT referral_code FROM ReferralCode WHERE user_id = ?;";
 		try {
 			return jdbcTemplate.queryForObject(sql, Long.class, userId);
 		} catch (EmptyResultDataAccessException e) {
@@ -1739,7 +1729,7 @@ public class Database {
 			SELECT position, driver, year
 			FROM DriverGuess
 			WHERE guesser = ?
-			ORDER BY year DESC, position ASC
+			ORDER BY year DESC, position;
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
 			.map(row -> 
@@ -1755,7 +1745,7 @@ public class Database {
 			SELECT position, constructor, year
 			FROM ConstructorGuess
 			WHERE guesser = ?
-			ORDER BY year DESC, position ASC
+			ORDER BY year DESC, position;
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
 			.map(row -> 
@@ -1771,7 +1761,7 @@ public class Database {
 			SELECT flag, amount, year
 			FROM FlagGuess
 			WHERE guesser = ?
-			ORDER BY year DESC, flag ASC
+			ORDER BY year DESC, flag;
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
 			.map(row -> new FlagGuessYear(
@@ -1789,7 +1779,7 @@ public class Database {
 			JOIN Race r ON dpg.race_number = r.id
 			JOIN RaceOrder ro ON dpg.race_number = ro.id
 			WHERE dpg.guesser = ?
-			ORDER BY ro.year DESC, ro.position ASC, category ASC
+			ORDER BY ro.year DESC, ro.position, dpg.category;
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
 		.map(row -> new PlaceGuess(
@@ -1807,8 +1797,8 @@ public class Database {
 			JOIN Race r ON n.race_number = r.id
 			JOIN RaceOrder ro ON n.race_number = ro.id
 			WHERE n.user_id = ?
-			GROUP BY n.race_number
-			ORDER BY ro.year DESC, ro.position ASC
+			GROUP BY n.race_number, ro.position, ro.year
+			ORDER BY ro.year DESC, ro.position;
 			""";
 		return jdbcTemplate.queryForList(sql, userId).stream()
 		.map(row -> new UserNotifiedCount(
@@ -1819,49 +1809,49 @@ public class Database {
 	}
 
 	public boolean isValidMailOption(int option) {
-		final String sql = "SELECT COUNT(*) FROM MailOption WHERE option = ?";
+		final String sql = "SELECT COUNT(*) FROM MailOption WHERE option = ?;";
 		return jdbcTemplate.queryForObject(sql, Integer.class, option) > 0;
 	}
 
 	public void addMailOption(UUID userId, MailOption option) {
-		final String sql = "INSERT OR IGNORE INTO MailPreference (user_id, option) VALUES (?, ?)";
+		final String sql = "INSERT OR IGNORE INTO MailPreference (user_id, option) VALUES (?, ?);";
 		jdbcTemplate.update(sql, userId, option);
 	}
 
 	public void removeMailOption(UUID userId, MailOption option) {
-		final String sql = "DELETE FROM MailPreference WHERE user_id = ? AND option = ?";
+		final String sql = "DELETE FROM MailPreference WHERE user_id = ? AND option = ?;";
 		jdbcTemplate.update(sql, userId, option);
 	}
 
 	private void clearMailPreferences(UUID userId) {
-		final String sql = "DELETE FROM MailPreference WHERE user_id = ?";
+		final String sql = "DELETE FROM MailPreference WHERE user_id = ?;";
 		jdbcTemplate.update(sql, userId);
 	}
 
 	public List<MailOption> getMailingPreference(UUID userId) {
-		final String sql = "SELECT option FROM MailPreference WHERE user_id = ? ORDER BY option DESC";
+		final String sql = "SELECT option FROM MailPreference WHERE user_id = ? ORDER BY option DESC;";
 		return jdbcTemplate.queryForList(sql, Integer.class, userId).stream()
-			.map(option -> new MailOption(option))
+			.map(MailOption::new)
 			.toList();
 	}
 	
 	public List<MailOption> getMailingOptions() {
-		final String sql = "SELECT option FROM MailOption ORDER BY option ASC";
+		final String sql = "SELECT option FROM MailOption ORDER BY option;";
 		return jdbcTemplate.queryForList(sql, Integer.class).stream()
-			.map(option -> new MailOption(option))
+			.map(MailOption::new)
 			.toList();
 	}
 
 	public void setTeamDriver(Driver driver, Constructor team, Year year) {
-		final String sql = "INSERT OR REPLACE INTO DriverTeam (driver, team, year) VALUES (?, ?, ?)";
+		final String sql = "INSERT OR REPLACE INTO DriverTeam (driver, team, year) VALUES (?, ?, ?);";
 		jdbcTemplate.update(sql, driver, team, year);
 	}
 	
 	public void addColorConstructor(Constructor constructor, Year year, Color color) {
-		if (color.value == null) {
+		if (color.value() == null) {
 			return;
 		}
-		final String sql = "INSERT OR REPLACE INTO ConstructorColor (constructor, year, color) VALUES (?, ?, ?)";
+		final String sql = "INSERT OR REPLACE INTO ConstructorColor (constructor, year, color) VALUES (?, ?, ?);";
 		jdbcTemplate.update(sql, constructor, year, color);
 	}
 
@@ -1871,7 +1861,7 @@ public class Database {
 			FROM ConstructorYear cy
 			LEFT JOIN ConstructorColor cc ON cc.constructor = cy.constructor
 			WHERE cy.year = ?
-			ORDER BY cy.position ASC
+			ORDER BY cy.position;
 			""";
 		return jdbcTemplate.queryForList(sql, year).stream()
 		.map(row -> new ColoredCompetitor<>(
@@ -1886,7 +1876,7 @@ public class Database {
 			FROM DriverYear dy
 			LEFT JOIN DriverTeam dt ON dt.driver = dy.driver
 			WHERE dy.year = ?
-			ORDER BY dy.position ASC
+			ORDER BY dy.position;
 			""";
 		return jdbcTemplate.queryForList(sql, year).stream()
 		.map(row -> new ValuedCompetitor<>(
@@ -1898,12 +1888,12 @@ public class Database {
 	
 
 	public void addBingomaster(UUID userId) {
-		final String sql = "INSERT OR IGNORE INTO Bingomaster (user_id) VALUES (?)";
+		final String sql = "INSERT OR IGNORE INTO Bingomaster (user_id) VALUES (?);";
 		jdbcTemplate.update(sql, userId);
 	}
 
 	public void removeBingomaster(UUID userId) {
-		final String sql = "DELETE FROM Bingomaster WHERE user_id = ?";
+		final String sql = "DELETE FROM Bingomaster WHERE user_id = ?;";
 		jdbcTemplate.update(sql, userId);
 	}
 
@@ -1912,23 +1902,7 @@ public class Database {
 			SELECT u.id AS id, u.username AS username, u.google_id AS google_id
 			FROM User u
 			JOIN Bingomaster bm ON u.id = bm.user_id
-			ORDER BY u.username_upper ASC
-			""";
-		return jdbcTemplate.queryForList(getAllUsersSql).stream()
-			.map(row -> 
-			new User(
-				(String) row.get("google_id"),
-				UUID.fromString((String) row.get("id")),
-				(String) row.get("username"))
-			).toList();
-	}
-
-	public List<User> getNonBingomasters() {
-		final String getAllUsersSql = """
-			SELECT id, username, google_id
-			FROM User
-			WHERE id NOT IN (SELECT user_id FROM Bingomaster)
-			ORDER BY username_upper ASC
+			ORDER BY u.username_upper;
 			""";
 		return jdbcTemplate.queryForList(getAllUsersSql).stream()
 			.map(row -> 
@@ -1940,7 +1914,7 @@ public class Database {
 	}
 
 	public boolean isBingomaster(UUID userId) {
-		final String sql = "SELECT COUNT(*) FROM Bingomaster WHERE user_id = ?";
+		final String sql = "SELECT COUNT(*) FROM Bingomaster WHERE user_id = ?;";
 		return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
 	}
 
@@ -1949,7 +1923,7 @@ public class Database {
 			SELECT year, id, square_text, marked
 			FROM BingoCard
 			WHERE year = ?
-			ORDER BY id ASC
+			ORDER BY id;
 			""";
 		return jdbcTemplate.queryForList(sql, year).stream()
 			.map(row ->
@@ -1966,7 +1940,7 @@ public class Database {
 		final String sql = """
 			SELECT year, id, square_text, marked
 			FROM BingoCard
-			WHERE year = ? AND id = ?
+			WHERE year = ? AND id = ?;
 			""";
 		Map<String, Object> row = jdbcTemplate.queryForMap(sql, year, id);
 		return new BingoSquare(
@@ -1980,8 +1954,8 @@ public class Database {
 	public void addBingoSquare(BingoSquare bingoSquare) {
 		final String sql = """
 			INSERT OR REPLACE INTO BingoCard
-			(year, id, square_text, marked) 
-			VALUES (?, ?, ?, ?); 
+			(year, id, square_text, marked)
+			VALUES (?, ?, ?, ?);
 			""";
 		jdbcTemplate.update(
 			sql,
@@ -1997,8 +1971,8 @@ public class Database {
 		boolean newMark = !bingoSquare.marked();
 		final String sql = """
 			UPDATE BingoCard
-			SET marked = ? 
-			WHERE year = ? AND id = ?
+			SET marked = ?
+			WHERE year = ? AND id = ?;
 			""";
 		jdbcTemplate.update(sql, newMark ? 1 : 0, year, id);
 	}
@@ -2006,8 +1980,8 @@ public class Database {
 	public void setTextBingoSquare(Year year, int id, String text) {
 		final String sql = """
 			UPDATE BingoCard
-			SET square_text = ? 
-			WHERE year = ? AND id = ?
+			SET square_text = ?
+			WHERE year = ? AND id = ?;
 			""";
 		jdbcTemplate.update(sql, text, year, id);
 	}
@@ -2016,33 +1990,28 @@ public class Database {
 		final String sql = """
 			SELECT COUNT(*)
 			FROM BingoCard
-			WHERE year = ?
+			WHERE year = ?;
 			""";
 		return jdbcTemplate.queryForObject(sql, Integer.class, year) > 0;
 	}
 
 	public boolean isValidSessionType(String sessionType) {
-		final String sql = "SELECT COUNT(*) FROM SessionType WHERE name = ?";
+		final String sql = "SELECT COUNT(*) FROM SessionType WHERE name = ?;";
 		return jdbcTemplate.queryForObject(sql, Integer.class, sessionType) > 0;
 	}
 
 	public List<SessionType> getSessionTypes() {
-		final String sql = "SELECT name FROM SessionType ORDER BY name ASC";
+		final String sql = "SELECT name FROM SessionType ORDER BY name;";
 		return jdbcTemplate.queryForList(sql).stream()
 			.map(row -> new SessionType((String) row.get("name")))
 			.toList();
-	}
-
-	public String translateSessionType(SessionType sessionType) {
-		final String sql = "SELECT translation FROM SessionTypeTranslation WHERE session_type = ?";
-		return jdbcTemplate.queryForObject(sql, String.class, sessionType);
 	}
 
 	public String getAlternativeDriverName(String driver, Year year) {
 		final String sql = """
 			SELECT driver
 			FROM DriverAlternativeName
-			WHERE alternative_name = ? AND year = ?
+			WHERE alternative_name = ? AND year = ?;
 			""";
 		try {
 			return jdbcTemplate.queryForObject(sql, String.class, driver, year);
@@ -2055,7 +2024,7 @@ public class Database {
 		final String sql = """
 			SELECT driver, alternative_name
 			FROM DriverAlternativeName
-			WHERE year = ?
+			WHERE year = ?;
 			""";
 		Map<String, String> linkedMap = new LinkedHashMap<>();
 		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, year);
@@ -2073,24 +2042,28 @@ public class Database {
 	}
 
 	public Year getYearFromRaceId(RaceId raceId) {
-		final String sql = "SELECT year FROM RaceOrder WHERE id = ?";
+		final String sql = "SELECT year FROM RaceOrder WHERE id = ?;";
 		return new Year(jdbcTemplate.queryForObject(sql, Integer.class, raceId));
 	}
 
 	public void addAlternativeDriverName(Driver driver, String alternativeName, Year year) {
-		final String sql = "INSERT OR IGNORE INTO DriverAlternativeName (driver, alternative_name, year) VALUES (?, ?, ?)";
+		final String sql = """
+			INSERT OR IGNORE INTO DriverAlternativeName
+			(driver, alternative_name, year)
+			VALUES (?, ?, ?);
+			""";
 		jdbcTemplate.update(sql, driver, alternativeName, year);
 	}
 
 	public void deleteAlternativeName(Driver driver, Year year, String alternativeName) {
-		final String sql = "DELETE FROM DriverAlternativeName WHERE driver = ? AND year = ? AND alternative_name = ?";
+		final String sql = "DELETE FROM DriverAlternativeName WHERE driver = ? AND year = ? AND alternative_name = ?;";
 		jdbcTemplate.update(sql, driver, year, alternativeName);
 	}
 
 	public List<UUID> getAdmins() {
-		final String sql = "SELECT user_id FROM Admin";
+		final String sql = "SELECT user_id FROM Admin;";
 		return jdbcTemplate.queryForList(sql, String.class).stream()
-			.map(adminId -> UUID.fromString(adminId))
+			.map(UUID::fromString)
 			.toList();
 	}
 }

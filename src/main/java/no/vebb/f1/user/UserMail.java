@@ -2,25 +2,25 @@ package no.vebb.f1.user;
 
 import no.vebb.f1.util.exception.InvalidEmailException;
 
-public class UserMail {
+public record UserMail(User user, String email) {
 
-	public final User user;
-	public final String email;
-
-	public UserMail(User user, String email) throws InvalidEmailException {
+	/**
+	 * @throws InvalidEmailException when email invalid
+	 */
+	public UserMail(User user, String email) {
 		this.user = user;
 		this.email = email;
 		validate();
 	}
 
-	private void validate() {
+	private void validate() throws InvalidEmailException {
 		if (!isValidEmail()) {
-			throw new InvalidEmailException("User '" + user.id + "' inputted invalid email");
+			throw new InvalidEmailException("User '" + user.id() + "' inputted invalid email");
 		}
 	}
 
 	private boolean isValidEmail() {
-		return email.matches("^([\\w\\-\\.])+(\\+?[\\w\\-\\.]+)?@([\\w\\-]+\\.)+[\\w\\-]{2,4}$");		
+		return email.matches("^([\\w\\-.])+(\\+?[\\w\\-.]+)?@([\\w\\-]+\\.)+[\\w\\-]{2,4}$");
 	}
 
 }

@@ -1,6 +1,5 @@
 package no.vebb.f1.controller.open;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +21,13 @@ import no.vebb.f1.util.response.RaceGuessResponse;
 @RequestMapping("/api/public/race-guess")
 public class RaceGuessController {
 
-	@Autowired
-	private Cutoff cutoff;
+	private final Cutoff cutoff;
+	private final Database db;
 
-	@Autowired
-	private Database db;
+	public RaceGuessController(Cutoff cutoff, Database db) {
+		this.cutoff = cutoff;
+		this.db = db;
+	}
 
 	@GetMapping
 	public ResponseEntity<RaceGuessResponse> guessOverview() {

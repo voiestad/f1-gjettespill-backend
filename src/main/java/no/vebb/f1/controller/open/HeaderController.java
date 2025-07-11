@@ -1,6 +1,5 @@
 package no.vebb.f1.controller.open;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,15 +19,16 @@ import no.vebb.f1.util.response.HeaderResponse;
 @RestController
 public class HeaderController {
 
-	@Autowired
-	private Database db;
+	private final Database db;
+	private final Cutoff cutoff;
+	private final UserService userService;
 
-	@Autowired
-	private Cutoff cutoff;
+	public HeaderController(Database db, Cutoff cutoff, UserService userService) {
+		this.db = db;
+		this.cutoff = cutoff;
+		this.userService = userService;
+	}
 
-	@Autowired
-	private UserService userService;
-	
 	@GetMapping("/api/public/header")
 	public ResponseEntity<HeaderResponse> preHandle() {
 		HeaderResponse res = new HeaderResponse();

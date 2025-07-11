@@ -53,9 +53,7 @@ public class Year {
 		if (getClass() != obj.getClass())
 			return false;
 		Year other = (Year) obj;
-		if (value != other.value)
-			return false;
-		return true;
-	}
+        return value == other.value;
+    }
 
 }

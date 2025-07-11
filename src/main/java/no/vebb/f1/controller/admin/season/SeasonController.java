@@ -4,9 +4,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import no.vebb.f1.graph.GraphCache;
-import no.vebb.f1.user.UserMailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +20,15 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RequestMapping("/api/admin/season")
 public class SeasonController {
 
-    @Autowired
-    private Database db;
+    private final Database db;
+    private final Importer importer;
+    private final Cutoff cutoff;
 
-    @Autowired
-    private Importer importer;
+    public SeasonController(Database db, Importer importer, Cutoff cutoff) {
+        this.db = db;
+        this.importer = importer;
+        this.cutoff = cutoff;
+    }
 
     @PostMapping("/add")
     @Transactional
@@ -56,7 +57,7 @@ public class SeasonController {
         importer.importData();
 
         Year seasonYear = new Year(year, db);
-        Instant time = new Cutoff().getDefaultInstant(seasonYear);
+        Instant time = cutoff.getDefaultInstant(seasonYear);
         db.setCutoffYear(time, seasonYear);
         setDefaultCutoffRaces(seasonYear, time);
 

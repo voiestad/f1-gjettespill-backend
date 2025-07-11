@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,14 +19,16 @@ import no.vebb.f1.user.UserService;
 public class F1ErrorController implements ErrorController {
 
 	private static final Logger logger = LoggerFactory.getLogger(F1ErrorController.class);
+	private final UserService userService;
 
-	@Autowired
-	private UserService userService;
+	public F1ErrorController(UserService userService) {
+		this.userService = userService;
+	}
 
 	@RequestMapping("/error")
 	public ResponseEntity<?> error(HttpServletRequest request) {
 		Optional<User> user = userService.loadUser();
-		String userId = user.map(u -> u.id.toString()).orElse("unknown");
+		String userId = user.map(u -> u.id().toString()).orElse("unknown");
 		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
 
 		String referer = (referer = request.getHeader("Referer")) == null ? "unknown" : referer;

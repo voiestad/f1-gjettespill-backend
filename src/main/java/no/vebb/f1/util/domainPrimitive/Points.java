@@ -49,10 +49,8 @@ public class Points implements Comparable<Points> {
 		if (getClass() != obj.getClass())
 			return false;
 		Points other = (Points) obj;
-		if (value != other.value)
-			return false;
-		return true;
-	}
+        return value == other.value;
+    }
 
 	@Override
 	public String toString() {

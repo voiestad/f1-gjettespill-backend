@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -30,15 +29,16 @@ import no.vebb.f1.util.exception.InvalidYearException;
 public class NotificationMail {
 
 	private static final Logger logger = LoggerFactory.getLogger(NotificationMail.class);
-
-	@Autowired
-	private JavaMailSender mailSender;
-
-	@Autowired
-	private Database db;
+	private final JavaMailSender mailSender;
+	private final Database db;
 
 	@Value("${spring.mail.username}")
 	private String fromEmail;
+
+	public NotificationMail(JavaMailSender mailSender, Database db) {
+		this.mailSender = mailSender;
+		this.db = db;
+	}
 
 	@Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
 	public void notifyUsers() {
@@ -52,7 +52,7 @@ public class NotificationMail {
 			int timeLeftHours = (int) (timeLeft / 3600);
 			List<UserMail> mailingList = db.getMailingList(raceId);
 			for (UserMail user : mailingList) {
-				UUID userId = user.user.id;
+				UUID userId = user.user().id();
 				int notifiedCount = db.getNotifiedCount(raceId, userId);
 				List<MailOption> options = db.getMailingPreference(userId);
 				for (MailOption option : options) {
@@ -66,14 +66,13 @@ public class NotificationMail {
 					try {
 						MimeMessage message = mailSender.createMimeMessage();
 						message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
-						message.addRecipients(RecipientType.TO, user.email);
+						message.addRecipients(RecipientType.TO, user.email());
 						message.setSubject("F1 Tipping påminnelse", "UTF-8");
 						message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
 						mailSender.send(message);
 						db.setNotified(raceId, userId);
 						logger.info("Successfully notified '{}' about '{}'", userId, race.name);
 					} catch (MessagingException e) {
-						e.printStackTrace();
 						logger.info("Message fail");
 					} catch (UnsupportedEncodingException e) {
 						logger.info("Encoding fail");
@@ -86,7 +85,7 @@ public class NotificationMail {
     }
 
 	private String getMessageContent(UserMail user, CutoffRace race, int timeLeft) {
-		String greet = String.format("Hei %s!", user.user.username);
+		String greet = String.format("Hei %s!", user.user().username());
 		String reminder = String.format("Dette er en påminnelse om å tippe på %s før tiden går ut.", race.name);
 		String hours = timeLeft == 1 ? "time" : "timer";
 		String time = String.format("Det er mindre enn %d %s igjen.", timeLeft, hours);
