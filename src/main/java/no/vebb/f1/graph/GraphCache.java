@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -26,20 +25,19 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @Component
 public class GraphCache {
 
-	@Autowired
-	private Database db;
-
-	@Autowired
-	private UserService userService;
-
-	@Autowired
-	private Cutoff cutoff;
+	private final Database db;
+	private final UserService userService;
+	private final Cutoff cutoff;
 
 	private volatile List<GuesserPointsSeason> graph;
-
 	private volatile List<RankedGuesser> leaderboard;
-
 	private static final Logger logger = LoggerFactory.getLogger(GraphCache.class);
+
+	public GraphCache(Database db, UserService userService, Cutoff cutoff) {
+		this.db = db;
+		this.userService = userService;
+		this.cutoff = cutoff;
+	}
 
 	@Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.SECOND * 10)
 	public void refresh() {

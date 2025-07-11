@@ -11,7 +11,6 @@ import java.io.PrintWriter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,14 +34,15 @@ public class Importer {
 
 	private static final Logger logger = LoggerFactory.getLogger(Importer.class);
 
-	@Autowired
-	private Database db;
+	private final Database db;
+	private final UserMailService userMailService;
+	private final GraphCache graphCache;
 
-	@Autowired
-	private UserMailService userMailService;
-
-	@Autowired
-	private GraphCache graphCache;
+	public Importer(Database db, UserMailService userMailService, GraphCache graphCache) {
+		this.db = db;
+		this.userMailService = userMailService;
+		this.graphCache = graphCache;
+	}
 
 	@Transactional
 	public void importData() {

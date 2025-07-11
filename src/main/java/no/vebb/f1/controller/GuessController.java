@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,15 +42,15 @@ import no.vebb.f1.util.exception.NoAvailableRaceException;
 public class GuessController {
 
 	private static final Logger logger = LoggerFactory.getLogger(GuessController.class);
+	private final Database db;
+	private final UserService userService;
+	private final Cutoff cutoff;
 
-	@Autowired
-	private Database db;
-
-	@Autowired
-	private UserService userService;
-
-	@Autowired
-	private Cutoff cutoff;
+	public GuessController(Database db, UserService userService, Cutoff cutoff) {
+		this.db = db;
+		this.userService = userService;
+		this.cutoff = cutoff;
+	}
 
 	@GetMapping("/categories")
 	public ResponseEntity<List<Category>> guess() {

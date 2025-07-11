@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -30,15 +29,16 @@ import no.vebb.f1.util.exception.InvalidYearException;
 public class NotificationMail {
 
 	private static final Logger logger = LoggerFactory.getLogger(NotificationMail.class);
-
-	@Autowired
-	private JavaMailSender mailSender;
-
-	@Autowired
-	private Database db;
+	private final JavaMailSender mailSender;
+	private final Database db;
 
 	@Value("${spring.mail.username}")
 	private String fromEmail;
+
+	public NotificationMail(JavaMailSender mailSender, Database db) {
+		this.mailSender = mailSender;
+		this.db = db;
+	}
 
 	@Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
 	public void notifyUsers() {

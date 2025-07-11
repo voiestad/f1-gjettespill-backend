@@ -8,7 +8,6 @@ import java.util.UUID;
 import no.vebb.f1.util.response.ReferralCodeResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,15 +38,15 @@ import no.vebb.f1.util.response.MailOptionsResponse;
 public class UserSettingsController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserSettingsController.class);
+    private final Database db;
+    private final UserService userService;
+    private final UserMailService userMailService;
 
-    @Autowired
-    private Database db;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserMailService userMailService;
+    public UserSettingsController(Database db, UserService userService, UserMailService userMailService) {
+        this.db = db;
+        this.userService = userService;
+        this.userMailService = userMailService;
+    }
 
     @GetMapping("/info")
     public ResponseEntity<UserInformation> userInformation() {

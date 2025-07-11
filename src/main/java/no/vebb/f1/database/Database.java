@@ -24,7 +24,7 @@ import no.vebb.f1.user.UserMail;
 @SuppressWarnings("null")
 public class Database {
 
-	private JdbcTemplate jdbcTemplate;
+	private final JdbcTemplate jdbcTemplate;
 
 	public Database(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;

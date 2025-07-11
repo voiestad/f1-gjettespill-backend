@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,8 +21,11 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RestController
 public class ScoreController {
 
-	@Autowired
-	private Database db;
+	private final Database db;
+
+	public ScoreController(Database db) {
+		this.db = db;
+	}
 
 	@GetMapping("/api/public/score")
 	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTables() {

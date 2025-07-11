@@ -6,7 +6,6 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import no.vebb.f1.util.response.CutoffResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,11 +23,13 @@ import no.vebb.f1.util.exception.InvalidRaceException;
 @RequestMapping("/api/admin/season/cutoff")
 public class CutoffController {
 
-    @Autowired
-    private Database db;
+    private final Database db;
+    private final GraphCache graphCache;
 
-    @Autowired
-    private GraphCache graphCache;
+    public CutoffController(Database db, GraphCache graphCache) {
+        this.db = db;
+        this.graphCache = graphCache;
+    }
 
     @GetMapping("/list/{year}")
     public ResponseEntity<CutoffResponse> manageCutoff(@PathVariable("year") int year) {

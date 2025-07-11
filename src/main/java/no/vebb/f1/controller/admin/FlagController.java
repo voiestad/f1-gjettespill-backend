@@ -2,7 +2,6 @@ package no.vebb.f1.controller.admin;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +20,11 @@ import no.vebb.f1.util.exception.InvalidSessionTypeException;
 @RequestMapping("/api/admin/flag")
 public class FlagController {
 
-    @Autowired
-    private Database db;
+    private final Database db;
+
+    public FlagController(Database db) {
+        this.db = db;
+    }
 
     @GetMapping("/types")
     public ResponseEntity<List<Flag>> getFlagTypes() {

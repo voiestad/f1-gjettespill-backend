@@ -3,7 +3,6 @@ package no.vebb.f1.controller.admin;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +16,13 @@ import no.vebb.f1.user.UserService;
 @RequestMapping("/api/admin/bingo")
 public class BingomasterController {
 
-    @Autowired
-    private Database db;
+    private final Database db;
+    private final UserService userService;
 
-    @Autowired
-    private UserService userService;
+    public BingomasterController(Database db, UserService userService) {
+        this.db = db;
+        this.userService = userService;
+    }
 
     @GetMapping("/list")
     public ResponseEntity<List<PublicUser>> getBingomasters() {

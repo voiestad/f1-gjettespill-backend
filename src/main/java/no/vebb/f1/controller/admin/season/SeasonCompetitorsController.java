@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import no.vebb.f1.util.collection.ColoredCompetitor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +23,11 @@ import no.vebb.f1.util.exception.InvalidDriverException;
 @RequestMapping("/api/admin/season/competitors")
 public class SeasonCompetitorsController {
 
-    @Autowired
-    private Database db;
+    private final Database db;
+
+    public SeasonCompetitorsController(Database db) {
+        this.db = db;
+    }
 
     @GetMapping("/drivers/list/{year}")
     public ResponseEntity<List<ValuedCompetitor<Driver, Constructor>>> listDrivers(@PathVariable("year") int year) {

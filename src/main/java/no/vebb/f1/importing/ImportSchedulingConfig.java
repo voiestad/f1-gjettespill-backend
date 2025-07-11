@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.scheduling.Trigger;
@@ -21,11 +20,13 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @Configuration
 public class ImportSchedulingConfig implements SchedulingConfigurer {
 
-	@Autowired
-	private Importer importer;
+	private final Importer importer;
+	private final Database db;
 
-	@Autowired
-	private Database db;
+	public ImportSchedulingConfig(Importer importer, Database db) {
+		this.importer = importer;
+		this.db = db;
+	}
 
 	@Override
 	public void configureTasks(@SuppressWarnings("null") ScheduledTaskRegistrar taskRegistrar) {

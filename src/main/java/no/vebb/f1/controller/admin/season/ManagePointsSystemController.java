@@ -1,6 +1,5 @@
 package no.vebb.f1.controller.admin.season;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +19,11 @@ import no.vebb.f1.util.exception.InvalidPointsException;
 @RequestMapping("/api/admin/season/points")
 public class ManagePointsSystemController {
 
-    @Autowired
-    private Database db;
+    private final Database db;
+
+    public ManagePointsSystemController(Database db) {
+        this.db = db;
+    }
 
     @PostMapping("/add")
     @Transactional

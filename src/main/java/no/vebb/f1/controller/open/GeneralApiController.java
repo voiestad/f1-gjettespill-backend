@@ -3,7 +3,6 @@ package no.vebb.f1.controller.open;
 import java.util.List;
 
 import no.vebb.f1.util.domainPrimitive.Category;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,11 +22,13 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RequestMapping("/api/public")
 public class GeneralApiController {
 
-    @Autowired
-    private Database db;
+    private final Database db;
+    private final UserService userService;
 
-    @Autowired
-    private UserService userService;
+    public GeneralApiController(Database db, UserService userService) {
+        this.db = db;
+        this.userService = userService;
+    }
 
     @GetMapping("/year/list")
     public ResponseEntity<List<Integer>> listYears() {

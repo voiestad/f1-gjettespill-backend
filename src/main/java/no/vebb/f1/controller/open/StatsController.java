@@ -1,6 +1,5 @@
 package no.vebb.f1.controller.open;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +17,11 @@ import no.vebb.f1.util.exception.InvalidRaceException;
 @RequestMapping("/api/public/stats")
 public class StatsController {
 
-	@Autowired
-	private Database db;
+	private final Database db;
+
+	public StatsController(Database db) {
+		this.db = db;
+	}
 
 	@GetMapping("/race/{raceId}")
 	public ResponseEntity<RaceStats> raceStats(@PathVariable("raceId") int raceId) {

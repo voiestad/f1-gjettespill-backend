@@ -3,7 +3,6 @@ package no.vebb.f1.user;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,8 +15,11 @@ import no.vebb.f1.util.exception.NotAdminException;
 @Service
 public class UserService {
 
-	@Autowired
-	private Database db;
+	private final Database db;
+
+	public UserService(Database db) {
+		this.db = db;
+	}
 
 	public Optional<User> loadUser() {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

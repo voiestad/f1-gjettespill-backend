@@ -2,7 +2,6 @@ package no.vebb.f1.controller.admin.season;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +21,15 @@ import no.vebb.f1.util.exception.InvalidRaceException;
 @RequestMapping("/api/admin/season/manage")
 public class ManageSeasonController {
 
-    @Autowired
-    private Database db;
+    private final Database db;
+    private final Importer importer;
+    private final Cutoff cutoff;
 
-    @Autowired
-    private Importer importer;
+    public ManageSeasonController(Database db, Importer importer, Cutoff cutoff) {
+        this.db = db;
+        this.importer = importer;
+        this.cutoff = cutoff;
+    }
 
     @PostMapping("/reload")
     @Transactional
@@ -121,7 +124,7 @@ public class ManageSeasonController {
         importer.importRaceName(raceId, seasonYear);
         importer.importData();
         RaceId validRaceId = new RaceId(raceId, db);
-        db.setCutoffRace(new Cutoff().getDefaultInstant(seasonYear), validRaceId);
+        db.setCutoffRace(cutoff.getDefaultInstant(seasonYear), validRaceId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
