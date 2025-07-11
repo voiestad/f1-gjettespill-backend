@@ -73,7 +73,6 @@ public class NotificationMail {
 						db.setNotified(raceId, userId);
 						logger.info("Successfully notified '{}' about '{}'", userId, race.name);
 					} catch (MessagingException e) {
-						e.printStackTrace();
 						logger.info("Message fail");
 					} catch (UnsupportedEncodingException e) {
 						logger.info("Encoding fail");
