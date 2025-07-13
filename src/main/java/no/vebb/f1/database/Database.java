@@ -2066,4 +2066,25 @@ public class Database {
 			.map(UUID::fromString)
 			.toList();
 	}
+
+	public List<String> getUnregisteredUsers() {
+		final String sql = """
+			SELECT SESSION_ID, LAST_ACCESS_TIME
+			FROM SPRING_SESSION
+			WHERE PRINCIPAL_NAME NOT IN (
+				SELECT google_id from User
+			);
+		""";
+		List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
+		return sqlRes.stream()
+			.filter(session -> {
+				long lastAccess = (long) session.get("LAST_ACCESS_TIME");
+				long now = System.currentTimeMillis();
+				long diff = now - lastAccess;
+				long hourMillis = 3600000;
+				return diff >= hourMillis;
+			})
+			.map(session -> (String) session.get("SESSION_ID"))
+			.toList();
+	}
 }
