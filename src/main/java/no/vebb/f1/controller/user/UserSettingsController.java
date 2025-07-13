@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletRequest;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserMail;
@@ -100,7 +99,7 @@ public class UserSettingsController {
 
     @PostMapping("/delete")
     @Transactional
-    public ResponseEntity<?> deleteAccount(@RequestParam("username") String username, HttpServletRequest request) {
+    public ResponseEntity<?> deleteAccount(@RequestParam("username") String username) {
         User user = userService.getUser();
         String actualUsername = user.username();
         if (!username.equals(actualUsername)) {
@@ -108,7 +107,6 @@ public class UserSettingsController {
         }
         db.deleteUser(user.id());
 
-        request.getSession().invalidate();
         SecurityContextHolder.clearContext();
 
         return new ResponseEntity<>(HttpStatus.OK);
