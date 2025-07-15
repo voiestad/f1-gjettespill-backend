@@ -1302,6 +1302,23 @@ public class Database {
 				year))
 			.toList();
 	}
+	public List<Race> getRacesYearFinished(Year year) {
+		final String getCutoffRaces = """
+			SELECT DISTINCT r.id as id, r.name as name, ro.year as year, ro.position as position
+			FROM RaceOrder ro
+			JOIN Race r ON ro.id = r.id
+			JOIN RaceResult rr ON rr.race_number = r.id
+			WHERE ro.year = ?
+			ORDER BY ro.position;
+			""";
+		return jdbcTemplate.queryForList(getCutoffRaces, year).stream()
+			.map(row -> new Race(
+				(int) row.get("position"),
+				(String) row.get("name"),
+				new RaceId((int) row.get("id")),
+				year))
+			.toList();
+	}
 
 	public Race getRaceFromId(RaceId raceId) {
 		final String sql = """

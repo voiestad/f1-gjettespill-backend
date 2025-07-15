@@ -39,9 +39,14 @@ public class GeneralApiController {
     }
 
     @GetMapping("/race/list/{year}")
-    public ResponseEntity<List<Race>> listRaces(@PathVariable("year") int year) {
+    public ResponseEntity<List<Race>> listRaces(
+            @PathVariable("year") int year,
+            @RequestParam(required = false, name = "completedOnly", defaultValue = "false") boolean completedOnly) {
         try {
             Year validYear = new Year(year);
+            if (completedOnly) {
+                return new ResponseEntity<>(db.getRacesYearFinished(validYear), HttpStatus.OK);
+            }
             return new ResponseEntity<>(db.getRacesYear(validYear), HttpStatus.OK);
         } catch (InvalidYearException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
