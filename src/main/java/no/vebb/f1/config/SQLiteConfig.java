@@ -246,23 +246,6 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS CategoryTranslation (
-					category TEXT PRIMARY KEY,
-					translation TEXT NOT NULL,
-					FOREIGN KEY (category) REFERENCES Category ON DELETE CASCADE
-			);
-			""");
-			jdbcTemplate.execute("""
-                INSERT INTO CategoryTranslation (category, translation)
-                VALUES
-                    ('DRIVER', 'Sjåfører'),
-                    ('CONSTRUCTOR', 'Konstruktører'),
-                    ('FLAG', 'Antall'),
-                    ('FIRST', '1.plass'),
-                    ('TENTH', '10.plass')
-                ON CONFLICT(category) DO NOTHING;
-            """);
-			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS DiffPointsMap (
 					category TEXT NOT NULL,
 					diff INTEGER NOT NULL,
@@ -285,20 +268,6 @@ public class SQLiteConfig {
                 ON CONFLICT(name) DO NOTHING;
             """);
 			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS SessionTypeTranslation (
-					session_type TEXT PRIMARY KEY,
-					translation TEXT NOT NULL,
-					FOREIGN KEY (session_type) REFERENCES SessionType ON DELETE CASCADE
-			);
-			""");
-			jdbcTemplate.execute("""
-                INSERT INTO SessionTypeTranslation (session_type, translation)
-                VALUES
-                    ('RACE', 'Løp'),
-                    ('SPRINT', 'Sprint')
-                ON CONFLICT(session_type) DO NOTHING;
-            """);
-			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS FlagStats (
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
 					flag TEXT NOT NULL,
@@ -310,21 +279,6 @@ public class SQLiteConfig {
 					FOREIGN KEY (session_type) REFERENCES SessionType ON DELETE CASCADE
 			);
 			""");
-			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS FlagTranslation (
-					flag TEXT PRIMARY KEY,
-					translation TEXT NOT NULL,
-					FOREIGN KEY (flag) REFERENCES Flag ON DELETE CASCADE
-			);
-			""");
-			jdbcTemplate.execute("""
-                INSERT INTO FlagTranslation (flag, translation)
-                VALUES
-                    ('Yellow Flag', 'Gult Flagg'),
-                    ('Red Flag', 'Rødt Flagg'),
-                    ('Safety Car', 'Sikkerhetsbil')
-                ON CONFLICT(flag) DO NOTHING;
-            """);
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS Admin (
 					user_id TEXT PRIMARY KEY,
