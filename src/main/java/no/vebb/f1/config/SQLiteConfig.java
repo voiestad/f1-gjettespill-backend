@@ -30,6 +30,39 @@ public class SQLiteConfig {
 			);
 			""");
 			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS Year (
+					year INTEGER PRIMARY KEY
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS YearFinished (
+					year INTEGER PRIMARY KEY,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS PlacementYear (
+					year INTEGER NOT NULL,
+					guesser TEXT NOT NULL,
+					placement INTEGER NOT NULL,
+					PRIMARY KEY (year, guesser),
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE,
+					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
+				CREATE TABLE IF NOT EXISTS PlacementCategory (
+					race_number INTEGER NOT NULL,
+					guesser TEXT NOT NULL,
+					category TEXT NOT NULL,
+					placement INTEGER NOT NULL,
+					PRIMARY KEY (race_number, guesser, category),
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE,
+					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
+				    FOREIGN KEY (category) REFERENCES Category(name) ON DELETE CASCADE
+			);
+			""");
+			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS RaceOrder (
 					id INTEGER NOT NULL UNIQUE,
 					year INTEGER NOT NULL,
