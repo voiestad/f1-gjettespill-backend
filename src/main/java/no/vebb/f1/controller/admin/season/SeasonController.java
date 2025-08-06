@@ -32,12 +32,22 @@ public class SeasonController {
 
     @PostMapping("/add")
     @Transactional
-    public ResponseEntity<String> addSeason(@RequestParam("year") int year, @RequestParam("start") int start, @RequestParam("end") int end) {
+    public ResponseEntity<String> addSeason(
+            @RequestParam("year") int year,
+            @RequestParam(name = "start", required = false) Integer start,
+            @RequestParam(name = "end", required = false) Integer end) {
         try {
             new Year(year, db);
             String error = String.format("Sesongen %d er allerede lagt til", year);
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         } catch (InvalidYearException ignored) {
+        }
+        db.addYear(year);
+        Year seasonYear = new Year(year, db);
+        Instant time = cutoff.getDefaultInstant(seasonYear);
+        db.setCutoffYear(time, seasonYear);
+        if (start == null || end == null) {
+            return new ResponseEntity<>("OK", HttpStatus.OK);
         }
         if (start > end) {
             String error = "Starten av året kan ikke være etter slutten av året";
@@ -56,9 +66,6 @@ public class SeasonController {
         importer.importRaceNames(races, year);
         importer.importData();
 
-        Year seasonYear = new Year(year, db);
-        Instant time = cutoff.getDefaultInstant(seasonYear);
-        db.setCutoffYear(time, seasonYear);
         setDefaultCutoffRaces(seasonYear, time);
 
         return new ResponseEntity<>("OK", HttpStatus.OK);

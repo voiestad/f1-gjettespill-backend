@@ -2104,4 +2104,9 @@ public class Database {
 			.map(session -> (String) session.get("SESSION_ID"))
 			.toList();
 	}
+
+	public void addYear(int year) {
+		final String sql = "INSERT OR IGNORE INTO Year (year) values (?)";
+		jdbcTemplate.update(sql, year);
+	}
 }
