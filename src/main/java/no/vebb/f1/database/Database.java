@@ -841,6 +841,7 @@ public class Database {
 			SELECT id, year, position
 			FROM RaceOrder
 			WHERE id NOT IN (SELECT race_number FROM RaceResult)
+			AND year NOT IN (SELECT year FROM YearFinished)
 			ORDER BY year, position;
 			""";
 		
