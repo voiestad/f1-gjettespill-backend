@@ -68,7 +68,8 @@ public class SQLiteConfig {
 					year INTEGER NOT NULL,
 					position INTEGER NOT NULL,
 					PRIMARY KEY (year, position),
-					FOREIGN KEY (id) REFERENCES Race(id) ON DELETE CASCADE
+					FOREIGN KEY (id) REFERENCES Race(id) ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -87,7 +88,8 @@ public class SQLiteConfig {
 					year INTEGER NOT NULL,
 					position INTEGER NOT NULL,
 					PRIMARY KEY (driver, year),
-					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -96,7 +98,8 @@ public class SQLiteConfig {
 					year INTEGER NOT NULL,
 					position INTEGER NOT NULL,
 					PRIMARY KEY (constructor, year),
-					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE
+					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -106,7 +109,8 @@ public class SQLiteConfig {
 					year INTEGER NOT NULL,
 					PRIMARY KEY (driver, year),
 					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
-					FOREIGN KEY (team) REFERENCES Constructor ON DELETE CASCADE
+					FOREIGN KEY (team) REFERENCES Constructor ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -115,7 +119,8 @@ public class SQLiteConfig {
 					year INTEGER NOT NULL,
 					color TEXT NOT NULL,
 					PRIMARY KEY (constructor, year),
-					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE
+					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -124,7 +129,8 @@ public class SQLiteConfig {
 					driver TEXT NOT NULL,
 					year INTEGER NOT NULL,
 					PRIMARY KEY (alternative_name, year),
-					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -192,7 +198,8 @@ public class SQLiteConfig {
 					amount INTEGER NOT NULL,
 					PRIMARY KEY (guesser, flag, year),
 					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
-					FOREIGN KEY (flag) REFERENCES Flag ON DELETE CASCADE
+					FOREIGN KEY (flag) REFERENCES Flag ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -203,7 +210,8 @@ public class SQLiteConfig {
 					position INTEGER NOT NULL,
 					PRIMARY KEY (guesser, position, year),
 					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
-					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE
+					FOREIGN KEY (constructor) REFERENCES Constructor ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -214,7 +222,8 @@ public class SQLiteConfig {
 					position INTEGER NOT NULL,
 					PRIMARY KEY (guesser, position, year),
 					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
-					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE
+					FOREIGN KEY (driver) REFERENCES Driver ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -252,7 +261,8 @@ public class SQLiteConfig {
 					points INTEGER NOT NULL,
 					year INTEGER NOT NULL,
 					PRIMARY KEY (category, diff, year),
-					FOREIGN KEY (category) REFERENCES Category ON DELETE CASCADE
+					FOREIGN KEY (category) REFERENCES Category ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -287,22 +297,24 @@ public class SQLiteConfig {
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS RaceCutoff (
-				race_number INTEGER PRIMARY KEY,
-				cutoff TEXT NOT NULL,
-				FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
+					race_number INTEGER PRIMARY KEY,
+					cutoff TEXT NOT NULL,
+					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS YearCutoff (
-				year INTEGER PRIMARY KEY,
-				cutoff TEXT NOT NULL
+					year INTEGER PRIMARY KEY,
+					cutoff TEXT NOT NULL,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS MailingList (
-				user_id TEXT PRIMARY KEY,
-				email TEXT NOT NULL,
-				FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+					user_id TEXT PRIMARY KEY,
+					email TEXT NOT NULL,
+					FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
@@ -363,11 +375,12 @@ public class SQLiteConfig {
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS BingoCard (
-				year INTEGER NOT NULL,
-				id INTEGER NOT NULL,
-				square_text TEXT NOT NULL,
-				marked INTEGER NOT NULL,
-				PRIMARY KEY (year, id)
+					year INTEGER NOT NULL,
+					id INTEGER NOT NULL,
+					square_text TEXT NOT NULL,
+					marked INTEGER NOT NULL,
+					PRIMARY KEY (year, id),
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
