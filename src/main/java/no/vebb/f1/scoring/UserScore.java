@@ -7,6 +7,10 @@ import java.util.Map;
 
 import no.vebb.f1.util.collection.Medals;
 import no.vebb.f1.util.collection.Placement;
+import no.vebb.f1.util.collection.userTables.FlagGuess;
+import no.vebb.f1.util.collection.userTables.PlaceGuess;
+import no.vebb.f1.util.collection.userTables.StandingsGuess;
+import no.vebb.f1.util.collection.userTables.Summary;
 import no.vebb.f1.util.domainPrimitive.*;
 import org.springframework.dao.EmptyResultDataAccessException;
 
@@ -25,7 +29,7 @@ public class UserScore {
 	public final List<FlagGuess> flagGuesses = new ArrayList<>();
 	public final List<PlaceGuess> winnerGuesses = new ArrayList<>();
 	public final List<PlaceGuess> tenthGuesses = new ArrayList<>();
-	public final Summary summary = new Summary();
+	public final Summary summary;
 	public final List<Placement<Year>> previousPlacements = new ArrayList<>();
 	public final Medals medals = new Medals(new MedalCount(0), new MedalCount(0), new MedalCount(0));
 
@@ -35,6 +39,7 @@ public class UserScore {
 		this.raceId = raceId;
 		this.db = db;
 		this.racePos = getRacePosition();
+		this.summary = db.getSummary(racePos, year, user);
 		initializeDriversGuesses();
 		initializeConstructorsGuesses();
 		initializeFlagsGuesses();
@@ -65,22 +70,19 @@ public class UserScore {
 		List<Driver> guessedDriver = db.getGuessedYearDriver(year, user.id);
 		List<Driver> drivers = db.getDriverStandings(raceId, year);
 		Category category = new Category("DRIVER", db);
-		summary.drivers = new Placement<>(new Position(1),
-				getGuessedToPos(category, guessedDriver, drivers, driversGuesses));
+		getGuessedToPos(category, guessedDriver, drivers, driversGuesses);
 	}
 
 	private void initializeConstructorsGuesses() {
 		List<Constructor> guessedConstructor = db.getGuessedYearConstructor(year, user.id);
 		List<Constructor> constructors = db.getConstructorStandings(raceId, year);
 		Category category = new Category("CONSTRUCTOR", db);
-		summary.constructors = new Placement<>(new Position(1),
-				getGuessedToPos(category, guessedConstructor, constructors, constructorsGuesses));
+		getGuessedToPos(category, guessedConstructor, constructors, constructorsGuesses);
 	}
 
-	private <T> Points getGuessedToPos(Category category, List<T> guessed,
+	private <T> void getGuessedToPos(Category category, List<T> guessed,
 			List<T> competitors, List<StandingsGuess<T>> result) {
 		DiffPointsMap map = new DiffPointsMap(category, year, db);
-		Points competitorScore = new Points();
 		Map<T, Integer> guessedToPos = new HashMap<>();
 		for (int i = 0; i < guessed.size(); i++) {
 			guessedToPos.put(guessed.get(i), i + 1);
@@ -95,16 +97,13 @@ public class UserScore {
 				Diff diff = new Diff(Math.abs(actualPos - guessedPos));
 				Points points = map.getPoints(diff);
 				result.add(new StandingsGuess<>(actualPos, competitor, guessedPos, diff, points));
-				competitorScore = competitorScore.add(points);
 			}
 		}
-		return competitorScore;
 	}
 
 	private void initializeFlagsGuesses() {
 		Category category = new Category("FLAG", db);
 		DiffPointsMap map = new DiffPointsMap(category, year, db);
-		Points flagScore = new Points();
 
 		List<Map<String, Object>> sqlRes = db.getDataForFlagTable(racePos, year, user.id);
 		for (Map<String, Object> row : sqlRes) {
@@ -113,28 +112,23 @@ public class UserScore {
 			int actual = (int) row.get("actual");
 			Diff diff = new Diff(Math.abs(guessed - actual));
 			Points points = map.getPoints(diff);
-			flagScore = flagScore.add(points);
 			flagGuesses.add(new FlagGuess(flag, guessed, actual, diff, points));
 		}
-		summary.flag = new Placement<>(new Position(1), flagScore);
 	}
 
 	private void initializeWinnerGuesses() {
-		summary.winner = new Placement<>(new Position(1),
-				getDriverPlaceGuessTable(new Category("FIRST", db), 1, winnerGuesses));
+		getDriverPlaceGuessTable(new Category("FIRST", db), 1, winnerGuesses);
 	}
 
 	private void initializeTenthGuesses() {
-		summary.tenth = new Placement<>(new Position(1),
-				getDriverPlaceGuessTable(new Category("TENTH", db), 10, tenthGuesses));
+		getDriverPlaceGuessTable(new Category("TENTH", db), 10, tenthGuesses);
 	}
 
-	private Points getDriverPlaceGuessTable(Category category, int targetPos, List<PlaceGuess> result) {
+	private void getDriverPlaceGuessTable(Category category, int targetPos, List<PlaceGuess> result) {
 		if (raceId == null) {
-			return new Points();
+			return;
 		}
 		DiffPointsMap map = new DiffPointsMap(category, year, db);
-		Points driverPlaceScore = new Points();
 		List<Map<String, Object>> sqlRes = db.getDataForPlaceGuessTable(category, user.id, year, racePos);
 
 		for (Map<String, Object> row : sqlRes) {
@@ -145,29 +139,8 @@ public class UserScore {
 			int finishPos = (int) row.get("finish");
 			Diff diff = new Diff(Math.abs(targetPos - finishPos));
 			Points points = map.getPoints(diff);
-			driverPlaceScore = driverPlaceScore.add(points);
 			result.add(new PlaceGuess(racePosition, raceName, driver, startPos, finishPos, diff, points));
 		}
-		return driverPlaceScore;
 	}
 
-	public Points getScore() {
-		return summary.getTotal().value();
-	}
-
-	public record StandingsGuess<T>(int pos, T competitor, Integer guessed, Diff diff, Points points) {}
-	public record FlagGuess(Flag flag, int guessed, int actual, Diff diff, Points points) {}
-	public record PlaceGuess(int racePos, String raceName, String driver, int startPos, int finishPos, Diff diff, Points points) {}
-	public static class Summary {
-		public Placement<Points> drivers;
-		public Placement<Points> constructors;
-		public Placement<Points> flag;
-		public Placement<Points> winner;
-		public Placement<Points> tenth;
-
-		public Placement<Points> getTotal() {
-			return new Placement<>(new Position(1),
-					drivers.value().add(constructors.value()).add(flag.value()).add(winner.value()).add(tenth.value()));
-		}
-	}
 }

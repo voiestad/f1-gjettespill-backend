@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import no.vebb.f1.user.PublicUser;
+import no.vebb.f1.util.collection.userTables.Summary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -2109,5 +2111,10 @@ public class Database {
 	public void addYear(int year) {
 		final String sql = "INSERT OR IGNORE INTO Year (year) values (?)";
 		jdbcTemplate.update(sql, year);
+	}
+
+	public Summary getSummary(int racePos, Year year, PublicUser user) {
+		// TODO: implement
+		return null;
 	}
 }
