@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import no.vebb.f1.util.collection.Medals;
 import no.vebb.f1.util.collection.Placement;
 import no.vebb.f1.util.domainPrimitive.*;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -26,6 +27,7 @@ public class UserScore {
 	public final List<PlaceGuess> tenthGuesses = new ArrayList<>();
 	public final Summary summary = new Summary();
 	public final List<Placement<Year>> previousPlacements = new ArrayList<>();
+	public final Medals medals = new Medals(new MedalCount(0), new MedalCount(0), new MedalCount(0));
 
 	public UserScore(PublicUser user, Year year, RaceId raceId, Database db) {
 		this.user = user;
