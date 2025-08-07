@@ -3,11 +3,7 @@ package no.vebb.f1.database;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import no.vebb.f1.user.PublicUser;
 import no.vebb.f1.util.collection.userTables.Summary;
@@ -2113,8 +2109,52 @@ public class Database {
 		jdbcTemplate.update(sql, year);
 	}
 
-	public Summary getSummary(int racePos, Year year, PublicUser user) {
-		// TODO: implement
-		return null;
+	public Summary getSummary(RaceId raceId, Year year, PublicUser user) {
+		List<Map<String, Object>> categoriesRes;
+		Map<String, Object> totalRes;
+		if (raceId != null) {
+			final String categoriesSql = """
+				SELECT category, placement, points
+				FROM PlacementCategory
+				WHERE race_number = ?;
+			""";
+			final String totalSql = """
+				SELECT placement, points
+				FROM PlacementRace
+				WHERE race_number = ?;
+			""";
+			categoriesRes = jdbcTemplate.queryForList(categoriesSql, raceId);
+			totalRes = jdbcTemplate.queryForMap(totalSql, raceId);
+		} else {
+			final String categoriesSql = """
+				SELECT category, placement, points
+				FROM PlacementCategoryYearStart
+				WHERE year = ?;
+			""";
+			final String totalSql = """
+				SELECT placement, points
+				FROM PlacementRaceYearStart
+				WHERE year = ?;
+			""";
+			categoriesRes = jdbcTemplate.queryForList(categoriesSql, year);
+			totalRes = jdbcTemplate.queryForMap(totalSql, year);
+		}
+		Map<Category, Placement<Points>> categories = new HashMap<>();
+		for (Map<String, Object> row : categoriesRes) {
+			Category category = new Category((String) row.get("category"));
+			Position pos = new Position((int) row.get("placement"));
+			Points points = new Points((int) row.get("points"));
+			Placement<Points> placement = new Placement<>(pos, points);
+			categories.put(category, placement);
+		}
+		Placement<Points> drivers = categories.get(new Category("DRIVER", this));
+		Placement<Points> constructors = categories.get(new Category("CONSTRUCTOR", this));
+		Placement<Points> flag = categories.get(new Category("FLAG", this));
+		Placement<Points> winner = categories.get(new Category("FIRST", this));
+		Placement<Points> tenth = categories.get(new Category("TENTH", this));
+		Placement<Points> total =
+				new Placement<>(new Position((int) totalRes.get("placement")),
+				new Points((int) totalRes.get("points")));
+		return new Summary(drivers, constructors, flag, winner, tenth, total);
 	}
 }

@@ -39,7 +39,7 @@ public class UserScore {
 		this.raceId = raceId;
 		this.db = db;
 		this.racePos = getRacePosition();
-		this.summary = db.getSummary(racePos, year, user);
+		this.summary = db.getSummary(raceId, year, user);
 		initializeDriversGuesses();
 		initializeConstructorsGuesses();
 		initializeFlagsGuesses();
