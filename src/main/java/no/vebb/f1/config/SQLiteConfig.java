@@ -56,6 +56,7 @@ public class SQLiteConfig {
 					guesser TEXT NOT NULL,
 					category TEXT NOT NULL,
 					placement INTEGER NOT NULL,
+					points INTEGER NOT NULL,
 					PRIMARY KEY (race_number, guesser, category),
 					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE,
 					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
@@ -67,6 +68,7 @@ public class SQLiteConfig {
 					race_number INTEGER NOT NULL,
 					guesser TEXT NOT NULL,
 					placement INTEGER NOT NULL,
+					points INTEGER NOT NULL,
 					PRIMARY KEY (race_number, guesser),
 					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE
 			);
