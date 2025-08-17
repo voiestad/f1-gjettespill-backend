@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,7 @@ public class ProfileController {
         this.cutoff = cutoff;
         this.db = db;
     }
+
     @GetMapping("/api/public/user/{id}")
     public ResponseEntity<UserScore> guesserProfile(
             @PathVariable("id") UUID id,
@@ -93,6 +95,15 @@ public class ProfileController {
         List<PublicUser> res = db.getAllUsers().stream()
                 .map(PublicUser::new)
                 .toList();
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/public/user/placements/{id}")
+    public ResponseEntity<UserPlacementStats> placementStats(@PathVariable("id") UUID id) {
+        if (userService.loadUser(id).isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        UserPlacementStats res = new UserPlacementStats(db, id);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }
