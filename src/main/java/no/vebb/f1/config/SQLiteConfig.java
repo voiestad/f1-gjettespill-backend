@@ -348,8 +348,7 @@ public class SQLiteConfig {
 				CREATE TABLE IF NOT EXISTS MailingList (
 					user_id TEXT PRIMARY KEY,
 					email TEXT NOT NULL,
-					FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
-					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
+					FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""
