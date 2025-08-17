@@ -6,13 +6,14 @@ import org.springframework.lang.NonNull;
 
 public record Position(int value) {
 
-    public Position {
+    public Position(int value) {
+        this.value = value;
         validate();
     }
 
     private void validate() throws InvalidPositionException {
         if (value < 1) {
-            throw new InvalidPositionException("Positions can't be non-positive");
+            throw new InvalidPositionException("Positions can't be non-positive. Was " + value);
         }
     }
 
