@@ -137,11 +137,31 @@ public class UserScore {
 
     public Points getScore() {
         Points score = new Points();
-        score = driversGuesses.stream().map(StandingsGuess::points).reduce(score, Points::add);
-        score = constructorsGuesses.stream().map(StandingsGuess::points).reduce(score, Points::add);
-        score = flagGuesses.stream().map(FlagGuess::points).reduce(score, Points::add);
-        score = winnerGuesses.stream().map(PlaceGuess::points).reduce(score, Points::add);
-        score = tenthGuesses.stream().map(PlaceGuess::points).reduce(score, Points::add);
+        score = score.add(getDriversScore());
+        score = score.add(getConstructorsScore());
+        score = score.add(getFlagScore());
+        score = score.add(getWinnerScore());
+        score = score.add(getTenthScore());
         return score;
+    }
+
+    public Points getDriversScore() {
+        return driversGuesses.stream().map(StandingsGuess::points).reduce(new Points(), Points::add);
+    }
+
+    public Points getConstructorsScore() {
+        return constructorsGuesses.stream().map(StandingsGuess::points).reduce(new Points(), Points::add);
+    }
+
+    public Points getFlagScore() {
+        return flagGuesses.stream().map(FlagGuess::points).reduce(new Points(), Points::add);
+    }
+
+    public Points getWinnerScore() {
+        return winnerGuesses.stream().map(PlaceGuess::points).reduce(new Points(), Points::add);
+    }
+
+    public Points getTenthScore() {
+        return tenthGuesses.stream().map(PlaceGuess::points).reduce(new Points(), Points::add);
     }
 }

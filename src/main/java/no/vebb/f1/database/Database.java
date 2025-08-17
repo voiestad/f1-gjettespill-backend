@@ -2110,52 +2110,60 @@ public class Database {
     }
 
     public Summary getSummary(RaceId raceId, Year year, PublicUser user) {
-        List<Map<String, Object>> categoriesRes;
-        Map<String, Object> totalRes;
-        if (raceId != null) {
-            final String categoriesSql = """
-                    	SELECT category, placement, points
-                    	FROM PlacementCategory
-                    	WHERE race_number = ?;
-                    """;
-            final String totalSql = """
-                    	SELECT placement, points
-                    	FROM PlacementRace
-                    	WHERE race_number = ?;
-                    """;
-            categoriesRes = jdbcTemplate.queryForList(categoriesSql, raceId);
-            totalRes = jdbcTemplate.queryForMap(totalSql, raceId);
-        } else {
-            final String categoriesSql = """
-                    	SELECT category, placement, points
-                    	FROM PlacementCategoryYearStart
-                    	WHERE year = ?;
-                    """;
-            final String totalSql = """
-                    	SELECT placement, points
-                    	FROM PlacementRaceYearStart
-                    	WHERE year = ?;
-                    """;
-            categoriesRes = jdbcTemplate.queryForList(categoriesSql, year);
-            totalRes = jdbcTemplate.queryForMap(totalSql, year);
+        try {
+            List<Map<String, Object>> categoriesRes;
+            Map<String, Object> totalRes;
+            if (raceId != null) {
+                final String categoriesSql = """
+                            SELECT category, placement, points
+                            FROM PlacementCategory
+                            WHERE race_number = ?
+                            AND guesser = ?;
+                        """;
+                final String totalSql = """
+                            SELECT placement, points
+                            FROM PlacementRace
+                            WHERE race_number = ?
+                            AND guesser = ?;
+                        """;
+                categoriesRes = jdbcTemplate.queryForList(categoriesSql, raceId, user.id);
+                totalRes = jdbcTemplate.queryForMap(totalSql, raceId, user.id);
+            } else {
+                final String categoriesSql = """
+                            SELECT category, placement, points
+                            FROM PlacementCategoryYearStart
+                            WHERE year = ?
+                            AND guesser = ?;
+                        """;
+                final String totalSql = """
+                            SELECT placement, points
+                            FROM PlacementRaceYearStart
+                            WHERE year = ?
+                            AND guesser = ?;
+                        """;
+                categoriesRes = jdbcTemplate.queryForList(categoriesSql, year, user.id);
+                totalRes = jdbcTemplate.queryForMap(totalSql, year, user.id);
+            }
+            Map<Category, Placement<Points>> categories = new HashMap<>();
+            for (Map<String, Object> row : categoriesRes) {
+                Category category = new Category((String) row.get("category"));
+                Position pos = new Position((int) row.get("placement"));
+                Points points = new Points((int) row.get("points"));
+                Placement<Points> placement = new Placement<>(pos, points);
+                categories.put(category, placement);
+            }
+            Placement<Points> drivers = categories.get(new Category("DRIVER", this));
+            Placement<Points> constructors = categories.get(new Category("CONSTRUCTOR", this));
+            Placement<Points> flag = categories.get(new Category("FLAG", this));
+            Placement<Points> winner = categories.get(new Category("FIRST", this));
+            Placement<Points> tenth = categories.get(new Category("TENTH", this));
+            Placement<Points> total =
+                    new Placement<>(new Position((int) totalRes.get("placement")),
+                            new Points((int) totalRes.get("points")));
+            return new Summary(drivers, constructors, flag, winner, tenth, total);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
         }
-        Map<Category, Placement<Points>> categories = new HashMap<>();
-        for (Map<String, Object> row : categoriesRes) {
-            Category category = new Category((String) row.get("category"));
-            Position pos = new Position((int) row.get("placement"));
-            Points points = new Points((int) row.get("points"));
-            Placement<Points> placement = new Placement<>(pos, points);
-            categories.put(category, placement);
-        }
-        Placement<Points> drivers = categories.get(new Category("DRIVER", this));
-        Placement<Points> constructors = categories.get(new Category("CONSTRUCTOR", this));
-        Placement<Points> flag = categories.get(new Category("FLAG", this));
-        Placement<Points> winner = categories.get(new Category("FIRST", this));
-        Placement<Points> tenth = categories.get(new Category("TENTH", this));
-        Placement<Points> total =
-                new Placement<>(new Position((int) totalRes.get("placement")),
-                        new Points((int) totalRes.get("points")));
-        return new Summary(drivers, constructors, flag, winner, tenth, total);
     }
 
     public List<Placement<Year>> getPreviousPlacements(UUID userId) {
@@ -2167,7 +2175,7 @@ public class Database {
         """;
         return jdbcTemplate.queryForList(sql, userId).stream()
                 .map(row ->
-                        new Placement<Year>(
+                        new Placement<>(
                                 new Position((int) row.get("placement")),
                                 new Year((int) row.get("year"))
                         ))
@@ -2186,5 +2194,51 @@ public class Database {
             new MedalCount((int) res.get("silver")),
             new MedalCount((int) res.get("bronze"))
         );
+    }
+
+    public void addUserScore(UUID userId, Summary summary, RaceId raceId, Year year) {
+        if (raceId != null) {
+            addUserScoreRace(userId, summary, raceId);
+        } else {
+            addUserScoreYearStart(userId, summary, year);
+        }
+    }
+
+    private void addUserScoreRace(UUID userId, Summary summary, RaceId raceId) {
+        final String addTotalSql = """
+            INSERT OR REPLACE INTO PlacementRace
+            (race_number, guesser, placement, points)
+            VALUES (?, ?, ?, ?);
+        """;
+        final String addCategorySql = """
+            INSERT OR REPLACE INTO PlacementCategory
+            (race_number, guesser, category, placement, points)
+            VALUES (?, ?, ?, ?, ?);
+        """;
+        jdbcTemplate.update(addTotalSql, raceId, userId, summary.total().pos(), summary.total().value());
+        jdbcTemplate.update(addCategorySql, raceId, userId, new Category("DRIVER"), summary.drivers().pos(), summary.drivers().value());
+        jdbcTemplate.update(addCategorySql, raceId, userId, new Category("CONSTRUCTOR"), summary.constructors().pos(), summary.constructors().value());
+        jdbcTemplate.update(addCategorySql, raceId, userId, new Category("FLAG"), summary.flag().pos(), summary.flag().value());
+        jdbcTemplate.update(addCategorySql, raceId, userId, new Category("FIRST"), summary.winner().pos(), summary.winner().value());
+        jdbcTemplate.update(addCategorySql, raceId, userId, new Category("TENTH"), summary.tenth().pos(), summary.tenth().value());
+    }
+
+    private void addUserScoreYearStart(UUID userId, Summary summary, Year year) {
+        final String addTotalSql = """
+            INSERT OR REPLACE INTO PlacementRaceYearStart
+            (year, guesser, placement, points)
+            VALUES (?, ?, ?, ?);
+        """;
+        final String addCategorySql = """
+            INSERT OR REPLACE INTO PlacementCategoryYearStart
+            (year, guesser, category, placement, points)
+            VALUES (?, ?, ?, ?, ?);
+        """;
+        jdbcTemplate.update(addTotalSql, year, userId, summary.total().pos(), summary.total().value());
+        jdbcTemplate.update(addCategorySql, year, userId, new Category("DRIVER"), summary.drivers().pos(), summary.drivers().value());
+        jdbcTemplate.update(addCategorySql, year, userId, new Category("CONSTRUCTOR"), summary.constructors().pos(), summary.constructors().value());
+        jdbcTemplate.update(addCategorySql, year, userId, new Category("FLAG"), summary.flag().pos(), summary.flag().value());
+        jdbcTemplate.update(addCategorySql, year, userId, new Category("FIRST"), summary.winner().pos(), summary.winner().value());
+        jdbcTemplate.update(addCategorySql, year, userId, new Category("TENTH"), summary.tenth().pos(), summary.tenth().value());
     }
 }
