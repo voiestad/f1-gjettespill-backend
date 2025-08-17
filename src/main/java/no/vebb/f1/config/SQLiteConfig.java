@@ -65,13 +65,13 @@ public class SQLiteConfig {
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS PlacementCategoryYearStart (
-					race_number INTEGER NOT NULL,
+					year INTEGER NOT NULL,
 					guesser TEXT NOT NULL,
 					category TEXT NOT NULL,
 					placement INTEGER NOT NULL,
 					points INTEGER NOT NULL,
-					PRIMARY KEY (race_number, guesser, category),
-					FOREIGN KEY (race_number) REFERENCES Race(id) ON DELETE CASCADE,
+					PRIMARY KEY (year, guesser, category),
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE,
 					FOREIGN KEY (guesser) REFERENCES User(id) ON DELETE CASCADE,
 				    FOREIGN KEY (category) REFERENCES Category(name) ON DELETE CASCADE
 			);
