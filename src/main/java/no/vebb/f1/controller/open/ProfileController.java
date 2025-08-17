@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import no.vebb.f1.scoring.UserPlacementStats;
+import no.vebb.f1.scoring.UserScoreResponse;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import org.springframework.http.HttpStatus;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.scoring.UserScore;
 import no.vebb.f1.user.PublicUser;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
@@ -38,7 +38,7 @@ public class ProfileController {
     }
 
     @GetMapping("/api/public/user/{id}")
-    public ResponseEntity<UserScore> guesserProfile(
+    public ResponseEntity<UserScoreResponse> guesserProfile(
             @PathVariable("id") UUID id,
             @RequestParam(value = "raceId", required = false) Integer raceId) {
         Optional<User> optUser = userService.loadUser(id);
@@ -50,7 +50,7 @@ public class ProfileController {
     }
 
     @GetMapping("/api/user/myprofile")
-    public ResponseEntity<UserScore> myProfile(
+    public ResponseEntity<UserScoreResponse> myProfile(
             @RequestParam(value = "raceId", required = false) Integer raceId) {
         Optional<User> optUser = userService.loadUser();
         if (optUser.isEmpty()) {
@@ -60,25 +60,25 @@ public class ProfileController {
         return getGuesserProfile(user, raceId);
     }
 
-    private ResponseEntity<UserScore> getGuesserProfile(User user, Integer inputRaceId) {
+    private ResponseEntity<UserScoreResponse> getGuesserProfile(User user, Integer inputRaceId) {
         if (inputRaceId == null) {
             return getUpToDate(user);
         }
         try {
             RaceId raceId = new RaceId(inputRaceId, db);
             Year year = db.getYearFromRaceId(raceId);
-            UserScore res = new UserScore(new PublicUser(user), year, raceId, db);
+            UserScoreResponse res = new UserScoreResponse(new PublicUser(user), year, raceId, db);
             return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (InvalidRaceException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
-    private ResponseEntity<UserScore> getUpToDate(User user) {
+    private ResponseEntity<UserScoreResponse> getUpToDate(User user) {
         try {
             Year year = new Year(TimeUtil.getCurrentYear(), db);
             if (isAbleToSeeGuesses(user, year)) {
-                UserScore res = new UserScore(new PublicUser(user), year, db);
+                UserScoreResponse res = new UserScoreResponse(new PublicUser(user), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {
