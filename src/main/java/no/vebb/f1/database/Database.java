@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import no.vebb.f1.graph.GuesserPointsSeason;
 import no.vebb.f1.user.PublicUser;
 import no.vebb.f1.util.collection.userTables.Summary;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -2240,5 +2241,79 @@ public class Database {
         jdbcTemplate.update(addCategorySql, year, userId, new Category("FLAG"), summary.flag().pos(), summary.flag().value());
         jdbcTemplate.update(addCategorySql, year, userId, new Category("FIRST"), summary.winner().pos(), summary.winner().value());
         jdbcTemplate.update(addCategorySql, year, userId, new Category("TENTH"), summary.tenth().pos(), summary.tenth().value());
+    }
+
+    public List<GuesserPointsSeason> getGraph(Year year) {
+        final String sql = """
+            SELECT prys.guesser as guesser, u.username as username, prys.points as points, 0 as position
+            FROM PlacementRaceYearStart prys
+            JOIN User u ON u.id = prys.guesser
+            WHERE year = ?
+            UNION
+            SELECT pr.guesser AS guesser, u.username as username, pr.points AS points, ro.position AS position
+            FROM PlacementRace pr
+            JOIN RaceOrder ro ON ro.id = pr.race_number
+            JOIN User u ON u.id = pr.guesser
+            WHERE year = ?
+            ORDER BY ro.position;
+        """;
+        Map<UUID, List<Points>> userPoints = new HashMap<>();
+        Map<UUID, String> usernames = new HashMap<>();
+        List<Map<String, Object>> res = jdbcTemplate.queryForList(sql, year, year);
+        for (Map<String, Object> row : res) {
+            UUID id = UUID.fromString(row.get("guesser").toString());
+            Points points = new Points((int) row.get("points"));
+            if (!userPoints.containsKey(id)) {
+                String username = row.get("username").toString();
+                usernames.put(id, username);
+                userPoints.put(id, new ArrayList<>());
+            }
+            userPoints.get(id).add(points);
+        }
+        return userPoints.entrySet().stream()
+                .map(entry -> new GuesserPointsSeason(usernames.get(entry.getKey()), entry.getValue()))
+                .toList();
+    }
+
+    public List<RankedGuesser> getLeaderboard(Year year) {
+        final String maxPosSql = """
+            SELECT MAX(position)
+            FROM (
+                SELECT 0 as position
+                FROM PlacementRaceYearStart prys
+                UNION
+                SELECT ro.position as position
+                FROM PlacementRace pr
+                JOIN RaceOrder ro ON ro.id = pr.race_number
+                WHERE ro.year = ?
+                GROUP BY ro.position
+                );""";
+        int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year);
+        final String sql = """
+            SELECT guesser, username, points, position, placement
+            FROM (SELECT prys.guesser as guesser, u.username as username, prys.points as points, 0 as position, prys.placement as placement
+            FROM PlacementRaceYearStart prys
+            JOIN User u ON u.id = prys.guesser
+            WHERE year = ?
+            UNION
+            SELECT pr.guesser AS guesser, u.username as username, pr.points AS points, ro.position AS position, pr.placement as placement
+            FROM PlacementRace pr
+            JOIN RaceOrder ro ON ro.id = pr.race_number
+            JOIN User u ON u.id = pr.guesser
+            WHERE year = ?
+            ORDER BY ro.position)
+            WHERE position = ?
+            ORDER BY placement, username;
+        """;
+        List<Map<String, Object>> res = jdbcTemplate.queryForList(sql, year, year, maxPos);
+        return res.stream()
+                .map(row -> new RankedGuesser(
+                        new Guesser(
+                        (String) row.get("username"),
+                        new Points((int) row.get("points")),
+                        UUID.fromString((String) row.get("guesser"))
+                ), new Position((int) row.get("placement"))
+                ))
+                .toList();
     }
 }

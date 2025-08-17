@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 
+import no.vebb.f1.scoring.ScoreCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -17,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.graph.GraphCache;
 import no.vebb.f1.user.UserMailService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
@@ -36,12 +36,12 @@ public class Importer {
 
 	private final Database db;
 	private final UserMailService userMailService;
-	private final GraphCache graphCache;
+	private final ScoreCalculator scoreCalculator;
 
-	public Importer(Database db, UserMailService userMailService, GraphCache graphCache) {
+	public Importer(Database db, UserMailService userMailService, ScoreCalculator scoreCalculator) {
 		this.db = db;
 		this.userMailService = userMailService;
-		this.graphCache = graphCache;
+		this.scoreCalculator = scoreCalculator;
 	}
 
 	@Transactional
@@ -83,13 +83,13 @@ public class Importer {
 						logger.info("Standings were not new.");
 						throw new RuntimeException("Standings were not up to date with race result.");	
 					} else {
-						graphCache.refresh();
+						scoreCalculator.calculateScores();
 						logger.info("Race result changed outside points without standings changing. Sending message to admins.");
 						userMailService.sendServerMessageToAdmins(
 							"Endringer i resultat av løp utenfor poengene uten at mesterskapet endret seg. Vennligst verifiser at mesterskapet er korrekt.");
 					}
 				} else {
-					graphCache.refresh();
+					scoreCalculator.calculateScores();
 					logger.info("Imported standings");
 				}
 			}
@@ -151,7 +151,7 @@ public class Importer {
 			}
 		} catch (InvalidYearException | EmptyResultDataAccessException ignored) {
 		}
-        graphCache.refresh();
+		scoreCalculator.calculateScores();
 	}
 
 	private void importStartingGridData(RaceId raceId) {

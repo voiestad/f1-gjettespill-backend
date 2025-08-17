@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+import no.vebb.f1.scoring.ScoreCalculator;
 import no.vebb.f1.util.response.CutoffResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.graph.GraphCache;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.domainPrimitive.RaceId;
@@ -24,11 +24,11 @@ import no.vebb.f1.util.exception.InvalidRaceException;
 public class CutoffController {
 
     private final Database db;
-    private final GraphCache graphCache;
+    private final ScoreCalculator scoreCalculator;
 
-    public CutoffController(Database db, GraphCache graphCache) {
+    public CutoffController(Database db, ScoreCalculator scoreCalculator) {
         this.db = db;
-        this.graphCache = graphCache;
+        this.scoreCalculator = scoreCalculator;
     }
 
     @GetMapping("/list/{year}")
@@ -64,7 +64,7 @@ public class CutoffController {
         try {
             Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
             db.setCutoffYear(cutoffTime, seasonYear);
-            graphCache.refresh();
+            scoreCalculator.calculateScores();
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (DateTimeParseException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
