@@ -49,7 +49,7 @@ public class ProfileController {
         return getGuesserProfile(user, raceId);
     }
 
-    @GetMapping("/api/user/myprofile")
+    @GetMapping("/api/user/my-profile")
     public ResponseEntity<UserScoreResponse> myProfile(
             @RequestParam(value = "raceId", required = false) Integer raceId) {
         Optional<User> optUser = userService.loadUser();
@@ -99,10 +99,21 @@ public class ProfileController {
     }
 
     @GetMapping("/api/public/user/placements/{id}")
-    public ResponseEntity<UserPlacementStats> placementStats(@PathVariable("id") UUID id) {
+    public ResponseEntity<UserPlacementStats> placementStatsById(@PathVariable("id") UUID id) {
         if (userService.loadUser(id).isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+        UserPlacementStats res = new UserPlacementStats(db, id);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/user/my-placements")
+    public ResponseEntity<UserPlacementStats> myPlacementStats() {
+        return userService.loadUser().map(user ->
+                getPlacementStats(user.id())).orElseGet(() -> new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+    private ResponseEntity<UserPlacementStats> getPlacementStats(UUID id) {
         UserPlacementStats res = new UserPlacementStats(db, id);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
