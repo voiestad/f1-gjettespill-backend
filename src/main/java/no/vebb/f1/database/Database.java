@@ -2316,4 +2316,22 @@ public class Database {
                 ))
                 .toList();
     }
+
+    public void finalizeYear(Year year) {
+        if (isFinishedYear(year)) {
+            return;
+        }
+        final String markAsFinished = "INSERT INTO YearFinished (year) VALUES (?);";
+        jdbcTemplate.update(markAsFinished, year);
+        final String addPlacement = "INSERT INTO PlacementYear (year, guesser, placement) VALUES (?, ?, ?);";
+        List<RankedGuesser> leaderboard = getLeaderboard(year);
+        for (RankedGuesser rankedGuesser : leaderboard) {
+            jdbcTemplate.update(addPlacement, year, rankedGuesser.guesser().id(), rankedGuesser.rank());
+        }
+    }
+
+    public boolean isFinishedYear(Year year) {
+        final String sql = "SELECT COUNT(*) FROM YearFinished WHERE year = ?;";
+        return jdbcTemplate.queryForObject(sql, Integer.class, year) > 0;
+    }
 }
