@@ -11,10 +11,12 @@ import java.util.UUID;
 public class UserPlacementStats {
     public final List<Placement<Year>> previousPlacements;
     public final Medals medals;
+    public final String username;
 
     public UserPlacementStats(Database db, UUID userId) {
         this.previousPlacements = db.getPreviousPlacements(userId);
         this.medals = db.getMedals(userId);
+        this.username = db.getUserFromId(userId).username();
     }
 
 }
