@@ -67,8 +67,11 @@ public class ProfileController {
         try {
             RaceId raceId = new RaceId(inputRaceId, db);
             Year year = db.getYearFromRaceId(raceId);
-            UserScoreResponse res = new UserScoreResponse(new PublicUser(user), year, raceId, db);
-            return new ResponseEntity<>(res, HttpStatus.OK);
+            if (isAbleToSeeGuesses(user, year)) {
+                UserScoreResponse res = new UserScoreResponse(new PublicUser(user), year, raceId, db);
+                return new ResponseEntity<>(res, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         } catch (InvalidRaceException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -82,6 +85,7 @@ public class ProfileController {
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
