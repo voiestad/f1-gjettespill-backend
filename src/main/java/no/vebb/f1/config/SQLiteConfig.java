@@ -104,7 +104,7 @@ public class SQLiteConfig {
 					position INTEGER NOT NULL,
 					PRIMARY KEY (year, position),
 					FOREIGN KEY (id) REFERENCES Race(id) ON DELETE CASCADE,
-						FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
+					FOREIGN KEY (year) REFERENCES Year(year) ON DELETE CASCADE
 			);
 			""");
 			jdbcTemplate.execute("""

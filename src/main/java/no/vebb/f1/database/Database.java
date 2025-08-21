@@ -2334,4 +2334,14 @@ public class Database {
         final String sql = "SELECT COUNT(*) FROM YearFinished WHERE year = ?;";
         return jdbcTemplate.queryForObject(sql, Integer.class, year) > 0;
     }
+
+    public Year getYearFromFlagId(int id) {
+        final String sql = """
+            SELECT ro.year
+            FROM RaceOrder ro
+            JOIN FlagStats fs ON ro.id = fs.race_number
+            WHERE fs.id = ?;
+        """;
+        return new Year(jdbcTemplate.queryForObject(sql, Integer.class, id));
+    }
 }

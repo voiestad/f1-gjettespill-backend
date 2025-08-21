@@ -1,5 +1,6 @@
 package no.vebb.f1.controller.admin.season;
 
+import no.vebb.f1.util.exception.YearFinishedException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,16 +31,19 @@ public class ManagePointsSystemController {
     public ResponseEntity<?> addPointsMapping(
             @RequestParam("year") int year,
             @RequestParam("category") String category) {
-        Year seasonYear = new Year(year, db);
+        Year validYear = new Year(year, db);
+        if (db.isFinishedYear(validYear)) {
+            throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
+        }
         Diff newDiff;
         try {
             Category validCategory = new Category(category, db);
             try {
-                newDiff = db.getMaxDiffInPointsMap(seasonYear, validCategory).add(new Diff(1));
+                newDiff = db.getMaxDiffInPointsMap(validYear, validCategory).add(new Diff(1));
             } catch (NullPointerException e) {
                 newDiff = new Diff();
             }
-            db.addDiffToPointsMap(validCategory, newDiff, seasonYear);
+            db.addDiffToPointsMap(validCategory, newDiff, validYear);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidCategoryException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -51,11 +55,14 @@ public class ManagePointsSystemController {
     public ResponseEntity<?> deletePointsMapping(
             @RequestParam("year") int year,
             @RequestParam("category") String category) {
-        Year seasonYear = new Year(year, db);
+        Year validYear = new Year(year, db);
+        if (db.isFinishedYear(validYear)) {
+            throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
+        }
         try {
             Category validCategory = new Category(category, db);
-            Diff maxDiff = db.getMaxDiffInPointsMap(seasonYear, validCategory);
-            db.removeDiffToPointsMap(validCategory, maxDiff, seasonYear);
+            Diff maxDiff = db.getMaxDiffInPointsMap(validYear, validCategory);
+            db.removeDiffToPointsMap(validCategory, maxDiff, validYear);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (NullPointerException | InvalidCategoryException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -69,17 +76,20 @@ public class ManagePointsSystemController {
             @RequestParam("category") String category,
             @RequestParam("diff") int diff,
             @RequestParam("points") int points) {
-        Year seasonYear = new Year(year, db);
+        Year validYear = new Year(year, db);
+        if (db.isFinishedYear(validYear)) {
+            throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
+        }
         try {
             Category validCategory = new Category(category, db);
             Diff validDiff = new Diff(diff);
-            boolean isValidDiff = db.isValidDiffInPointsMap(validCategory, validDiff, seasonYear);
+            boolean isValidDiff = db.isValidDiffInPointsMap(validCategory, validDiff, validYear);
             if (!isValidDiff) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
             Points validPoints = new Points(points);
-            db.setNewDiffToPointsInPointsMap(validCategory, validDiff, seasonYear, validPoints);
+            db.setNewDiffToPointsInPointsMap(validCategory, validDiff, validYear, validPoints);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (EmptyResultDataAccessException | InvalidCategoryException | InvalidPointsException |
                  InvalidDiffException e) {

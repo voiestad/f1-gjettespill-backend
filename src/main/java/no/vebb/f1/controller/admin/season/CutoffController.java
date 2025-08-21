@@ -6,6 +6,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import no.vebb.f1.scoring.ScoreCalculator;
+import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.util.response.CutoffResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,10 @@ public class CutoffController {
             @RequestParam("cutoff") String cutoff) {
         try {
             RaceId validRaceId = new RaceId(raceId, db);
+            Year year = db.getYearFromRaceId(validRaceId);
+            if (db.isFinishedYear(year)) {
+                throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
+            }
             Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
             db.setCutoffRace(cutoffTime, validRaceId);
             return new ResponseEntity<>(HttpStatus.OK);
@@ -60,10 +65,13 @@ public class CutoffController {
     public ResponseEntity<String> setCutoffYear(
             @RequestParam("year") int year,
             @RequestParam("cutoff") String cutoff) {
-        Year seasonYear = new Year(year, db);
+        Year validYear = new Year(year, db);
+        if (db.isFinishedYear(validYear)) {
+            throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
+        }
         try {
             Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
-            db.setCutoffYear(cutoffTime, seasonYear);
+            db.setCutoffYear(cutoffTime, validYear);
             scoreCalculator.calculateScores();
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (DateTimeParseException e) {
