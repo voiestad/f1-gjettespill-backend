@@ -40,29 +40,34 @@ public class ProfileController {
     @GetMapping("/api/public/user/{id}")
     public ResponseEntity<UserScoreResponse> guesserProfile(
             @PathVariable("id") UUID id,
-            @RequestParam(value = "raceId", required = false) Integer raceId) {
+            @RequestParam(value = "raceId", required = false) Integer raceId,
+            @RequestParam(value = "year", required = false) Integer year) {
         Optional<User> optUser = userService.loadUser(id);
         if (optUser.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         User user = optUser.get();
-        return getGuesserProfile(user, raceId);
+        return getGuesserProfile(user, raceId, year);
     }
 
     @GetMapping("/api/user/my-profile")
     public ResponseEntity<UserScoreResponse> myProfile(
-            @RequestParam(value = "raceId", required = false) Integer raceId) {
+            @RequestParam(value = "raceId", required = false) Integer raceId,
+            @RequestParam(value = "year", required = false) Integer year) {
         Optional<User> optUser = userService.loadUser();
         if (optUser.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         User user = optUser.get();
-        return getGuesserProfile(user, raceId);
+        return getGuesserProfile(user, raceId, year);
     }
 
-    private ResponseEntity<UserScoreResponse> getGuesserProfile(User user, Integer inputRaceId) {
+    private ResponseEntity<UserScoreResponse> getGuesserProfile(User user, Integer inputRaceId, Integer inputYear) {
         if (inputRaceId == null) {
-            return getUpToDate(user);
+            if (inputYear == null) {
+                return getUpToDate(user);
+            }
+            return getGuesserProfileYear(user, inputYear);
         }
         try {
             RaceId raceId = new RaceId(inputRaceId, db);
@@ -80,6 +85,19 @@ public class ProfileController {
     private ResponseEntity<UserScoreResponse> getUpToDate(User user) {
         try {
             Year year = new Year(TimeUtil.getCurrentYear(), db);
+            if (isAbleToSeeGuesses(user, year)) {
+                UserScoreResponse res = new UserScoreResponse(new PublicUser(user), year, db);
+                return new ResponseEntity<>(res, HttpStatus.OK);
+            }
+        } catch (InvalidYearException ignored) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    private ResponseEntity<UserScoreResponse> getGuesserProfileYear(User user, int inputYear) {
+        try {
+            Year year = new Year(inputYear, db);
             if (isAbleToSeeGuesses(user, year)) {
                 UserScoreResponse res = new UserScoreResponse(new PublicUser(user), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
