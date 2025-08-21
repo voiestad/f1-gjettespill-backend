@@ -31,11 +31,8 @@ public class GeneralApiController {
     }
 
     @GetMapping("/year/list")
-    public ResponseEntity<List<Integer>> listYears() {
-        List<Integer> res = db.getAllValidYears().stream()
-                .map(year -> year.value)
-                .toList();
-        return new ResponseEntity<>(res, HttpStatus.OK);
+    public ResponseEntity<List<Year>> listYears() {
+        return new ResponseEntity<>(db.getAllValidYears(), HttpStatus.OK);
     }
 
     @GetMapping("/race/list/{year}")

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.graph.GuesserPointsSeason;
-import no.vebb.f1.graph.GraphCache;
+import no.vebb.f1.graph.Graph;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.RankedGuesser;
 import no.vebb.f1.util.domainPrimitive.Year;
@@ -21,16 +21,16 @@ import no.vebb.f1.util.exception.InvalidYearException;
 public class HomeController {
 
 	private final Database db;
-	private final GraphCache graphCache;
+	private final Graph graph;
 
-	public HomeController(Database db, GraphCache graphCache) {
+	public HomeController(Database db, Graph graphCache) {
 		this.db = db;
-		this.graphCache = graphCache;
+		this.graph = graphCache;
 	}
 
 	@GetMapping("/api/public/home")
 	public ResponseEntity<HomePageResponse> home() {
-		List<RankedGuesser> leaderboard = graphCache.getleaderboard();
+		List<RankedGuesser> leaderboard = graph.getleaderboard();
 		List<String> guessers = null;
 		List<GuesserPointsSeason> graph = null;
 		try {
@@ -40,7 +40,7 @@ public class HomeController {
 					.map(User::username)
 					.toList();
 			} else {
-				graph = graphCache.getGraph();
+				graph = this.graph.getGraph();
 			}
 		} catch (InvalidYearException ignored) {
 		}

@@ -1,5 +1,6 @@
 package no.vebb.f1.components;
 
+import no.vebb.f1.util.exception.YearFinishedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -39,5 +40,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoUsernameException.class)
     public ResponseEntity<?> handleNoUsername() {
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(YearFinishedException.class)
+    public ResponseEntity<?> handleYearFinished() {
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 }
