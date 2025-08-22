@@ -408,10 +408,10 @@ public class PostgreSQLConfig {
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS bingo_cards (
 					year INTEGER NOT NULL,
-					bing_card_id INTEGER NOT NULL,
+					bingo_square_id INTEGER NOT NULL,
 					square_text TEXT NOT NULL,
 					marked BOOLEAN NOT NULL,
-					PRIMARY KEY (year, bing_card_id),
+					PRIMARY KEY (year, bingo_square_id),
 					FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 				);
 			""");
