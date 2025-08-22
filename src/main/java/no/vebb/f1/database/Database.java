@@ -2423,4 +2423,9 @@ public class Database {
         """;
         return new Year(jdbcTemplate.queryForObject(sql, Integer.class, id));
     }
+
+    public void removeReferralCode(UUID userId) {
+        final String sql = "DELETE FROM referral_codes WHERE user_id = ?;";
+        jdbcTemplate.update(sql, userId);
+    }
 }
