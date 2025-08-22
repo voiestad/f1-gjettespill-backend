@@ -287,7 +287,7 @@ public class Importer {
 		db.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
 	}
 
-	public void importRaceNames(List<Integer> racesToImportFrom, int year) {
+	public void importRaceNames(List<Integer> racesToImportFrom, Year year) {
 		int position = 1;
 		for (int raceId : racesToImportFrom) {
 			if (addRace(raceId, year, position)) {
@@ -298,10 +298,10 @@ public class Importer {
 
 	public void importRaceName(int raceId, Year year) {
 		int position = db.getMaxRaceOrderPosition(year) + 1;
-		addRace(raceId, year.value, position);
+		addRace(raceId, year, position);
 	}
 
-	private boolean addRace(int raceId, int year, int position) {
+	private boolean addRace(int raceId, Year year, int position) {
 		boolean isAlreadyAdded = db.isRaceAdded(raceId);
 		if (isAlreadyAdded) {
 			throw new RuntimeException("Race name was already added");
@@ -350,7 +350,7 @@ public class Importer {
 				new PositionedCompetitor(
 					String.valueOf(Integer.parseInt(row.get(0))),
 					parseDriver(row.get(1), year), 
-					String.valueOf((int) Double.parseDouble(row.get(4)))
+					(int) Double.parseDouble(row.get(4))
 					))
 				.toList();
 			ResultChangeStatus status = isDriverStandingsNew(currentStandings, year);
@@ -361,7 +361,7 @@ public class Importer {
 			for (PositionedCompetitor competitor : currentStandings) {
 				Driver driver = new Driver(competitor.name(), db);
 				int position = Integer.parseInt(competitor.position());
-				Points points = new Points(Integer.parseInt(competitor.points()));
+				Points points = new Points(competitor.points());
 				db.insertDriverIntoStandings(newestRace, driver, position, points);
 			}
 			logger.info("Driver standings added for race '{}'", newestRace);
@@ -394,7 +394,7 @@ public class Importer {
 				new PositionedCompetitor(
 					String.valueOf(Integer.parseInt(row.get(0))),
 					row.get(1),
-					String.valueOf((int) Double.parseDouble(row.get(2)))
+					(int) Double.parseDouble(row.get(2))
 					))
 				.toList();
 			ResultChangeStatus status = isConstructorStandingsNew(currentStandings, year);
@@ -404,7 +404,7 @@ public class Importer {
 			}
 			for (PositionedCompetitor competitor : currentStandings) {
 				int position = Integer.parseInt(competitor.position());
-				Points points = new Points(Integer.parseInt(competitor.points()));
+				Points points = new Points(competitor.points());
 				Constructor validConstructor = new Constructor(competitor.name());
 				db.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
 			}
@@ -456,7 +456,7 @@ public class Importer {
 
 	private Points compPoints(List<PositionedCompetitor> competitors) {
 		return competitors.stream()
-			.map(comp -> new Points(Integer.parseInt(comp.points())))
+			.map(comp -> new Points(comp.points()))
 			.reduce(new Points(), Points::add);
 	}
 

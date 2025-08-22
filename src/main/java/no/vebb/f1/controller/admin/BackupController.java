@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class BackupController {
 
-	public static final Logger logger = LoggerFactory.getLogger(BackupController.class);
+	private static final Logger logger = LoggerFactory.getLogger(BackupController.class);
 
 	@GetMapping("/api/admin/getbackup")
 	public ResponseEntity<Resource> getBackup() {
