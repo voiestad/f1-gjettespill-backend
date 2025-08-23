@@ -2015,7 +2015,7 @@ public class Database {
                         new BingoSquare(
                                 (String) row.get("square_text"),
                                 (boolean) row.get("marked"),
-                                (int) row.get("bing_card_id"),
+                                (int) row.get("bingo_square_id"),
                                 new Year((int) row.get("year"))
                         )
                 ).toList();
@@ -2031,7 +2031,7 @@ public class Database {
         return new BingoSquare(
                 (String) row.get("square_text"),
                 (boolean) row.get("marked"),
-                (int) row.get("bing_card_id"),
+                (int) row.get("bingo_square_id"),
                 new Year((int) row.get("year"))
         );
     }
