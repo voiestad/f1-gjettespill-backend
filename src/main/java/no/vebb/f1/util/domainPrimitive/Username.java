@@ -9,8 +9,7 @@ public class Username {
 	private final Database db;
 
 	public Username(String username, Database db) throws InvalidUsernameException {
-		username = username.strip();
-		this.username = username;
+		this.username = username.strip();
 		this.db = db;
 		validate();
 	}
@@ -24,8 +23,8 @@ public class Username {
 			throw new InvalidUsernameException("Brukernavn kan bare inneholde (a-å, A-Å).");
 		}
 		
-		if (username.equalsIgnoreCase("ANONYM")) {
-			throw new InvalidUsernameException("Brukernavn kan ikke være 'Anonym'.");
+		if (username.length() > 30) {
+			throw new InvalidUsernameException("Brukernavn kan maksimalt inneholde 30 tegn.");
 		}
 
 		boolean isUsernameInUse = db.isUsernameInUse(username);

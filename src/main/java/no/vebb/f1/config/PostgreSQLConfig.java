@@ -22,6 +22,9 @@ public class PostgreSQLConfig {
 				);
 			""");
 			jdbcTemplate.execute("""
+				CREATE SEQUENCE IF NOT EXISTS anonymous_username_seq START 1;
+			""");
+			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS races (
 					race_id INTEGER PRIMARY KEY,
 					race_name TEXT NOT NULL
@@ -369,7 +372,7 @@ public class PostgreSQLConfig {
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS referral_codes (
 					user_id UUID PRIMARY KEY,
-					referral_code INTEGER NOT NULL,
+					referral_code BIGINT NOT NULL,
 					cutoff TEXT NOT NULL,
 					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 				);

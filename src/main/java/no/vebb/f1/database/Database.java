@@ -273,13 +273,12 @@ public class Database {
 
     /**
      * Checks if the username is already in use by a user.
-     * NOTE: Username should be in uppercase.
      *
-     * @param username the username in uppercase
+     * @param username the username
      * @return true if username is in use
      */
     public boolean isUsernameInUse(String username) {
-        final String sqlCheckUsername = "SELECT COUNT(*) FROM users WHERE username = ?;";
+        final String sqlCheckUsername = "SELECT COUNT(*) FROM users WHERE username = ?::citext;";
         return jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, username) > 0;
     }
 
@@ -307,7 +306,7 @@ public class Database {
     public void deleteUser(UUID userId) {
         final String deleteUser = """
                 UPDATE users
-                SET username = 'Anonym', google_id = ?
+                SET username = 'Anonym' || nextVal('anonymous_username_seq'), google_id = ?
                 WHERE user_id = ?;
                 """;
         clearUserFromMailing(userId);
@@ -1873,7 +1872,7 @@ public class Database {
                 JOIN races r ON n.race_id = r.race_id
                 JOIN race_order ro ON n.race_id = ro.race_id
                 WHERE n.user_id = ?
-                GROUP BY n.race_id, ro.position, ro.year
+                GROUP BY n.race_id, ro.position, ro.year, r.race_name
                 ORDER BY ro.year DESC, ro.position;
                 """;
         return jdbcTemplate.queryForList(sql, userId).stream()
@@ -2090,7 +2089,7 @@ public class Database {
     public List<SessionType> getSessionTypes() {
         final String sql = "SELECT session_type FROM session_types ORDER BY session_type;";
         return jdbcTemplate.queryForList(sql).stream()
-                .map(row -> new SessionType((String) row.get("name")))
+                .map(row -> new SessionType((String) row.get("session_type")))
                 .toList();
     }
 
