@@ -27,6 +27,10 @@ public class Username {
 			throw new InvalidUsernameException("Brukernavn kan maksimalt inneholde 30 tegn.");
 		}
 
+		if (username.length() >= 6 && username.substring(0, 6).equalsIgnoreCase("anonym")) {
+			throw new InvalidUsernameException("Brukernavn kan ikke start med 'Anonym'.");
+		}
+
 		boolean isUsernameInUse = db.isUsernameInUse(username);
 
 		if (isUsernameInUse) {
