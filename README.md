@@ -22,13 +22,12 @@ Dette repoet er koden for backenden til nettsiden. Koden for frontenden ligger [
 2. Fyll inn følgende informasjon:
 
 ```
-spring.security.oauth2.client.registration.google.redirect-uri={baseUrl}/login/oauth2/code/google
 spring.security.oauth2.client.registration.google.client-id={id}
 spring.security.oauth2.client.registration.google.client-secret={secret}
 spring.mail.username={email}
 spring.mail.password={app password}
-f1.login.success-redirect-uri={redirect URI}
-f1.logout.success-redirect-uri={redirect URI}
+spring.datasource.username={database username}
+spring.datasource.password={database password}
 ```
 
 ## Kjøre Applikasjonen
