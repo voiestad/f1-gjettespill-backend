@@ -71,7 +71,7 @@ public class ManageSeasonController {
             if (isPosOutOfBounds) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
-            List<RaceId> races = db.getRacesFromSeason(new Year(year, db));
+            List<RaceId> races = db.getRacesFromSeason(validYear);
             db.removeRaceOrderFromSeason(validYear);
             int currentPos = 1;
             for (RaceId id : races) {
@@ -79,14 +79,14 @@ public class ManageSeasonController {
                     continue;
                 }
                 if (currentPos == position) {
-                    db.insertRaceOrder(validRaceId, year, currentPos);
+                    db.insertRaceOrder(validRaceId, validYear, currentPos);
                     currentPos++;
                 }
-                db.insertRaceOrder(id, year, currentPos);
+                db.insertRaceOrder(id, validYear, currentPos);
                 currentPos++;
             }
             if (currentPos == position) {
-                db.insertRaceOrder(validRaceId, year, currentPos);
+                db.insertRaceOrder(validRaceId, validYear, currentPos);
             }
             importer.importData();
             return new ResponseEntity<>(HttpStatus.OK);
@@ -114,7 +114,7 @@ public class ManageSeasonController {
             db.removeRaceOrderFromSeason(validYear);
             int currentPos = 1;
             for (RaceId id : races) {
-                db.insertRaceOrder(id, year, currentPos);
+                db.insertRaceOrder(id, validYear, currentPos);
                 currentPos++;
             }
             return new ResponseEntity<>(HttpStatus.OK);

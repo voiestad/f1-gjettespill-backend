@@ -6,13 +6,10 @@ import no.vebb.f1.util.exception.InvalidUsernameException;
 public class Username {
 	
 	public final String username;
-	public final String usernameUpper;
 	private final Database db;
 
 	public Username(String username, Database db) throws InvalidUsernameException {
-		username = username.strip();
-		this.username = username;
-		this.usernameUpper = username.toUpperCase();
+		this.username = username.strip();
 		this.db = db;
 		validate();
 	}
@@ -26,11 +23,15 @@ public class Username {
 			throw new InvalidUsernameException("Brukernavn kan bare inneholde (a-å, A-Å).");
 		}
 		
-		if (usernameUpper.equals("ANONYM")) {
-			throw new InvalidUsernameException("Brukernavn kan ikke være 'Anonym'.");
+		if (username.length() > 30) {
+			throw new InvalidUsernameException("Brukernavn kan maksimalt inneholde 30 tegn.");
 		}
 
-		boolean isUsernameInUse = db.isUsernameInUse(usernameUpper);
+		if (username.length() >= 6 && username.substring(0, 6).equalsIgnoreCase("anonym")) {
+			throw new InvalidUsernameException("Brukernavn kan ikke start med 'Anonym'.");
+		}
+
+		boolean isUsernameInUse = db.isUsernameInUse(username);
 
 		if (isUsernameInUse) {
 			throw new InvalidUsernameException("Brukernavnet er allerede i bruk. Vennligst velg et annet.");

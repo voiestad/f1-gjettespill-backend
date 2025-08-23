@@ -63,6 +63,9 @@ public class BingoController {
 		}
 		try {
 			Year validSeason = new Year(year, db);
+			if (db.isFinishedYear(validSeason)) {
+				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
+			}
 			if (db.isBingoCardAdded(validSeason)) {
 				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}

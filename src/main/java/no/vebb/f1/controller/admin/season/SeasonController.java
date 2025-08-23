@@ -63,7 +63,7 @@ public class SeasonController {
             races.add(i);
         }
 
-        importer.importRaceNames(races, year);
+        importer.importRaceNames(races, seasonYear);
         importer.importData();
 
         setDefaultCutoffRaces(seasonYear, time);
