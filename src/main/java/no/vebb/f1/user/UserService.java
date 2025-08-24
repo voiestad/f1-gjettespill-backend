@@ -1,5 +1,6 @@
 package no.vebb.f1.user;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -78,4 +79,7 @@ public class UserService {
 		return loggedInUser.id().equals(user.id());
 	}
 
+	public List<User> getAllUsers() {
+		return userRespository.findAll();
+	}
 }

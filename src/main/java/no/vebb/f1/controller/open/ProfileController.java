@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.scoring.UserScoreResponse;
-import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import org.springframework.http.HttpStatus;
@@ -31,13 +30,11 @@ public class ProfileController {
     private final UserService userService;
     private final Cutoff cutoff;
     private final Database db;
-    private final UserRespository userRespository;
 
-    public ProfileController(UserService userService, Cutoff cutoff, Database db, UserRespository userRespository) {
+    public ProfileController(UserService userService, Cutoff cutoff, Database db) {
         this.userService = userService;
         this.cutoff = cutoff;
         this.db = db;
-        this.userRespository = userRespository;
     }
 
     @GetMapping("/api/public/user/{id}")
@@ -117,7 +114,7 @@ public class ProfileController {
 
     @GetMapping("/api/public/user/list")
     public ResponseEntity<List<PublicUserDto>> listUsers() {
-        List<PublicUserDto> res = userRespository.findAll().stream()
+        List<PublicUserDto> res = userService.getAllUsers().stream()
                 .map(PublicUserDto::fromEntity)
                 .toList();
         return new ResponseEntity<>(res, HttpStatus.OK);
