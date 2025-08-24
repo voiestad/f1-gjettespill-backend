@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.vebb.f1.codes.CodeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +17,6 @@ import jakarta.mail.Message.RecipientType;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.CodeGenerator;
 
 @Service
 public class UserMailService {
@@ -26,20 +26,21 @@ public class UserMailService {
 	private final Database db;
 	private final UserRespository userRespository;
 	private final UserService userService;
+	private final CodeService codeService;
 
-	public UserMailService(JavaMailSender mailSender, Database db, UserRespository userRespository, UserService userService) {
+	public UserMailService(JavaMailSender mailSender, Database db, UserRespository userRespository, UserService userService, CodeService codeService) {
 		this.mailSender = mailSender;
 		this.db = db;
 		this.userRespository = userRespository;
 		this.userService = userService;
+		this.codeService = codeService;
 	}
 
 	@Value("${spring.mail.username}")
 	private String fromEmail;
 
 	public void sendVerificationCode(UserMail user) {
-		final int verificationCode = CodeGenerator.getVerificationCode();
-		db.addVerificationCode(user, verificationCode);
+		final int verificationCode = codeService.addVerificationCode(user);
 		String strCode = String.valueOf(verificationCode);
 		String formattedCode = String.format("%s %s %s",
 				strCode.substring(0, 3), strCode.substring(3, 6), strCode.substring(6, 9));

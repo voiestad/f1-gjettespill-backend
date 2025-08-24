@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import no.vebb.f1.codes.CodeService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.util.response.ReferralCodeResponse;
 import org.slf4j.Logger;
@@ -37,12 +38,14 @@ public class UserSettingsController {
     private final UserService userService;
     private final UserMailService userMailService;
     private final UserRespository userRespository;
+    private final CodeService codeService;
 
-    public UserSettingsController(Database db, UserService userService, UserMailService userMailService, UserRespository userRespository) {
+    public UserSettingsController(Database db, UserService userService, UserMailService userMailService, UserRespository userRespository, CodeService codeService) {
         this.db = db;
         this.userService = userService;
         this.userMailService = userMailService;
         this.userRespository = userRespository;
+        this.codeService = codeService;
     }
 
     @GetMapping("/info")
@@ -72,7 +75,7 @@ public class UserSettingsController {
     }
 
     private ResponseEntity<String> registerUsername(OAuth2User principal, Username username, Long referralCode) {
-        if (referralCode != null && !db.isValidReferralCode(referralCode)) {
+        if (referralCode != null && !codeService.isValidReferralCode(referralCode)) {
             logger.warn("Someone tried to use an invalid referral code.");
             logger.warn("{}", referralCode);
             return new ResponseEntity<>("Ikke gyldig invitasjonskode.", HttpStatus.BAD_REQUEST);
@@ -146,14 +149,14 @@ public class UserSettingsController {
     @GetMapping("/mail/verification")
     public ResponseEntity<Boolean> hasVerificationCode() {
         User user = userService.getUser();
-        return new ResponseEntity<>(db.hasVerificationCode(user.id()), HttpStatus.OK);
+        return new ResponseEntity<>(codeService.hasVerificationCode(user.id()), HttpStatus.OK);
     }
 
     @PostMapping("/mail/verification")
     @Transactional
     public ResponseEntity<?> verificationCode(@RequestParam("code") int code) {
         User user = userService.getUser();
-        boolean isValidVerificationCode = db.isValidVerificationCode(user.id(), code);
+        boolean isValidVerificationCode = codeService.validateVerificationCode(user.id(), code);
         if (isValidVerificationCode) {
             logger.info("Successfully verified email of user '{}'", user.id());
             return new ResponseEntity<>(HttpStatus.OK);
@@ -192,7 +195,7 @@ public class UserSettingsController {
     @GetMapping("/referral")
     public ResponseEntity<ReferralCodeResponse> getReferralCode() {
         UUID userId = userService.getUser().id();
-        Long referralCode = db.getReferralCode(userId);
+        Long referralCode = codeService.getReferralCode(userId);
         ReferralCodeResponse code = new ReferralCodeResponse(referralCode);
         return new ResponseEntity<>(code, HttpStatus.OK);
     }
@@ -201,7 +204,7 @@ public class UserSettingsController {
     @Transactional
     public ResponseEntity<ReferralCodeResponse> generateReferralCode() {
         UUID userId = userService.getUser().id();
-        ReferralCodeResponse code = new ReferralCodeResponse(db.addReferralCode(userId));
+        ReferralCodeResponse code = new ReferralCodeResponse(codeService.addReferralCode(userId));
         return new ResponseEntity<>(code, HttpStatus.OK);
     }
 
@@ -209,7 +212,7 @@ public class UserSettingsController {
     @Transactional
     public ResponseEntity<?> removeReferralCode() {
         UUID userId = userService.getUser().id();
-        db.removeReferralCode(userId);
+        codeService.removeReferralCode(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

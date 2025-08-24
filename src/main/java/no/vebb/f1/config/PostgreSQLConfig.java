@@ -365,7 +365,7 @@ public class PostgreSQLConfig {
 					user_id UUID PRIMARY KEY,
 					verification_code INTEGER NOT NULL,
 					email TEXT NOT NULL,
-					cutoff TEXT NOT NULL,
+					cutoff TIMESTAMPTZ NOT NULL,
 					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 				);
 			""");
@@ -373,7 +373,7 @@ public class PostgreSQLConfig {
 				CREATE TABLE IF NOT EXISTS referral_codes (
 					user_id UUID PRIMARY KEY,
 					referral_code BIGINT NOT NULL,
-					cutoff TEXT NOT NULL,
+					cutoff TIMESTAMPTZ NOT NULL,
 					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 				);
 			""");

@@ -1514,17 +1514,6 @@ public class Database {
         return jdbcTemplate.queryForObject(existCheck, Integer.class, value) > 0;
     }
 
-    private void addToMailingList(UUID userId, String email) {
-        final String sql = """
-            INSERT INTO mailing_list (user_id, email)
-            VALUES (?, ?)
-            ON CONFLICT (user_id)
-            DO UPDATE SET email = EXCLUDED.email;
-        """;
-        jdbcTemplate.update(sql, userId, email);
-        removeVerificationCode(userId);
-    }
-
     public void clearUserFromMailing(UUID userId) {
         clearMailPreferences(userId);
         clearNotified(userId);
@@ -1582,107 +1571,6 @@ public class Database {
     private void clearNotified(UUID userId) {
         final String sql = "DELETE FROM notified WHERE user_id = ?;";
         jdbcTemplate.update(sql, userId);
-    }
-
-    public void addVerificationCode(UserMail userMail, int verificationCode) {
-        final String sql = """
-                INSERT INTO verification_codes
-                (user_id, verification_code, email, cutoff)
-                VALUES (?, ?, ?, ?)
-                ON CONFLICT (user_id)
-                DO UPDATE SET verification_code = EXCLUDED.verification_code,
-                              email = EXCLUDED.email,
-                              cutoff = EXCLUDED.cutoff;
-                """;
-        jdbcTemplate.update(sql, userMail.user().id(), verificationCode, userMail.email(), Instant.now().plus(Duration.ofMinutes(10)).toString());
-    }
-
-    public void removeVerificationCode(UUID userId) {
-        final String sql = "DELETE FROM verification_codes WHERE user_id = ?";
-        jdbcTemplate.update(sql, userId);
-    }
-
-    public void removeExpiredVerificationCodes() {
-        final String sql = "SELECT cutoff, user_id FROM verification_codes;";
-        List<UUID> expired = getExpiredCodes(sql);
-        for (UUID userId : expired) {
-            removeVerificationCode(userId);
-        }
-    }
-
-    public boolean hasVerificationCode(UUID userId) {
-        final String sql = "SELECT COUNT(*) FROM verification_codes WHERE user_id = ?;";
-        return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
-    }
-
-    public boolean isValidVerificationCode(UUID userId, int verificationCode) {
-        final String sql = "SELECT COUNT(*) FROM verification_codes WHERE user_id = ? AND verification_code = ?;";
-        boolean isValidCode = jdbcTemplate.queryForObject(sql, Integer.class, userId, verificationCode) > 0;
-        if (!isValidCode) {
-            return false;
-        }
-        final String getCutoffSql = "SELECT cutoff FROM verification_codes WHERE user_id = ?;";
-        Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoffSql, String.class, userId));
-        boolean isValidCutoff = cutoff.compareTo(Instant.now()) > 0;
-        if (!isValidCutoff) {
-            return false;
-        }
-        final String emailSql = "SELECT email FROM verification_codes WHERE user_id = ?;";
-        String email = jdbcTemplate.queryForObject(emailSql, String.class, userId);
-        addToMailingList(userId, email);
-        return true;
-    }
-
-    public boolean isValidReferralCode(long referralCode) {
-        final String sql = "SELECT COUNT(*) FROM referral_codes WHERE referral_code = ?;";
-        boolean isValidCode = jdbcTemplate.queryForObject(sql, Integer.class, referralCode) > 0;
-        if (!isValidCode) {
-            return false;
-        }
-        final String getCutoffSql = "SELECT cutoff FROM referral_codes WHERE referral_code = ?;";
-        Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoffSql, String.class, referralCode));
-        return cutoff.compareTo(Instant.now()) > 0;
-    }
-
-    public void removeExpiredReferralCodes() {
-        final String getExpiredSql = "SELECT cutoff, user_id FROM referral_codes;";
-        List<UUID> expired = getExpiredCodes(getExpiredSql);
-        final String removeSql = "DELETE FROM referral_codes WHERE user_id = ?;";
-        for (UUID userId : expired) {
-            jdbcTemplate.update(removeSql, userId);
-        }
-    }
-
-    private List<UUID> getExpiredCodes(final String sql) {
-        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
-        return sqlRes.stream()
-                .filter(row -> Instant.parse((String) row.get("cutoff")).compareTo(Instant.now()) < 0)
-                .map(row -> (UUID) row.get("user_id"))
-                .toList();
-    }
-
-    public long addReferralCode(UUID userId) {
-        final String sql = """
-                INSERT INTO referral_codes
-                (user_id, referral_code, cutoff)
-                VALUES (?, ?, ?)
-                ON CONFLICT (user_id)
-                DO UPDATE SET referral_code = EXCLUDED.referral_code,
-                              cutoff = EXCLUDED.cutoff;
-                """;
-        long referralCode = CodeGenerator.getReferralCode();
-        Instant cutoff = Instant.now().plus(Duration.ofHours(1));
-        jdbcTemplate.update(sql, userId, referralCode, cutoff.toString());
-        return referralCode;
-    }
-
-    public Long getReferralCode(UUID userId) {
-        final String sql = "SELECT referral_code FROM referral_codes WHERE user_id = ?;";
-        try {
-            return jdbcTemplate.queryForObject(sql, Long.class, userId);
-        } catch (EmptyResultDataAccessException e) {
-            return null;
-        }
     }
 
     public List<CompetitorGuessYear<Driver>> userGuessDataDriver(UUID userId) {
@@ -2299,10 +2187,5 @@ public class Database {
             WHERE fs.flag_id = ?;
         """;
         return new Year(jdbcTemplate.queryForObject(sql, Integer.class, id));
-    }
-
-    public void removeReferralCode(UUID userId) {
-        final String sql = "DELETE FROM referral_codes WHERE user_id = ?;";
-        jdbcTemplate.update(sql, userId);
     }
 }
