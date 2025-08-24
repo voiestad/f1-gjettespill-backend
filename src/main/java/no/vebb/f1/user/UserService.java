@@ -3,7 +3,6 @@ package no.vebb.f1.user;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -16,9 +15,11 @@ import no.vebb.f1.util.exception.NotAdminException;
 public class UserService {
 
 	private final Database db;
+	private final UserRespository userRespository;
 
-	public UserService(Database db) {
+	public UserService(Database db, UserRespository userRespository) {
 		this.db = db;
+		this.userRespository = userRespository;
 	}
 
 	public Optional<User> loadUser() {
@@ -27,19 +28,11 @@ public class UserService {
 			return Optional.empty();
 		}
 		final String googleId = authentication.getName();
-		try {
-			return Optional.of(db.getUserFromGoogleId(googleId));
-		} catch (EmptyResultDataAccessException e) {
-			return Optional.empty();
-		}
+		return userRespository.findByGoogleId(googleId);
 	}
 
 	public Optional<User> loadUser(UUID id) {
-		try {
-			return Optional.of(db.getUserFromId(id));
-		} catch (EmptyResultDataAccessException e) {
-			return Optional.empty();
-		}
+		return userRespository.findById(id);
 	}
 
 	public boolean isLoggedIn() {

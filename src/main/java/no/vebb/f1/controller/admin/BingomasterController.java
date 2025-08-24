@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import no.vebb.f1.user.PublicUser;
+import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 
@@ -25,9 +25,9 @@ public class BingomasterController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<PublicUser>> getBingomasters() {
-        List<PublicUser> bingoMasters = db.getBingomasters().stream()
-                .map(PublicUser::new)
+    public ResponseEntity<List<PublicUserDto>> getBingomasters() {
+        List<PublicUserDto> bingoMasters = db.getBingomasters().stream()
+                .map(PublicUserDto::fromEntity)
                 .toList();
         return new ResponseEntity<>(bingoMasters, HttpStatus.OK);
     }

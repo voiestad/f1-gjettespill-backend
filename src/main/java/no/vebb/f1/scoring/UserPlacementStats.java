@@ -13,10 +13,10 @@ public class UserPlacementStats {
     public final Medals medals;
     public final String username;
 
-    public UserPlacementStats(Database db, UUID userId) {
+    public UserPlacementStats(Database db, UUID userId, String username) {
         this.previousPlacements = db.getPreviousPlacements(userId);
         this.medals = db.getMedals(userId);
-        this.username = db.getUserFromId(userId).username();
+        this.username = username;
     }
 
 }

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.scoring.UserScoreResponse;
+import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.user.PublicUser;
+import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
@@ -30,11 +31,13 @@ public class ProfileController {
     private final UserService userService;
     private final Cutoff cutoff;
     private final Database db;
+    private final UserRespository userRespository;
 
-    public ProfileController(UserService userService, Cutoff cutoff, Database db) {
+    public ProfileController(UserService userService, Cutoff cutoff, Database db, UserRespository userRespository) {
         this.userService = userService;
         this.cutoff = cutoff;
         this.db = db;
+        this.userRespository = userRespository;
     }
 
     @GetMapping("/api/public/user/{id}")
@@ -73,7 +76,7 @@ public class ProfileController {
             RaceId raceId = new RaceId(inputRaceId, db);
             Year year = db.getYearFromRaceId(raceId);
             if (isAbleToSeeGuesses(user, year)) {
-                UserScoreResponse res = new UserScoreResponse(new PublicUser(user), year, raceId, db);
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(user), year, raceId, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -86,7 +89,7 @@ public class ProfileController {
         try {
             Year year = new Year(TimeUtil.getCurrentYear(), db);
             if (isAbleToSeeGuesses(user, year)) {
-                UserScoreResponse res = new UserScoreResponse(new PublicUser(user), year, db);
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(user), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {
@@ -99,7 +102,7 @@ public class ProfileController {
         try {
             Year year = new Year(inputYear, db);
             if (isAbleToSeeGuesses(user, year)) {
-                UserScoreResponse res = new UserScoreResponse(new PublicUser(user), year, db);
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(user), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {
@@ -113,30 +116,30 @@ public class ProfileController {
     }
 
     @GetMapping("/api/public/user/list")
-    public ResponseEntity<List<PublicUser>> listUsers() {
-        List<PublicUser> res = db.getAllUsers().stream()
-                .map(PublicUser::new)
+    public ResponseEntity<List<PublicUserDto>> listUsers() {
+        List<PublicUserDto> res = userRespository.findAll().stream()
+                .map(PublicUserDto::fromEntity)
                 .toList();
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     @GetMapping("/api/public/user/placements/{id}")
     public ResponseEntity<UserPlacementStats> placementStatsById(@PathVariable("id") UUID id) {
-        if (userService.loadUser(id).isEmpty()) {
+        Optional<User> optUser = userService.loadUser(id);
+        if (optUser.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        UserPlacementStats res = new UserPlacementStats(db, id);
+        UserPlacementStats res = new UserPlacementStats(db, id, optUser.get().username());
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     @GetMapping("/api/user/my-placements")
     public ResponseEntity<UserPlacementStats> myPlacementStats() {
-        return userService.loadUser().map(user ->
-                getPlacementStats(user.id())).orElseGet(() -> new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        return userService.loadUser().map(this::getPlacementStats).orElseGet(() -> new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
-    private ResponseEntity<UserPlacementStats> getPlacementStats(UUID id) {
-        UserPlacementStats res = new UserPlacementStats(db, id);
+    private ResponseEntity<UserPlacementStats> getPlacementStats(User user) {
+        UserPlacementStats res = new UserPlacementStats(db, user.id(), user.username());
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }

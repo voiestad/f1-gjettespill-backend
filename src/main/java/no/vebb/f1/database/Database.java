@@ -6,7 +6,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import no.vebb.f1.graph.GuesserPointsSeason;
-import no.vebb.f1.user.PublicUser;
+import no.vebb.f1.user.PublicUserDto;
+import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.collection.userTables.Summary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,9 +25,11 @@ import no.vebb.f1.user.UserMail;
 public class Database {
 
     private final JdbcTemplate jdbcTemplate;
+    private final UserRespository userRespository;
 
-    public Database(JdbcTemplate jdbcTemplate) {
+    public Database(JdbcTemplate jdbcTemplate, UserRespository userRespository) {
         this.jdbcTemplate = jdbcTemplate;
+        this.userRespository = userRespository;
     }
 
     /**
@@ -67,36 +70,6 @@ public class Database {
     public boolean isUserAdmin(UUID userId) {
         final String sql = "SELECT COUNT(*) FROM admins WHERE user_id = ?;";
         return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
-    }
-
-    /**
-     * Gets the User object for the given id.
-     *
-     * @param userId for user to get
-     * @return User
-     * @throws EmptyResultDataAccessException if user not found in database
-     */
-    public User getUserFromId(UUID userId) throws EmptyResultDataAccessException {
-        final String sql = "SELECT username, google_id FROM users WHERE user_id = ?;";
-        Map<String, Object> sqlRes = jdbcTemplate.queryForMap(sql, userId);
-        String username = sqlRes.get("username").toString();
-        String googleId = (String) sqlRes.get("google_id");
-        return new User(googleId, userId, username);
-    }
-
-    /**
-     * Gets the User object for the given googleId.
-     *
-     * @param googleId as String
-     * @return User
-     * @throws EmptyResultDataAccessException if user not found in database
-     */
-    public User getUserFromGoogleId(String googleId) throws EmptyResultDataAccessException {
-        final String sql = "SELECT username, user_id FROM users WHERE google_id = ?;";
-        Map<String, Object> sqlRes = jdbcTemplate.queryForMap(sql, googleId);
-        String username = sqlRes.get("username").toString();
-        UUID id = (UUID) sqlRes.get("user_id");
-        return new User(googleId, id, username);
     }
 
     /**
@@ -788,26 +761,6 @@ public class Database {
     }
 
     /**
-     * Gets a list of all all users sorted by username_upper.
-     *
-     * @return every user
-     */
-    public List<User> getAllUsers() {
-        final String getAllUsersSql = """
-                SELECT user_id, username, google_id
-                FROM users
-                ORDER BY username;
-                """;
-        return jdbcTemplate.queryForList(getAllUsersSql).stream()
-                .map(row ->
-                        new User(
-                                (String) row.get("google_id"),
-                                (UUID) row.get("user_id"),
-                                row.get("username").toString())
-                ).toList();
-    }
-
-    /**
      * Gets a list of every person that has guessed in a season. To qualify they have to have guessed
      * on flags, drivers and constructors.
      * Ordered ascendingly by username
@@ -828,7 +781,9 @@ public class Database {
 
         return jdbcTemplate.queryForList(getGussers, year.value, year.value, year.value).stream()
                 .map(row -> (UUID) row.get("id"))
-                .map(this::getUserFromId)
+                .map(userRespository::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .toList();
     }
 
@@ -1674,10 +1629,7 @@ public class Database {
         return sqlRes.stream()
                 .map(row ->
                         new UserMail(
-                                new User(
-                                        (String) row.get("google_id"),
-                                        (UUID) row.get("id"),
-                                        row.get("username").toString())
+                                userRespository.findById((UUID) row.get("id")).get()
                                 , (String) row.get("email"))
                 )
                 .toList();
@@ -1989,12 +1941,10 @@ public class Database {
                 ORDER BY u.username;
                 """;
         return jdbcTemplate.queryForList(getAllUsersSql).stream()
-                .map(row ->
-                        new User(
-                                (String) row.get("google_id"),
-                                (UUID) row.get("id"),
-                                row.get("username").toString())
-                ).toList();
+                .map(row -> userRespository.findById((UUID) row.get("id")))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
     }
 
     public boolean isBingomaster(UUID userId) {
@@ -2180,7 +2130,7 @@ public class Database {
         jdbcTemplate.update(sql, year);
     }
 
-    public Summary getSummary(RaceId raceId, Year year, PublicUser user) {
+    public Summary getSummary(RaceId raceId, Year year, PublicUserDto user) {
         try {
             List<Map<String, Object>> categoriesRes;
             Map<String, Object> totalRes;
@@ -2197,8 +2147,8 @@ public class Database {
                             WHERE race_id = ?
                             AND user_id = ?;
                         """;
-                categoriesRes = jdbcTemplate.queryForList(categoriesSql, raceId.value, user.id);
-                totalRes = jdbcTemplate.queryForMap(totalSql, raceId.value, user.id);
+                categoriesRes = jdbcTemplate.queryForList(categoriesSql, raceId.value, user.id());
+                totalRes = jdbcTemplate.queryForMap(totalSql, raceId.value, user.id());
             } else {
                 final String categoriesSql = """
                             SELECT category_name, placement, points
@@ -2212,8 +2162,8 @@ public class Database {
                             WHERE year = ?
                             AND user_id = ?;
                         """;
-                categoriesRes = jdbcTemplate.queryForList(categoriesSql, year.value, user.id);
-                totalRes = jdbcTemplate.queryForMap(totalSql, year.value, user.id);
+                categoriesRes = jdbcTemplate.queryForList(categoriesSql, year.value, user.id());
+                totalRes = jdbcTemplate.queryForMap(totalSql, year.value, user.id());
             }
             Map<Category, Placement<Points>> categories = new HashMap<>();
             for (Map<String, Object> row : categoriesRes) {

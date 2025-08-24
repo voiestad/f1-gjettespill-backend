@@ -1,7 +1,7 @@
 package no.vebb.f1.scoring;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.user.PublicUser;
+import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.User;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
@@ -59,7 +59,7 @@ public class ScoreCalculator {
         for (RaceId raceId : raceIds) {
             Map<UUID, Summary> rankedGuessers = new HashMap<>();
             List<UserScore> userScores = guessers.stream()
-                    .map(guesser -> new UserScore(new PublicUser(guesser), year, raceId, db))
+                    .map(guesser -> new UserScore(PublicUserDto.fromEntity(guesser), year, raceId, db))
                     .toList();
             Map<UUID, Placement<Points>> driversPoints = getPlacementMap(userScores, UserScore::getDriversScore);
             Map<UUID, Placement<Points>> constructorsPoints = getPlacementMap(userScores, UserScore::getConstructorsScore);
@@ -90,7 +90,7 @@ public class ScoreCalculator {
 
     private Map<UUID, Placement<Points>> getPlacementMap(List<UserScore> userScores, Function<UserScore, Points> getScore) {
         List<ScoredUser> scoredUsers = userScores.stream()
-                .map(userScore -> new ScoredUser(userScore.user.id, getScore.apply(userScore)))
+                .map(userScore -> new ScoredUser(userScore.user.id(), getScore.apply(userScore)))
                 .sorted(Collections.reverseOrder())
                 .toList();
         Map<UUID, Placement<Points>> placementMap = new HashMap<>();

@@ -4,19 +4,19 @@ import no.vebb.f1.util.collection.userTables.Summary;
 import no.vebb.f1.util.domainPrimitive.*;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.user.PublicUser;
+import no.vebb.f1.user.PublicUserDto;
 
 public class UserScoreResponse {
 
 	public final UserScore userScores;
 	public final Summary summary;
 
-	public UserScoreResponse(PublicUser user, Year year, RaceId raceId, Database db) {
+	public UserScoreResponse(PublicUserDto user, Year year, RaceId raceId, Database db) {
 		this.userScores = new UserScore(user, year, raceId, db);
 		this.summary = db.getSummary(raceId, year, user);
 	}
 
-	public UserScoreResponse(PublicUser user, Year year, Database db) {
+	public UserScoreResponse(PublicUserDto user, Year year, Database db) {
 		this.userScores = new UserScore(user, year, db);
 		this.summary = db.getSummary(this.userScores.raceId, year, user);
 	}

@@ -2,6 +2,7 @@ package no.vebb.f1.user;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -23,10 +24,12 @@ public class UserMailService {
 	private static final Logger logger = LoggerFactory.getLogger(UserMailService.class);
 	private final JavaMailSender mailSender;
 	private final Database db;
+	private final UserRespository userRespository;
 
-	public UserMailService(JavaMailSender mailSender, Database db) {
+	public UserMailService(JavaMailSender mailSender, Database db, UserRespository userRespository) {
 		this.mailSender = mailSender;
 		this.db = db;
+		this.userRespository = userRespository;
 	}
 
 	@Value("${spring.mail.username}")
@@ -55,7 +58,9 @@ public class UserMailService {
 		List<UUID> admins = db.getAdmins();
 		List<UserMail> adminsWithMail = admins.stream()
 			.filter(db::userHasEmail)
-			.map(db::getUserFromId)
+			.map(userRespository::findById)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
 			.map(admin -> new UserMail(admin, db.getEmail(admin.id())))
 			.toList();
 		for (UserMail admin : adminsWithMail) {
