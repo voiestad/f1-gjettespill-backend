@@ -62,17 +62,6 @@ public class Database {
     }
 
     /**
-     * Checks if the user is admin based on given id.
-     *
-     * @param userId to check
-     * @return true if user is admin
-     */
-    public boolean isUserAdmin(UUID userId) {
-        final String sql = "SELECT COUNT(*) FROM admins WHERE user_id = ?;";
-        return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
-    }
-
-    /**
      * Gets the latest race number that has had a race.
      *
      * @param year of season
@@ -242,61 +231,6 @@ public class Database {
                 """;
         List<String> result = getCompetitors(raceId, year, constructorYearSql, constructorStandingsSql);
         return result.stream().map(Constructor::new).toList();
-    }
-
-    /**
-     * Checks if the username is already in use by a user.
-     *
-     * @param username the username
-     * @return true if username is in use
-     */
-    public boolean isUsernameInUse(String username) {
-        final String sqlCheckUsername = "SELECT COUNT(*) FROM users WHERE username = ?::citext;";
-        return jdbcTemplate.queryForObject(sqlCheckUsername, Integer.class, username) > 0;
-    }
-
-    /**
-     * Updates the username of the given user to the given username.
-     *
-     * @param username to set as new username
-     * @param userId   of user
-     */
-    public void updateUsername(Username username, UUID userId) {
-        final String updateUsername = """
-                UPDATE users
-                SET username = ?
-                WHERE user_id = ?;
-                """;
-        jdbcTemplate.update(updateUsername, username.username, userId);
-    }
-
-    /**
-     * Deletes the account of the given user.
-     * Sets the username to 'Anonym' and google_id to id.
-     *
-     * @param userId of user
-     */
-    public void deleteUser(UUID userId) {
-        final String deleteUser = """
-                UPDATE users
-                SET username = 'Anonym' || nextVal('anonymous_username_seq'), google_id = ?
-                WHERE user_id = ?;
-                """;
-        clearUserFromMailing(userId);
-        removeBingomaster(userId);
-        jdbcTemplate.update(deleteUser, userId, userId);
-    }
-
-    /**
-     * Adds a user with the given username and google ID to the database.
-     * Sets a random UUID as the users ID.
-     *
-     * @param username of the user
-     * @param googleId the ID provided by OAUTH
-     */
-    public void addUser(Username username, String googleId) {
-        final String sqlInsertUsername = "INSERT INTO users (google_id, user_id, username) VALUES (?, ?, ?);";
-        jdbcTemplate.update(sqlInsertUsername, googleId, UUID.randomUUID(), username.username);
     }
 
     /**
@@ -2095,13 +2029,6 @@ public class Database {
     public void deleteAlternativeName(Driver driver, Year year, String alternativeName) {
         final String sql = "DELETE FROM drivers_alternative_name WHERE driver_name = ? AND year = ? AND alternative_name = ?;";
         jdbcTemplate.update(sql, driver.value, year.value, alternativeName);
-    }
-
-    public List<UUID> getAdmins() {
-        final String sql = "SELECT user_id FROM admins;";
-        return jdbcTemplate.queryForList(sql, String.class).stream()
-                .map(UUID::fromString)
-                .toList();
     }
 
     public List<String> getUnregisteredUsers() {

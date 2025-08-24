@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import no.vebb.f1.user.*;
 import no.vebb.f1.util.response.ReferralCodeResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,10 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.user.User;
-import no.vebb.f1.user.UserMail;
-import no.vebb.f1.user.UserMailService;
-import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidEmailException;
@@ -40,11 +36,13 @@ public class UserSettingsController {
     private final Database db;
     private final UserService userService;
     private final UserMailService userMailService;
+    private final UserRespository userRespository;
 
-    public UserSettingsController(Database db, UserService userService, UserMailService userMailService) {
+    public UserSettingsController(Database db, UserService userService, UserMailService userMailService, UserRespository userRespository) {
         this.db = db;
         this.userService = userService;
         this.userMailService = userMailService;
+        this.userRespository = userRespository;
     }
 
     @GetMapping("/info")
@@ -62,12 +60,11 @@ public class UserSettingsController {
             @RequestParam("username") String username,
             @RequestParam(value = "referralCode", required = false) Long referralCode) {
         try {
-            Username validUsername = new Username(username, db);
+            Username validUsername = new Username(username, userRespository);
             if (!userService.isLoggedIn()) {
                 return registerUsername(principal, validUsername, referralCode);
             }
-            final UUID id = userService.getUser().id();
-            db.updateUsername(validUsername, id);
+            userService.changeUsername(validUsername);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidUsernameException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
@@ -80,14 +77,7 @@ public class UserSettingsController {
             logger.warn("{}", referralCode);
             return new ResponseEntity<>("Ikke gyldig invitasjonskode.", HttpStatus.BAD_REQUEST);
         }
-        final String googleId = principal.getName();
-        try {
-            db.addUser(username, googleId);
-        } catch (DataAccessException e) {
-            // Try again to ensure it could not be equal UUID
-            logger.warn("Failed to set UUID to new user. Tried again.");
-            db.addUser(username, googleId);
-        }
+        userService.addUser(username, principal);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -105,10 +95,8 @@ public class UserSettingsController {
         if (!username.equals(actualUsername)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        db.deleteUser(user.id());
-
+        userService.deleteUser();
         SecurityContextHolder.clearContext();
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

@@ -1,16 +1,16 @@
 package no.vebb.f1.util.domainPrimitive;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.exception.InvalidUsernameException;
 
 public class Username {
 	
 	public final String username;
-	private final Database db;
+	private final UserRespository userRespository;
 
-	public Username(String username, Database db) throws InvalidUsernameException {
+	public Username(String username, UserRespository userRespository) throws InvalidUsernameException {
 		this.username = username.strip();
-		this.db = db;
+		this.userRespository = userRespository;
 		validate();
 	}
 
@@ -31,7 +31,7 @@ public class Username {
 			throw new InvalidUsernameException("Brukernavn kan ikke start med 'Anonym'.");
 		}
 
-		boolean isUsernameInUse = db.isUsernameInUse(username);
+		boolean isUsernameInUse = userRespository.findByUsername(username).isPresent();
 
 		if (isUsernameInUse) {
 			throw new InvalidUsernameException("Brukernavnet er allerede i bruk. Vennligst velg et annet.");

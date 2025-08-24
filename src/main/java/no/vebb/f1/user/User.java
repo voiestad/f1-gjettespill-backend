@@ -15,8 +15,17 @@ public class User {
     private UUID id;
     @Column(unique = true, nullable = false, name = "google_id")
     private String googleId;
-    @Column(unique = true, nullable = false, name = "username")
+    @Column(unique = true, nullable = false, name = "username", columnDefinition = "citext")
     private String username;
+
+    User(UUID id, String googleId, String username) {
+        this.id = id;
+        this.googleId = googleId;
+        this.username = username;
+    }
+
+    protected User() {
+    }
 
     public UUID id() {
         return id;
@@ -30,4 +39,7 @@ public class User {
         return googleId;
     }
 
+    void setUsername(String username) {
+        this.username = username;
+    }
 }

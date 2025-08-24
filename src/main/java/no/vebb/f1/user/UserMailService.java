@@ -25,11 +25,13 @@ public class UserMailService {
 	private final JavaMailSender mailSender;
 	private final Database db;
 	private final UserRespository userRespository;
+	private final UserService userService;
 
-	public UserMailService(JavaMailSender mailSender, Database db, UserRespository userRespository) {
+	public UserMailService(JavaMailSender mailSender, Database db, UserRespository userRespository, UserService userService) {
 		this.mailSender = mailSender;
 		this.db = db;
 		this.userRespository = userRespository;
+		this.userService = userService;
 	}
 
 	@Value("${spring.mail.username}")
@@ -55,7 +57,7 @@ public class UserMailService {
     }
 
 	public void sendServerMessageToAdmins(String messageForAdmin) {
-		List<UUID> admins = db.getAdmins();
+		List<UUID> admins = userService.getAdmins();
 		List<UserMail> adminsWithMail = admins.stream()
 			.filter(db::userHasEmail)
 			.map(userRespository::findById)

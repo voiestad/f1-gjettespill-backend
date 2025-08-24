@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.vebb.f1.util.domainPrimitive.Username;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.database.Database;
@@ -17,10 +19,12 @@ public class UserService {
 
 	private final Database db;
 	private final UserRespository userRespository;
+	private final AdminRepository adminRepository;
 
-	public UserService(Database db, UserRespository userRespository) {
+	public UserService(Database db, UserRespository userRespository, AdminRepository adminRepository) {
 		this.db = db;
 		this.userRespository = userRespository;
+		this.adminRepository = adminRepository;
 	}
 
 	public Optional<User> loadUser() {
@@ -42,8 +46,7 @@ public class UserService {
 	}
 
 	public boolean isAdmin() {
-		Optional<User> user = loadUser();
-        return user.filter(value -> db.isUserAdmin(value.id())).isPresent();
+        return loadUser().map(value -> adminRepository.findById(value.id())).isPresent();
     }
 
 	public void adminCheck() throws NotAdminException {
@@ -80,6 +83,29 @@ public class UserService {
 	}
 
 	public List<User> getAllUsers() {
-		return userRespository.findAll();
+		return userRespository.findAllByOrderByUsername();
+	}
+
+	public void addUser(Username username, OAuth2User principal) {
+		final String googleId = principal.getName();
+		User user = new User(UUID.randomUUID(), googleId, username.username);
+		userRespository.save(user);
+	}
+
+	public void changeUsername(Username newUsername) {
+		User user = getUser();
+		user.setUsername(newUsername.username);
+		userRespository.save(user);
+	}
+
+	public void deleteUser() {
+		User user = getUser();
+		userRespository.anonymizeUser(user.id());
+		db.clearUserFromMailing(user.id());
+		db.removeBingomaster(user.id());
+	}
+
+	public List<UUID> getAdmins() {
+		return adminRepository.findAll().stream().map(Admin::id).toList();
 	}
 }
