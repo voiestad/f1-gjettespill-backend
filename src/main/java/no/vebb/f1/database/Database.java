@@ -1867,7 +1867,7 @@ public class Database {
 
     public List<UserNotifiedCount> userDataNotified(UUID userId) {
         final String sql = """
-                SELECT r.race_name AS name, count(*) as notified_count, ro.year AS year
+                SELECT r.race_name AS name, count(*)::INTEGER as notified_count, ro.year AS year
                 FROM notified n
                 JOIN races r ON n.race_id = r.race_id
                 JOIN race_order ro ON n.race_id = ro.race_id
