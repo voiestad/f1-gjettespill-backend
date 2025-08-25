@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 
+import no.vebb.f1.mail.MailService;
 import no.vebb.f1.scoring.ScoreCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.user.UserMailService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.PositionedCompetitor;
@@ -35,12 +35,12 @@ public class Importer {
 	private static final Logger logger = LoggerFactory.getLogger(Importer.class);
 
 	private final Database db;
-	private final UserMailService userMailService;
+	private final MailService mailService;
 	private final ScoreCalculator scoreCalculator;
 
-	public Importer(Database db, UserMailService userMailService, ScoreCalculator scoreCalculator) {
+	public Importer(Database db, MailService mailService, ScoreCalculator scoreCalculator) {
 		this.db = db;
-		this.userMailService = userMailService;
+		this.mailService = mailService;
 		this.scoreCalculator = scoreCalculator;
 	}
 
@@ -85,7 +85,7 @@ public class Importer {
 					} else {
 						scoreCalculator.calculateScores();
 						logger.info("Race result changed outside points without standings changing. Sending message to admins.");
-						userMailService.sendServerMessageToAdmins(
+						mailService.sendServerMessageToAdmins(
 							"Endringer i resultat av løp utenfor poengene uten at mesterskapet endret seg. Vennligst verifiser at mesterskapet er korrekt.");
 					}
 				} else {

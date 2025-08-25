@@ -1514,32 +1514,6 @@ public class Database {
         return jdbcTemplate.queryForObject(existCheck, Integer.class, value) > 0;
     }
 
-    public void clearUserFromMailing(UUID userId) {
-        clearMailPreferences(userId);
-        clearNotified(userId);
-        deleteUserFromMailingList(userId);
-    }
-
-    private void deleteUserFromMailingList(UUID userId) {
-        final String sql = "DELETE FROM mailing_list WHERE user_id = ?;";
-        jdbcTemplate.update(sql, userId);
-    }
-
-
-    public boolean userHasEmail(UUID userId) {
-        final String sql = "SELECT COUNT(*) FROM mailing_list WHERE user_id = ?;";
-        return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
-    }
-
-    public String getEmail(UUID userId) {
-        try {
-            final String sql = "SELECT email FROM mailing_list WHERE user_id = ?;";
-            return jdbcTemplate.queryForObject(sql, String.class, userId);
-        } catch (EmptyResultDataAccessException e) {
-            return null;
-        }
-    }
-
     public List<UserMail> getMailingList(RaceId raceId) {
         final String sql = """
                 SELECT u.google_id as google_id, u.user_id as id, u.username as username, ml.email as email
@@ -1556,21 +1530,6 @@ public class Database {
                                 , (String) row.get("email"))
                 )
                 .toList();
-    }
-
-    public void setNotified(RaceId raceId, UUID userId) {
-        final String sql = "INSERT INTO notified (user_id, race_id) VALUES (?, ?);";
-        jdbcTemplate.update(sql, userId, raceId.value);
-    }
-
-    public int getNotifiedCount(RaceId raceId, UUID userId) {
-        final String sql = "SELECT COUNT(*) FROM notified WHERE user_id = ? AND race_id = ?;";
-        return jdbcTemplate.queryForObject(sql, Integer.class, userId, raceId.value);
-    }
-
-    private void clearNotified(UUID userId) {
-        final String sql = "DELETE FROM notified WHERE user_id = ?;";
-        jdbcTemplate.update(sql, userId);
     }
 
     public List<CompetitorGuessYear<Driver>> userGuessDataDriver(UUID userId) {
@@ -1641,7 +1600,7 @@ public class Database {
 
     public List<UserNotifiedCount> userDataNotified(UUID userId) {
         final String sql = """
-                SELECT r.race_name AS name, count(*) as notified_count, ro.year AS year
+                SELECT r.race_name AS name, count(*)::INTEGER as notified_count, ro.year AS year
                 FROM notified n
                 JOIN races r ON n.race_id = r.race_id
                 JOIN race_order ro ON n.race_id = ro.race_id
@@ -1655,40 +1614,6 @@ public class Database {
                         (int) row.get("notified_count"),
                         new Year((int) row.get("year"))
                 )).toList();
-    }
-
-    public boolean isValidMailOption(int option) {
-        final String sql = "SELECT COUNT(*) FROM mail_options WHERE mail_option = ?;";
-        return jdbcTemplate.queryForObject(sql, Integer.class, option) > 0;
-    }
-
-    public void addMailOption(UUID userId, MailOption option) {
-        final String sql = "INSERT INTO mail_preferences (user_id, mail_option) VALUES (?, ?) ON CONFLICT DO NOTHING;";
-        jdbcTemplate.update(sql, userId, option.value);
-    }
-
-    public void removeMailOption(UUID userId, MailOption option) {
-        final String sql = "DELETE FROM mail_preferences WHERE user_id = ? AND mail_option = ?;";
-        jdbcTemplate.update(sql, userId, option.value);
-    }
-
-    private void clearMailPreferences(UUID userId) {
-        final String sql = "DELETE FROM mail_preferences WHERE user_id = ?;";
-        jdbcTemplate.update(sql, userId);
-    }
-
-    public List<MailOption> getMailingPreference(UUID userId) {
-        final String sql = "SELECT mail_option FROM mail_preferences WHERE user_id = ? ORDER BY mail_option DESC;";
-        return jdbcTemplate.queryForList(sql, Integer.class, userId).stream()
-                .map(MailOption::new)
-                .toList();
-    }
-
-    public List<MailOption> getMailingOptions() {
-        final String sql = "SELECT mail_option FROM mail_options ORDER BY mail_option;";
-        return jdbcTemplate.queryForList(sql, Integer.class).stream()
-                .map(MailOption::new)
-                .toList();
     }
 
     public void setTeamDriver(Driver driver, Constructor team, Year year) {

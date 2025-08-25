@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.User;
 import no.vebb.f1.user.UserDto;
 import no.vebb.f1.util.collection.CompetitorGuessYear;
@@ -25,15 +26,15 @@ public class UserInformation {
 	public final List<UserNotifiedCount> notifiedCount;
 	public final List<Integer> emailPreferences;
 
-	public UserInformation(User user, Database db) {
+	public UserInformation(User user, Database db, MailService mailService) {
 		this.user = UserDto.fromEntity(user);
-		this.email = db.getEmail(user.id());
+		this.email = mailService.getEmail(user.id());
 		this.driverGuess = db.userGuessDataDriver(user.id());
 		this.constructorGuess = db.userGuessDataConstructor(user.id());
 		this.flagGuess = db.userGuessDataFlag(user.id());
 		this.placeGuess = db.userGuessDataDriverPlace(user.id());
 		this.notifiedCount = db.userDataNotified(user.id());
-		this.emailPreferences = db.getMailingPreference(user.id()).stream()
+		this.emailPreferences = mailService.getMailingPreference(user.id()).stream()
 				.map(option -> option.value)
 				.collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
 					Collections.reverse(list);

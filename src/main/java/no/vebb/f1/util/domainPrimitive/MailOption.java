@@ -1,25 +1,25 @@
 package no.vebb.f1.util.domainPrimitive;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.mail.MailService;
 import no.vebb.f1.util.exception.InvalidMailOptionException;
 
 public class MailOption {
 
 	public final int value;
-	private Database db;
+	private MailService mailService;
 
 	public MailOption(int value) {
 		this.value = value;
 	}
 	
-	public MailOption(int value, Database db) throws InvalidMailOptionException {
+	public MailOption(int value, MailService mailService) throws InvalidMailOptionException {
 		this.value = value;
-		this.db = db;
+		this.mailService = mailService;
 		validate();
 	}
 
 	private void validate() throws InvalidMailOptionException {
-		if (!db.isValidMailOption(value)) {
+		if (!mailService.isValidMailOption(value)) {
 			throw new InvalidMailOptionException("Option: " + value + "is not a valid mail option");
 		}
 	}

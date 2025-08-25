@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import no.vebb.f1.codes.CodeService;
+import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.util.response.ReferralCodeResponse;
 import org.slf4j.Logger;
@@ -36,22 +37,22 @@ public class UserSettingsController {
     private static final Logger logger = LoggerFactory.getLogger(UserSettingsController.class);
     private final Database db;
     private final UserService userService;
-    private final UserMailService userMailService;
     private final UserRespository userRespository;
     private final CodeService codeService;
+    private final MailService mailService;
 
-    public UserSettingsController(Database db, UserService userService, UserMailService userMailService, UserRespository userRespository, CodeService codeService) {
+    public UserSettingsController(Database db, UserService userService, UserRespository userRespository, CodeService codeService, MailService mailService) {
         this.db = db;
         this.userService = userService;
-        this.userMailService = userMailService;
         this.userRespository = userRespository;
         this.codeService = codeService;
+        this.mailService = mailService;
     }
 
     @GetMapping("/info")
     public ResponseEntity<UserInformation> userInformation() {
         User user = userService.getUser();
-        UserInformation userInfo = new UserInformation(user, db);
+        UserInformation userInfo = new UserInformation(user, db, mailService);
         return new ResponseEntity<>(userInfo, HttpStatus.OK);
 
     }
@@ -106,17 +107,17 @@ public class UserSettingsController {
     @GetMapping("/mail")
     public ResponseEntity<MailOptionsResponse> mailingList() {
         User user = userService.getUser();
-        boolean hasMail = db.userHasEmail(user.id());
+        boolean hasMail = mailService.userHasEmail(user.id());
         if (!hasMail) {
             MailOptionsResponse res = new MailOptionsResponse(false, null);
             return new ResponseEntity<>(res, HttpStatus.OK);
         }
         Map<Integer, Boolean> mailOptions = new LinkedHashMap<>();
-        List<MailOption> options = db.getMailingOptions();
+        List<MailOption> options = mailService.getMailingOptions();
         for (MailOption option : options) {
             mailOptions.put(option.value, false);
         }
-        List<MailOption> preferences = db.getMailingPreference(user.id());
+        List<MailOption> preferences = mailService.getMailingPreference(user.id());
         for (MailOption preference : preferences) {
             mailOptions.put(preference.value, true);
         }
@@ -131,7 +132,7 @@ public class UserSettingsController {
         try {
             User user = userService.getUser();
             UserMail userMail = new UserMail(user, email);
-            userMailService.sendVerificationCode(userMail);
+            codeService.sendVerificationCode(userMail);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidEmailException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -142,7 +143,7 @@ public class UserSettingsController {
     @Transactional
     public ResponseEntity<?> removeMailingList() {
         User user = userService.getUser();
-        db.clearUserFromMailing(user.id());
+        mailService.clearUserFromMailing(user.id());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -171,8 +172,8 @@ public class UserSettingsController {
     public ResponseEntity<?> addMailingOption(@RequestParam("option") int option) {
         try {
             User user = userService.getUser();
-            MailOption mailOption = new MailOption(option, db);
-            db.addMailOption(user.id(), mailOption);
+            MailOption mailOption = new MailOption(option, mailService);
+            mailService.addMailOption(user.id(), mailOption);
         } catch (InvalidEmailException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -184,8 +185,8 @@ public class UserSettingsController {
     public ResponseEntity<?> removeMailingOption(@RequestParam("option") int option) {
         try {
             User user = userService.getUser();
-            MailOption mailOption = new MailOption(option, db);
-            db.removeMailOption(user.id(), mailOption);
+            MailOption mailOption = new MailOption(option);
+            mailService.removeMailOption(user.id(), mailOption);
         } catch (InvalidEmailException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.vebb.f1.mail.MailService;
 import no.vebb.f1.util.domainPrimitive.Username;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,11 +21,13 @@ public class UserService {
 	private final Database db;
 	private final UserRespository userRespository;
 	private final AdminRepository adminRepository;
+	private final MailService mailService;
 
-	public UserService(Database db, UserRespository userRespository, AdminRepository adminRepository) {
+	public UserService(Database db, UserRespository userRespository, AdminRepository adminRepository, MailService mailService) {
 		this.db = db;
 		this.userRespository = userRespository;
 		this.adminRepository = adminRepository;
+		this.mailService = mailService;
 	}
 
 	public Optional<User> loadUser() {
@@ -101,11 +104,8 @@ public class UserService {
 	public void deleteUser() {
 		User user = getUser();
 		userRespository.anonymizeUser(user.id());
-		db.clearUserFromMailing(user.id());
+		mailService.clearUserFromMailing(user.id());
 		db.removeBingomaster(user.id());
 	}
 
-	public List<UUID> getAdmins() {
-		return adminRepository.findAll().stream().map(Admin::id).toList();
-	}
 }

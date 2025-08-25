@@ -354,6 +354,7 @@ public class PostgreSQLConfig {
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS notified (
+					id SERIAL PRIMARY KEY,
 					user_id UUID NOT NULL,
 					race_id INTEGER NOT NULL,
 					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,

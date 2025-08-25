@@ -24,7 +24,7 @@ public class CodeService {
         this.mailService = mailService;
     }
 
-    public int addVerificationCode(UserMail userMail) {
+    public void sendVerificationCode(UserMail userMail) {
         final int code = CodeGenerator.getVerificationCode();
         VerificationCode verificationCode = new VerificationCode(
                 userMail.user().id(),
@@ -33,7 +33,7 @@ public class CodeService {
                 Instant.now().plus(Duration.ofMinutes(10))
         );
         verificationCodeRepository.save(verificationCode);
-        return code;
+        mailService.sendVerificationCodeMail(userMail, code);
     }
 
     public void removeVerificationCode(UUID userId) {
