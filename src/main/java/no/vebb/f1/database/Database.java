@@ -281,25 +281,6 @@ public class Database {
     }
 
     /**
-     * Gets the current race to guess on. Only returns a race if there is a race
-     * that has a starting grid and not race result.
-     *
-     * @return race id
-     * @throws EmptyResultDataAccessException if there is no race within the criteria
-     */
-    public RaceId getCurrentRaceIdToGuess() throws EmptyResultDataAccessException {
-        final String getRaceId = """
-                SELECT DISTINCT race_id
-                FROM starting_grids sg
-                WHERE sg.race_id NOT IN (
-                	SELECT rr.race_id
-                	FROM race_results rr
-                );
-                """;
-        return new RaceId(jdbcTemplate.queryForObject(getRaceId, Integer.class));
-    }
-
-    /**
      * Adds the guesses of flags of a user into the given year.
      * Overwrites pre-existing guesses.
      *
@@ -834,28 +815,6 @@ public class Database {
     }
 
     /**
-     * Checks if starting grid for race already exists.
-     *
-     * @param raceId to check
-     * @return true if exists
-     */
-    public boolean isStartingGridAdded(RaceId raceId) {
-        final String existCheck = "SELECT COUNT(*) FROM starting_grids WHERE race_id = ?;";
-        return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId.value) > 0;
-    }
-
-    /**
-     * Checks if race result for race already exists.
-     *
-     * @param raceId to check
-     * @return true if exists
-     */
-    public boolean isRaceResultAdded(RaceId raceId) {
-        final String existCheck = "SELECT COUNT(*) FROM race_results WHERE race_id = ?;";
-        return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId.value) > 0;
-    }
-
-    /**
      * Checks if race already exists.
      *
      * @param raceId to check
@@ -996,82 +955,6 @@ public class Database {
     public void deleteAllConstructorYear(Year year) {
         final String deleteAllConstructors = "DELETE FROM constructors_year WHERE year = ?;";
         jdbcTemplate.update(deleteAllConstructors, year.value);
-    }
-
-    /**
-     * Insert driving to starting grid in given race and position.
-     *
-     * @param raceId   to add data to
-     * @param position of driver
-     * @param driver   to add
-     */
-    public void insertDriverStartingGrid(RaceId raceId, int position, Driver driver) {
-        final String insertStartingGrid = """
-            INSERT INTO starting_grids (race_id, position, driver_name) VALUES (?, ?, ?)
-            ON CONFLICT (race_id, driver_name)
-            DO UPDATE SET position = EXCLUDED.position;
-        """;
-        jdbcTemplate.update(insertStartingGrid, raceId.value, position, driver.value);
-    }
-
-    /**
-     * Inserts or replaces race result of driver into RaceResult table.
-     *
-     * @param raceId            of race
-     * @param position          of driver
-     * @param driver            name
-     * @param points            the driver got
-     * @param finishingPosition the position that driver finished race in
-     */
-    public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, Points points, int finishingPosition) {
-        final String insertRaceResult = """
-                INSERT INTO race_results
-                (race_id, position, driver_name, points, finishing_position)
-                VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT (race_id, finishing_position)
-                DO UPDATE SET position = EXCLUDED.position,
-                              driver_name = EXCLUDED.driver_name,
-                              points = EXCLUDED.points;
-                """;
-        jdbcTemplate.update(insertRaceResult, raceId.value, position, driver.value, points.value, finishingPosition);
-    }
-
-    /**
-     * Inserts or replaces position in standings of driver into DriverStandings table.
-     *
-     * @param raceId   of race
-     * @param driver   name
-     * @param position of driver
-     * @param points   of driver
-     */
-    public void insertDriverIntoStandings(RaceId raceId, Driver driver, int position, Points points) {
-        final String insertDriverStandings = """
-                INSERT INTO driver_standings
-                (race_id, driver_name, position, points)
-                VALUES (?, ?, ?, ?)
-                ON CONFLICT (race_id, driver_name)
-                DO UPDATE SET position = EXCLUDED.position, points = EXCLUDED.points;
-                """;
-        jdbcTemplate.update(insertDriverStandings, raceId.value, driver.value, position, points.value);
-    }
-
-    /**
-     * Inserts or replaces position in standings of constructor into ConstructorStandings table.
-     *
-     * @param raceId      of race
-     * @param constructor name
-     * @param position    of constructor
-     * @param points      of constructor
-     */
-    public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, int position, Points points) {
-        final String insertConstructorStandings = """
-                INSERT INTO constructor_standings
-                (race_id, constructor_name, position, points)
-                VALUES (?, ?, ?, ?)
-                ON CONFLICT (race_id, constructor_name)
-                DO UPDATE SET position = EXCLUDED.position, points = EXCLUDED.points;
-                """;
-        jdbcTemplate.update(insertConstructorStandings, raceId.value, constructor.value, position, points.value);
     }
 
     /**
@@ -1377,102 +1260,6 @@ public class Database {
         return jdbcTemplate.queryForList(sql, String.class).stream()
                 .map(Flag::new)
                 .toList();
-    }
-
-    /**
-     * Gets a list of the starting grid of a race as a list of PositionedCompetitor.
-     * Points are left blank.
-     *
-     * @param raceId of race
-     * @return starting grid
-     */
-    public List<PositionedCompetitor> getStartingGrid(RaceId raceId) {
-        final String getStartingGrid = """
-                SELECT position, driver_name
-                FROM starting_grids
-                WHERE race_id = ?
-                ORDER BY position;
-                """;
-        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getStartingGrid, raceId.value);
-        List<PositionedCompetitor> startingGrid = new ArrayList<>();
-        for (Map<String, Object> row : sqlRes) {
-            String position = String.valueOf((int) row.get("position"));
-            String driver = (String) row.get("driver_name");
-            startingGrid.add(new PositionedCompetitor(position, driver, 0));
-        }
-        return startingGrid;
-    }
-
-    /**
-     * Gets a list of the race result of a race as a list of PositionedCompetitor.
-     *
-     * @param raceId of race
-     * @return race result
-     */
-    public List<PositionedCompetitor> getRaceResult(RaceId raceId) {
-        final String getRaceResult = """
-                SELECT position, driver_name, points
-                FROM race_results
-                WHERE race_id = ?
-                ORDER BY finishing_position;
-                """;
-        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getRaceResult, raceId.value);
-        List<PositionedCompetitor> raceResult = new ArrayList<>();
-        for (Map<String, Object> row : sqlRes) {
-            String position = (String) row.get("position");
-            String driver = (String) row.get("driver_name");
-            int points = (int) row.get("points");
-            raceResult.add(new PositionedCompetitor(position, driver, points));
-        }
-        return raceResult;
-    }
-
-    /**
-     * Gets a list of the driver standings from a race as a list of PositionedCompetitor.
-     *
-     * @param raceId of race
-     * @return driver standings
-     */
-    public List<PositionedCompetitor> getDriverStandings(RaceId raceId) {
-        final String getDriverStandings = """
-                SELECT position, driver_name, points
-                FROM driver_standings
-                WHERE race_id = ?
-                ORDER BY position;
-                """;
-        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getDriverStandings, raceId.value);
-        List<PositionedCompetitor> standings = new ArrayList<>();
-        for (Map<String, Object> row : sqlRes) {
-            String position = String.valueOf((int) row.get("position"));
-            String driver = (String) row.get("driver_name");
-            int points = (int) row.get("points");
-            standings.add(new PositionedCompetitor(position, driver, points));
-        }
-        return standings;
-    }
-
-    /**
-     * Gets a list of the constructor standings from a race as a list of PositionedCompetitor.
-     *
-     * @param raceId of race
-     * @return constructor standings
-     */
-    public List<PositionedCompetitor> getConstructorStandings(RaceId raceId) {
-        final String getConstructorStandings = """
-                SELECT position, constructor_name, points
-                FROM constructor_standings
-                WHERE race_id = ?
-                ORDER BY position;
-                """;
-        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getConstructorStandings, raceId.value);
-        List<PositionedCompetitor> standings = new ArrayList<>();
-        for (Map<String, Object> row : sqlRes) {
-            String position = String.valueOf((int) row.get("position"));
-            String constructor = (String) row.get("constructor_name");
-            int points = (int) row.get("points");
-            standings.add(new PositionedCompetitor(position, constructor, points));
-        }
-        return standings;
     }
 
     /**

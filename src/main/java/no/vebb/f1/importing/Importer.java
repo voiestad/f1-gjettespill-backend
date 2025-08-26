@@ -10,6 +10,7 @@ import java.io.StringWriter;
 import java.io.PrintWriter;
 
 import no.vebb.f1.mail.MailService;
+import no.vebb.f1.results.ResultService;
 import no.vebb.f1.scoring.ScoreCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,11 +38,13 @@ public class Importer {
 	private final Database db;
 	private final MailService mailService;
 	private final ScoreCalculator scoreCalculator;
+	private final ResultService resultService;
 
-	public Importer(Database db, MailService mailService, ScoreCalculator scoreCalculator) {
+	public Importer(Database db, MailService mailService, ScoreCalculator scoreCalculator, ResultService resultService) {
 		this.db = db;
 		this.mailService = mailService;
 		this.scoreCalculator = scoreCalculator;
+		this.resultService = resultService;
 	}
 
 	@Transactional
@@ -167,9 +170,9 @@ public class Importer {
 		if (raceResult.size() <= 1) {
 			return ResultChangeStatus.NO_CHANGE;
 		}
-		List<PositionedCompetitor> preList = db.getRaceResult(raceId);
+		List<PositionedCompetitor> preList = resultService.getRaceResult(raceId).stream().map(PositionedCompetitor::fromRaceResult).toList();
 		insertRaceResultData(raceId, raceResult);
-		List<PositionedCompetitor> postList = db.getRaceResult(raceId);
+		List<PositionedCompetitor> postList = resultService.getRaceResult(raceId).stream().map(PositionedCompetitor::fromRaceResult).toList();
 		if (preList.size() != postList.size()) {
 			ResultChangeStatus status = ResultChangeStatus.POINTS_CHANGE;
 			Points change = compPoints(postList);
@@ -214,7 +217,7 @@ public class Importer {
 	private int importStartingGrids(List<RaceId> racesToImportFrom) {
 		int count = 0;
 		for (RaceId raceId : racesToImportFrom) {
-			boolean isAlreadyAdded = db.isStartingGridAdded(raceId);
+			boolean isAlreadyAdded = resultService.isStartingGridAdded(raceId);
 			if (isAlreadyAdded) {
 				continue;
 			}
@@ -235,7 +238,7 @@ public class Importer {
 				String driver = parseDriver(row.get(2), raceId);
 				db.addDriver(driver);
 				Driver validDriver = new Driver(driver, db);
-				db.insertDriverStartingGrid(raceId, position, validDriver);
+				resultService.insertDriverStartingGrid(raceId, position, validDriver);
 			}
 
 		} catch (NumberFormatException | IndexOutOfBoundsException e) {
@@ -246,7 +249,7 @@ public class Importer {
 	private boolean importRaceResults(List<RaceId> racesToImportFrom) {
 		boolean addedNewRace = false;
 		for (RaceId raceId : racesToImportFrom) {
-			boolean isAlreadyAdded = db.isRaceResultAdded(raceId);
+			boolean isAlreadyAdded = resultService.isRaceResultAdded(raceId);
 			if (isAlreadyAdded) {
 				throw new RuntimeException("Race is already added and was attempted added again");
 			}
@@ -284,7 +287,7 @@ public class Importer {
 		String position = row.get(0);
 		Driver driver = new Driver(parseDriver(row.get(2), raceId), db);
 		Points points = new Points((int) Double.parseDouble(row.get(6)));
-		db.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
+		resultService.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
 	}
 
 	public void importRaceNames(List<Integer> racesToImportFrom, Year year) {
@@ -362,7 +365,7 @@ public class Importer {
 				Driver driver = new Driver(competitor.name(), db);
 				int position = Integer.parseInt(competitor.position());
 				Points points = new Points(competitor.points());
-				db.insertDriverIntoStandings(newestRace, driver, position, points);
+				resultService.insertDriverIntoStandings(newestRace, driver, position, points);
 			}
 			logger.info("Driver standings added for race '{}'", newestRace);
 			return status;
@@ -374,7 +377,7 @@ public class Importer {
 	private ResultChangeStatus isDriverStandingsNew(List<PositionedCompetitor> standings, Year year) {
 		try {
 			RaceId previousRaceId = db.getLatestStandingsId(year);
-			List<PositionedCompetitor> previousStandings = db.getDriverStandings(previousRaceId);
+			List<PositionedCompetitor> previousStandings = resultService.getDriverStandings(previousRaceId).stream().map(PositionedCompetitor::fromDriverStandings).toList();
 			return compareStandings(standings, previousStandings);
 		} catch (EmptyResultDataAccessException e) {
 			return changeWithSum(standings);
@@ -406,7 +409,7 @@ public class Importer {
 				int position = Integer.parseInt(competitor.position());
 				Points points = new Points(competitor.points());
 				Constructor validConstructor = new Constructor(competitor.name());
-				db.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
+				resultService.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
 			}
 			logger.info("Constructor standings added for race '{}'", newestRace);
 			return status;
@@ -418,7 +421,7 @@ public class Importer {
 	private ResultChangeStatus isConstructorStandingsNew(List<PositionedCompetitor> standings, Year year) {
 		try {
 			RaceId previousRaceId = db.getLatestStandingsId(year);
-			List<PositionedCompetitor> previousStandings = db.getConstructorStandings(previousRaceId);
+			List<PositionedCompetitor> previousStandings = resultService.getConstructorStandings(previousRaceId).stream().map(PositionedCompetitor::fromConstructorStandings).toList();
 			return compareStandings(standings, previousStandings);
 		} catch (EmptyResultDataAccessException e) {
 			return changeWithSum(standings);

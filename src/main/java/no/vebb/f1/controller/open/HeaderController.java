@@ -1,5 +1,6 @@
 package no.vebb.f1.controller.open;
 
+import no.vebb.f1.results.ResultService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +23,13 @@ public class HeaderController {
 	private final Database db;
 	private final Cutoff cutoff;
 	private final UserService userService;
+	private final ResultService resultService;
 
-	public HeaderController(Database db, Cutoff cutoff, UserService userService) {
+	public HeaderController(Database db, Cutoff cutoff, UserService userService, ResultService resultService) {
 		this.db = db;
 		this.cutoff = cutoff;
 		this.userService = userService;
+		this.resultService = resultService;
 	}
 
 	@GetMapping("/api/public/header")
@@ -51,9 +54,9 @@ public class HeaderController {
 
 	private boolean isRaceToGuess() {
 		try {
-			RaceId raceId = db.getCurrentRaceIdToGuess();
+			RaceId raceId = resultService.getCurrentRaceIdToGuess();
 			return cutoff.isAbleToGuessRace(raceId);
-		} catch (EmptyResultDataAccessException | NoAvailableRaceException e) {
+		} catch (NoAvailableRaceException e) {
 			return false;
 		}
     }

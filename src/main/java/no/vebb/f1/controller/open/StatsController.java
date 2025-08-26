@@ -1,5 +1,6 @@
 package no.vebb.f1.controller.open;
 
+import no.vebb.f1.results.ResultService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,9 +19,11 @@ import no.vebb.f1.util.exception.InvalidRaceException;
 public class StatsController {
 
 	private final Database db;
+	private final ResultService resultService;
 
-	public StatsController(Database db) {
+	public StatsController(Database db, ResultService resultService) {
 		this.db = db;
+		this.resultService = resultService;
 	}
 
 	@GetMapping("/race/{raceId}")
@@ -28,7 +31,7 @@ public class StatsController {
 		try {
 			RaceId validRaceId = new RaceId(raceId, db);
 			Year year = db.getYearFromRaceId(validRaceId);
-			RaceStats res = new RaceStats(validRaceId, year, db);
+			RaceStats res = new RaceStats(validRaceId, year, db, resultService);
 			return new ResponseEntity<>(res, HttpStatus.OK);
 		} catch (InvalidRaceException e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);

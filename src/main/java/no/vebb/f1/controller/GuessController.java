@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import no.vebb.f1.results.ResultService;
 import no.vebb.f1.util.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,11 +44,13 @@ public class GuessController {
 	private final Database db;
 	private final UserService userService;
 	private final Cutoff cutoff;
+	private final ResultService resultService;
 
-	public GuessController(Database db, UserService userService, Cutoff cutoff) {
+	public GuessController(Database db, UserService userService, Cutoff cutoff, ResultService resultService) {
 		this.db = db;
 		this.userService = userService;
 		this.cutoff = cutoff;
+		this.resultService = resultService;
 	}
 
 	@GetMapping("/categories")
@@ -268,15 +271,11 @@ public class GuessController {
 	}
 
 	private RaceId getRaceIdToGuess() throws NoAvailableRaceException {
-		try {
-			RaceId raceId = db.getCurrentRaceIdToGuess();
-			if (!cutoff.isAbleToGuessRace(raceId)) {
-				throw new NoAvailableRaceException("Cutoff has been passed");
-			}
-			return raceId;
-		} catch (EmptyResultDataAccessException e) {
-			throw new NoAvailableRaceException("Currently there are no available races");
-		}
+        RaceId raceId = resultService.getCurrentRaceIdToGuess();
+        if (!cutoff.isAbleToGuessRace(raceId)) {
+            throw new NoAvailableRaceException("Cutoff has been passed");
+        }
+        return raceId;
 	}
 
 	@GetMapping("/flag")
