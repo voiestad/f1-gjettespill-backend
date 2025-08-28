@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UserRespository extends JpaRepository<User, UUID> {
+public interface UserRespository extends JpaRepository<UserEntity, UUID> {
 
-    Optional<User> findByGoogleId(String googleId);
+    Optional<UserEntity> findByGoogleId(String googleId);
 
     @Query(value = "SELECT * FROM users WHERE username = :username :: citext", nativeQuery = true)
-    Optional<User> findByUsername(String username);
+    Optional<UserEntity> findByUsername(String username);
 
-    List<User> findAllByOrderByUsername();
+    List<UserEntity> findAllByOrderByUsername();
 
     @Modifying
     @Query(value = """

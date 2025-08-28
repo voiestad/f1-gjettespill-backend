@@ -26,13 +26,13 @@ public class CodeService {
 
     public void sendVerificationCode(UserMail userMail) {
         final int code = CodeGenerator.getVerificationCode();
-        VerificationCode verificationCode = new VerificationCode(
-                userMail.user().id(),
+        VerificationCodeEntity verificationCodeEntity = new VerificationCodeEntity(
+                userMail.userEntity().id(),
                 code,
                 userMail.email(),
                 Instant.now().plus(Duration.ofMinutes(10))
         );
-        verificationCodeRepository.save(verificationCode);
+        verificationCodeRepository.save(verificationCodeEntity);
         mailService.sendVerificationCodeMail(userMail, code);
     }
 
@@ -55,20 +55,20 @@ public class CodeService {
     }
 
     public boolean validateVerificationCode(UUID userId, int code) {
-        Optional<VerificationCode> optVerificationCode = verificationCodeRepository.findById(userId);
+        Optional<VerificationCodeEntity> optVerificationCode = verificationCodeRepository.findById(userId);
         if (optVerificationCode.isEmpty()) {
             return false;
         }
-        VerificationCode verificationCode = optVerificationCode.get();
-        boolean isValidCode = code == verificationCode.code();
+        VerificationCodeEntity verificationCodeEntity = optVerificationCode.get();
+        boolean isValidCode = code == verificationCodeEntity.code();
         if (!isValidCode) {
             return false;
         }
-        boolean isValidCutoff = verificationCode.cutoff().compareTo(Instant.now()) > 0;
+        boolean isValidCutoff = verificationCodeEntity.cutoff().compareTo(Instant.now()) > 0;
         if (!isValidCutoff) {
             return false;
         }
-        String email = verificationCode.email();
+        String email = verificationCodeEntity.email();
         mailService.addToMailingList(userId, email);
         removeVerificationCode(userId);
         return true;
@@ -76,8 +76,8 @@ public class CodeService {
 
     public boolean isValidReferralCode(long code) {
         return referralCodeRepository.findByCode(code)
-                .map(referralCode ->
-                        referralCode.cutoff().compareTo(Instant.now()) > 0).orElse(false);
+                .map(referralCodeEntity ->
+                        referralCodeEntity.cutoff().compareTo(Instant.now()) > 0).orElse(false);
     }
 
     public void removeExpiredReferralCodes() {
@@ -90,14 +90,14 @@ public class CodeService {
     public long addReferralCode(UUID userId) {
         long code = CodeGenerator.getReferralCode();
         Instant cutoff = Instant.now().plus(Duration.ofHours(1));
-        ReferralCode referralCode = new ReferralCode(userId, code, cutoff);
-        referralCodeRepository.save(referralCode);
+        ReferralCodeEntity referralCodeEntity = new ReferralCodeEntity(userId, code, cutoff);
+        referralCodeRepository.save(referralCodeEntity);
         return code;
     }
 
     @Nullable
     public Long getReferralCode(UUID userId) {
-        return referralCodeRepository.findById(userId).map(ReferralCode::code).orElse(null);
+        return referralCodeRepository.findById(userId).map(ReferralCodeEntity::code).orElse(null);
     }
 
     public void removeReferralCode(UUID userId) {

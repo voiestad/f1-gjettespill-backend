@@ -1,25 +1,25 @@
 package no.vebb.f1.util.collection;
 
-import no.vebb.f1.results.ConstructorStandings;
-import no.vebb.f1.results.DriverStandings;
-import no.vebb.f1.results.RaceResult;
-import no.vebb.f1.results.StartingGrid;
+import no.vebb.f1.results.ConstructorStandingsEntity;
+import no.vebb.f1.results.DriverStandingsEntity;
+import no.vebb.f1.results.RaceResultEntity;
+import no.vebb.f1.results.StartingGridEntity;
 
 public record PositionedCompetitor(String position, String name, int points) {
-    public static PositionedCompetitor fromStartingGrid(StartingGrid startingGrid) {
-        return new PositionedCompetitor(String.valueOf(startingGrid.position()), startingGrid.driverName(), 0);
+    public static PositionedCompetitor fromStartingGrid(StartingGridEntity startingGridEntity) {
+        return new PositionedCompetitor(String.valueOf(startingGridEntity.position()), startingGridEntity.driverName(), 0);
     }
 
-    public static PositionedCompetitor fromRaceResult(RaceResult raceResult) {
-        return new PositionedCompetitor(String.valueOf(raceResult.position()), raceResult.driverName(), raceResult.points());
+    public static PositionedCompetitor fromRaceResult(RaceResultEntity raceResultEntity) {
+        return new PositionedCompetitor(String.valueOf(raceResultEntity.position()), raceResultEntity.driverName(), raceResultEntity.points());
     }
 
-    public static PositionedCompetitor fromDriverStandings(DriverStandings driverStandings) {
-        return new PositionedCompetitor(String.valueOf(driverStandings.position()), driverStandings.driverName(), driverStandings.points());
+    public static PositionedCompetitor fromDriverStandings(DriverStandingsEntity driverStandingsEntity) {
+        return new PositionedCompetitor(String.valueOf(driverStandingsEntity.position()), driverStandingsEntity.driverName(), driverStandingsEntity.points());
     }
 
-    public static PositionedCompetitor fromConstructorStandings(ConstructorStandings constructorStandings) {
-        return new PositionedCompetitor(String.valueOf(constructorStandings.position()), constructorStandings.constructorName(), constructorStandings.points());
+    public static PositionedCompetitor fromConstructorStandings(ConstructorStandingsEntity constructorStandingsEntity) {
+        return new PositionedCompetitor(String.valueOf(constructorStandingsEntity.position()), constructorStandingsEntity.constructorName(), constructorStandingsEntity.points());
     }
 
 }

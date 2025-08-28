@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
-import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserService;
 
 @RestController
@@ -27,7 +27,7 @@ public class F1ErrorController implements ErrorController {
 
 	@RequestMapping("/error")
 	public ResponseEntity<?> error(HttpServletRequest request) {
-		Optional<User> user = userService.loadUser();
+		Optional<UserEntity> user = userService.loadUser();
 		String userId = user.map(u -> u.id().toString()).orElse("unknown");
 		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
 

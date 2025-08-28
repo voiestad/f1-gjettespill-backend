@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface MailOptionRepository extends JpaRepository<MailOption, Integer> {
-    @Query("SELECT mo FROM MailOption mo ORDER BY mo.mailOption")
-    List<MailOption> findAllOrderByMailOption();
+public interface MailOptionRepository extends JpaRepository<MailOptionEntity, Integer> {
+    @Query("SELECT mo FROM MailOptionEntity mo ORDER BY mo.mailOption")
+    List<MailOptionEntity> findAllOrderByMailOption();
 }

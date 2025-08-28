@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "race_results")
-public class RaceResult {
+public class RaceResultEntity {
     @EmbeddedId
     private RaceResultId id;
     @Column(name = "position", nullable = false)
@@ -17,9 +17,9 @@ public class RaceResult {
     @Column(name = "points", nullable = false)
     private int points;
 
-    protected RaceResult() {}
+    protected RaceResultEntity() {}
 
-    public RaceResult(int raceId, int finishingPosition, String position, String driverName, int points) {
+    public RaceResultEntity(int raceId, int finishingPosition, String position, String driverName, int points) {
         this.id = new RaceResultId(raceId, finishingPosition);
         this.position = position;
         this.driverName = driverName;

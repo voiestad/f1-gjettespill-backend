@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "mailing_list")
-public class Mail {
+public class MailEntity {
     @Id
     @Column(name = "user_id")
     private UUID id;
@@ -17,10 +17,10 @@ public class Mail {
     @Column(unique = true, nullable = false, name = "email")
     private String email;
 
-    protected Mail() {
+    protected MailEntity() {
     }
 
-    public Mail(UUID id, String email) {
+    public MailEntity(UUID id, String email) {
         this.id = id;
         this.email = email;
     }

@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface DriverStandingsRepository extends JpaRepository<DriverStandings, DriverStandingsId> {
+public interface DriverStandingsRepository extends JpaRepository<DriverStandingsEntity, DriverStandingsId> {
     @Query(value = "SELECT * FROM driver_standings WHERE race_id = :raceId ORDER BY position", nativeQuery = true)
-    List<DriverStandings> findAllByRaceIdOrderByPosition(int raceId);
+    List<DriverStandingsEntity> findAllByRaceIdOrderByPosition(int raceId);
 }

@@ -25,43 +25,43 @@ public class ResultService {
         this.constructorStandingsRepository = constructorStandingsRepository;
     }
 
-    public List<StartingGrid> getStartingGrid(RaceId raceId) {
+    public List<StartingGridEntity> getStartingGrid(RaceId raceId) {
         return startingGridRepository.findAllByRaceIdOrderByPosition(raceId.value);
     }
 
-    public List<RaceResult> getRaceResult(RaceId raceId) {
+    public List<RaceResultEntity> getRaceResult(RaceId raceId) {
         return raceResultRepository.findAllByRaceIdOrderByPosition(raceId.value);
     }
 
-    public List<DriverStandings> getDriverStandings(RaceId raceId) {
+    public List<DriverStandingsEntity> getDriverStandings(RaceId raceId) {
         return driverStandingsRepository.findAllByRaceIdOrderByPosition(raceId.value);
     }
 
-    public List<ConstructorStandings> getConstructorStandings(RaceId raceId) {
+    public List<ConstructorStandingsEntity> getConstructorStandings(RaceId raceId) {
         return constructorStandingsRepository.findAllByRaceIdOrderByPosition(raceId.value);
     }
 
 
     public void insertDriverStartingGrid(RaceId raceId, int position, Driver driver) {
-        StartingGrid startingGrid = new StartingGrid(raceId.value, driver.value, position);
-        startingGridRepository.save(startingGrid);
+        StartingGridEntity startingGridEntity = new StartingGridEntity(raceId.value, driver.value, position);
+        startingGridRepository.save(startingGridEntity);
     }
 
     public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, Points points, int finishingPosition) {
-        RaceResult raceResult = new RaceResult(raceId.value, finishingPosition, position, driver.value, points.value);
-        raceResultRepository.save(raceResult);
+        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId.value, finishingPosition, position, driver.value, points.value);
+        raceResultRepository.save(raceResultEntity);
     }
 
 
     public void insertDriverIntoStandings(RaceId raceId, Driver driver, int position, Points points) {
-        DriverStandings driverStandings = new DriverStandings(raceId.value, driver.value, position, points.value);
-        driverStandingsRepository.save(driverStandings);
+        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId.value, driver.value, position, points.value);
+        driverStandingsRepository.save(driverStandingsEntity);
     }
 
 
     public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, int position, Points points) {
-        ConstructorStandings constructorStandings = new ConstructorStandings(raceId.value, constructor.value, position, points.value);
-        constructorStandingsRepository.save(constructorStandings);
+        ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId.value, constructor.value, position, points.value);
+        constructorStandingsRepository.save(constructorStandingsEntity);
     }
 
     public boolean isStartingGridAdded(RaceId raceId) {
@@ -73,14 +73,14 @@ public class ResultService {
     }
 
     public RaceId getCurrentRaceIdToGuess() throws NoAvailableRaceException {
-        List<StartingGrid> startingGrids = startingGridRepository.findAllByNotInRaceResult();
-        if (startingGrids.isEmpty()) {
+        List<StartingGridEntity> startingGridEntities = startingGridRepository.findAllByNotInRaceResult();
+        if (startingGridEntities.isEmpty()) {
             throw new NoAvailableRaceException("No starting grid found that is not in race result");
         }
-        if (startingGrids.size() > 1) {
+        if (startingGridEntities.size() > 1) {
             throw new NoAvailableRaceException("Too many starting grids found");
         }
-        return new RaceId(startingGrids.get(0).raceId());
+        return new RaceId(startingGridEntities.get(0).raceId());
     }
 
 }

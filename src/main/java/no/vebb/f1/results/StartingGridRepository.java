@@ -5,9 +5,9 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface StartingGridRepository extends JpaRepository<StartingGrid, StartingGridId> {
+public interface StartingGridRepository extends JpaRepository<StartingGridEntity, StartingGridId> {
     @Query(value = "SELECT * FROM starting_grids WHERE race_id = :raceId ORDER BY position", nativeQuery = true)
-    List<StartingGrid> findAllByRaceIdOrderByPosition(int raceId);
+    List<StartingGridEntity> findAllByRaceIdOrderByPosition(int raceId);
 
     @Query(value = "SELECT EXISTS (SELECT * from starting_grids WHERE race_id = :raceId)", nativeQuery = true)
     boolean existsByRaceId(int raceId);
@@ -20,5 +20,5 @@ public interface StartingGridRepository extends JpaRepository<StartingGrid, Star
             	FROM race_results rr
             )
             """, nativeQuery = true)
-    List<StartingGrid> findAllByNotInRaceResult();
+    List<StartingGridEntity> findAllByNotInRaceResult();
 }

@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-public class User {
+public class UserEntity {
     @Id
     @Column(nullable = false, name = "user_id")
     private UUID id;
@@ -18,13 +18,13 @@ public class User {
     @Column(unique = true, nullable = false, name = "username", columnDefinition = "citext")
     private String username;
 
-    User(UUID id, String googleId, String username) {
+    UserEntity(UUID id, String googleId, String username) {
         this.id = id;
         this.googleId = googleId;
         this.username = username;
     }
 
-    protected User() {
+    protected UserEntity() {
     }
 
     public UUID id() {

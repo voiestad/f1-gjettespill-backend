@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.UUID;
 
-public interface MailPreferenceRepository extends JpaRepository<MailPreference, MailPreferenceId> {
+public interface MailPreferenceRepository extends JpaRepository<MailPreferenceEntity, MailPreferenceId> {
 
     @Modifying
     @Query(value = "DELETE FROM mail_preferences WHERE user_id = :userId", nativeQuery = true)
@@ -15,5 +15,5 @@ public interface MailPreferenceRepository extends JpaRepository<MailPreference, 
 
     @Query(value = "SELECT * FROM mail_preferences WHERE user_id = :userId ORDER BY mail_option DESC",
             nativeQuery = true)
-    List<MailPreference> findAllByUserId(UUID userId);
+    List<MailPreferenceEntity> findAllByUserId(UUID userId);
 }

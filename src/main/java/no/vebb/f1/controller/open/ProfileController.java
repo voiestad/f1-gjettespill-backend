@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.PublicUserDto;
-import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
@@ -42,38 +42,38 @@ public class ProfileController {
             @PathVariable("id") UUID id,
             @RequestParam(value = "raceId", required = false) Integer raceId,
             @RequestParam(value = "year", required = false) Integer year) {
-        Optional<User> optUser = userService.loadUser(id);
+        Optional<UserEntity> optUser = userService.loadUser(id);
         if (optUser.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        User user = optUser.get();
-        return getGuesserProfile(user, raceId, year);
+        UserEntity userEntity = optUser.get();
+        return getGuesserProfile(userEntity, raceId, year);
     }
 
     @GetMapping("/api/user/my-profile")
     public ResponseEntity<UserScoreResponse> myProfile(
             @RequestParam(value = "raceId", required = false) Integer raceId,
             @RequestParam(value = "year", required = false) Integer year) {
-        Optional<User> optUser = userService.loadUser();
+        Optional<UserEntity> optUser = userService.loadUser();
         if (optUser.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-        User user = optUser.get();
-        return getGuesserProfile(user, raceId, year);
+        UserEntity userEntity = optUser.get();
+        return getGuesserProfile(userEntity, raceId, year);
     }
 
-    private ResponseEntity<UserScoreResponse> getGuesserProfile(User user, Integer inputRaceId, Integer inputYear) {
+    private ResponseEntity<UserScoreResponse> getGuesserProfile(UserEntity userEntity, Integer inputRaceId, Integer inputYear) {
         if (inputRaceId == null) {
             if (inputYear == null) {
-                return getUpToDate(user);
+                return getUpToDate(userEntity);
             }
-            return getGuesserProfileYear(user, inputYear);
+            return getGuesserProfileYear(userEntity, inputYear);
         }
         try {
             RaceId raceId = new RaceId(inputRaceId, db);
             Year year = db.getYearFromRaceId(raceId);
-            if (isAbleToSeeGuesses(user, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(user), year, raceId, db);
+            if (isAbleToSeeGuesses(userEntity, year)) {
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -82,11 +82,11 @@ public class ProfileController {
         }
     }
 
-    private ResponseEntity<UserScoreResponse> getUpToDate(User user) {
+    private ResponseEntity<UserScoreResponse> getUpToDate(UserEntity userEntity) {
         try {
             Year year = new Year(TimeUtil.getCurrentYear(), db);
-            if (isAbleToSeeGuesses(user, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(user), year, db);
+            if (isAbleToSeeGuesses(userEntity, year)) {
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {
@@ -95,11 +95,11 @@ public class ProfileController {
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    private ResponseEntity<UserScoreResponse> getGuesserProfileYear(User user, int inputYear) {
+    private ResponseEntity<UserScoreResponse> getGuesserProfileYear(UserEntity userEntity, int inputYear) {
         try {
             Year year = new Year(inputYear, db);
-            if (isAbleToSeeGuesses(user, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(user), year, db);
+            if (isAbleToSeeGuesses(userEntity, year)) {
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {
@@ -108,8 +108,8 @@ public class ProfileController {
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    private boolean isAbleToSeeGuesses(User user, Year year) {
-        return !cutoff.isAbleToGuessYear(year) || userService.isLoggedInUser(user);
+    private boolean isAbleToSeeGuesses(UserEntity userEntity, Year year) {
+        return !cutoff.isAbleToGuessYear(year) || userService.isLoggedInUser(userEntity);
     }
 
     @GetMapping("/api/public/user/list")
@@ -122,7 +122,7 @@ public class ProfileController {
 
     @GetMapping("/api/public/user/placements/{id}")
     public ResponseEntity<UserPlacementStats> placementStatsById(@PathVariable("id") UUID id) {
-        Optional<User> optUser = userService.loadUser(id);
+        Optional<UserEntity> optUser = userService.loadUser(id);
         if (optUser.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -135,8 +135,8 @@ public class ProfileController {
         return userService.loadUser().map(this::getPlacementStats).orElseGet(() -> new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
-    private ResponseEntity<UserPlacementStats> getPlacementStats(User user) {
-        UserPlacementStats res = new UserPlacementStats(db, user.id(), user.username());
+    private ResponseEntity<UserPlacementStats> getPlacementStats(UserEntity userEntity) {
+        UserPlacementStats res = new UserPlacementStats(db, userEntity.id(), userEntity.username());
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }

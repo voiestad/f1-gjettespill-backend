@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "driver_standings")
-public class DriverStandings {
+public class DriverStandingsEntity {
     @EmbeddedId
     private DriverStandingsId id;
     @Column(name = "position", nullable = false)
@@ -15,10 +15,10 @@ public class DriverStandings {
     @Column(name = "points", nullable = false)
     private int points;
 
-    protected DriverStandings() {
+    protected DriverStandingsEntity() {
     }
 
-    public DriverStandings(int raceId, String driverName, int position, int points) {
+    public DriverStandingsEntity(int raceId, String driverName, int position, int points) {
         this.id = new DriverStandingsId(raceId, driverName);
         this.position = position;
         this.points = points;

@@ -4,17 +4,17 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "starting_grids")
-public class StartingGrid {
+public class StartingGridEntity {
     @EmbeddedId
     private StartingGridId id;
 
     @Column(name = "position", nullable = false)
     private int position;
 
-    protected StartingGrid() {
+    protected StartingGridEntity() {
     }
 
-    public StartingGrid(int raceId, String driverName, int position) {
+    public StartingGridEntity(int raceId, String driverName, int position) {
         this.id = new StartingGridId(raceId, driverName);
         this.position = position;
     }

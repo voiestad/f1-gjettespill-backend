@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "mail_options")
-public class MailOption {
+public class MailOptionEntity {
     @Id
     @Column(name = "mail_option")
     private int mailOption;

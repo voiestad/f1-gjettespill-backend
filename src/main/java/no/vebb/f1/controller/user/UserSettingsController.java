@@ -51,8 +51,8 @@ public class UserSettingsController {
 
     @GetMapping("/info")
     public ResponseEntity<UserInformation> userInformation() {
-        User user = userService.getUser();
-        UserInformation userInfo = new UserInformation(user, db, mailService);
+        UserEntity userEntity = userService.getUser();
+        UserInformation userInfo = new UserInformation(userEntity, db, mailService);
         return new ResponseEntity<>(userInfo, HttpStatus.OK);
 
     }
@@ -94,8 +94,8 @@ public class UserSettingsController {
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deleteAccount(@RequestParam("username") String username) {
-        User user = userService.getUser();
-        String actualUsername = user.username();
+        UserEntity userEntity = userService.getUser();
+        String actualUsername = userEntity.username();
         if (!username.equals(actualUsername)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -106,8 +106,8 @@ public class UserSettingsController {
 
     @GetMapping("/mail")
     public ResponseEntity<MailOptionsResponse> mailingList() {
-        User user = userService.getUser();
-        boolean hasMail = mailService.userHasEmail(user.id());
+        UserEntity userEntity = userService.getUser();
+        boolean hasMail = mailService.userHasEmail(userEntity.id());
         if (!hasMail) {
             MailOptionsResponse res = new MailOptionsResponse(false, null);
             return new ResponseEntity<>(res, HttpStatus.OK);
@@ -117,7 +117,7 @@ public class UserSettingsController {
         for (MailOption option : options) {
             mailOptions.put(option.value, false);
         }
-        List<MailOption> preferences = mailService.getMailingPreference(user.id());
+        List<MailOption> preferences = mailService.getMailingPreference(userEntity.id());
         for (MailOption preference : preferences) {
             mailOptions.put(preference.value, true);
         }
@@ -130,8 +130,8 @@ public class UserSettingsController {
     @Transactional
     public ResponseEntity<?> addMailingList(@RequestParam("email") String email) {
         try {
-            User user = userService.getUser();
-            UserMail userMail = new UserMail(user, email);
+            UserEntity userEntity = userService.getUser();
+            UserMail userMail = new UserMail(userEntity, email);
             codeService.sendVerificationCode(userMail);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidEmailException e) {
@@ -142,27 +142,27 @@ public class UserSettingsController {
     @PostMapping("/mail/remove")
     @Transactional
     public ResponseEntity<?> removeMailingList() {
-        User user = userService.getUser();
-        mailService.clearUserFromMailing(user.id());
+        UserEntity userEntity = userService.getUser();
+        mailService.clearUserFromMailing(userEntity.id());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/mail/verification")
     public ResponseEntity<Boolean> hasVerificationCode() {
-        User user = userService.getUser();
-        return new ResponseEntity<>(codeService.hasVerificationCode(user.id()), HttpStatus.OK);
+        UserEntity userEntity = userService.getUser();
+        return new ResponseEntity<>(codeService.hasVerificationCode(userEntity.id()), HttpStatus.OK);
     }
 
     @PostMapping("/mail/verification")
     @Transactional
     public ResponseEntity<?> verificationCode(@RequestParam("code") int code) {
-        User user = userService.getUser();
-        boolean isValidVerificationCode = codeService.validateVerificationCode(user.id(), code);
+        UserEntity userEntity = userService.getUser();
+        boolean isValidVerificationCode = codeService.validateVerificationCode(userEntity.id(), code);
         if (isValidVerificationCode) {
-            logger.info("Successfully verified email of user '{}'", user.id());
+            logger.info("Successfully verified email of user '{}'", userEntity.id());
             return new ResponseEntity<>(HttpStatus.OK);
         }
-        logger.warn("User '{}' put the wrong verification code", user.id());
+        logger.warn("User '{}' put the wrong verification code", userEntity.id());
 
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -171,9 +171,9 @@ public class UserSettingsController {
     @Transactional
     public ResponseEntity<?> addMailingOption(@RequestParam("option") int option) {
         try {
-            User user = userService.getUser();
+            UserEntity userEntity = userService.getUser();
             MailOption mailOption = new MailOption(option, mailService);
-            mailService.addMailOption(user.id(), mailOption);
+            mailService.addMailOption(userEntity.id(), mailOption);
         } catch (InvalidEmailException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -184,9 +184,9 @@ public class UserSettingsController {
     @Transactional
     public ResponseEntity<?> removeMailingOption(@RequestParam("option") int option) {
         try {
-            User user = userService.getUser();
+            UserEntity userEntity = userService.getUser();
             MailOption mailOption = new MailOption(option);
-            mailService.removeMailOption(user.id(), mailOption);
+            mailService.removeMailOption(userEntity.id(), mailOption);
         } catch (InvalidEmailException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

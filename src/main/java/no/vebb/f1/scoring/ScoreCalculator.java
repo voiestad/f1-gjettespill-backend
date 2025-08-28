@@ -2,7 +2,7 @@ package no.vebb.f1.scoring;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.PublicUserDto;
-import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.util.Cutoff;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Placement;
@@ -54,7 +54,7 @@ public class ScoreCalculator {
             return;
         }
         Year year = new Year(TimeUtil.getCurrentYear(), db);
-        List<User> guessers = db.getSeasonGuessers(year);
+        List<UserEntity> guessers = db.getSeasonGuessers(year);
         List<RaceId> raceIds = getSeasonRaceIds(year);
         for (RaceId raceId : raceIds) {
             Map<UUID, Summary> rankedGuessers = new HashMap<>();
@@ -68,7 +68,7 @@ public class ScoreCalculator {
             Map<UUID, Placement<Points>> tenthPoints = getPlacementMap(userScores, UserScore::getTenthScore);
             Map<UUID, Placement<Points>> totalPoints = getPlacementMap(userScores, UserScore::getScore);
 
-            for (User guesser : guessers) {
+            for (UserEntity guesser : guessers) {
                 UUID id = guesser.id();
                 Summary summary = new Summary(
                         driversPoints.get(id),

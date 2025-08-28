@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "constructor_standings")
-public class ConstructorStandings {
+public class ConstructorStandingsEntity {
     @EmbeddedId
     private ConstructorStandingsId id;
     @Column(name = "position", nullable = false)
@@ -15,10 +15,10 @@ public class ConstructorStandings {
     @Column(name = "points", nullable = false)
     private int points;
 
-    protected ConstructorStandings() {
+    protected ConstructorStandingsEntity() {
     }
 
-    public ConstructorStandings(int raceId, String constructorName, int position, int points) {
+    public ConstructorStandingsEntity(int raceId, String constructorName, int position, int points) {
         this.id = new ConstructorStandingsId(raceId, constructorName);
         this.position = position;
         this.points = points;

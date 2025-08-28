@@ -53,7 +53,7 @@ public class MailService {
     }
 
     public void addToMailingList(UUID userId, String email) {
-        mailingListRepository.save(new Mail(userId, email));
+        mailingListRepository.save(new MailEntity(userId, email));
     }
 
     @Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
@@ -67,9 +67,9 @@ public class MailService {
             }
             int timeLeftHours = (int) (timeLeft / 3600);
             List<UserMail> mailingList = db.getMailingList(raceId);
-            List<Notified> notifications = new ArrayList<>();
+            List<NotifiedEntity> notifications = new ArrayList<>();
             for (UserMail user : mailingList) {
-                UUID userId = user.user().id();
+                UUID userId = user.userEntity().id();
                 int notifiedCount = notifiedRepository.countAllByRaceIdAndUserId(raceId.value, userId);
                 List<MailOption> options = getMailingPreference(userId);
                 for (MailOption option : options) {
@@ -87,7 +87,7 @@ public class MailService {
                         message.setSubject("F1 Tipping påminnelse", "UTF-8");
                         message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
                         mailSender.send(message);
-                        notifications.add(new Notified(userId, raceId));
+                        notifications.add(new NotifiedEntity(userId, raceId));
                         logger.info("Successfully notified '{}' about '{}'", userId, race.name);
                     } catch (MessagingException e) {
                         logger.info("Message fail");
@@ -103,7 +103,7 @@ public class MailService {
     }
 
     private String getMessageContent(UserMail user, CutoffRace race, int timeLeft) {
-        String greet = String.format("Hei %s!", user.user().username());
+        String greet = String.format("Hei %s!", user.userEntity().username());
         String reminder = String.format("Dette er en påminnelse om å tippe på %s før tiden går ut.", race.name);
         String hours = timeLeft == 1 ? "time" : "timer";
         String time = String.format("Det er mindre enn %d %s igjen.", timeLeft, hours);
@@ -125,7 +125,7 @@ public class MailService {
     }
 
     public String getEmail(UUID userId) {
-        return mailingListRepository.findById(userId).map(Mail::email).orElse(null);
+        return mailingListRepository.findById(userId).map(MailEntity::email).orElse(null);
     }
 
 
@@ -139,15 +139,15 @@ public class MailService {
             message.addRecipients(Message.RecipientType.TO, user.email());
             message.setSubject("Verifikasjonskode F1 Tipping");
             message.setContent(String.format("Hei %s!\n\nHer er din verifikasjonskode: %s\n\nDen er gyldig i 10 minutter.",
-                    user.user().username(), formattedCode), "text/plain; charset=UTF-8");
+                    user.userEntity().username(), formattedCode), "text/plain; charset=UTF-8");
             mailSender.send(message);
-            logger.info("Successfully sent verification code to '{}'", user.user().id());
+            logger.info("Successfully sent verification code to '{}'", user.userEntity().id());
         } catch (MessagingException | UnsupportedEncodingException ignored) {
         }
     }
 
     public void sendServerMessageToAdmins(String messageForAdmin) {
-        List<UUID> admins = adminRepository.findAll().stream().map(Admin::id).toList();
+        List<UUID> admins = adminRepository.findAll().stream().map(AdminEntity::id).toList();
         List<UserMail> adminsWithMail = userRespository.findAllById(admins).stream()
                 .filter(user -> userHasEmail(user.id()))
                 .map(admin -> new UserMail(admin, getEmail(admin.id())))
@@ -161,7 +161,7 @@ public class MailService {
                 message.setContent(String.format("Hei administrator!\n\nDette er en automatisk generert melding:\n%s",
                         messageForAdmin), "text/plain; charset=UTF-8");
                 mailSender.send(message);
-                logger.info("Successfully sent server message to '{}'", admin.user().id());
+                logger.info("Successfully sent server message to '{}'", admin.userEntity().id());
             } catch (MessagingException | UnsupportedEncodingException ignored) {
             }
         }
@@ -172,7 +172,7 @@ public class MailService {
     }
 
     public void addMailOption(UUID userId, MailOption option) {
-        mailPreferenceRepository.save(new MailPreference(new MailPreferenceId(userId, option.value)));
+        mailPreferenceRepository.save(new MailPreferenceEntity(new MailPreferenceId(userId, option.value)));
     }
 
     public void removeMailOption(UUID userId, MailOption option) {
@@ -185,14 +185,14 @@ public class MailService {
 
     public List<MailOption> getMailingPreference(UUID userId) {
         return mailPreferenceRepository.findAllByUserId(userId).stream()
-                .map(MailPreference::mailOption)
+                .map(MailPreferenceEntity::mailOption)
                 .map(MailOption::new)
                 .toList();
     }
 
     public List<MailOption> getMailingOptions() {
         return mailOptionRepository.findAllOrderByMailOption().stream()
-                .map(no.vebb.f1.mail.MailOption::mailOption)
+                .map(MailOptionEntity::mailOption)
                 .map(MailOption::new)
                 .toList();
     }

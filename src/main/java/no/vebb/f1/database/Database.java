@@ -17,7 +17,7 @@ import no.vebb.f1.util.*;
 import no.vebb.f1.util.collection.*;
 import no.vebb.f1.util.domainPrimitive.*;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
-import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserMail;
 
 @Service
@@ -683,7 +683,7 @@ public class Database {
      * @param year of season
      * @return id of guessers
      */
-    public List<User> getSeasonGuessers(Year year) {
+    public List<UserEntity> getSeasonGuessers(Year year) {
         final String getGussers = """
                 SELECT DISTINCT u.user_id as id, u.username
                 FROM users u
@@ -1467,7 +1467,7 @@ public class Database {
         jdbcTemplate.update(sql, userId);
     }
 
-    public List<User> getBingomasters() {
+    public List<UserEntity> getBingomasters() {
         final String getAllUsersSql = """
                 SELECT u.user_id AS id, u.username AS username, u.google_id AS google_id
                 FROM users u

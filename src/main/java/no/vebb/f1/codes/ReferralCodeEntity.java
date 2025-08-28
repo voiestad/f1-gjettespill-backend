@@ -9,34 +9,27 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "verification_codes")
-public class VerificationCode implements Code {
+@Table(name = "referral_codes")
+public class ReferralCodeEntity implements Code {
     @Id
     @Column(name = "user_id")
     private UUID userId;
-    @Column(nullable = false, name = "verification_code")
-    private int code;
-    @Column(nullable = false, name = "email")
-    private String email;
+    @Column(nullable = false, name = "referral_code")
+    private long code;
     @Column(nullable = false, name = "cutoff")
     private Instant cutoff;
 
-    protected VerificationCode() {
+    protected ReferralCodeEntity() {
     }
 
-    public VerificationCode(UUID userId, int code, String email, Instant cutoff) {
+    public ReferralCodeEntity(UUID userId, long code, Instant cutoff) {
         this.userId = userId;
         this.code = code;
-        this.email = email;
         this.cutoff = cutoff;
     }
 
-    public int code() {
+    public long code() {
         return code;
-    }
-
-    public String email() {
-        return email;
     }
 
     @Override

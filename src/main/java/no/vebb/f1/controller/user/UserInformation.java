@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.mail.MailService;
-import no.vebb.f1.user.User;
+import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserDto;
 import no.vebb.f1.util.collection.CompetitorGuessYear;
 import no.vebb.f1.util.collection.FlagGuessYear;
@@ -26,15 +26,15 @@ public class UserInformation {
 	public final List<UserNotifiedCount> notifiedCount;
 	public final List<Integer> emailPreferences;
 
-	public UserInformation(User user, Database db, MailService mailService) {
-		this.user = UserDto.fromEntity(user);
-		this.email = mailService.getEmail(user.id());
-		this.driverGuess = db.userGuessDataDriver(user.id());
-		this.constructorGuess = db.userGuessDataConstructor(user.id());
-		this.flagGuess = db.userGuessDataFlag(user.id());
-		this.placeGuess = db.userGuessDataDriverPlace(user.id());
-		this.notifiedCount = db.userDataNotified(user.id());
-		this.emailPreferences = mailService.getMailingPreference(user.id()).stream()
+	public UserInformation(UserEntity userEntity, Database db, MailService mailService) {
+		this.user = UserDto.fromEntity(userEntity);
+		this.email = mailService.getEmail(userEntity.id());
+		this.driverGuess = db.userGuessDataDriver(userEntity.id());
+		this.constructorGuess = db.userGuessDataConstructor(userEntity.id());
+		this.flagGuess = db.userGuessDataFlag(userEntity.id());
+		this.placeGuess = db.userGuessDataDriverPlace(userEntity.id());
+		this.notifiedCount = db.userDataNotified(userEntity.id());
+		this.emailPreferences = mailService.getMailingPreference(userEntity.id()).stream()
 				.map(option -> option.value)
 				.collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
 					Collections.reverse(list);

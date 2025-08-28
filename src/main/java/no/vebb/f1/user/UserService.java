@@ -30,7 +30,7 @@ public class UserService {
 		this.mailService = mailService;
 	}
 
-	public Optional<User> loadUser() {
+	public Optional<UserEntity> loadUser() {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication == null) {
 			return Optional.empty();
@@ -39,12 +39,12 @@ public class UserService {
 		return userRespository.findByGoogleId(googleId);
 	}
 
-	public Optional<User> loadUser(UUID id) {
+	public Optional<UserEntity> loadUser(UUID id) {
 		return userRespository.findById(id);
 	}
 
 	public boolean isLoggedIn() {
-		Optional<User> user = loadUser();
+		Optional<UserEntity> user = loadUser();
 		return user.isPresent();
 	}
 
@@ -63,8 +63,8 @@ public class UserService {
 			throw new NoUsernameException("User does not have a username, which is required for this end point");
 		}
 	}
-	public User getUser() throws NoUsernameException {
-		Optional<User> user = loadUser();
+	public UserEntity getUser() throws NoUsernameException {
+		Optional<UserEntity> user = loadUser();
 		if (user.isEmpty()) {
 			throw new NoUsernameException("User does not have a username, which is required for this end point");
 		}
@@ -72,40 +72,40 @@ public class UserService {
 	}
 
 	public boolean isBingomaster() {
-		Optional<User> user = loadUser();
+		Optional<UserEntity> user = loadUser();
         return user.filter(value -> db.isBingomaster(value.id())).isPresent();
     }
 
-	public boolean isLoggedInUser(User user) {
-		Optional<User> optUser = loadUser();
+	public boolean isLoggedInUser(UserEntity userEntity) {
+		Optional<UserEntity> optUser = loadUser();
 		if (optUser.isEmpty()) {
 			return false;
 		}
-		User loggedInUser = optUser.get();
-		return loggedInUser.id().equals(user.id());
+		UserEntity userEntity = optUser.get();
+		return userEntity.id().equals(userEntity.id());
 	}
 
-	public List<User> getAllUsers() {
+	public List<UserEntity> getAllUsers() {
 		return userRespository.findAllByOrderByUsername();
 	}
 
 	public void addUser(Username username, OAuth2User principal) {
 		final String googleId = principal.getName();
-		User user = new User(UUID.randomUUID(), googleId, username.username);
-		userRespository.save(user);
+		UserEntity userEntity = new UserEntity(UUID.randomUUID(), googleId, username.username);
+		userRespository.save(userEntity);
 	}
 
 	public void changeUsername(Username newUsername) {
-		User user = getUser();
-		user.setUsername(newUsername.username);
-		userRespository.save(user);
+		UserEntity userEntity = getUser();
+		userEntity.setUsername(newUsername.username);
+		userRespository.save(userEntity);
 	}
 
 	public void deleteUser() {
-		User user = getUser();
-		userRespository.anonymizeUser(user.id());
-		mailService.clearUserFromMailing(user.id());
-		db.removeBingomaster(user.id());
+		UserEntity userEntity = getUser();
+		userRespository.anonymizeUser(userEntity.id());
+		mailService.clearUserFromMailing(userEntity.id());
+		db.removeBingomaster(userEntity.id());
 	}
 
 }

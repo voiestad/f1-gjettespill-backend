@@ -5,13 +5,13 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "mail_preferences")
-public class MailPreference {
+public class MailPreferenceEntity {
     @EmbeddedId
     private MailPreferenceId id;
 
-    protected MailPreference() {}
+    protected MailPreferenceEntity() {}
 
-    public MailPreference(MailPreferenceId id) {
+    public MailPreferenceEntity(MailPreferenceId id) {
         this.id = id;
     }
 

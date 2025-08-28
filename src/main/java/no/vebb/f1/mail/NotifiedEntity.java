@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "notified")
-public class Notified {
+public class NotifiedEntity {
     @Id
     @GeneratedValue
     @Column(name = "id")
@@ -17,9 +17,9 @@ public class Notified {
     @Column(name = "race_id", nullable = false)
     private int raceId;
 
-    public Notified() {}
+    public NotifiedEntity() {}
 
-    public Notified(UUID userId, RaceId raceId) {
+    public NotifiedEntity(UUID userId, RaceId raceId) {
         this.userId = userId;
         this.raceId = raceId.value;
     }
