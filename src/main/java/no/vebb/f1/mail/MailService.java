@@ -5,9 +5,10 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import no.vebb.f1.database.Database;
+import no.vebb.f1.race.RaceOrderEntity;
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
@@ -39,11 +40,12 @@ public class MailService {
     private final MailOptionRepository mailOptionRepository;
     private final MailPreferenceRepository mailPreferenceRepository;
     private final YearService yearService;
+    private final RaceService raceService;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, Database db, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository, YearService yearService) {
+    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, Database db, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository, YearService yearService, RaceService raceService) {
         this.mailingListRepository = mailingListRepository;
         this.mailSender = mailSender;
         this.db = db;
@@ -53,6 +55,7 @@ public class MailService {
         this.mailOptionRepository = mailOptionRepository;
         this.mailPreferenceRepository = mailPreferenceRepository;
         this.yearService = yearService;
+        this.raceService = raceService;
     }
 
     public void addToMailingList(UUID userId, String email) {
@@ -62,8 +65,8 @@ public class MailService {
     @Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
     public void notifyUsers() {
         try {
-            CutoffRace race = db.getLatestRaceForPlaceGuess(new Year(TimeUtil.getCurrentYear(), yearService));
-            RaceId raceId = race.id;
+            RaceOrderEntity race = raceService.getLatestRaceForPlaceGuess(new Year(TimeUtil.getCurrentYear(), yearService));
+            RaceId raceId = new RaceId(race.raceId());
             long timeLeft = db.getTimeLeftToGuessRace(raceId);
             if (timeLeft < 0) {
                 return;
@@ -91,7 +94,7 @@ public class MailService {
                         message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
                         mailSender.send(message);
                         notifications.add(new NotifiedEntity(userId, raceId));
-                        logger.info("Successfully notified '{}' about '{}'", userId, race.name);
+                        logger.info("Successfully notified '{}' about '{}'", userId, race.name());
                     } catch (MessagingException e) {
                         logger.info("Message fail");
                     } catch (UnsupportedEncodingException e) {
@@ -105,9 +108,9 @@ public class MailService {
         }
     }
 
-    private String getMessageContent(UserMail user, CutoffRace race, int timeLeft) {
+    private String getMessageContent(UserMail user, RaceOrderEntity race, int timeLeft) {
         String greet = String.format("Hei %s!", user.userEntity().username());
-        String reminder = String.format("Dette er en påminnelse om å tippe på %s før tiden går ut.", race.name);
+        String reminder = String.format("Dette er en påminnelse om å tippe på %s før tiden går ut.", race.name());
         String hours = timeLeft == 1 ? "time" : "timer";
         String time = String.format("Det er mindre enn %d %s igjen.", timeLeft, hours);
         return String.format("%s\n\n%s %s", greet, reminder, time);

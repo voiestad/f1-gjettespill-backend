@@ -2,6 +2,7 @@ package no.vebb.f1.controller.admin;
 
 import java.util.List;
 
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
@@ -25,10 +26,12 @@ public class FlagController {
 
     private final Database db;
     private final YearService yearService;
+    private final RaceService raceService;
 
-    public FlagController(Database db, YearService yearService) {
+    public FlagController(Database db, YearService yearService, RaceService raceService) {
         this.db = db;
         this.yearService = yearService;
+        this.raceService = raceService;
     }
 
     @GetMapping("/types")
@@ -44,7 +47,7 @@ public class FlagController {
     @GetMapping("/list/{id}")
     public ResponseEntity<List<RegisteredFlag>> getRegisteredFlag(@PathVariable("id") int raceId) {
         try {
-            RaceId validRaceId = new RaceId(raceId, db);
+            RaceId validRaceId = new RaceId(raceId, raceService);
             List<RegisteredFlag> registeredFlags = db.getRegisteredFlags(validRaceId);
             return new ResponseEntity<>(registeredFlags, HttpStatus.OK);
         } catch (InvalidRaceException e) {
@@ -60,8 +63,8 @@ public class FlagController {
             @RequestParam("raceId") int raceId,
             @RequestParam("sessionType") String sessionType) {
         try {
-            RaceId validRaceId = new RaceId(raceId, db);
-            Year year = db.getYearFromRaceId(validRaceId);
+            RaceId validRaceId = new RaceId(raceId, raceService);
+            Year year = raceService.getYearFromRaceId(validRaceId);
             if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
             }

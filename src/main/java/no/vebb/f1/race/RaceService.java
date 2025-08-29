@@ -1,0 +1,143 @@
+package no.vebb.f1.race;
+
+import jakarta.persistence.EntityManager;
+import no.vebb.f1.util.collection.Race;
+import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.util.exception.InvalidRaceException;
+import no.vebb.f1.util.exception.InvalidYearException;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class RaceService {
+
+    private final RaceRepository raceRepository;
+    private final RaceOrderRepository raceOrderRepository;
+    private final EntityManager entityManager;
+
+    public RaceService(RaceRepository raceRepository, RaceOrderRepository raceOrderRepository, EntityManager entityManager) {
+        this.raceRepository = raceRepository;
+        this.raceOrderRepository = raceOrderRepository;
+        this.entityManager = entityManager;
+    }
+
+    public Year getYearFromRaceId(RaceId raceId) throws InvalidRaceException {
+        return raceOrderRepository.findById(raceId.value).map(RaceOrderEntity::year).map(Year::new).orElseThrow(InvalidRaceException::new);
+    }
+
+    public RaceId getLatestRaceId(Year year) throws InvalidYearException {
+        List<RaceOrderEntity> races = raceOrderRepository.findAllByYearJoinWithRaceResults(year.value);
+        if (races.isEmpty()) {
+            throw new InvalidYearException("No races completed for " + year);
+        }
+        return new RaceId(races.get(races.size() - 1).raceId());
+    }
+
+    public int getPositionOfRace(RaceId raceId) throws InvalidRaceException {
+        return raceOrderRepository.findById(raceId.value).map(RaceOrderEntity::position).orElseThrow(InvalidRaceException::new);
+    }
+
+    public RaceOrderEntity getLatestRaceForPlaceGuess(Year year) throws InvalidYearException {
+        List<RaceOrderEntity> races = raceOrderRepository.findAllByYearJoinWithStartingGrid(year.value);
+        if (races.isEmpty()) {
+            throw new InvalidYearException("No races has starting grid for " + year);
+        }
+        return races.get(races.size() - 1);
+    }
+
+    public List<RaceId> getRaceIdsFinished(Year year) {
+        return raceOrderRepository.findAllByYearJoinWithRaceResults(year.value).stream()
+                .map(RaceOrderEntity::raceId)
+                .map(RaceId::new)
+                .toList();
+    }
+
+    public List<RaceOrderEntity> getActiveRaces() {
+        return raceOrderRepository.findAllByNotFinished();
+    }
+
+    public RaceId getLatestStartingGridRaceId(Year year) throws InvalidYearException {
+        return new RaceId(getLatestRaceForPlaceGuess(year).raceId());
+    }
+
+    public RaceId getUpcomingRaceId(Year year) {
+        List<RaceOrderEntity> races = raceOrderRepository.findAllByYearNotInRaceResult(year.value);
+        if (races.isEmpty()) {
+            throw new InvalidYearException("Every races are complete for " + year);
+        }
+        return new RaceId(races.get(0).raceId());
+    }
+
+    public RaceId getLatestStandingsId(Year year) throws InvalidYearException {
+        List<RaceOrderEntity> races = raceOrderRepository.findAllByYearJoinWithStandings(year.value);
+        if (races.isEmpty()) {
+            throw new InvalidYearException("No races has starting grid for " + year);
+        }
+        return new RaceId(races.get(races.size() - 1).raceId());
+    }
+
+    public boolean isRaceAdded(int raceId) {
+        return raceRepository.existsById(raceId);
+    }
+
+    public void insertRace(int raceId, String raceName) {
+        RaceEntity newRace = new RaceEntity(raceId, raceName);
+        raceRepository.save(newRace);
+    }
+
+    public int getMaxRaceOrderPosition(Year year) {
+        return raceOrderRepository.findTopByYearOrderByPositionDesc(year.value).map(RaceOrderEntity::position).orElse(0);
+    }
+
+    public void insertRaceOrder(RaceId raceId, Year year, int position) {
+        RaceOrderEntity raceOrderEntity = new RaceOrderEntity(raceId.value, year.value, position);
+        raceOrderRepository.save(raceOrderEntity);
+    }
+
+    public void updateRaceOrderPosition(RaceId raceId, Year year, int position) {
+        raceOrderRepository.updatePosition(raceId.value, year.value, position);
+    }
+
+    public void deleteRace(RaceId raceId) {
+        raceRepository.deleteById(raceId.value);
+        entityManager.flush();
+        entityManager.clear();
+    }
+
+    public boolean isRaceInSeason(RaceId raceId, Year year) {
+        return raceOrderRepository.existsByRaceIdAndYear(raceId.value, year.value);
+    }
+
+    public List<RaceId> getRacesFromSeason(Year year) {
+        return raceOrderRepository.findAllByYearOrderByPosition(year.value).stream()
+                .map(RaceOrderEntity::raceId)
+                .map(RaceId::new)
+                .toList();
+    }
+
+    public List<Race> getRacesYear(Year year) {
+        return mapToRace(raceOrderRepository.findAllByYearOrderByPosition(year.value));
+    }
+
+    public List<Race> getRacesYearFinished(Year year) throws InvalidYearException {
+        return mapToRace(raceOrderRepository.findAllByYearJoinWithRaceResults(year.value));
+    }
+
+    public RaceOrderEntity getRaceFromId(RaceId raceId) {
+        return raceOrderRepository.findById(raceId.value).orElseThrow(InvalidRaceException::new);
+    }
+
+    private List<Race> mapToRace(List<RaceOrderEntity> raceOrderEntities) {
+        return raceOrderEntities.stream()
+                .map(ro -> new Race(
+                        ro.position(),
+                        ro.name(),
+                        new RaceId(ro.raceId()),
+                        new Year(ro.year())
+                ))
+                .toList();
+    }
+
+}

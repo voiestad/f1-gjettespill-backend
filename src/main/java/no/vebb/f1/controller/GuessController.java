@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import no.vebb.f1.race.RaceOrderEntity;
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.util.exception.*;
 import no.vebb.f1.year.YearService;
@@ -47,13 +49,15 @@ public class GuessController {
 	private final Cutoff cutoff;
 	private final ResultService resultService;
 	private final YearService yearService;
+	private final RaceService raceService;
 
-	public GuessController(Database db, UserService userService, Cutoff cutoff, ResultService resultService, YearService yearService) {
+	public GuessController(Database db, UserService userService, Cutoff cutoff, ResultService resultService, YearService yearService, RaceService raceService) {
 		this.db = db;
 		this.userService = userService;
 		this.cutoff = cutoff;
 		this.resultService = resultService;
 		this.yearService = yearService;
+		this.raceService = raceService;
 	}
 
 	@GetMapping("/categories")
@@ -231,12 +235,14 @@ public class GuessController {
 			if (yearService.isFinishedYear(year)) {
 				throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 			}
-			Race race = db.getRaceFromId(getRaceIdToGuess());
-			long timeLeftToGuess = db.getTimeLeftToGuessRace(race.id());
-			List<ColoredCompetitor<Driver>> drivers = db.getDriversFromStartingGridWithColors(race.id());
+			RaceOrderEntity raceOrderEntity = raceService.getRaceFromId(getRaceIdToGuess());
+			RaceId raceId = new RaceId(raceOrderEntity.raceId());
+			Race race = new Race(raceOrderEntity.position(), raceOrderEntity.name(), raceId, year);
+			long timeLeftToGuess = db.getTimeLeftToGuessRace(raceId);
+			List<ColoredCompetitor<Driver>> drivers = db.getDriversFromStartingGridWithColors(raceId);
 			UUID id = userService.getUser().id();
 			try {
-				Driver driver = db.getGuessedDriverPlace(race.id(), category, id);
+				Driver driver = db.getGuessedDriverPlace(raceId, category, id);
 				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, driver, timeLeftToGuess, race);
 				return new ResponseEntity<>(res, HttpStatus.OK);
 			} catch (EmptyResultDataAccessException e) {

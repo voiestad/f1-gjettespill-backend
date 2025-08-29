@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.scoring.ScoreCalculator;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.util.response.CutoffResponse;
@@ -28,11 +29,13 @@ public class CutoffController {
     private final Database db;
     private final ScoreCalculator scoreCalculator;
     private final YearService yearService;
+    private final RaceService raceService;
 
-    public CutoffController(Database db, ScoreCalculator scoreCalculator, YearService yearService) {
+    public CutoffController(Database db, ScoreCalculator scoreCalculator, YearService yearService, RaceService raceService) {
         this.db = db;
         this.scoreCalculator = scoreCalculator;
         this.yearService = yearService;
+        this.raceService = raceService;
     }
 
     @GetMapping("/list/{year}")
@@ -50,8 +53,8 @@ public class CutoffController {
             @RequestParam("id") int raceId,
             @RequestParam("cutoff") String cutoff) {
         try {
-            RaceId validRaceId = new RaceId(raceId, db);
-            Year year = db.getYearFromRaceId(validRaceId);
+            RaceId validRaceId = new RaceId(raceId, raceService);
+            Year year = raceService.getYearFromRaceId(validRaceId);
             if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
             }

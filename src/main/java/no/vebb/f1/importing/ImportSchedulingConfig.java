@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executors;
 
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.year.YearService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -24,11 +25,13 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 	private final Importer importer;
 	private final Database db;
 	private final YearService yearService;
+	private final RaceService raceService;
 
-	public ImportSchedulingConfig(Importer importer, Database db, YearService yearService) {
+	public ImportSchedulingConfig(Importer importer, Database db, YearService yearService, RaceService raceService) {
 		this.importer = importer;
 		this.db = db;
 		this.yearService = yearService;
+		this.raceService = raceService;
 	}
 
 	@Override
@@ -52,9 +55,9 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 	
 	private Duration getDelayCurrentRace(Year year) {
 		try {
-			RaceId currentRaceId = db.getLatestStartingGridRaceId(year);
+			RaceId currentRaceId = raceService.getLatestStartingGridRaceId(year);
 			long timeLeft = db.getTimeLeftToGuessRaceHours(currentRaceId);
-			boolean isResultImported = currentRaceId.equals(db.getLatestRaceId(year));
+			boolean isResultImported = currentRaceId.equals(raceService.getLatestRaceId(year));
 			boolean isImportPeriod = timeLeft <= 36;
 			boolean isRefreshPeriod = timeLeft >= -24;
 			if (isImportPeriod && !isResultImported) {
@@ -63,21 +66,21 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 			if (isRefreshPeriod && isResultImported) {
 				return Duration.ofMillis(TimeUtil.HALF_HOUR);
 			}
-		} catch (EmptyResultDataAccessException ignored) {
+		} catch (EmptyResultDataAccessException | InvalidYearException ignored) {
 		}
 		return null;
 	}
 
 	private Duration getDelayUpcomingRace(Year year) {
 		try {
-			RaceId upcomingRaceId = db.getUpcomingRaceId(year);
+			RaceId upcomingRaceId = raceService.getUpcomingRaceId(year);
 			long timeLeft = db.getTimeLeftToGuessRaceHours(upcomingRaceId);
 			boolean shouldImport = timeLeft <= 36;
 			if (shouldImport) {
 				return Duration.ofMillis(TimeUtil.TEN_MINUTES);
 			}
 			return Duration.ofMillis(TimeUtil.HOUR * 8);
-		} catch (EmptyResultDataAccessException e) {
+		} catch (InvalidYearException e) {
 			return Duration.ofMillis(TimeUtil.DAY); 
 		}
 	}

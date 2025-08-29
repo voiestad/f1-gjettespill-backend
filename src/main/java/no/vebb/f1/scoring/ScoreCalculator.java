@@ -1,6 +1,7 @@
 package no.vebb.f1.scoring;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.util.Cutoff;
@@ -33,11 +34,13 @@ public class ScoreCalculator {
     private final YearService yearService;
 
     private static final Logger logger = LoggerFactory.getLogger(ScoreCalculator.class);
+    private final RaceService raceService;
 
-    public ScoreCalculator(Database db, Cutoff cutoff, YearService yearService) {
+    public ScoreCalculator(Database db, Cutoff cutoff, YearService yearService, RaceService raceService) {
         this.db = db;
         this.cutoff = cutoff;
         this.yearService = yearService;
+        this.raceService = raceService;
     }
 
     @Transactional
@@ -62,7 +65,7 @@ public class ScoreCalculator {
         for (RaceId raceId : raceIds) {
             Map<UUID, Summary> rankedGuessers = new HashMap<>();
             List<UserScore> userScores = guessers.stream()
-                    .map(guesser -> new UserScore(PublicUserDto.fromEntity(guesser), year, raceId, db))
+                    .map(guesser -> new UserScore(PublicUserDto.fromEntity(guesser), year, raceId, db, raceService))
                     .toList();
             Map<UUID, Placement<Points>> driversPoints = getPlacementMap(userScores, UserScore::getDriversScore);
             Map<UUID, Placement<Points>> constructorsPoints = getPlacementMap(userScores, UserScore::getConstructorsScore);
@@ -115,7 +118,7 @@ public class ScoreCalculator {
     private List<RaceId> getSeasonRaceIds(Year year) {
         List<RaceId> raceIds = new ArrayList<>();
         raceIds.add(null);
-        raceIds.addAll(db.getRaceIdsFinished(year));
+        raceIds.addAll(raceService.getRaceIdsFinished(year));
         return raceIds;
     }
 

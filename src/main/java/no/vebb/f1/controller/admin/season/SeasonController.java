@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +26,14 @@ public class SeasonController {
     private final Importer importer;
     private final Cutoff cutoff;
     private final YearService yearService;
+    private final RaceService raceService;
 
-    public SeasonController(Database db, Importer importer, Cutoff cutoff, YearService yearService) {
+    public SeasonController(Database db, Importer importer, Cutoff cutoff, YearService yearService, RaceService raceService) {
         this.db = db;
         this.importer = importer;
         this.cutoff = cutoff;
         this.yearService = yearService;
+        this.raceService = raceService;
     }
 
     @PostMapping("/add")
@@ -75,7 +78,7 @@ public class SeasonController {
     }
 
     private void setDefaultCutoffRaces(Year year, Instant time) {
-        List<RaceId> races = db.getRacesFromSeason(year);
+        List<RaceId> races = raceService.getRacesFromSeason(year);
         for (RaceId id : races) {
             db.setCutoffRace(time, id);
         }

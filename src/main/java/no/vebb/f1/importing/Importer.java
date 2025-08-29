@@ -10,6 +10,8 @@ import java.io.StringWriter;
 import java.io.PrintWriter;
 
 import no.vebb.f1.mail.MailService;
+import no.vebb.f1.race.RaceOrderEntity;
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.scoring.ScoreCalculator;
 import no.vebb.f1.year.YearService;
@@ -22,7 +24,6 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Driver;
@@ -41,13 +42,15 @@ public class Importer {
 	private final ScoreCalculator scoreCalculator;
 	private final ResultService resultService;
 	private final YearService yearService;
+	private final RaceService raceService;
 
-	public Importer(Database db, MailService mailService, ScoreCalculator scoreCalculator, ResultService resultService, YearService yearService) {
+	public Importer(Database db, MailService mailService, ScoreCalculator scoreCalculator, ResultService resultService, YearService yearService, RaceService raceService) {
 		this.db = db;
 		this.mailService = mailService;
 		this.scoreCalculator = scoreCalculator;
 		this.resultService = resultService;
 		this.yearService = yearService;
+		this.raceService = raceService;
 	}
 
 	@Transactional
@@ -114,27 +117,28 @@ public class Importer {
 
 	private boolean areStandingsUpToDate(Year year) {
 		try {
-			RaceId latestRaceId = db.getLatestRaceResultId(year);
+			RaceId latestRaceId = raceService.getLatestRaceId(year);
 			try {
-				RaceId standingsRaceId = db.getLatestStandingsId(year);
+				RaceId standingsRaceId = raceService.getLatestStandingsId(year);
 				return latestRaceId.equals(standingsRaceId);
-			} catch (EmptyResultDataAccessException e) {
+			} catch (InvalidYearException e) {
 				return false;
 			}
-		} catch (EmptyResultDataAccessException e) {
+		} catch (InvalidYearException e) {
 			return true;
 		}
 	}
 
 	private Map<Year, List<RaceId>> getActiveRaces() {
 		Map<Year, List<RaceId>> activeRaces = new LinkedHashMap<>();
-		List<CutoffRace> sqlRes = db.getActiveRaces();
-		for (CutoffRace race : sqlRes) {
-			if (!activeRaces.containsKey(race.year)) {
-				activeRaces.put(race.year, new ArrayList<>());
+		List<RaceOrderEntity> sqlRes = raceService.getActiveRaces();
+		for (RaceOrderEntity race : sqlRes) {
+			Year year = new Year(race.year());
+			if (!activeRaces.containsKey(year)) {
+				activeRaces.put(year, new ArrayList<>());
 			}
-			List<RaceId> races = activeRaces.get(race.year);
-			races.add(race.id);
+			List<RaceId> races = activeRaces.get(year);
+			races.add(new RaceId(race.raceId()));
 		}
 		return activeRaces;
 	}
@@ -150,7 +154,7 @@ public class Importer {
 		}
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
-			RaceId newestRaceId = db.getLatestRaceId(year);
+			RaceId newestRaceId = raceService.getLatestRaceId(year);
 			if (raceId.equals(newestRaceId)) {
 				logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
 				importStandings(year, new Points());
@@ -202,17 +206,17 @@ public class Importer {
 
 	private void refreshLatestStartingGrid(Year year) {
 		try {
-			RaceId raceId = db.getLatestStartingGridRaceId(year);
+			RaceId raceId = raceService.getLatestStartingGridRaceId(year);
 			importStartingGridData(raceId);
-		} catch (EmptyResultDataAccessException ignored) {
+		} catch (InvalidYearException ignored) {
 		}
 	}
 
 	private ResultChangeStatus refreshLatestRaceResult(Year year) {
 		try {
-			RaceId raceId = db.getLatestRaceResultId(year);
+			RaceId raceId = raceService.getLatestRaceId(year);
 			return importRaceResultData(raceId);
-		} catch (EmptyResultDataAccessException e) {
+		} catch (InvalidYearException e) {
 			return ResultChangeStatus.NO_CHANGE;
 		}
 	}
@@ -303,12 +307,12 @@ public class Importer {
 	}
 
 	public void importRaceName(int raceId, Year year) {
-		int position = db.getMaxRaceOrderPosition(year) + 1;
+		int position = raceService.getMaxRaceOrderPosition(year) + 1;
 		addRace(raceId, year, position);
 	}
 
 	private boolean addRace(int raceId, Year year, int position) {
-		boolean isAlreadyAdded = db.isRaceAdded(raceId);
+		boolean isAlreadyAdded = raceService.isRaceAdded(raceId);
 		if (isAlreadyAdded) {
 			throw new RuntimeException("Race name was already added");
 		}
@@ -317,22 +321,22 @@ public class Importer {
 		if (raceName.isEmpty()) {
 			return false;
 		}
-		db.insertRace(raceId, raceName);
-		RaceId validRaceId = new RaceId(raceId, db);
-		db.insertRaceOrder(validRaceId, year, position);
+		raceService.insertRace(raceId, raceName);
+		RaceId validRaceId = new RaceId(raceId, raceService);
+		raceService.insertRaceOrder(validRaceId, year, position);
 		return true;
 	}
 
 	private boolean importStandings(Year year, Points expectedChange) {
 		try {
-			RaceId newestRace = db.getLatestRaceId(year);
+			RaceId newestRace = raceService.getLatestRaceId(year);
 			ResultChangeStatus driverStatus = importDriverStandings(year, newestRace);
 			ResultChangeStatus constructorStatus = importConstructorStandings(year, newestRace);
 			boolean equalPointsChange = driverStatus.getPointsChange().equals(constructorStatus.getPointsChange());
 			boolean driverValidStatus = validResultStatus(driverStatus, expectedChange);
 			boolean constructorValidStatus = validResultStatus(constructorStatus, expectedChange);
 			return equalPointsChange && driverValidStatus && constructorValidStatus;
-		} catch (EmptyResultDataAccessException e) {
+		} catch (EmptyResultDataAccessException | InvalidYearException e) {
 			throw new RuntimeException("Should not call importStandings without having a race result");
 		}
 	}
@@ -379,7 +383,7 @@ public class Importer {
 
 	private ResultChangeStatus isDriverStandingsNew(List<PositionedCompetitor> standings, Year year) {
 		try {
-			RaceId previousRaceId = db.getLatestStandingsId(year);
+			RaceId previousRaceId = raceService.getLatestStandingsId(year);
 			List<PositionedCompetitor> previousStandings = resultService.getDriverStandings(previousRaceId).stream().map(PositionedCompetitor::fromDriverStandings).toList();
 			return compareStandings(standings, previousStandings);
 		} catch (EmptyResultDataAccessException e) {
@@ -423,7 +427,7 @@ public class Importer {
 
 	private ResultChangeStatus isConstructorStandingsNew(List<PositionedCompetitor> standings, Year year) {
 		try {
-			RaceId previousRaceId = db.getLatestStandingsId(year);
+			RaceId previousRaceId = raceService.getLatestStandingsId(year);
 			List<PositionedCompetitor> previousStandings = resultService.getConstructorStandings(previousRaceId).stream().map(PositionedCompetitor::fromConstructorStandings).toList();
 			return compareStandings(standings, previousStandings);
 		} catch (EmptyResultDataAccessException e) {

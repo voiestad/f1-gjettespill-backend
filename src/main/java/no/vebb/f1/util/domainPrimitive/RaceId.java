@@ -2,16 +2,16 @@ package no.vebb.f1.util.domainPrimitive;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.util.exception.InvalidRaceException;
 
 public class RaceId {
 	public final int value;
-	private Database db;
+	private RaceService raceService;
 
-	public RaceId(int value, Database db) throws InvalidRaceException {
+	public RaceId(int value, RaceService raceService) throws InvalidRaceException {
 		this.value = value;
-		this.db = db;
+		this.raceService = raceService;
 		validate();
 	}
 
@@ -20,7 +20,7 @@ public class RaceId {
 	}
 
 	private void validate() throws InvalidRaceException {
-		if (!db.isRaceAdded(value)) {
+		if (!raceService.isRaceAdded(value)) {
 			throw new InvalidRaceException("RaceId : " + value + " is not a race ID");
 		}
 	}

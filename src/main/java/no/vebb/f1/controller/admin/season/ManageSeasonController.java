@@ -2,6 +2,7 @@ package no.vebb.f1.controller.admin.season;
 
 import java.util.List;
 
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
@@ -27,20 +28,22 @@ public class ManageSeasonController {
     private final Importer importer;
     private final Cutoff cutoff;
     private final YearService yearService;
+    private final RaceService raceService;
 
-    public ManageSeasonController(Database db, Importer importer, Cutoff cutoff, YearService yearService) {
+    public ManageSeasonController(Database db, Importer importer, Cutoff cutoff, YearService yearService, RaceService raceService) {
         this.db = db;
         this.importer = importer;
         this.cutoff = cutoff;
         this.yearService = yearService;
+        this.raceService = raceService;
     }
 
     @PostMapping("/reload")
     @Transactional
     public ResponseEntity<?> reloadRace(@RequestParam("id") int raceId) {
         try {
-            RaceId validRaceId = new RaceId(raceId, db);
-            Year year = db.getYearFromRaceId(validRaceId);
+            RaceId validRaceId = new RaceId(raceId, raceService);
+            Year year = raceService.getYearFromRaceId(validRaceId);
             if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
             }
@@ -64,32 +67,31 @@ public class ManageSeasonController {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            RaceId validRaceId = new RaceId(raceId, db);
-            boolean isRaceInSeason = db.isRaceInSeason(validRaceId, validYear);
+            RaceId validRaceId = new RaceId(raceId, raceService);
+            boolean isRaceInSeason = raceService.isRaceInSeason(validRaceId, validYear);
             if (!isRaceInSeason) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
-            int maxPos = db.getMaxRaceOrderPosition(validYear);
+            int maxPos = raceService.getMaxRaceOrderPosition(validYear);
             boolean isPosOutOfBounds = position < 1 || position > maxPos;
             if (isPosOutOfBounds) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
-            List<RaceId> races = db.getRacesFromSeason(validYear);
-            db.removeRaceOrderFromSeason(validYear);
+            List<RaceId> races = raceService.getRacesFromSeason(validYear);
             int currentPos = 1;
             for (RaceId id : races) {
                 if (id.equals(validRaceId)) {
                     continue;
                 }
                 if (currentPos == position) {
-                    db.insertRaceOrder(validRaceId, validYear, currentPos);
+                    raceService.updateRaceOrderPosition(validRaceId, validYear, currentPos);
                     currentPos++;
                 }
-                db.insertRaceOrder(id, validYear, currentPos);
+                raceService.updateRaceOrderPosition(id, validYear, currentPos);
                 currentPos++;
             }
             if (currentPos == position) {
-                db.insertRaceOrder(validRaceId, validYear, currentPos);
+                raceService.updateRaceOrderPosition(validRaceId, validYear, currentPos);
             }
             importer.importData();
             return new ResponseEntity<>(HttpStatus.OK);
@@ -106,18 +108,16 @@ public class ManageSeasonController {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            RaceId validRaceId = new RaceId(raceId, db);
-            boolean isRaceInSeason = db.isRaceInSeason(validRaceId, validYear);
+            RaceId validRaceId = new RaceId(raceId, raceService);
+            boolean isRaceInSeason = raceService.isRaceInSeason(validRaceId, validYear);
             if (!isRaceInSeason) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
-            db.deleteRace(validRaceId);
-
-            List<RaceId> races = db.getRacesFromSeason(validYear);
-            db.removeRaceOrderFromSeason(validYear);
+            raceService.deleteRace(validRaceId);
+            List<RaceId> races = raceService.getRacesFromSeason(validYear);
             int currentPos = 1;
             for (RaceId id : races) {
-                db.insertRaceOrder(id, validYear, currentPos);
+                raceService.updateRaceOrderPosition(id, validYear, currentPos);
                 currentPos++;
             }
             return new ResponseEntity<>(HttpStatus.OK);
@@ -134,13 +134,13 @@ public class ManageSeasonController {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            new RaceId(raceId, db);
+            new RaceId(raceId, raceService);
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         } catch (InvalidRaceException ignored) {
         }
         importer.importRaceName(raceId, validYear);
         importer.importData();
-        RaceId validRaceId = new RaceId(raceId, db);
+        RaceId validRaceId = new RaceId(raceId, raceService);
         db.setCutoffRace(cutoff.getDefaultInstant(validYear), validRaceId);
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -6,9 +6,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import no.vebb.f1.graph.GuesserPointsSeason;
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.collection.userTables.Summary;
+import no.vebb.f1.util.exception.InvalidRaceException;
 import no.vebb.f1.year.YearService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,33 +30,20 @@ public class Database {
     private final JdbcTemplate jdbcTemplate;
     private final UserRespository userRespository;
     private final YearService yearService;
+    private final RaceService raceService;
 
-    public Database(JdbcTemplate jdbcTemplate, UserRespository userRespository, YearService yearService) {
+    public Database(JdbcTemplate jdbcTemplate, UserRespository userRespository, YearService yearService, RaceService raceService) {
         this.jdbcTemplate = jdbcTemplate;
         this.userRespository = userRespository;
         this.yearService = yearService;
+        this.raceService = raceService;
     }
 
-    /**
-     * Gets the cutoff for guessing on categories that happens before the season
-     * starts.
-     *
-     * @param year of season
-     * @return time as Instant
-     * @throws EmptyResultDataAccessException if year cutoff does not exist
-     */
     public Instant getCutoffYear(Year year) throws EmptyResultDataAccessException {
         final String getCutoff = "SELECT cutoff FROM year_cutoffs WHERE year = ?;";
         return Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, year.value));
     }
 
-    /**
-     * Gets the cutoff for guessing on race specific categories.
-     *
-     * @param raceId of race
-     * @return time as Instant
-     * @throws NoAvailableRaceException if race does not have a cutoff set
-     */
     public Instant getCutoffRace(RaceId raceId) throws NoAvailableRaceException {
         try {
             final String getCutoff = "SELECT cutoff FROM race_cutoffs WHERE race_id = ?;";
@@ -64,45 +53,6 @@ public class Database {
         }
     }
 
-    /**
-     * Gets the latest race number that has had a race.
-     *
-     * @param year of season
-     * @return race number of race
-     */
-    public RaceId getLatestRaceId(Year year) throws EmptyResultDataAccessException {
-        final String getRaceIdSql = """
-                SELECT ro.race_id
-                FROM race_order ro
-                JOIN race_results rr ON ro.race_id = rr.race_id
-                WHERE ro.year = ?
-                ORDER BY ro.position DESC
-                LIMIT 1;
-                """;
-
-        return new RaceId(jdbcTemplate.queryForObject(getRaceIdSql, Integer.class, year.value));
-    }
-
-    /**
-     * Gets the position of a race within the season it is in.
-     *
-     * @param raceId of race
-     * @return position of race
-     */
-    public int getPositionOfRace(RaceId raceId) {
-        final String getRacePosition = "SELECT position FROM race_order WHERE race_id = ?;";
-        return jdbcTemplate.queryForObject(getRacePosition, Integer.class, raceId.value);
-    }
-
-    /**
-     * Gets the data for a users guesses on flags up until the given race position
-     * of the given year. If race position is 0, actual amount will also be 0.
-     *
-     * @param racePos position within a season
-     * @param year    of season
-     * @param userId  of guesser/user
-     * @return "table" of guesses
-     */
     public List<Map<String, Object>> getDataForFlagTable(int racePos, Year year, UUID userId) {
         if (racePos == 0) {
             final String sqlNoRace = """
@@ -128,16 +78,6 @@ public class Database {
         }
     }
 
-    /**
-     * Gets the data for a users guesses on the given race of the given year.
-     * Columns: race_position, race_name, driver, start, finish
-     *
-     * @param category to get table for
-     * @param userId   of guesser/user
-     * @param year     of season
-     * @param racePos  position within a season
-     * @return "table" of guesses
-     */
     public List<Map<String, Object>> getDataForPlaceGuessTable(Category category, UUID userId, Year year, int racePos) {
         final String sql = """
                 SELECT ro.position as race_position, r.race_name AS race_name, dpg.driver_name AS driver, sg.position AS start, rr.finishing_position AS finish
@@ -152,14 +92,6 @@ public class Database {
         return jdbcTemplate.queryForList(sql, category.value, userId, year.value, racePos);
     }
 
-    /**
-     * Gets a list of drivers guessed by the given user in the given year.
-     * Ordered by position of guesses in ascending order.
-     *
-     * @param year   of season
-     * @param userId of user
-     * @return drivers ascendingly
-     */
     public List<Driver> getGuessedYearDriver(Year year, UUID userId) {
         final String guessedSql = "SELECT driver_name FROM driver_guesses WHERE year = ?  AND user_id = ? ORDER BY position";
         return jdbcTemplate.queryForList(guessedSql, String.class, year.value, userId).stream()
@@ -167,14 +99,6 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Gets a list of constructors guessed by the given user in the given year.
-     * Ordered by position of guesses in ascending order.
-     *
-     * @param year   of season
-     * @param userId of user
-     * @return constructors ascendingly
-     */
     public List<Constructor> getGuessedYearConstructor(Year year, UUID userId) {
         final String guessedSql = """
                 SELECT constructor_name
@@ -187,16 +111,6 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Gets the driver standings for a given race and year.
-     * If the race id is set to -1, the position set in the DriverYear will be used as
-     * default order.
-     * Ordered by position of standings in ascending order.
-     *
-     * @param raceId of race
-     * @param year   of season
-     * @return drivers ascendingly
-     */
     public List<Driver> getDriverStandings(RaceId raceId, Year year) {
         final String driverYearSql = "SELECT driver_name FROM drivers_year WHERE year = ? ORDER BY position;";
         final String driverStandingsSql = "SELECT driver_name FROM driver_standings WHERE race_id = ? ORDER BY position;";
@@ -214,16 +128,6 @@ public class Database {
         return result;
     }
 
-    /**
-     * Gets the constructor standings for a given race and year.
-     * If the race number is set to -1, the position set in the ConstructorYear will be used as
-     * default order.
-     * Ordered by position of standings in ascending order.
-     *
-     * @param raceId of race
-     * @param year   of season
-     * @return constructors ascendingly
-     */
     public List<Constructor> getConstructorStandings(RaceId raceId, Year year) {
         final String constructorYearSql = "SELECT constructor_name FROM constructors_year WHERE year = ? ORDER BY position;";
         final String constructorStandingsSql = """
@@ -236,13 +140,6 @@ public class Database {
         return result.stream().map(Constructor::new).toList();
     }
 
-    /**
-     * Gets the guesses of all users for the given race in the given category.
-     *
-     * @param raceId   of race
-     * @param category for guesses
-     * @return list of guesses
-     */
     public List<UserRaceGuess> getUserGuessesDriverPlace(RaceId raceId, Category category) {
         final String getGuessSql = """
                 SELECT u.username AS username, dpg.driver_name AS driver, sg.position AS position
@@ -261,36 +158,6 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Gets the latest race which has a starting grid available in the given year.
-     *
-     * @param year of season
-     * @return race
-     * @throws EmptyResultDataAccessException if there is no race within the criteria
-     */
-    public CutoffRace getLatestRaceForPlaceGuess(Year year) throws EmptyResultDataAccessException {
-        final String getRaceIdSql = """
-                SELECT ro.race_id AS id, ro.position AS position, r.race_name AS name
-                FROM race_order ro
-                JOIN starting_grids sg ON ro.race_id = sg.race_id
-                JOIN races r ON r.race_id = ro.race_id
-                WHERE ro.year = ?
-                ORDER BY ro.position DESC
-                LIMIT 1;
-                """;
-        Map<String, Object> res = jdbcTemplate.queryForMap(getRaceIdSql, year.value);
-        RaceId raceId = new RaceId((int) res.get("id"));
-        return new CutoffRace((int) res.get("position"), (String) res.get("name"), raceId);
-    }
-
-    /**
-     * Adds the guesses of flags of a user into the given year.
-     * Overwrites pre-existing guesses.
-     *
-     * @param userId of user
-     * @param year   of season
-     * @param flags  the user guessed
-     */
     public void addFlagGuesses(UUID userId, Year year, Flags flags) {
         final String sql = """
             INSERT INTO flag_guesses (user_id, flag_name, year, amount)
@@ -303,13 +170,6 @@ public class Database {
         jdbcTemplate.update(sql, userId, "Safety Car", year.value, flags.safetyCar);
     }
 
-    /**
-     * Gets the flag guesses of the given user in the given year.
-     *
-     * @param userId of user
-     * @param year   of season
-     * @return flag guesses
-     */
     public Flags getFlagGuesses(UUID userId, Year year) {
         final String sql = "SELECT flag_name, amount FROM flag_guesses WHERE user_id = ? AND year = ?;";
         List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, userId, year.value);
@@ -332,12 +192,6 @@ public class Database {
         return flags;
     }
 
-    /**
-     * Gets number of seconds remaining to guess in the given race.
-     *
-     * @param raceId of race
-     * @return time left in seconds
-     */
     public long getTimeLeftToGuessRace(RaceId raceId) {
         Instant now = Instant.now();
         final String getCutoff = "SELECT cutoff FROM race_cutoffs WHERE race_id = ?;";
@@ -349,11 +203,6 @@ public class Database {
         return (int) (getTimeLeftToGuessRace(raceId) / 3600L);
     }
 
-    /**
-     * Gets number of seconds remaining to guess in the year.
-     *
-     * @return time left in seconds
-     */
     public long getTimeLeftToGuessYear() {
         Instant now = Instant.now();
         final String getCutoff = "SELECT cutoff FROM year_cutoffs WHERE year = ?;";
@@ -362,13 +211,6 @@ public class Database {
         return Duration.between(now, cutoffYear).toSeconds();
     }
 
-    /**
-     * Gets a list of starting grid from the given race.
-     * Drivers are ordered from first to last ascendingly.
-     *
-     * @param raceId of race
-     * @return drivers ascendingly
-     */
     public List<Driver> getDriversFromStartingGrid(RaceId raceId) {
         final String getDriversFromGrid = "SELECT driver_name FROM starting_grids WHERE race_id = ? ORDER BY position;";
         return jdbcTemplate.queryForList(getDriversFromGrid, String.class, raceId.value).stream()
@@ -394,14 +236,6 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Gets the previous guess of a user on driver place guess.
-     *
-     * @param raceId   of race
-     * @param category guessed on
-     * @param userId   of the user
-     * @return name of driver guessed
-     */
     public Driver getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
         final String getPreviousGuessSql = """
                 SELECT driver_name
@@ -411,14 +245,6 @@ public class Database {
         return new Driver(jdbcTemplate.queryForObject(getPreviousGuessSql, String.class, raceId.value, category.value, userId));
     }
 
-    /**
-     * Adds driver place guess to the database.
-     *
-     * @param userId   of the guesser
-     * @param raceId   of race
-     * @param driver   name guessed
-     * @param category which the user guessed on
-     */
     public void addDriverPlaceGuess(UUID userId, RaceId raceId, Driver driver, Category category) {
         final String insertGuessSql = """
             INSERT INTO driver_place_guesses (user_id, race_id, driver_name, category_name)
@@ -429,13 +255,6 @@ public class Database {
         jdbcTemplate.update(insertGuessSql, userId, raceId.value, driver.value, category.value);
     }
 
-    /**
-     * Gets a list of a users guesses on a drivers in a given season.
-     *
-     * @param userId of user
-     * @param year   of season
-     * @return competitors ascendingly
-     */
     public List<ColoredCompetitor<Driver>> getDriversGuess(UUID userId, Year year) {
         final String getGuessedSql = """
                 SELECT dg.driver_name as driver, cc.color as color
@@ -460,13 +279,6 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Gets a list of a users guesses on constructors in a given season.
-     *
-     * @param userId of user
-     * @param year   of season
-     * @return competitors ascendingly
-     */
     public List<ColoredCompetitor<Constructor>> getConstructorsGuess(UUID userId, Year year) {
         final String getGuessedSql = """
                 SELECT cg.constructor_name as constructor, cc.color as color
@@ -501,12 +313,6 @@ public class Database {
         return competitors;
     }
 
-    /**
-     * Gets a list of a yearly drivers in a given season.
-     *
-     * @param year of season
-     * @return drivers ascendingly
-     */
     public List<Driver> getDriversYear(Year year) {
         final String getDriversSql = "SELECT driver_name FROM drivers_year WHERE year = ? ORDER BY position;";
         return jdbcTemplate.queryForList(getDriversSql, String.class, year.value).stream()
@@ -514,12 +320,6 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Gets a list of a yearly constructors in a given season.
-     *
-     * @param year of season
-     * @return constructors ascendingly
-     */
     public List<Constructor> getConstructorsYear(Year year) {
         final String getConstructorSql = "SELECT constructor_name FROM constructors_year WHERE year = ? ORDER BY position;";
         return jdbcTemplate.queryForList(getConstructorSql, String.class, year.value).stream()
@@ -527,14 +327,6 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Adds a guess for a user on the ranking of a driver.
-     *
-     * @param userId   of user
-     * @param driver   name
-     * @param year     of season
-     * @param position guessed
-     */
     public void insertDriversYearGuess(UUID userId, Driver driver, Year year, int position) {
         final String addRowDriver = """
             INSERT INTO driver_guesses (user_id, driver_name, year, position)
@@ -545,14 +337,6 @@ public class Database {
         jdbcTemplate.update(addRowDriver, userId, driver.value, year.value, position);
     }
 
-    /**
-     * Adds a guess for a user on the ranking of a constructor.
-     *
-     * @param userId      of user
-     * @param constructor name
-     * @param year        of season
-     * @param position    guessed
-     */
     public void insertConstructorsYearGuess(UUID userId, Constructor constructor, Year year, int position) {
         final String addRowConstructor = """
             INSERT INTO constructor_guesses (user_id, constructor_name, year, position)
@@ -563,11 +347,6 @@ public class Database {
         jdbcTemplate.update(addRowConstructor, userId, constructor.value, year.value, position);
     }
 
-    /**
-     * Gets a list of all guessing categories.
-     *
-     * @return categories
-     */
     public List<Category> getCategories() {
         final String sql = "SELECT category_name FROM categories;";
         return jdbcTemplate.queryForList(sql, String.class).stream()
@@ -575,25 +354,11 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Checks if the given category is a valid category
-     *
-     * @param category name
-     * @return true if category is valid
-     */
     public boolean isValidCategory(String category) {
         final String validateCategory = "SELECT COUNT(*) FROM categories WHERE category_name = ?;";
         return jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
     }
 
-    /**
-     * Gets a mapping from the difference of a guess to the points
-     * obtained by the difference in a given category.
-     *
-     * @param category name
-     * @param year     of season
-     * @return map from diff to points
-     */
     public Map<Diff, Points> getDiffPointsMap(Year year, Category category) {
         final String sql = """
                 SELECT points, diff
@@ -610,53 +375,23 @@ public class Database {
             map.put(diff, points);
         }
         return map;
-
     }
 
-    /**
-     * Gets max diff in mapping from diff to points in the given season and category.
-     *
-     * @param year     of season
-     * @param category name
-     * @return max diff
-     */
     public Diff getMaxDiffInPointsMap(Year year, Category category) {
         final String getMaxDiff = "SELECT MAX(diff) FROM diff_points_mappings WHERE year = ? AND category_name = ?;";
         return new Diff(jdbcTemplate.queryForObject(getMaxDiff, Integer.class, year.value, category.value));
     }
 
-    /**
-     * Adds a new mapping from the given diff to 0 points in the given season and category.
-     *
-     * @param category name
-     * @param diff     to add mapping for
-     * @param year     of season
-     */
     public void addDiffToPointsMap(Category category, Diff diff, Year year) {
         final String addDiff = "INSERT INTO diff_points_mappings (category_name, diff, points, year) VALUES (?, ?, ?, ?);";
         jdbcTemplate.update(addDiff, category.value, diff.value, 0, year.value);
     }
 
-    /**
-     * Removes the mapping from the given diff in the given season and category.
-     *
-     * @param category name
-     * @param diff     to remove mapping for
-     * @param year     of season
-     */
     public void removeDiffToPointsMap(Category category, Diff diff, Year year) {
         final String deleteRowWithDiff = "DELETE FROM diff_points_mappings WHERE year = ? AND category_name = ? AND diff = ?;";
         jdbcTemplate.update(deleteRowWithDiff, year.value, category.value, diff.value);
     }
 
-    /**
-     * Sets a new mapping from the given diff to the given points in the given season and category.
-     *
-     * @param category name
-     * @param diff     to set new mapping for
-     * @param year     of season
-     * @param points   for getting the diff
-     */
     public void setNewDiffToPointsInPointsMap(Category category, Diff diff, Year year, Points points) {
         final String setNewPoints = """
                 UPDATE diff_points_mappings
@@ -666,26 +401,11 @@ public class Database {
         jdbcTemplate.update(setNewPoints, points.value, diff.value, year.value, category.value);
     }
 
-    /**
-     * Checks if there is a diff set for the given season and category.
-     *
-     * @param category name
-     * @param diff     to check
-     * @param year     of season
-     */
     public boolean isValidDiffInPointsMap(Category category, Diff diff, Year year) {
         final String validateDiff = "SELECT COUNT(*) FROM diff_points_mappings WHERE year = ? AND category_name = ? AND diff = ?;";
         return jdbcTemplate.queryForObject(validateDiff, Integer.class, year.value, category.value, diff.value) > 0;
     }
 
-    /**
-     * Gets a list of every person that has guessed in a season. To qualify they have to have guessed
-     * on flags, drivers and constructors.
-     * Ordered ascendingly by username
-     *
-     * @param year of season
-     * @return id of guessers
-     */
     public List<UserEntity> getSeasonGuessers(Year year) {
         final String getGussers = """
                 SELECT DISTINCT u.user_id as id, u.username
@@ -705,354 +425,68 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Gets every race id from a year where there has been a a race.
-     *
-     * @param year of season
-     * @return id of races
-     */
-    public List<RaceId> getRaceIdsFinished(Year year) {
-        final String getRaceIds = """
-                SELECT DISTINCT ro.race_id as race_id, ro.position
-                FROM race_order ro
-                JOIN race_results rr ON ro.race_id = rr.race_id
-                WHERE ro.year = ?
-                ORDER BY ro.position;
-                """;
-        return jdbcTemplate.queryForList(getRaceIds, year.value).stream()
-                .map(row -> (int) row.get("race_id"))
-                .map(RaceId::new)
-                .toList();
-    }
-
-    /**
-     * Gets the id, year and position of every race that does not have a
-     * race result.
-     * Ordered by year and then position, both ascendingly.
-     *
-     * @return list of rows with id, year and position
-     */
-    public List<CutoffRace> getActiveRaces() {
-        final String sql = """
-                SELECT race_id, year, position
-                FROM race_order
-                WHERE race_id NOT IN (SELECT race_id FROM race_results)
-                AND year NOT IN (SELECT year FROM years_finished)
-                ORDER BY year, position;
-                """;
-
-        return jdbcTemplate.queryForList(sql).stream()
-                .map(row -> new CutoffRace(
-                        (int) row.get("position"),
-                        new RaceId((int) row.get("race_id")),
-                        new Year((int) row.get("year"))
-                ))
-                .toList();
-    }
-
-    /**
-     * Gets the id of the latest starting grid of a season.
-     *
-     * @param year of season
-     * @return race id
-     */
-    public RaceId getLatestStartingGridRaceId(Year year) {
-        final String getStartingGridId = """
-                SELECT ro.race_id
-                FROM starting_grids sg
-                JOIN race_order ro on ro.race_id = sg.race_id
-                WHERE ro.year = ?
-                ORDER BY ro.position DESC
-                LIMIT 1;
-                """;
-        return new RaceId(jdbcTemplate.queryForObject(getStartingGridId, Integer.class, year.value));
-    }
-
-    /**
-     * Gets the id of the latest race result of a season.
-     *
-     * @param year of season
-     * @return race id
-     */
-    public RaceId getLatestRaceResultId(Year year) {
-        final String getRaceResultId = """
-                SELECT ro.race_id
-                FROM race_results rr
-                JOIN race_order ro on ro.race_id = rr.race_id
-                WHERE ro.year = ?
-                ORDER BY ro.position DESC
-                LIMIT 1;
-                """;
-        return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year.value));
-    }
-
-    public RaceId getUpcomingRaceId(Year year) {
-        final String sql = """
-                SELECT race_id
-                FROM race_order
-                WHERE race_id NOT IN (SELECT DISTINCT race_id FROM race_results)
-                AND year = ?
-                ORDER BY position
-                LIMIT 1;
-                """;
-        return new RaceId(jdbcTemplate.queryForObject(sql, Integer.class, year.value));
-    }
-
-    /**
-     * Gets the id of the latest race result of a season.
-     *
-     * @param year of season
-     * @return race id
-     */
-    public RaceId getLatestStandingsId(Year year) {
-        final String getRaceResultId = """
-                SELECT ro.race_id
-                FROM race_order ro
-                JOIN driver_standings ds on ds.race_id = ro.race_id
-                JOIN constructor_standings cs on cs.race_id = ro.race_id
-                WHERE ro.year = ?
-                ORDER BY ro.position DESC
-                LIMIT 1;
-                """;
-        return new RaceId(jdbcTemplate.queryForObject(getRaceResultId, Integer.class, year.value));
-    }
-
-    /**
-     * Checks if race already exists.
-     *
-     * @param raceId to check
-     * @return true if exists
-     */
-    public boolean isRaceAdded(int raceId) {
-        final String existCheck = "SELECT COUNT(*) FROM races WHERE race_id = ?;";
-        return jdbcTemplate.queryForObject(existCheck, Integer.class, raceId) > 0;
-    }
-
-    /**
-     * Adds name of driver to the Driver table in database.
-     *
-     * @param driver name
-     */
     public void addDriver(String driver) {
         final String insertDriver = "INSERT INTO drivers (driver_name) VALUES (?) ON CONFLICT DO NOTHING;";
         jdbcTemplate.update(insertDriver, driver);
     }
 
-    /**
-     * Appends the driver to DriverYear table in the given year.
-     *
-     * @param driver name
-     * @param year   of season
-     */
     public void addDriverYear(String driver, Year year) {
         addDriver(driver);
         int position = getMaxPosDriverYear(year) + 1;
         addDriverYear(new Driver(driver), year, position);
     }
 
-    /**
-     * Gets the max position of drivers in the DriverYear table.
-     *
-     * @param year of season
-     * @return max position. 0 if empty.
-     */
     public int getMaxPosDriverYear(Year year) {
         final String getMaxPos = "SELECT COALESCE(MAX(position), 0)::INTEGER FROM drivers_year WHERE year = ?;";
         return jdbcTemplate.queryForObject(getMaxPos, Integer.class, year.value);
     }
 
-    /**
-     * Adds driver to the DriverYear table in the given year and position.
-     *
-     * @param driver   name
-     * @param year     of season
-     * @param position of driver
-     */
     public void addDriverYear(Driver driver, Year year, int position) {
         final String addDriverYear = "INSERT INTO drivers_year (driver_name, year, position) VALUES (?, ?, ?);";
         jdbcTemplate.update(addDriverYear, driver.value, year.value, position);
     }
 
-    /**
-     * Removes driver from DriverYear table.
-     *
-     * @param driver to delete
-     * @param year   of season
-     */
     public void deleteDriverYear(Driver driver, Year year) {
         final String deleteDriver = "DELETE FROM drivers_year WHERE year = ? AND driver_name = ?;";
         jdbcTemplate.update(deleteDriver, year.value, driver.value);
     }
 
-    /**
-     * Removes all drivers from DriverYear table in the given year.
-     *
-     * @param year of season
-     */
     public void deleteAllDriverYear(Year year) {
         final String deleteAllDrivers = "DELETE FROM drivers_year WHERE year = ?;";
         jdbcTemplate.update(deleteAllDrivers, year.value);
     }
 
-    /**
-     * Adds name of constructor to the Constructor table in database.
-     *
-     * @param constructor name
-     */
     public void addConstructor(String constructor) {
         final String insertConstructor = "INSERT INTO constructors (constructor_name) VALUES (?) ON CONFLICT DO NOTHING;";
         jdbcTemplate.update(insertConstructor, constructor);
     }
 
-    /**
-     * Appends the constructor to ConstructorYear table in the given year.
-     *
-     * @param constructor name
-     * @param year        of season
-     */
     public void addConstructorYear(String constructor, Year year) {
         addConstructor(constructor);
         int position = getMaxPosConstructorYear(year) + 1;
         addConstructorYear(new Constructor(constructor), year, position);
     }
 
-    /**
-     * Gets the max position of constructors in the ConstructorYear table.
-     *
-     * @param year of season
-     * @return max position. 0 if empty.
-     */
     public int getMaxPosConstructorYear(Year year) {
         final String getMaxPos = "SELECT COALESCE(MAX(position), 0)::INTEGER FROM constructors_year WHERE year = ?;";
         return jdbcTemplate.queryForObject(getMaxPos, Integer.class, year.value);
     }
 
-    /**
-     * Adds constructor to the ConstructorYear table in the given year and position.
-     *
-     * @param constructor name
-     * @param year        of season
-     * @param position    of constructor
-     */
     public void addConstructorYear(Constructor constructor, Year year, int position) {
         final String addConstructorYear = "INSERT INTO public.constructors_year (constructor_name, year, position) VALUES (?, ?, ?);";
         jdbcTemplate.update(addConstructorYear, constructor.value, year.value, position);
     }
 
-    /**
-     * Removes constructor from ConstructorYear table.
-     *
-     * @param constructor to delete
-     * @param year        of season
-     */
     public void deleteConstructorYear(Constructor constructor, Year year) {
         final String deleteConstructor = "DELETE FROM constructors_year WHERE year = ? AND constructor_name = ?;";
         jdbcTemplate.update(deleteConstructor, year.value, constructor.value);
     }
 
-    /**
-     * Removes all constructor from ConstructorYear table in the given year.
-     *
-     * @param year of season
-     */
     public void deleteAllConstructorYear(Year year) {
         final String deleteAllConstructors = "DELETE FROM constructors_year WHERE year = ?;";
         jdbcTemplate.update(deleteAllConstructors, year.value);
     }
 
-    /**
-     * Inserts race id and name into Race table.
-     *
-     * @param raceId   of race
-     * @param raceName of race
-     */
-    public void insertRace(int raceId, String raceName) {
-        final String insertRaceName = "INSERT INTO races (race_id, race_name) VALUES (?, ?) ON CONFLICT DO NOTHING;";
-        jdbcTemplate.update(insertRaceName, raceId, raceName);
-    }
-
-    /**
-     * Gets the max position of a race in RaceOrder of a given year.
-     * Is equivalent to number of races in the season.
-     *
-     * @param year of season
-     * @return max position
-     */
-    public int getMaxRaceOrderPosition(Year year) {
-        final String sql = "SELECT MAX(position) FROM race_order WHERE year = ?;";
-        return jdbcTemplate.queryForObject(sql, Integer.class, year.value);
-    }
-
-    /**
-     * Inserts race into RaceOrder.
-     *
-     * @param raceId   of race
-     * @param year     of season
-     * @param position of race
-     */
-    public void insertRaceOrder(RaceId raceId, Year year, int position) {
-        final String insertRaceOrder = """
-            INSERT INTO race_order (race_id, year, position)
-            VALUES (?, ?, ?)
-            ON CONFLICT DO NOTHING;
-        """;
-        jdbcTemplate.update(insertRaceOrder, raceId.value, year.value, position);
-    }
-
-    /**
-     * Deletes race from Race table.
-     *
-     * @param raceId to delete
-     */
-    public void deleteRace(RaceId raceId) {
-        final String deleteRace = "DELETE FROM races WHERE race_id = ?;";
-        jdbcTemplate.update(deleteRace, raceId.value);
-    }
-
-    /**
-     * Checks if a race is a valid race within a season. To be valid, it needs to have a
-     * table row in RaceOrder where both year and id are equal to input values.
-     *
-     * @param raceId of race
-     * @param year   of season
-     * @return true if race is valid
-     */
-    public boolean isRaceInSeason(RaceId raceId, Year year) {
-        final String validateRaceId = "SELECT COUNT(*) FROM race_order WHERE year = ? AND race_id = ?;";
-        return jdbcTemplate.queryForObject(validateRaceId, Integer.class, year.value, raceId.value) > 0;
-    }
-
-    /**
-     * Gets a list of race ids from a season.
-     * Ordered by their position in RaceOrder.
-     *
-     * @param year of season
-     * @return id of races
-     */
-    public List<RaceId> getRacesFromSeason(Year year) {
-        final String getRaceIds = "SELECT race_id FROM race_order WHERE year = ? ORDER BY position;";
-        return jdbcTemplate.queryForList(getRaceIds, Integer.class, year.value).stream()
-                .map(RaceId::new)
-                .toList();
-    }
-
-    /**
-     * Removes all races from RaceOrder in the given season.
-     *
-     * @param year of season
-     */
-    public void removeRaceOrderFromSeason(Year year) {
-        final String removeOldOrderSql = "DELETE FROM race_order WHERE year = ?;";
-        jdbcTemplate.update(removeOldOrderSql, year.value);
-    }
-
-    /**
-     * Gets the races from a season with their cutoff.
-     * Ordered ascendingly by race position.
-     *
-     * @param year of season
-     * @return races with cutoff
-     */
     public List<CutoffRace> getCutoffRaces(Year year) {
         List<CutoffRace> races = new ArrayList<>();
         final String getCutoffRaces = """
@@ -1076,74 +510,10 @@ public class Database {
         return races;
     }
 
-    public List<Race> getRacesYear(Year year) {
-        final String getCutoffRaces = """
-                SELECT r.race_id as id, r.race_name as name, ro.year as year, ro.position as position
-                FROM race_order ro
-                JOIN races r ON ro.race_id = r.race_id
-                WHERE ro.year = ?
-                ORDER BY ro.position;
-                """;
-        return jdbcTemplate.queryForList(getCutoffRaces, year.value).stream()
-                .map(row -> new Race(
-                        (int) row.get("position"),
-                        (String) row.get("name"),
-                        new RaceId((int) row.get("id")),
-                        year))
-                .toList();
-    }
-
-    public List<Race> getRacesYearFinished(Year year) {
-        final String getCutoffRaces = """
-                SELECT DISTINCT r.race_id as id, r.race_name as name, ro.year as year, ro.position as position
-                FROM race_order ro
-                JOIN races r ON ro.race_id = r.race_id
-                JOIN race_results rr ON rr.race_id = r.race_id
-                WHERE ro.year = ?
-                ORDER BY ro.position;
-                """;
-        return jdbcTemplate.queryForList(getCutoffRaces, year.value).stream()
-                .map(row -> new Race(
-                        (int) row.get("position"),
-                        (String) row.get("name"),
-                        new RaceId((int) row.get("id")),
-                        year))
-                .toList();
-    }
-
-    public Race getRaceFromId(RaceId raceId) {
-        final String sql = """
-                SELECT r.race_id as id, r.race_name as name, ro.year as year, ro.position as position
-                FROM race_order ro
-                JOIN races r ON ro.race_id = r.race_id
-                WHERE ro.race_id = ?
-                ORDER BY ro.position;
-                """;
-        Map<String, Object> sqlRes = jdbcTemplate.queryForMap(sql, raceId.value);
-        return new Race(
-                (int) sqlRes.get("position"),
-                (String) sqlRes.get("name"),
-                new RaceId((int) sqlRes.get("id")),
-                new Year((int) sqlRes.get("year"))
-        );
-    }
-
-    /**
-     * Gets the cutoff of the year in LocalDataTime.
-     *
-     * @param year of season
-     * @return cutoff time in local time
-     */
     public LocalDateTime getCutoffYearLocalTime(Year year) {
         return TimeUtil.instantToLocalTime(getCutoffYear(year));
     }
 
-    /**
-     * Sets the cutoff of the given race to the given time.
-     *
-     * @param cutoffTime for guessing
-     * @param raceId     of race
-     */
     public void setCutoffRace(Instant cutoffTime, RaceId raceId) {
         final String setCutoffTime = """
             INSERT INTO race_cutoffs (race_id, cutoff)
@@ -1154,12 +524,6 @@ public class Database {
         jdbcTemplate.update(setCutoffTime, raceId.value, cutoffTime.toString());
     }
 
-    /**
-     * Sets the cutoff of the given season to the given time.
-     *
-     * @param cutoffTime for guessing
-     * @param year       of season
-     */
     public void setCutoffYear(Instant cutoffTime, Year year) {
         final String setCutoffTime = """
             INSERT INTO year_cutoffs (year, cutoff) VALUES (?, ?)
@@ -1169,12 +533,6 @@ public class Database {
         jdbcTemplate.update(setCutoffTime, year.value, cutoffTime.toString());
     }
 
-    /**
-     * Gets a list of registered flags for a given race.
-     *
-     * @param raceId of race
-     * @return registered flags
-     */
     public List<RegisteredFlag> getRegisteredFlags(RaceId raceId) {
         List<RegisteredFlag> registeredFlags = new ArrayList<>();
         final String getRegisteredFlags = """
@@ -1194,45 +552,16 @@ public class Database {
         return registeredFlags;
     }
 
-    /**
-     * Inserts an instance of a recorded flag to the database.
-     * IDs are assigned automatically.
-     *
-     * @param flag   type of flag
-     * @param round  the round flag happened in
-     * @param raceId of race
-     */
     public void insertFlagStats(Flag flag, int round, RaceId raceId, SessionType sessionType) {
         final String sql = "INSERT INTO flag_stats (flag_name, race_id, round, session_type) VALUES (?, ?, ?, ?);";
         jdbcTemplate.update(sql, flag.value, raceId.value, round, sessionType.value);
     }
 
-    /**
-     * Deletes a recorded flag by its id.
-     *
-     * @param flagId of stat
-     */
     public void deleteFlagStatsById(int flagId) {
         final String sql = "DELETE FROM flag_stats WHERE flag_id = ?;";
         jdbcTemplate.update(sql, flagId);
     }
 
-    /**
-     * Gets the name of a race.
-     *
-     * @param raceId of race
-     * @return name of race
-     */
-    public String getRaceName(RaceId raceId) {
-        final String getRaceNameSql = "SELECT race_name FROM races WHERE race_id = ?;";
-        return jdbcTemplate.queryForObject(getRaceNameSql, String.class, raceId.value);
-    }
-
-    /**
-     * Gets a list of all the types of flags.
-     *
-     * @return name of flag types
-     */
     public List<Flag> getFlags() {
         final String sql = "SELECT flag_name FROM flags;";
         return jdbcTemplate.queryForList(sql, String.class).stream()
@@ -1240,13 +569,6 @@ public class Database {
                 .toList();
     }
 
-    /**
-     * Checks if a driver is in DriverYear in the given season.
-     *
-     * @param driver the name of the driver
-     * @param year   of season
-     * @return true if driver is valid
-     */
     public boolean isValidDriverYear(Driver driver, Year year) {
         final String existCheck = "SELECT COUNT(*) FROM drivers_year WHERE year = ? AND driver_name = ?;";
         return jdbcTemplate.queryForObject(existCheck, Integer.class, year.value, driver.value) > 0;
@@ -1257,13 +579,6 @@ public class Database {
         return jdbcTemplate.queryForObject(existCheck, Integer.class, driver.value) > 0;
     }
 
-    /**
-     * Checks if a constructor is in ConstructorYear in the given season.
-     *
-     * @param constructor the name of the constructor
-     * @param year        of season
-     * @return true if constructor is valid
-     */
     public boolean isValidConstructorYear(Constructor constructor, Year year) {
         final String existCheck = "SELECT COUNT(*) FROM constructors_year WHERE year = ? AND constructor_name = ?;";
         return jdbcTemplate.queryForObject(existCheck, Integer.class, year.value, constructor.value) > 0;
@@ -1585,13 +900,12 @@ public class Database {
     }
 
     public String getAlternativeDriverName(String driver, RaceId raceId) {
-        Year year = getYearFromRaceId(raceId);
-        return getAlternativeDriverName(driver, year);
-    }
-
-    public Year getYearFromRaceId(RaceId raceId) {
-        final String sql = "SELECT year FROM race_order WHERE race_id = ?;";
-        return new Year(jdbcTemplate.queryForObject(sql, Integer.class, raceId.value));
+        try {
+            Year year = raceService.getYearFromRaceId(raceId);
+            return getAlternativeDriverName(driver, year);
+        } catch (InvalidRaceException ignored) {
+            return driver;
+        }
     }
 
     public void addAlternativeDriverName(Driver driver, String alternativeName, Year year) {

@@ -2,6 +2,7 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
@@ -26,11 +27,13 @@ public class GeneralApiController {
     private final Database db;
     private final UserService userService;
     private final YearService yearService;
+    private final RaceService raceService;
 
-    public GeneralApiController(Database db, UserService userService, YearService yearService) {
+    public GeneralApiController(Database db, UserService userService, YearService yearService, RaceService raceService) {
         this.db = db;
         this.userService = userService;
         this.yearService = yearService;
+        this.raceService = raceService;
     }
 
     @GetMapping("/year/list")
@@ -45,9 +48,9 @@ public class GeneralApiController {
         try {
             Year validYear = new Year(year);
             if (completedOnly) {
-                return new ResponseEntity<>(db.getRacesYearFinished(validYear), HttpStatus.OK);
+                return new ResponseEntity<>(raceService.getRacesYearFinished(validYear), HttpStatus.OK);
             }
-            return new ResponseEntity<>(db.getRacesYear(validYear), HttpStatus.OK);
+            return new ResponseEntity<>(raceService.getRacesYear(validYear), HttpStatus.OK);
         } catch (InvalidYearException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

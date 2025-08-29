@@ -1,12 +1,13 @@
 package no.vebb.f1.scoring;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.util.collection.userTables.FlagGuess;
 import no.vebb.f1.util.collection.userTables.PlaceGuess;
 import no.vebb.f1.util.collection.userTables.StandingsGuess;
 import no.vebb.f1.util.domainPrimitive.*;
-import org.springframework.dao.EmptyResultDataAccessException;
+import no.vebb.f1.util.exception.InvalidYearException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class UserScore {
 
     private final Database db;
+    private final RaceService raceService;
     public final PublicUserDto user;
     public final Year year;
     public final RaceId raceId;
@@ -26,11 +28,12 @@ public class UserScore {
     public final List<PlaceGuess> winnerGuesses = new ArrayList<>();
     public final List<PlaceGuess> tenthGuesses = new ArrayList<>();
 
-    public UserScore(PublicUserDto user, Year year, RaceId raceId, Database db) {
+    public UserScore(PublicUserDto user, Year year, RaceId raceId, Database db, RaceService raceService) {
         this.user = user;
         this.year = year;
         this.raceId = raceId;
         this.db = db;
+        this.raceService = raceService;
         this.racePos = getRacePosition();
         initializeDriversGuesses();
         initializeConstructorsGuesses();
@@ -39,14 +42,14 @@ public class UserScore {
         initializeTenthGuesses();
     }
 
-    public UserScore(PublicUserDto user, Year year, Database db) {
-        this(user, year, UserScore.getRaceId(year, db), db);
+    public UserScore(PublicUserDto user, Year year, Database db, RaceService raceService) {
+        this(user, year, UserScore.getRaceId(year, raceService), db, raceService);
     }
 
-    private static RaceId getRaceId(Year year, Database db) {
+    private static RaceId getRaceId(Year year, RaceService raceService) {
         try {
-            return db.getLatestRaceId(year);
-        } catch (EmptyResultDataAccessException e) {
+            return raceService.getLatestRaceId(year);
+        } catch (InvalidYearException e) {
             return null;
         }
     }
@@ -55,7 +58,7 @@ public class UserScore {
         if (raceId == null) {
             return 0;
         }
-        return db.getPositionOfRace(raceId);
+        return raceService.getPositionOfRace(raceId);
     }
 
     private void initializeDriversGuesses() {

@@ -115,10 +115,9 @@ public class PostgreSQLConfig {
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS race_order (
-					race_id INTEGER NOT NULL UNIQUE,
+					race_id INTEGER PRIMARY KEY,
 					year INTEGER NOT NULL,
 					position INTEGER NOT NULL,
-					PRIMARY KEY (year, position),
 					FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
 					FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 				);
