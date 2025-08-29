@@ -3,6 +3,7 @@ package no.vebb.f1.controller.open;
 import java.util.List;
 
 import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,16 +25,18 @@ public class BingoController {
 
     private final Database db;
 	private final UserService userService;
+	private final YearService yearService;
 
-	public BingoController(Database db, UserService userService) {
+	public BingoController(Database db, UserService userService, YearService yearService) {
 		this.db = db;
 		this.userService = userService;
+		this.yearService = yearService;
 	}
 
 	@GetMapping("/api/public/bingo")
 	public ResponseEntity<List<BingoSquare>> getCurrentBingoCard() {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 			return new ResponseEntity<>(db.getBingoCard(year), HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -43,7 +46,7 @@ public class BingoController {
 	@GetMapping("/api/public/bingo/{year}")
 	public ResponseEntity<List<BingoSquare>> getBingoCardYear(@PathVariable("year") int year) {
 		try {
-			Year validYear = new Year(year, db);
+			Year validYear = new Year(year, yearService);
 			return new ResponseEntity<>(db.getBingoCard(validYear), HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -62,8 +65,8 @@ public class BingoController {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		try {
-			Year validSeason = new Year(year, db);
-			if (db.isFinishedYear(validSeason)) {
+			Year validSeason = new Year(year, yearService);
+			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}
 			if (db.isBingoCardAdded(validSeason)) {
@@ -87,8 +90,8 @@ public class BingoController {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		try {
-			Year validSeason = new Year(year, db);
-			if (db.isFinishedYear(validSeason)) {
+			Year validSeason = new Year(year, yearService);
+			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}
 			if (!db.isBingoCardAdded(validSeason)) {
@@ -113,8 +116,8 @@ public class BingoController {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		try {
-			Year validSeason = new Year(year, db);
-			if (db.isFinishedYear(validSeason)) {
+			Year validSeason = new Year(year, yearService);
+			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}
 			db.toogleMarkBingoSquare(validSeason, id);

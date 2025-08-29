@@ -3,6 +3,7 @@ package no.vebb.f1.controller.open;
 import java.util.List;
 
 import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,15 +25,17 @@ public class GeneralApiController {
 
     private final Database db;
     private final UserService userService;
+    private final YearService yearService;
 
-    public GeneralApiController(Database db, UserService userService) {
+    public GeneralApiController(Database db, UserService userService, YearService yearService) {
         this.db = db;
         this.userService = userService;
+        this.yearService = yearService;
     }
 
     @GetMapping("/year/list")
     public ResponseEntity<List<Year>> listYears() {
-        return new ResponseEntity<>(db.getAllValidYears(), HttpStatus.OK);
+        return new ResponseEntity<>(yearService.getAllYears(), HttpStatus.OK);
     }
 
     @GetMapping("/race/list/{year}")

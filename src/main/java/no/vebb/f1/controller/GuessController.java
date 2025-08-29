@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.util.exception.*;
+import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -45,20 +46,22 @@ public class GuessController {
 	private final UserService userService;
 	private final Cutoff cutoff;
 	private final ResultService resultService;
+	private final YearService yearService;
 
-	public GuessController(Database db, UserService userService, Cutoff cutoff, ResultService resultService) {
+	public GuessController(Database db, UserService userService, Cutoff cutoff, ResultService resultService, YearService yearService) {
 		this.db = db;
 		this.userService = userService;
 		this.cutoff = cutoff;
 		this.resultService = resultService;
+		this.yearService = yearService;
 	}
 
 	@GetMapping("/categories")
 	public ResponseEntity<List<Category>> guess() {
 		List<Category> res = new ArrayList<>();
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			if (db.isFinishedYear(year)) {
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+			if (yearService.isFinishedYear(year)) {
 				throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 			}
 		} catch (InvalidYearException ignored) {
@@ -84,8 +87,8 @@ public class GuessController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
-		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		if (db.isFinishedYear(year)) {
+		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+		if (yearService.isFinishedYear(year)) {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		UUID id = userService.getUser().id();
@@ -101,8 +104,8 @@ public class GuessController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
-		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		if (db.isFinishedYear(year)) {
+		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+		if (yearService.isFinishedYear(year)) {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		try {
@@ -134,8 +137,8 @@ public class GuessController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
-		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		if (db.isFinishedYear(year)) {
+		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+		if (yearService.isFinishedYear(year)) {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		UUID id = userService.getUser().id();
@@ -151,8 +154,8 @@ public class GuessController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
-		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		if (db.isFinishedYear(year)) {
+		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+		if (yearService.isFinishedYear(year)) {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		try {
@@ -224,8 +227,8 @@ public class GuessController {
 
 	private ResponseEntity<CutoffCompetitorsSelected<Driver>> handleGetChooseDriver(Category category) {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			if (db.isFinishedYear(year)) {
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+			if (yearService.isFinishedYear(year)) {
 				throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 			}
 			Race race = db.getRaceFromId(getRaceIdToGuess());
@@ -247,8 +250,8 @@ public class GuessController {
 
 	private ResponseEntity<?> handlePostChooseDriver(String driver, Category category) {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
-			if (db.isFinishedYear(year)) {
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+			if (yearService.isFinishedYear(year)) {
 				throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 			}
 			RaceId raceId = getRaceIdToGuess();
@@ -284,8 +287,8 @@ public class GuessController {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		long timeLeftToGuess = db.getTimeLeftToGuessYear();
-		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		if (db.isFinishedYear(year)) {
+		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+		if (yearService.isFinishedYear(year)) {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		Flags flags = db.getFlagGuesses(userService.getUser().id(), year);
@@ -300,8 +303,8 @@ public class GuessController {
 		if (!cutoff.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
-		Year year = new Year(TimeUtil.getCurrentYear(), db);
-		if (db.isFinishedYear(year)) {
+		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+		if (yearService.isFinishedYear(year)) {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		Flags flags = new Flags(yellow, red, safetyCar);

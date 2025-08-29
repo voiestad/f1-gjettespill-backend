@@ -3,6 +3,7 @@ package no.vebb.f1.controller.admin.season;
 import java.util.List;
 
 import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,11 +26,13 @@ public class ManageSeasonController {
     private final Database db;
     private final Importer importer;
     private final Cutoff cutoff;
+    private final YearService yearService;
 
-    public ManageSeasonController(Database db, Importer importer, Cutoff cutoff) {
+    public ManageSeasonController(Database db, Importer importer, Cutoff cutoff, YearService yearService) {
         this.db = db;
         this.importer = importer;
         this.cutoff = cutoff;
+        this.yearService = yearService;
     }
 
     @PostMapping("/reload")
@@ -38,7 +41,7 @@ public class ManageSeasonController {
         try {
             RaceId validRaceId = new RaceId(raceId, db);
             Year year = db.getYearFromRaceId(validRaceId);
-            if (db.isFinishedYear(year)) {
+            if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
             }
             importer.importRaceData(validRaceId);
@@ -56,8 +59,8 @@ public class ManageSeasonController {
             @RequestParam("year") int year,
             @RequestParam("id") int raceId,
             @RequestParam("newPosition") int position) {
-        Year validYear = new Year(year, db);
-        if (db.isFinishedYear(validYear)) {
+        Year validYear = new Year(year, yearService);
+        if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
@@ -98,8 +101,8 @@ public class ManageSeasonController {
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deleteRace(@RequestParam("year") int year, @RequestParam("id") int raceId) {
-        Year validYear = new Year(year, db);
-        if (db.isFinishedYear(validYear)) {
+        Year validYear = new Year(year, yearService);
+        if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
@@ -126,8 +129,8 @@ public class ManageSeasonController {
     @PostMapping("/add")
     @Transactional
     public ResponseEntity<?> addRace(@RequestParam("year") int year, @RequestParam("id") int raceId) {
-        Year validYear = new Year(year, db);
-        if (db.isFinishedYear(validYear)) {
+        Year validYear = new Year(year, yearService);
+        if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {

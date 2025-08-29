@@ -76,13 +76,8 @@ public class UserService {
         return user.filter(value -> db.isBingomaster(value.id())).isPresent();
     }
 
-	public boolean isLoggedInUser(UserEntity userEntity) {
-		Optional<UserEntity> optUser = loadUser();
-		if (optUser.isEmpty()) {
-			return false;
-		}
-		UserEntity userEntity = optUser.get();
-		return userEntity.id().equals(userEntity.id());
+	public boolean isLoggedInUser(UserEntity loggedInUserEntity) {
+		return loadUser().map(userEntity -> userEntity.id().equals(loggedInUserEntity.id())).orElse(false);
 	}
 
 	public List<UserEntity> getAllUsers() {

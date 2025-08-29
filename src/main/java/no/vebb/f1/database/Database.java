@@ -9,6 +9,7 @@ import no.vebb.f1.graph.GuesserPointsSeason;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.collection.userTables.Summary;
+import no.vebb.f1.year.YearService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -26,10 +27,12 @@ public class Database {
 
     private final JdbcTemplate jdbcTemplate;
     private final UserRespository userRespository;
+    private final YearService yearService;
 
-    public Database(JdbcTemplate jdbcTemplate, UserRespository userRespository) {
+    public Database(JdbcTemplate jdbcTemplate, UserRespository userRespository, YearService yearService) {
         this.jdbcTemplate = jdbcTemplate;
         this.userRespository = userRespository;
+        this.yearService = yearService;
     }
 
     /**
@@ -1007,18 +1010,6 @@ public class Database {
     }
 
     /**
-     * Checks if a season is a valid season. To be valid, it needs to have atleast one
-     * race in the RaceOrder table.
-     *
-     * @param year of season
-     * @return true if season is valid
-     */
-    public boolean isValidSeason(int year) {
-        final String validateSeason = "SELECT COUNT(*) FROM years WHERE year = ?;";
-        return jdbcTemplate.queryForObject(validateSeason, Integer.class, year) > 0;
-    }
-
-    /**
      * Checks if a race is a valid race within a season. To be valid, it needs to have a
      * table row in RaceOrder where both year and id are equal to input values.
      *
@@ -1029,19 +1020,6 @@ public class Database {
     public boolean isRaceInSeason(RaceId raceId, Year year) {
         final String validateRaceId = "SELECT COUNT(*) FROM race_order WHERE year = ? AND race_id = ?;";
         return jdbcTemplate.queryForObject(validateRaceId, Integer.class, year.value, raceId.value) > 0;
-    }
-
-    /**
-     * Gets a list of all valid years. I.E. years that are in RaceOrder table.
-     * Ordered descendingly.
-     *
-     * @return valid years
-     */
-    public List<Year> getAllValidYears() {
-        final String sql = "SELECT DISTINCT year FROM years ORDER BY year DESC;";
-        return jdbcTemplate.queryForList(sql, Integer.class).stream()
-                .map(Year::new)
-                .toList();
     }
 
     /**
@@ -1652,11 +1630,6 @@ public class Database {
                 .toList();
     }
 
-    public void addYear(int year) {
-        final String sql = "INSERT INTO years (year) values (?) ON CONFLICT DO NOTHING;";
-        jdbcTemplate.update(sql, year);
-    }
-
     public Summary getSummary(RaceId raceId, Year year, PublicUserDto user) {
         try {
             List<Map<String, Object>> categoriesRes;
@@ -1874,21 +1847,15 @@ public class Database {
     }
 
     public void finalizeYear(Year year) {
-        if (isFinishedYear(year)) {
+        if (yearService.isFinishedYear(year)) {
             return;
         }
-        final String markAsFinished = "INSERT INTO years_finished (year) VALUES (?);";
-        jdbcTemplate.update(markAsFinished, year.value);
+        yearService.finalizeYear(year);
         final String addPlacement = "INSERT INTO placements_year (year, user_id, placement) VALUES (?, ?, ?);";
         List<RankedGuesser> leaderboard = getLeaderboard(year);
         for (RankedGuesser rankedGuesser : leaderboard) {
             jdbcTemplate.update(addPlacement, year.value, rankedGuesser.guesser().id(), rankedGuesser.rank().value());
         }
-    }
-
-    public boolean isFinishedYear(Year year) {
-        final String sql = "SELECT COUNT(*) FROM years_finished WHERE year = ?;";
-        return jdbcTemplate.queryForObject(sql, Integer.class, year.value) > 0;
     }
 
     public Year getYearFromFlagId(int id) {

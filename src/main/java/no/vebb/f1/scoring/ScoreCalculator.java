@@ -13,6 +13,7 @@ import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
+import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +30,14 @@ import java.util.function.Function;
 public class ScoreCalculator {
     private final Database db;
     private final Cutoff cutoff;
+    private final YearService yearService;
 
     private static final Logger logger = LoggerFactory.getLogger(ScoreCalculator.class);
 
-    public ScoreCalculator(Database db, Cutoff cutoff) {
+    public ScoreCalculator(Database db, Cutoff cutoff, YearService yearService) {
         this.db = db;
         this.cutoff = cutoff;
+        this.yearService = yearService;
     }
 
     @Transactional
@@ -53,7 +56,7 @@ public class ScoreCalculator {
         if (cutoff.isAbleToGuessCurrentYear()) {
             return;
         }
-        Year year = new Year(TimeUtil.getCurrentYear(), db);
+        Year year = new Year(TimeUtil.getCurrentYear(), yearService);
         List<UserEntity> guessers = db.getSeasonGuessers(year);
         List<RaceId> raceIds = getSeasonRaceIds(year);
         for (RaceId raceId : raceIds) {

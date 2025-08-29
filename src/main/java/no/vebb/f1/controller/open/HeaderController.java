@@ -1,6 +1,7 @@
 package no.vebb.f1.controller.open;
 
 import no.vebb.f1.results.ResultService;
+import no.vebb.f1.year.YearService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +25,14 @@ public class HeaderController {
 	private final Cutoff cutoff;
 	private final UserService userService;
 	private final ResultService resultService;
+	private final YearService yearService;
 
-	public HeaderController(Database db, Cutoff cutoff, UserService userService, ResultService resultService) {
+	public HeaderController(Database db, Cutoff cutoff, UserService userService, ResultService resultService, YearService yearService) {
 		this.db = db;
 		this.cutoff = cutoff;
 		this.userService = userService;
 		this.resultService = resultService;
+		this.yearService = yearService;
 	}
 
 	@GetMapping("/api/public/header")
@@ -44,7 +47,7 @@ public class HeaderController {
 
 	private boolean isRaceGuess() {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 			RaceId raceId = db.getLatestRaceForPlaceGuess(year).id;
 			return !cutoff.isAbleToGuessRace(raceId);
 		} catch (InvalidYearException | NoAvailableRaceException | EmptyResultDataAccessException e) {

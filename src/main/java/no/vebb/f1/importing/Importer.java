@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.scoring.ScoreCalculator;
+import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -39,19 +40,21 @@ public class Importer {
 	private final MailService mailService;
 	private final ScoreCalculator scoreCalculator;
 	private final ResultService resultService;
+	private final YearService yearService;
 
-	public Importer(Database db, MailService mailService, ScoreCalculator scoreCalculator, ResultService resultService) {
+	public Importer(Database db, MailService mailService, ScoreCalculator scoreCalculator, ResultService resultService, YearService yearService) {
 		this.db = db;
 		this.mailService = mailService;
 		this.scoreCalculator = scoreCalculator;
 		this.resultService = resultService;
+		this.yearService = yearService;
 	}
 
 	@Transactional
 	public void importData() {
 		logger.info("Starting import of data to database");
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 			Map<Year, List<RaceId>> racesToImportFromList = getActiveRaces();
 			boolean shouldImportStandings = false;
 
@@ -146,7 +149,7 @@ public class Importer {
 			logger.info("No change in race result");
 		}
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 			RaceId newestRaceId = db.getLatestRaceId(year);
 			if (raceId.equals(newestRaceId)) {
 				logger.info("Race that was manually reloaded is the newest race. Will import standings as well");

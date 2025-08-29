@@ -1,5 +1,6 @@
 package no.vebb.f1.controller.open;
 
+import no.vebb.f1.year.YearService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,16 +24,18 @@ public class RaceGuessController {
 
 	private final Cutoff cutoff;
 	private final Database db;
+	private final YearService yearService;
 
-	public RaceGuessController(Cutoff cutoff, Database db) {
+	public RaceGuessController(Cutoff cutoff, Database db, YearService yearService) {
 		this.cutoff = cutoff;
 		this.db = db;
+		this.yearService = yearService;
 	}
 
 	@GetMapping
 	public ResponseEntity<RaceGuessResponse> guessOverview() {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 			CutoffRace race = db.getLatestRaceForPlaceGuess(year);
 			if (cutoff.isAbleToGuessRace(race.id)) {
 				return new ResponseEntity<>(HttpStatus.FORBIDDEN);

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,15 +23,17 @@ import no.vebb.f1.util.exception.InvalidYearException;
 public class ScoreController {
 
 	private final Database db;
+	private final YearService yearService;
 
-	public ScoreController(Database db) {
+	public ScoreController(Database db, YearService yearService) {
 		this.db = db;
+		this.yearService = yearService;
 	}
 
 	@GetMapping("/api/public/score")
 	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTables() {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 			var res = getScoreMappingTables(year, db);
 			return new ResponseEntity<>(res, HttpStatus.OK); 
 		} catch (InvalidYearException e) {	
@@ -41,7 +44,7 @@ public class ScoreController {
 	@GetMapping("/api/public/score/{year}")
 	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTablesYear(@PathVariable("year") int year) {
 		try {
-			Year validYear = new Year(year, db);
+			Year validYear = new Year(year, yearService);
 			var res = getScoreMappingTables(validYear, db);
 			return new ResponseEntity<>(res, HttpStatus.OK);
 		} catch (InvalidYearException e) {

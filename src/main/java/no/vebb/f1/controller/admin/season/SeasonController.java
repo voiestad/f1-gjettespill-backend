@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +24,13 @@ public class SeasonController {
     private final Database db;
     private final Importer importer;
     private final Cutoff cutoff;
+    private final YearService yearService;
 
-    public SeasonController(Database db, Importer importer, Cutoff cutoff) {
+    public SeasonController(Database db, Importer importer, Cutoff cutoff, YearService yearService) {
         this.db = db;
         this.importer = importer;
         this.cutoff = cutoff;
+        this.yearService = yearService;
     }
 
     @PostMapping("/add")
@@ -37,13 +40,13 @@ public class SeasonController {
             @RequestParam(name = "start", required = false) Integer start,
             @RequestParam(name = "end", required = false) Integer end) {
         try {
-            new Year(year, db);
+            new Year(year, yearService);
             String error = String.format("Sesongen %d er allerede lagt til", year);
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         } catch (InvalidYearException ignored) {
         }
-        db.addYear(year);
-        Year seasonYear = new Year(year, db);
+        yearService.addYear(year);
+        Year seasonYear = new Year(year, yearService);
         Instant time = cutoff.getDefaultInstant(seasonYear);
         db.setCutoffYear(time, seasonYear);
         if (start == null || end == null) {

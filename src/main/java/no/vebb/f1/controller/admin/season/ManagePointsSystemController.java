@@ -1,6 +1,7 @@
 package no.vebb.f1.controller.admin.season;
 
 import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.year.YearService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +22,11 @@ import no.vebb.f1.util.exception.InvalidPointsException;
 public class ManagePointsSystemController {
 
     private final Database db;
+    private final YearService yearService;
 
-    public ManagePointsSystemController(Database db) {
+    public ManagePointsSystemController(Database db, YearService yearService) {
         this.db = db;
+        this.yearService = yearService;
     }
 
     @PostMapping("/add")
@@ -31,8 +34,8 @@ public class ManagePointsSystemController {
     public ResponseEntity<?> addPointsMapping(
             @RequestParam("year") int year,
             @RequestParam("category") String category) {
-        Year validYear = new Year(year, db);
-        if (db.isFinishedYear(validYear)) {
+        Year validYear = new Year(year, yearService);
+        if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         Diff newDiff;
@@ -55,8 +58,8 @@ public class ManagePointsSystemController {
     public ResponseEntity<?> deletePointsMapping(
             @RequestParam("year") int year,
             @RequestParam("category") String category) {
-        Year validYear = new Year(year, db);
-        if (db.isFinishedYear(validYear)) {
+        Year validYear = new Year(year, yearService);
+        if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
@@ -76,8 +79,8 @@ public class ManagePointsSystemController {
             @RequestParam("category") String category,
             @RequestParam("diff") int diff,
             @RequestParam("points") int points) {
-        Year validYear = new Year(year, db);
-        if (db.isFinishedYear(validYear)) {
+        Year validYear = new Year(year, yearService);
+        if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {

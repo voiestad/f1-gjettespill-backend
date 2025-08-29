@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executors;
 
+import no.vebb.f1.year.YearService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.scheduling.Trigger;
@@ -22,10 +23,12 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 
 	private final Importer importer;
 	private final Database db;
+	private final YearService yearService;
 
-	public ImportSchedulingConfig(Importer importer, Database db) {
+	public ImportSchedulingConfig(Importer importer, Database db, YearService yearService) {
 		this.importer = importer;
 		this.db = db;
+		this.yearService = yearService;
 	}
 
 	@Override
@@ -36,7 +39,7 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 
 	private Duration getDelay() {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), db);
+			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 			Duration delay = getDelayCurrentRace(year);
 			if (delay != null) {
 				return delay;

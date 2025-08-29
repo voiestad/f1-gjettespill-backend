@@ -2,17 +2,17 @@ package no.vebb.f1.util.domainPrimitive;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.year.YearService;
 
 public class Year {
 
 	public final int value;
-	private Database db;
+	private YearService yearService;
 
-	public Year(int value, Database db) throws InvalidYearException {
+	public Year(int value, YearService yearService) throws InvalidYearException {
 		this.value = value;
-		this.db = db;
+		this.yearService = yearService;
 		validate();
 	}
 
@@ -21,7 +21,7 @@ public class Year {
 	}
 
 	private void validate() throws InvalidYearException {
-		if (!db.isValidSeason(value)) {
+		if (!yearService.isValidSeason(value)) {
 			throw new InvalidYearException("Year : " + value + " is not a valid season");
 		}
 	}

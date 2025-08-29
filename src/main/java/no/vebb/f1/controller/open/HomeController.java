@@ -4,6 +4,7 @@ import java.util.List;
 
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.util.response.HomePageResponse;
+import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,10 +23,12 @@ public class HomeController {
 
 	private final Database db;
 	private final Graph graph;
+	private final YearService yearService;
 
-	public HomeController(Database db, Graph graphCache) {
+	public HomeController(Database db, Graph graphCache, YearService yearService) {
 		this.db = db;
 		this.graph = graphCache;
+		this.yearService = yearService;
 	}
 
 	@GetMapping("/api/public/home")
@@ -35,7 +38,7 @@ public class HomeController {
 		List<GuesserPointsSeason> graph = null;
 		try {
 			if (leaderboard == null) {
-				Year year = new Year(TimeUtil.getCurrentYear(), db);
+				Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 				guessers = db.getSeasonGuessers(year).stream()
 					.map(UserEntity::username)
 					.toList();

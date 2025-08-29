@@ -8,6 +8,7 @@ import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.scoring.UserScoreResponse;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.exception.InvalidRaceException;
+import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,11 +31,13 @@ public class ProfileController {
     private final UserService userService;
     private final Cutoff cutoff;
     private final Database db;
+    private final YearService yearService;
 
-    public ProfileController(UserService userService, Cutoff cutoff, Database db) {
+    public ProfileController(UserService userService, Cutoff cutoff, Database db, YearService yearService) {
         this.userService = userService;
         this.cutoff = cutoff;
         this.db = db;
+        this.yearService = yearService;
     }
 
     @GetMapping("/api/public/user/{id}")
@@ -84,7 +87,7 @@ public class ProfileController {
 
     private ResponseEntity<UserScoreResponse> getUpToDate(UserEntity userEntity) {
         try {
-            Year year = new Year(TimeUtil.getCurrentYear(), db);
+            Year year = new Year(TimeUtil.getCurrentYear(), yearService);
             if (isAbleToSeeGuesses(userEntity, year)) {
                 UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);
@@ -97,7 +100,7 @@ public class ProfileController {
 
     private ResponseEntity<UserScoreResponse> getGuesserProfileYear(UserEntity userEntity, int inputYear) {
         try {
-            Year year = new Year(inputYear, db);
+            Year year = new Year(inputYear, yearService);
             if (isAbleToSeeGuesses(userEntity, year)) {
                 UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, db);
                 return new ResponseEntity<>(res, HttpStatus.OK);

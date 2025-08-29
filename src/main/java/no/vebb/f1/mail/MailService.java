@@ -12,6 +12,7 @@ import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,11 +38,12 @@ public class MailService {
     private final AdminRepository adminRepository;
     private final MailOptionRepository mailOptionRepository;
     private final MailPreferenceRepository mailPreferenceRepository;
+    private final YearService yearService;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, Database db, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository) {
+    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, Database db, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository, YearService yearService) {
         this.mailingListRepository = mailingListRepository;
         this.mailSender = mailSender;
         this.db = db;
@@ -50,6 +52,7 @@ public class MailService {
         this.adminRepository = adminRepository;
         this.mailOptionRepository = mailOptionRepository;
         this.mailPreferenceRepository = mailPreferenceRepository;
+        this.yearService = yearService;
     }
 
     public void addToMailingList(UUID userId, String email) {
@@ -59,7 +62,7 @@ public class MailService {
     @Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
     public void notifyUsers() {
         try {
-            CutoffRace race = db.getLatestRaceForPlaceGuess(new Year(TimeUtil.getCurrentYear(), db));
+            CutoffRace race = db.getLatestRaceForPlaceGuess(new Year(TimeUtil.getCurrentYear(), yearService));
             RaceId raceId = race.id;
             long timeLeft = db.getTimeLeftToGuessRace(raceId);
             if (timeLeft < 0) {
@@ -191,7 +194,7 @@ public class MailService {
     }
 
     public List<MailOption> getMailingOptions() {
-        return mailOptionRepository.findAllOrderByMailOption().stream()
+        return mailOptionRepository.findAllByOrderByMailOption().stream()
                 .map(MailOptionEntity::mailOption)
                 .map(MailOption::new)
                 .toList();

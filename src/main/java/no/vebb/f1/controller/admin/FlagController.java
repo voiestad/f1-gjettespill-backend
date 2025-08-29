@@ -4,6 +4,7 @@ import java.util.List;
 
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +24,11 @@ import no.vebb.f1.util.exception.InvalidSessionTypeException;
 public class FlagController {
 
     private final Database db;
+    private final YearService yearService;
 
-    public FlagController(Database db) {
+    public FlagController(Database db, YearService yearService) {
         this.db = db;
+        this.yearService = yearService;
     }
 
     @GetMapping("/types")
@@ -59,7 +62,7 @@ public class FlagController {
         try {
             RaceId validRaceId = new RaceId(raceId, db);
             Year year = db.getYearFromRaceId(validRaceId);
-            if (db.isFinishedYear(year)) {
+            if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
             }
             Flag validFlag = new Flag(flag, db);
@@ -79,7 +82,7 @@ public class FlagController {
     @Transactional
     public ResponseEntity<?> deleteFlag(@RequestParam("id") int id) {
         Year year = db.getYearFromFlagId(id);
-        if (db.isFinishedYear(year)) {
+        if (yearService.isFinishedYear(year)) {
             throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
         }
         db.deleteFlagStatsById(id);

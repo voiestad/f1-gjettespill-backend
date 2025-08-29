@@ -3,6 +3,7 @@ package no.vebb.f1.util;
 import java.time.Instant;
 import java.util.Calendar;
 
+import no.vebb.f1.year.YearService;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.database.Database;
@@ -15,14 +16,16 @@ import no.vebb.f1.util.exception.NoAvailableRaceException;
 public class Cutoff {
 	
 	private final Database db;
+	private final YearService yearService;
 
-	public Cutoff(Database db) {
+	public Cutoff(Database db, YearService yearService) {
 		this.db = db;
+		this.yearService = yearService;
 	}
 
 	public boolean isAbleToGuessCurrentYear() {
 		try {
-			return isAbleToGuessYear(new Year(TimeUtil.getCurrentYear(), db));	
+			return isAbleToGuessYear(new Year(TimeUtil.getCurrentYear(), yearService));
 		} catch (InvalidYearException e) {
 			return false;
 		}

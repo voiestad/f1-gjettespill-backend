@@ -8,6 +8,7 @@ import java.util.List;
 import no.vebb.f1.scoring.ScoreCalculator;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.util.response.CutoffResponse;
+import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +27,17 @@ public class CutoffController {
 
     private final Database db;
     private final ScoreCalculator scoreCalculator;
+    private final YearService yearService;
 
-    public CutoffController(Database db, ScoreCalculator scoreCalculator) {
+    public CutoffController(Database db, ScoreCalculator scoreCalculator, YearService yearService) {
         this.db = db;
         this.scoreCalculator = scoreCalculator;
+        this.yearService = yearService;
     }
 
     @GetMapping("/list/{year}")
     public ResponseEntity<CutoffResponse> manageCutoff(@PathVariable("year") int year) {
-        Year seasonYear = new Year(year, db);
+        Year seasonYear = new Year(year, yearService);
         List<CutoffRace> races = db.getCutoffRaces(seasonYear);
         LocalDateTime cutoffYear = db.getCutoffYearLocalTime(seasonYear);
         CutoffResponse res = new CutoffResponse(races, cutoffYear);
@@ -49,7 +52,7 @@ public class CutoffController {
         try {
             RaceId validRaceId = new RaceId(raceId, db);
             Year year = db.getYearFromRaceId(validRaceId);
-            if (db.isFinishedYear(year)) {
+            if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
             }
             Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
@@ -65,8 +68,8 @@ public class CutoffController {
     public ResponseEntity<String> setCutoffYear(
             @RequestParam("year") int year,
             @RequestParam("cutoff") String cutoff) {
-        Year validYear = new Year(year, db);
-        if (db.isFinishedYear(validYear)) {
+        Year validYear = new Year(year, yearService);
+        if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
