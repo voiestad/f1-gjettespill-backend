@@ -397,7 +397,7 @@ public class Database {
                 FROM users u
                 JOIN mailing_list ml ON ml.user_id = u.user_id
                 WHERE u.user_id NOT IN
-                      (SELECT user_id FROM driver_place_guesses WHERE race_id = ? GROUP BY user_id HAVING COUNT(*) == 2);
+                      (SELECT user_id FROM driver_place_guesses WHERE race_id = ? GROUP BY user_id HAVING COUNT(*) = 2);
                 """;
         List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, raceId.value);
         return sqlRes.stream()
