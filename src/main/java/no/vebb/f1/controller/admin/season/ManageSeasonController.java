@@ -13,9 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
-import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidRaceException;
@@ -24,16 +23,14 @@ import no.vebb.f1.util.exception.InvalidRaceException;
 @RequestMapping("/api/admin/season/manage")
 public class ManageSeasonController {
 
-    private final Database db;
     private final Importer importer;
-    private final Cutoff cutoff;
+    private final CutoffService cutoffService;
     private final YearService yearService;
     private final RaceService raceService;
 
-    public ManageSeasonController(Database db, Importer importer, Cutoff cutoff, YearService yearService, RaceService raceService) {
-        this.db = db;
+    public ManageSeasonController(Importer importer, CutoffService cutoffService, YearService yearService, RaceService raceService) {
         this.importer = importer;
-        this.cutoff = cutoff;
+        this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
     }
@@ -141,7 +138,7 @@ public class ManageSeasonController {
         importer.importRaceName(raceId, validYear);
         importer.importData();
         RaceId validRaceId = new RaceId(raceId, raceService);
-        db.setCutoffRace(cutoff.getDefaultInstant(validYear), validRaceId);
+        cutoffService.setCutoffRace(cutoffService.getDefaultInstant(validYear), validRaceId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

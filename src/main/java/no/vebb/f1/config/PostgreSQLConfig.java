@@ -333,14 +333,14 @@ public class PostgreSQLConfig {
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS race_cutoffs (
 					race_id INTEGER PRIMARY KEY,
-					cutoff TEXT NOT NULL,
+					cutoff TIMESTAMPTZ NOT NULL,
 					FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
 				);
 			""");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS year_cutoffs (
 					year INTEGER PRIMARY KEY,
-					cutoff TEXT NOT NULL,
+					cutoff TIMESTAMPTZ NOT NULL,
 					FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 				);
 			""");

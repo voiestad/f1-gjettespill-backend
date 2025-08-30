@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Flags;
 import no.vebb.f1.util.collection.Race;
@@ -47,16 +47,16 @@ public class GuessController {
 	private static final Logger logger = LoggerFactory.getLogger(GuessController.class);
 	private final Database db;
 	private final UserService userService;
-	private final Cutoff cutoff;
+	private final CutoffService cutoffService;
 	private final ResultService resultService;
 	private final YearService yearService;
 	private final RaceService raceService;
 	private final CompetitorService competitorService;
 
-	public GuessController(Database db, UserService userService, Cutoff cutoff, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService) {
+	public GuessController(Database db, UserService userService, CutoffService cutoffService, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService) {
 		this.db = db;
 		this.userService = userService;
-		this.cutoff = cutoff;
+		this.cutoffService = cutoffService;
 		this.resultService = resultService;
 		this.yearService = yearService;
 		this.raceService = raceService;
@@ -73,7 +73,7 @@ public class GuessController {
 			}
 		} catch (InvalidYearException ignored) {
 		}
-		if (cutoff.isAbleToGuessCurrentYear()) {
+		if (cutoffService.isAbleToGuessCurrentYear()) {
 			res.add(new Category("DRIVER"));
 			res.add(new Category("CONSTRUCTOR"));
 			res.add(new Category("FLAG"));
@@ -91,7 +91,7 @@ public class GuessController {
 	 */
 	@GetMapping("/driver")
 	public ResponseEntity<CutoffCompetitors<Driver>> rankDrivers() {
-		if (!cutoff.isAbleToGuessCurrentYear()) {
+		if (!cutoffService.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
@@ -99,7 +99,7 @@ public class GuessController {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		UUID id = userService.getUser().id();
-		long timeLeftToGuess = db.getTimeLeftToGuessYear();
+		long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear();
 		List<ColoredCompetitor<Driver>> competitors = db.getDriversGuess(id, year);
 		CutoffCompetitors<Driver> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
 		return new ResponseEntity<>(res, HttpStatus.OK);
@@ -108,7 +108,7 @@ public class GuessController {
 	@PostMapping("/driver")
 	@Transactional
 	public ResponseEntity<?> rankDrivers(@RequestParam List<String> rankedCompetitors) {
-		if (!cutoff.isAbleToGuessCurrentYear()) {
+		if (!cutoffService.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
@@ -141,7 +141,7 @@ public class GuessController {
 
 	@GetMapping("/constructor")
 	public ResponseEntity<CutoffCompetitors<Constructor>> rankConstructors() {
-		if (!cutoff.isAbleToGuessCurrentYear()) {
+		if (!cutoffService.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
@@ -149,7 +149,7 @@ public class GuessController {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		UUID id = userService.getUser().id();
-		long timeLeftToGuess = db.getTimeLeftToGuessYear();
+		long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear();
 		List<ColoredCompetitor<Constructor>> competitors = db.getConstructorsGuess(id, year);
 		CutoffCompetitors<Constructor> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
 		return new ResponseEntity<>(res, HttpStatus.OK);
@@ -158,7 +158,7 @@ public class GuessController {
 	@PostMapping("/constructor")
 	@Transactional
 	public ResponseEntity<?> rankConstructors(@RequestParam List<String> rankedCompetitors) {
-		if (!cutoff.isAbleToGuessCurrentYear()) {
+		if (!cutoffService.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
@@ -241,7 +241,7 @@ public class GuessController {
 			RaceOrderEntity raceOrderEntity = raceService.getRaceFromId(getRaceIdToGuess());
 			RaceId raceId = new RaceId(raceOrderEntity.raceId());
 			Race race = new Race(raceOrderEntity.position(), raceOrderEntity.name(), raceId, year);
-			long timeLeftToGuess = db.getTimeLeftToGuessRace(raceId);
+			long timeLeftToGuess = cutoffService.getTimeLeftToGuessRace(raceId);
 			List<ColoredCompetitor<Driver>> drivers = db.getDriversFromStartingGridWithColors(raceId);
 			UUID id = userService.getUser().id();
 			try {
@@ -284,7 +284,7 @@ public class GuessController {
 
 	private RaceId getRaceIdToGuess() throws NoAvailableRaceException {
         RaceId raceId = resultService.getCurrentRaceIdToGuess();
-        if (!cutoff.isAbleToGuessRace(raceId)) {
+        if (!cutoffService.isAbleToGuessRace(raceId)) {
             throw new NoAvailableRaceException("Cutoff has been passed");
         }
         return raceId;
@@ -292,10 +292,10 @@ public class GuessController {
 
 	@GetMapping("/flag")
 	public ResponseEntity<CutoffFlags> guessFlags() {
-		if (!cutoff.isAbleToGuessCurrentYear()) {
+		if (!cutoffService.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
-		long timeLeftToGuess = db.getTimeLeftToGuessYear();
+		long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear();
 		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 		if (yearService.isFinishedYear(year)) {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
@@ -309,7 +309,7 @@ public class GuessController {
 	@Transactional
 	public ResponseEntity<?> guessFlags(@RequestParam int yellow, @RequestParam int red,
 			@RequestParam int safetyCar) {
-		if (!cutoff.isAbleToGuessCurrentYear()) {
+		if (!cutoffService.isAbleToGuessCurrentYear()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), yearService);

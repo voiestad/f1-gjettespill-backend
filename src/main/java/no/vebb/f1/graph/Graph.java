@@ -6,7 +6,7 @@ import no.vebb.f1.year.YearService;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.RankedGuesser;
 import no.vebb.f1.util.domainPrimitive.Year;
@@ -15,17 +15,17 @@ import no.vebb.f1.util.domainPrimitive.Year;
 public class Graph {
 
 	private final Database db;
-	private final Cutoff cutoff;
+	private final CutoffService cutoffService;
 	private final YearService yearService;
 
-	public Graph(Database db, Cutoff cutoff, YearService yearService) {
+	public Graph(Database db, CutoffService cutoffService, YearService yearService) {
 		this.db = db;
-		this.cutoff = cutoff;
+		this.cutoffService = cutoffService;
 		this.yearService = yearService;
 	}
 
 	public List<GuesserPointsSeason> getGraph() {
-		if (cutoff.isAbleToGuessCurrentYear()) {
+		if (cutoffService.isAbleToGuessCurrentYear()) {
 			return null;
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
@@ -33,7 +33,7 @@ public class Graph {
 	}
 
 	public List<RankedGuesser> getleaderboard() {
-		if (cutoff.isAbleToGuessCurrentYear()) {
+		if (cutoffService.isAbleToGuessCurrentYear()) {
 			return null;
 		}
 		Year year = new Year(TimeUtil.getCurrentYear(), yearService);

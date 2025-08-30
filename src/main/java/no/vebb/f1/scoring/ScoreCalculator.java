@@ -4,7 +4,7 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserEntity;
-import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Placement;
 import no.vebb.f1.util.collection.userTables.Summary;
@@ -30,15 +30,15 @@ import java.util.function.Function;
 @Component
 public class ScoreCalculator {
     private final Database db;
-    private final Cutoff cutoff;
+    private final CutoffService cutoffService;
     private final YearService yearService;
 
     private static final Logger logger = LoggerFactory.getLogger(ScoreCalculator.class);
     private final RaceService raceService;
 
-    public ScoreCalculator(Database db, Cutoff cutoff, YearService yearService, RaceService raceService) {
+    public ScoreCalculator(Database db, CutoffService cutoffService, YearService yearService, RaceService raceService) {
         this.db = db;
-        this.cutoff = cutoff;
+        this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
     }
@@ -56,7 +56,7 @@ public class ScoreCalculator {
     }
 
     private void calculate() {
-        if (cutoff.isAbleToGuessCurrentYear()) {
+        if (cutoffService.isAbleToGuessCurrentYear()) {
             return;
         }
         Year year = new Year(TimeUtil.getCurrentYear(), yearService);

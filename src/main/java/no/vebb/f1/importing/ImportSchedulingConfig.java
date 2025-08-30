@@ -4,7 +4,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executors;
 
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceService;
+import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.year.YearService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -13,7 +15,6 @@ import org.springframework.scheduling.TriggerContext;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
@@ -23,15 +24,15 @@ import no.vebb.f1.util.exception.InvalidYearException;
 public class ImportSchedulingConfig implements SchedulingConfigurer {
 
 	private final Importer importer;
-	private final Database db;
 	private final YearService yearService;
 	private final RaceService raceService;
+	private final CutoffService cutoffService;
 
-	public ImportSchedulingConfig(Importer importer, Database db, YearService yearService, RaceService raceService) {
+	public ImportSchedulingConfig(Importer importer, YearService yearService, RaceService raceService, CutoffService cutoffService) {
 		this.importer = importer;
-		this.db = db;
 		this.yearService = yearService;
 		this.raceService = raceService;
+		this.cutoffService = cutoffService;
 	}
 
 	@Override
@@ -56,7 +57,7 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 	private Duration getDelayCurrentRace(Year year) {
 		try {
 			RaceId currentRaceId = raceService.getLatestStartingGridRaceId(year);
-			long timeLeft = db.getTimeLeftToGuessRaceHours(currentRaceId);
+			long timeLeft = cutoffService.getTimeLeftToGuessRaceHours(currentRaceId);
 			boolean isResultImported = currentRaceId.equals(raceService.getLatestRaceId(year));
 			boolean isImportPeriod = timeLeft <= 36;
 			boolean isRefreshPeriod = timeLeft >= -24;
@@ -66,21 +67,21 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 			if (isRefreshPeriod && isResultImported) {
 				return Duration.ofMillis(TimeUtil.HALF_HOUR);
 			}
-		} catch (EmptyResultDataAccessException | InvalidYearException ignored) {
+		} catch (EmptyResultDataAccessException | InvalidYearException | NoAvailableRaceException ignored) {
 		}
-		return null;
+			return null;
 	}
 
 	private Duration getDelayUpcomingRace(Year year) {
 		try {
 			RaceId upcomingRaceId = raceService.getUpcomingRaceId(year);
-			long timeLeft = db.getTimeLeftToGuessRaceHours(upcomingRaceId);
+			long timeLeft = cutoffService.getTimeLeftToGuessRaceHours(upcomingRaceId);
 			boolean shouldImport = timeLeft <= 36;
 			if (shouldImport) {
 				return Duration.ofMillis(TimeUtil.TEN_MINUTES);
 			}
 			return Duration.ofMillis(TimeUtil.HOUR * 8);
-		} catch (InvalidYearException e) {
+		} catch (InvalidYearException | NoAvailableRaceException e) {
 			return Duration.ofMillis(TimeUtil.DAY); 
 		}
 	}

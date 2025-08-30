@@ -4,6 +4,7 @@ import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.database.Database;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
@@ -13,6 +14,7 @@ import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,11 +43,12 @@ public class MailService {
     private final MailPreferenceRepository mailPreferenceRepository;
     private final YearService yearService;
     private final RaceService raceService;
+    private final CutoffService cutoffService;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, Database db, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository, YearService yearService, RaceService raceService) {
+    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, Database db, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository, YearService yearService, RaceService raceService, CutoffService cutoffService) {
         this.mailingListRepository = mailingListRepository;
         this.mailSender = mailSender;
         this.db = db;
@@ -56,6 +59,7 @@ public class MailService {
         this.mailPreferenceRepository = mailPreferenceRepository;
         this.yearService = yearService;
         this.raceService = raceService;
+        this.cutoffService = cutoffService;
     }
 
     public void addToMailingList(UUID userId, String email) {
@@ -67,7 +71,7 @@ public class MailService {
         try {
             RaceOrderEntity race = raceService.getLatestRaceForPlaceGuess(new Year(TimeUtil.getCurrentYear(), yearService));
             RaceId raceId = new RaceId(race.raceId());
-            long timeLeft = db.getTimeLeftToGuessRace(raceId);
+            long timeLeft = cutoffService.getTimeLeftToGuessRace(raceId);
             if (timeLeft < 0) {
                 return;
             }
@@ -104,7 +108,7 @@ public class MailService {
                 }
             }
             notifiedRepository.saveAll(notifications);
-        } catch (InvalidYearException | EmptyResultDataAccessException ignored) {
+        } catch (InvalidYearException | EmptyResultDataAccessException | NoAvailableRaceException ignored) {
         }
     }
 

@@ -1,8 +1,5 @@
 package no.vebb.f1.database;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import no.vebb.f1.graph.GuesserPointsSeason;
@@ -14,10 +11,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import no.vebb.f1.util.*;
 import no.vebb.f1.util.collection.*;
 import no.vebb.f1.util.domainPrimitive.*;
-import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserMail;
 
@@ -33,20 +28,6 @@ public class Database {
         this.jdbcTemplate = jdbcTemplate;
         this.userRespository = userRespository;
         this.yearService = yearService;
-    }
-
-    public Instant getCutoffYear(Year year) throws EmptyResultDataAccessException {
-        final String getCutoff = "SELECT cutoff FROM year_cutoffs WHERE year = ?;";
-        return Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, year.value));
-    }
-
-    public Instant getCutoffRace(RaceId raceId) throws NoAvailableRaceException {
-        try {
-            final String getCutoff = "SELECT cutoff FROM race_cutoffs WHERE race_id = ?;";
-            return Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceId.value));
-        } catch (EmptyResultDataAccessException e) {
-            throw new NoAvailableRaceException("There is no cutoff for the given raceId '" + raceId + "'");
-        }
     }
 
     public List<Map<String, Object>> getDataForFlagTable(int racePos, Year year, UUID userId) {
@@ -186,25 +167,6 @@ public class Database {
             }
         }
         return flags;
-    }
-
-    public long getTimeLeftToGuessRace(RaceId raceId) {
-        Instant now = Instant.now();
-        final String getCutoff = "SELECT cutoff FROM race_cutoffs WHERE race_id = ?;";
-        Instant cutoff = Instant.parse(jdbcTemplate.queryForObject(getCutoff, String.class, raceId.value));
-        return Duration.between(now, cutoff).toSeconds();
-    }
-
-    public int getTimeLeftToGuessRaceHours(RaceId raceId) {
-        return (int) (getTimeLeftToGuessRace(raceId) / 3600L);
-    }
-
-    public long getTimeLeftToGuessYear() {
-        Instant now = Instant.now();
-        final String getCutoff = "SELECT cutoff FROM year_cutoffs WHERE year = ?;";
-        Instant cutoffYear = Instant
-                .parse(jdbcTemplate.queryForObject(getCutoff, String.class, TimeUtil.getCurrentYear()));
-        return Duration.between(now, cutoffYear).toSeconds();
     }
 
     public List<Driver> getDriversFromStartingGrid(RaceId raceId) {
@@ -405,52 +367,6 @@ public class Database {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .toList();
-    }
-
-    public List<CutoffRace> getCutoffRaces(Year year) {
-        List<CutoffRace> races = new ArrayList<>();
-        final String getCutoffRaces = """
-                SELECT r.race_id as id, r.race_name as name, rc.cutoff as cutoff, ro.year as year, ro.position as position
-                FROM race_cutoffs rc
-                JOIN race_order ro ON ro.race_id = rc.race_id
-                JOIN races r ON ro.race_id = r.race_id
-                WHERE ro.year = ?
-                ORDER BY ro.position;
-                """;
-        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(getCutoffRaces, year.value);
-        for (Map<String, Object> row : sqlRes) {
-            LocalDateTime cutoff = TimeUtil.instantToLocalTime(Instant.parse((String) row.get("cutoff")));
-            String name = (String) row.get("name");
-            int id = (int) row.get("id");
-            int position = (int) row.get("position");
-            RaceId raceId = new RaceId(id);
-            CutoffRace race = new CutoffRace(position, name, raceId, cutoff, year);
-            races.add(race);
-        }
-        return races;
-    }
-
-    public LocalDateTime getCutoffYearLocalTime(Year year) {
-        return TimeUtil.instantToLocalTime(getCutoffYear(year));
-    }
-
-    public void setCutoffRace(Instant cutoffTime, RaceId raceId) {
-        final String setCutoffTime = """
-            INSERT INTO race_cutoffs (race_id, cutoff)
-            VALUES (?, ?)
-            ON CONFLICT (race_id)
-            DO UPDATE SET cutoff = EXCLUDED.cutoff;
-        """;
-        jdbcTemplate.update(setCutoffTime, raceId.value, cutoffTime.toString());
-    }
-
-    public void setCutoffYear(Instant cutoffTime, Year year) {
-        final String setCutoffTime = """
-            INSERT INTO year_cutoffs (year, cutoff) VALUES (?, ?)
-            ON CONFLICT (year)
-            DO UPDATE SET cutoff = EXCLUDED.cutoff;
-        """;
-        jdbcTemplate.update(setCutoffTime, year.value, cutoffTime.toString());
     }
 
     public List<RegisteredFlag> getRegisteredFlags(RaceId raceId) {

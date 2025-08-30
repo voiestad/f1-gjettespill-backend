@@ -21,7 +21,7 @@ import no.vebb.f1.database.Database;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -30,14 +30,14 @@ import no.vebb.f1.util.exception.InvalidYearException;
 public class ProfileController {
 
     private final UserService userService;
-    private final Cutoff cutoff;
+    private final CutoffService cutoffService;
     private final Database db;
     private final YearService yearService;
     private final RaceService raceService;
 
-    public ProfileController(UserService userService, Cutoff cutoff, Database db, YearService yearService, RaceService raceService) {
+    public ProfileController(UserService userService, CutoffService cutoffService, Database db, YearService yearService, RaceService raceService) {
         this.userService = userService;
-        this.cutoff = cutoff;
+        this.cutoffService = cutoffService;
         this.db = db;
         this.yearService = yearService;
         this.raceService = raceService;
@@ -115,7 +115,7 @@ public class ProfileController {
     }
 
     private boolean isAbleToSeeGuesses(UserEntity userEntity, Year year) {
-        return !cutoff.isAbleToGuessYear(year) || userService.isLoggedInUser(userEntity);
+        return !cutoffService.isAbleToGuessYear(year) || userService.isLoggedInUser(userEntity);
     }
 
     @GetMapping("/api/public/user/list")

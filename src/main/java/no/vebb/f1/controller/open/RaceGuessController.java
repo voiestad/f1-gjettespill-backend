@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.database.Database;
-import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Year;
@@ -24,13 +24,13 @@ import no.vebb.f1.util.response.RaceGuessResponse;
 @RequestMapping("/api/public/race-guess")
 public class RaceGuessController {
 
-	private final Cutoff cutoff;
+	private final CutoffService cutoffService;
 	private final Database db;
 	private final YearService yearService;
 	private final RaceService raceService;
 
-	public RaceGuessController(Cutoff cutoff, Database db, YearService yearService, RaceService raceService) {
-		this.cutoff = cutoff;
+	public RaceGuessController(CutoffService cutoffService, Database db, YearService yearService, RaceService raceService) {
+		this.cutoffService = cutoffService;
 		this.db = db;
 		this.yearService = yearService;
 		this.raceService = raceService;
@@ -42,7 +42,7 @@ public class RaceGuessController {
 			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 			RaceOrderEntity race = raceService.getLatestRaceForPlaceGuess(year);
 			RaceId raceId = new RaceId(race.raceId());
-			if (cutoff.isAbleToGuessRace(raceId)) {
+			if (cutoffService.isAbleToGuessRace(raceId)) {
 				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}
 			var first = db.getUserGuessesDriverPlace(raceId, new Category("FIRST", db));

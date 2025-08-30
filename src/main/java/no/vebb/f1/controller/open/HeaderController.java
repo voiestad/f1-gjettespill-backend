@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
@@ -21,14 +21,14 @@ import no.vebb.f1.util.response.HeaderResponse;
 @RestController
 public class HeaderController {
 
-	private final Cutoff cutoff;
+	private final CutoffService cutoffService;
 	private final UserService userService;
 	private final ResultService resultService;
 	private final YearService yearService;
 	private final RaceService raceService;
 
-	public HeaderController(Cutoff cutoff, UserService userService, ResultService resultService, YearService yearService, RaceService raceService) {
-		this.cutoff = cutoff;
+	public HeaderController(CutoffService cutoffService, UserService userService, ResultService resultService, YearService yearService, RaceService raceService) {
+		this.cutoffService = cutoffService;
 		this.userService = userService;
 		this.resultService = resultService;
 		this.yearService = yearService;
@@ -41,7 +41,7 @@ public class HeaderController {
 		res.isLoggedIn = userService.isLoggedIn();
 		res.isRaceGuess = isRaceGuess();
 		res.isAdmin =  userService.isAdmin();
-		res.isAbleToGuess = cutoff.isAbleToGuessCurrentYear() || isRaceToGuess();
+		res.isAbleToGuess = cutoffService.isAbleToGuessCurrentYear() || isRaceToGuess();
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
 
@@ -49,7 +49,7 @@ public class HeaderController {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
 			RaceId raceId = new RaceId(raceService.getLatestRaceForPlaceGuess(year).raceId());
-			return !cutoff.isAbleToGuessRace(raceId);
+			return !cutoffService.isAbleToGuessRace(raceId);
 		} catch (InvalidYearException | NoAvailableRaceException | EmptyResultDataAccessException e) {
 			return false;
 		}
@@ -58,7 +58,7 @@ public class HeaderController {
 	private boolean isRaceToGuess() {
 		try {
 			RaceId raceId = resultService.getCurrentRaceIdToGuess();
-			return cutoff.isAbleToGuessRace(raceId);
+			return cutoffService.isAbleToGuessRace(raceId);
 		} catch (NoAvailableRaceException e) {
 			return false;
 		}

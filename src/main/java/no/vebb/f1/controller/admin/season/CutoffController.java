@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.scoring.ScoreCalculator;
 import no.vebb.f1.util.exception.YearFinishedException;
@@ -15,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
 import no.vebb.f1.util.domainPrimitive.RaceId;
@@ -26,23 +26,23 @@ import no.vebb.f1.util.exception.InvalidRaceException;
 @RequestMapping("/api/admin/season/cutoff")
 public class CutoffController {
 
-    private final Database db;
     private final ScoreCalculator scoreCalculator;
     private final YearService yearService;
     private final RaceService raceService;
+    private final CutoffService cutoffService;
 
-    public CutoffController(Database db, ScoreCalculator scoreCalculator, YearService yearService, RaceService raceService) {
-        this.db = db;
+    public CutoffController(ScoreCalculator scoreCalculator, YearService yearService, RaceService raceService, CutoffService cutoffService) {
         this.scoreCalculator = scoreCalculator;
         this.yearService = yearService;
         this.raceService = raceService;
+        this.cutoffService = cutoffService;
     }
 
     @GetMapping("/list/{year}")
     public ResponseEntity<CutoffResponse> manageCutoff(@PathVariable("year") int year) {
         Year seasonYear = new Year(year, yearService);
-        List<CutoffRace> races = db.getCutoffRaces(seasonYear);
-        LocalDateTime cutoffYear = db.getCutoffYearLocalTime(seasonYear);
+        List<CutoffRace> races = cutoffService.getCutoffRaces(seasonYear);
+        LocalDateTime cutoffYear = cutoffService.getCutoffYearLocalTime(seasonYear);
         CutoffResponse res = new CutoffResponse(races, cutoffYear);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
@@ -59,7 +59,7 @@ public class CutoffController {
                 throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
             }
             Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
-            db.setCutoffRace(cutoffTime, validRaceId);
+            cutoffService.setCutoffRace(cutoffTime, validRaceId);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (DateTimeParseException | InvalidRaceException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -77,7 +77,7 @@ public class CutoffController {
         }
         try {
             Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
-            db.setCutoffYear(cutoffTime, validYear);
+            cutoffService.setCutoffYear(cutoffTime, validYear);
             scoreCalculator.calculateScores();
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (DateTimeParseException e) {

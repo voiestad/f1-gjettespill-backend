@@ -11,9 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.importing.Importer;
-import no.vebb.f1.util.Cutoff;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -22,16 +21,14 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RequestMapping("/api/admin/season")
 public class SeasonController {
 
-    private final Database db;
     private final Importer importer;
-    private final Cutoff cutoff;
+    private final CutoffService cutoffService;
     private final YearService yearService;
     private final RaceService raceService;
 
-    public SeasonController(Database db, Importer importer, Cutoff cutoff, YearService yearService, RaceService raceService) {
-        this.db = db;
+    public SeasonController(Importer importer, CutoffService cutoffService, YearService yearService, RaceService raceService) {
         this.importer = importer;
-        this.cutoff = cutoff;
+        this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
     }
@@ -50,8 +47,8 @@ public class SeasonController {
         }
         yearService.addYear(year);
         Year seasonYear = new Year(year, yearService);
-        Instant time = cutoff.getDefaultInstant(seasonYear);
-        db.setCutoffYear(time, seasonYear);
+        Instant time = cutoffService.getDefaultInstant(seasonYear);
+        cutoffService.setCutoffYear(time, seasonYear);
         if (start == null || end == null) {
             return new ResponseEntity<>("OK", HttpStatus.OK);
         }
@@ -80,7 +77,7 @@ public class SeasonController {
     private void setDefaultCutoffRaces(Year year, Instant time) {
         List<RaceId> races = raceService.getRacesFromSeason(year);
         for (RaceId id : races) {
-            db.setCutoffRace(time, id);
+            cutoffService.setCutoffRace(time, id);
         }
     }
 }
