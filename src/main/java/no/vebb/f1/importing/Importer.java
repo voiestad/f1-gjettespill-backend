@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 
+import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
@@ -22,7 +23,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.domainPrimitive.Constructor;
@@ -37,20 +37,20 @@ public class Importer {
 
 	private static final Logger logger = LoggerFactory.getLogger(Importer.class);
 
-	private final Database db;
 	private final MailService mailService;
 	private final ScoreCalculator scoreCalculator;
 	private final ResultService resultService;
 	private final YearService yearService;
 	private final RaceService raceService;
+	private final CompetitorService competitorService;
 
-	public Importer(Database db, MailService mailService, ScoreCalculator scoreCalculator, ResultService resultService, YearService yearService, RaceService raceService) {
-		this.db = db;
+	public Importer(MailService mailService, ScoreCalculator scoreCalculator, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService) {
 		this.mailService = mailService;
 		this.scoreCalculator = scoreCalculator;
 		this.resultService = resultService;
 		this.yearService = yearService;
 		this.raceService = raceService;
+		this.competitorService = competitorService;
 	}
 
 	@Transactional
@@ -181,6 +181,7 @@ public class Importer {
 		insertRaceResultData(raceId, raceResult);
 		List<PositionedCompetitor> postList = resultService.getRaceResult(raceId).stream().map(PositionedCompetitor::fromRaceResult).toList();
 		if (preList.size() != postList.size()) {
+			logger.info("Different size");
 			ResultChangeStatus status = ResultChangeStatus.POINTS_CHANGE;
 			Points change = compPoints(postList);
 			status.setPointsChange(change);
@@ -243,8 +244,8 @@ public class Importer {
 			for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
 				int position = Integer.parseInt(row.get(0));
 				String driver = parseDriver(row.get(2), raceId);
-				db.addDriver(driver);
-				Driver validDriver = new Driver(driver, db);
+				competitorService.addDriver(driver);
+				Driver validDriver = new Driver(driver, competitorService);
 				resultService.insertDriverStartingGrid(raceId, position, validDriver);
 			}
 
@@ -292,7 +293,7 @@ public class Importer {
 
 	private void insertRaceResultRow(RaceId raceId, List<String> row, int finishingPosition) {
 		String position = row.get(0);
-		Driver driver = new Driver(parseDriver(row.get(2), raceId), db);
+		Driver driver = new Driver(parseDriver(row.get(2), raceId), competitorService);
 		Points points = new Points((int) Double.parseDouble(row.get(6)));
 		resultService.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
 	}
@@ -369,7 +370,7 @@ public class Importer {
 				return ResultChangeStatus.NO_CHANGE;
 			}
 			for (PositionedCompetitor competitor : currentStandings) {
-				Driver driver = new Driver(competitor.name(), db);
+				Driver driver = new Driver(competitor.name(), competitorService);
 				int position = Integer.parseInt(competitor.position());
 				Points points = new Points(competitor.points());
 				resultService.insertDriverIntoStandings(newestRace, driver, position, points);
@@ -475,11 +476,11 @@ public class Importer {
 	}
 
 	private String parseDriver(String driverName, RaceId raceId) {
-		return db.getAlternativeDriverName(parseDriver(driverName), raceId);
+		return competitorService.getAlternativeDriverName(parseDriver(driverName), raceId);
 	}
 
 	private String parseDriver(String driverName, Year year) {
-		return db.getAlternativeDriverName(parseDriver(driverName), year);
+		return competitorService.getAlternativeDriverName(parseDriver(driverName), year);
 	}
 
 	private String getTableString(List<List<String>> table) {

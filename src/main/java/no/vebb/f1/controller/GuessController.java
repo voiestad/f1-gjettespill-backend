@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
@@ -50,14 +51,16 @@ public class GuessController {
 	private final ResultService resultService;
 	private final YearService yearService;
 	private final RaceService raceService;
+	private final CompetitorService competitorService;
 
-	public GuessController(Database db, UserService userService, Cutoff cutoff, ResultService resultService, YearService yearService, RaceService raceService) {
+	public GuessController(Database db, UserService userService, Cutoff cutoff, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService) {
 		this.db = db;
 		this.userService = userService;
 		this.cutoff = cutoff;
 		this.resultService = resultService;
 		this.yearService = yearService;
 		this.raceService = raceService;
+		this.competitorService = competitorService;
 	}
 
 	@GetMapping("/categories")
@@ -113,10 +116,10 @@ public class GuessController {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		try {
-			List<Driver> validationList = db.getDriversYear(year);
+			List<Driver> validationList = competitorService.getDriversYear(year);
 			Set<Driver> competitors = new HashSet<>(validationList);
 			List<Driver> guessedDrivers = rankedCompetitors.stream()
-					.map(driver -> new Driver(driver, db))
+					.map(driver -> new Driver(driver, competitorService))
 					.toList();
 			String error = validateGuessList(guessedDrivers, competitors);
 			if (error != null) {
@@ -163,10 +166,10 @@ public class GuessController {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
 		try {
-			List<Constructor> validationList = db.getConstructorsYear(year);
+			List<Constructor> validationList = competitorService.getConstructorsYear(year);
 			Set<Constructor> competitors = new HashSet<>(validationList);
 			List<Constructor> guessedConstructors = rankedCompetitors.stream()
-					.map(constructor -> new Constructor(constructor, db))
+					.map(constructor -> new Constructor(constructor, competitorService))
 					.toList();
 			String error = validateGuessList(guessedConstructors, competitors);
 			if (error != null) {
@@ -261,7 +264,7 @@ public class GuessController {
 				throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 			}
 			RaceId raceId = getRaceIdToGuess();
-			Driver validDriver = new Driver(driver, db);
+			Driver validDriver = new Driver(driver, competitorService);
 			Set<Driver> driversCheck = new HashSet<>(db.getDriversFromStartingGrid(raceId));
 			if (!driversCheck.contains(validDriver)) {
 				logger.warn("'{}', invalid winner driver inputted by user.", driver);

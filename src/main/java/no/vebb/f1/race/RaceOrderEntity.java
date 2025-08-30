@@ -9,10 +9,10 @@ public class RaceOrderEntity {
     @Column(name = "race_id")
     private int raceId;
 
-    @Column(name = "year")
+    @Column(name = "year", nullable = false)
     private int year;
 
-    @Column(name = "position")
+    @Column(name = "position", nullable = false)
     private int position;
 
     @OneToOne(targetEntity = RaceEntity.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)

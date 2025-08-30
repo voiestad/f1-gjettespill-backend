@@ -2,24 +2,24 @@ package no.vebb.f1.util.domainPrimitive;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.util.exception.InvalidConstructorException;
 
 public class Constructor {
 
 	public final String value;
 	public final Year year;
-	private Database db;
+	private CompetitorService competitorService;
 
-	public Constructor(String value, Database db, Year year) throws InvalidConstructorException {
+	public Constructor(String value, CompetitorService competitorService, Year year) throws InvalidConstructorException {
 		this.value = value;
-		this.db = db;
+		this.competitorService = competitorService;
 		this.year = year;
 		validate();
 	}
 
-	public Constructor(String value, Database db) throws InvalidConstructorException {
-		this(value, db, null);
+	public Constructor(String value, CompetitorService competitorService) throws InvalidConstructorException {
+		this(value, competitorService, null);
 	}
 
 	public Constructor(String value) {
@@ -28,10 +28,10 @@ public class Constructor {
 	}
 
 	private void validate() throws InvalidConstructorException {
-		if (!db.isValidConstructor(this)) {
+		if (!competitorService.isValidConstructor(this)) {
 			throw new InvalidConstructorException("Driver : '" + this + "' is not a valid constructor");
 		}
-		if (year != null && !db.isValidConstructorYear(this, year)) {
+		if (year != null && !competitorService.isValidConstructorYear(this, year)) {
 			throw new InvalidConstructorException("Driver : '" + this + "' is not a valid constructor in '" + year + "'");
 		}
 	}

@@ -12,7 +12,7 @@ public class RaceEntity {
     @Column(name = "race_id")
     private int raceId;
 
-    @Column(name = "race_name")
+    @Column(name = "race_name", nullable = false)
     private String raceName;
 
     protected RaceEntity() {}

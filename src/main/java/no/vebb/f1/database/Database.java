@@ -6,11 +6,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import no.vebb.f1.graph.GuesserPointsSeason;
-import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.collection.userTables.Summary;
-import no.vebb.f1.util.exception.InvalidRaceException;
 import no.vebb.f1.year.YearService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -30,13 +28,11 @@ public class Database {
     private final JdbcTemplate jdbcTemplate;
     private final UserRespository userRespository;
     private final YearService yearService;
-    private final RaceService raceService;
 
-    public Database(JdbcTemplate jdbcTemplate, UserRespository userRespository, YearService yearService, RaceService raceService) {
+    public Database(JdbcTemplate jdbcTemplate, UserRespository userRespository, YearService yearService) {
         this.jdbcTemplate = jdbcTemplate;
         this.userRespository = userRespository;
         this.yearService = yearService;
-        this.raceService = raceService;
     }
 
     public Instant getCutoffYear(Year year) throws EmptyResultDataAccessException {
@@ -313,20 +309,6 @@ public class Database {
         return competitors;
     }
 
-    public List<Driver> getDriversYear(Year year) {
-        final String getDriversSql = "SELECT driver_name FROM drivers_year WHERE year = ? ORDER BY position;";
-        return jdbcTemplate.queryForList(getDriversSql, String.class, year.value).stream()
-                .map(Driver::new)
-                .toList();
-    }
-
-    public List<Constructor> getConstructorsYear(Year year) {
-        final String getConstructorSql = "SELECT constructor_name FROM constructors_year WHERE year = ? ORDER BY position;";
-        return jdbcTemplate.queryForList(getConstructorSql, String.class, year.value).stream()
-                .map(Constructor::new)
-                .toList();
-    }
-
     public void insertDriversYearGuess(UUID userId, Driver driver, Year year, int position) {
         final String addRowDriver = """
             INSERT INTO driver_guesses (user_id, driver_name, year, position)
@@ -425,68 +407,6 @@ public class Database {
                 .toList();
     }
 
-    public void addDriver(String driver) {
-        final String insertDriver = "INSERT INTO drivers (driver_name) VALUES (?) ON CONFLICT DO NOTHING;";
-        jdbcTemplate.update(insertDriver, driver);
-    }
-
-    public void addDriverYear(String driver, Year year) {
-        addDriver(driver);
-        int position = getMaxPosDriverYear(year) + 1;
-        addDriverYear(new Driver(driver), year, position);
-    }
-
-    public int getMaxPosDriverYear(Year year) {
-        final String getMaxPos = "SELECT COALESCE(MAX(position), 0)::INTEGER FROM drivers_year WHERE year = ?;";
-        return jdbcTemplate.queryForObject(getMaxPos, Integer.class, year.value);
-    }
-
-    public void addDriverYear(Driver driver, Year year, int position) {
-        final String addDriverYear = "INSERT INTO drivers_year (driver_name, year, position) VALUES (?, ?, ?);";
-        jdbcTemplate.update(addDriverYear, driver.value, year.value, position);
-    }
-
-    public void deleteDriverYear(Driver driver, Year year) {
-        final String deleteDriver = "DELETE FROM drivers_year WHERE year = ? AND driver_name = ?;";
-        jdbcTemplate.update(deleteDriver, year.value, driver.value);
-    }
-
-    public void deleteAllDriverYear(Year year) {
-        final String deleteAllDrivers = "DELETE FROM drivers_year WHERE year = ?;";
-        jdbcTemplate.update(deleteAllDrivers, year.value);
-    }
-
-    public void addConstructor(String constructor) {
-        final String insertConstructor = "INSERT INTO constructors (constructor_name) VALUES (?) ON CONFLICT DO NOTHING;";
-        jdbcTemplate.update(insertConstructor, constructor);
-    }
-
-    public void addConstructorYear(String constructor, Year year) {
-        addConstructor(constructor);
-        int position = getMaxPosConstructorYear(year) + 1;
-        addConstructorYear(new Constructor(constructor), year, position);
-    }
-
-    public int getMaxPosConstructorYear(Year year) {
-        final String getMaxPos = "SELECT COALESCE(MAX(position), 0)::INTEGER FROM constructors_year WHERE year = ?;";
-        return jdbcTemplate.queryForObject(getMaxPos, Integer.class, year.value);
-    }
-
-    public void addConstructorYear(Constructor constructor, Year year, int position) {
-        final String addConstructorYear = "INSERT INTO public.constructors_year (constructor_name, year, position) VALUES (?, ?, ?);";
-        jdbcTemplate.update(addConstructorYear, constructor.value, year.value, position);
-    }
-
-    public void deleteConstructorYear(Constructor constructor, Year year) {
-        final String deleteConstructor = "DELETE FROM constructors_year WHERE year = ? AND constructor_name = ?;";
-        jdbcTemplate.update(deleteConstructor, year.value, constructor.value);
-    }
-
-    public void deleteAllConstructorYear(Year year) {
-        final String deleteAllConstructors = "DELETE FROM constructors_year WHERE year = ?;";
-        jdbcTemplate.update(deleteAllConstructors, year.value);
-    }
-
     public List<CutoffRace> getCutoffRaces(Year year) {
         List<CutoffRace> races = new ArrayList<>();
         final String getCutoffRaces = """
@@ -567,26 +487,6 @@ public class Database {
         return jdbcTemplate.queryForList(sql, String.class).stream()
                 .map(Flag::new)
                 .toList();
-    }
-
-    public boolean isValidDriverYear(Driver driver, Year year) {
-        final String existCheck = "SELECT COUNT(*) FROM drivers_year WHERE year = ? AND driver_name = ?;";
-        return jdbcTemplate.queryForObject(existCheck, Integer.class, year.value, driver.value) > 0;
-    }
-
-    public boolean isValidDriver(Driver driver) {
-        final String existCheck = "SELECT COUNT(*) FROM drivers WHERE driver_name = ?;";
-        return jdbcTemplate.queryForObject(existCheck, Integer.class, driver.value) > 0;
-    }
-
-    public boolean isValidConstructorYear(Constructor constructor, Year year) {
-        final String existCheck = "SELECT COUNT(*) FROM constructors_year WHERE year = ? AND constructor_name = ?;";
-        return jdbcTemplate.queryForObject(existCheck, Integer.class, year.value, constructor.value) > 0;
-    }
-
-    public boolean isValidConstructor(Constructor constructor) {
-        final String existCheck = "SELECT COUNT(*) FROM constructors WHERE constructor_name = ?;";
-        return jdbcTemplate.queryForObject(existCheck, Integer.class, constructor.value) > 0;
     }
 
     public boolean isValidFlag(String value) {
@@ -695,60 +595,6 @@ public class Database {
                         new Year((int) row.get("year"))
                 )).toList();
     }
-
-    public void setTeamDriver(Driver driver, Constructor team, Year year) {
-        final String sql = """
-            INSERT INTO drivers_team (driver_name, team, year)
-            VALUES (?, ?, ?)
-            ON CONFLICT (driver_name, year)
-            DO UPDATE SET team = EXCLUDED.team;
-        """;
-        jdbcTemplate.update(sql, driver.value, team.value, year.value);
-    }
-
-    public void addColorConstructor(Constructor constructor, Year year, Color color) {
-        if (color.value() == null) {
-            return;
-        }
-        final String sql = """
-            INSERT INTO constructors_color (constructor_name, year, color)
-            VALUES (?, ?, ?)
-            ON CONFLICT (constructor_name, year)
-            DO UPDATE SET color = EXCLUDED.color;
-        """;
-        jdbcTemplate.update(sql, constructor.value, year.value, color.value());
-    }
-
-    public List<ColoredCompetitor<Constructor>> getConstructorsYearWithColors(Year year) {
-        final String sql = """
-                SELECT cy.constructor_name as constructor, cc.color as color
-                FROM constructors_year cy
-                LEFT JOIN constructors_color cc ON cc.constructor_name = cy.constructor_name
-                WHERE cy.year = ?
-                ORDER BY cy.position;
-                """;
-        return jdbcTemplate.queryForList(sql, year.value).stream()
-                .map(row -> new ColoredCompetitor<>(
-                        new Constructor((String) row.get("constructor")),
-                        new Color((String) row.get("color"))))
-                .toList();
-    }
-
-    public List<ValuedCompetitor<Driver, Constructor>> getDriversTeam(Year year) {
-        final String sql = """
-                SELECT dy.driver_name as driver, dt.team as team
-                FROM drivers_year dy
-                LEFT JOIN drivers_team dt ON dt.driver_name = dy.driver_name
-                WHERE dy.year = ?
-                ORDER BY dy.position;
-                """;
-        return jdbcTemplate.queryForList(sql, year.value).stream()
-                .map(row -> new ValuedCompetitor<>(
-                        new Driver((String) row.get("driver")),
-                        new Constructor((String) row.get("team"))))
-                .toList();
-    }
-
 
     public void addBingomaster(UUID userId) {
         final String sql = "INSERT INTO bingomasters (user_id) VALUES (?) ON CONFLICT DO NOTHING;";
@@ -868,59 +714,6 @@ public class Database {
         return jdbcTemplate.queryForList(sql).stream()
                 .map(row -> new SessionType((String) row.get("session_type")))
                 .toList();
-    }
-
-    public String getAlternativeDriverName(String driver, Year year) {
-        final String sql = """
-                SELECT driver_name
-                FROM drivers_alternative_name
-                WHERE alternative_name = ? AND year = ?;
-                """;
-        try {
-            return jdbcTemplate.queryForObject(sql, String.class, driver, year.value);
-        } catch (EmptyResultDataAccessException e) {
-            return driver;
-        }
-    }
-
-    public Map<String, String> getAlternativeDriverNamesYear(Year year) {
-        final String sql = """
-                SELECT driver_name, alternative_name
-                FROM drivers_alternative_name
-                WHERE year = ?;
-                """;
-        Map<String, String> linkedMap = new LinkedHashMap<>();
-        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, year.value);
-        for (Map<String, Object> row : sqlRes) {
-            String driverName = (String) row.get("driver_name");
-            String alternativeName = (String) row.get("alternative_name");
-            linkedMap.put(alternativeName, driverName);
-        }
-        return linkedMap;
-    }
-
-    public String getAlternativeDriverName(String driver, RaceId raceId) {
-        try {
-            Year year = raceService.getYearFromRaceId(raceId);
-            return getAlternativeDriverName(driver, year);
-        } catch (InvalidRaceException ignored) {
-            return driver;
-        }
-    }
-
-    public void addAlternativeDriverName(Driver driver, String alternativeName, Year year) {
-        final String sql = """
-                INSERT INTO drivers_alternative_name
-                (driver_name, alternative_name, year)
-                VALUES (?, ?, ?)
-                ON CONFLICT DO NOTHING;
-                """;
-        jdbcTemplate.update(sql, driver.value, alternativeName, year.value);
-    }
-
-    public void deleteAlternativeName(Driver driver, Year year, String alternativeName) {
-        final String sql = "DELETE FROM drivers_alternative_name WHERE driver_name = ? AND year = ? AND alternative_name = ?;";
-        jdbcTemplate.update(sql, driver.value, year.value, alternativeName);
     }
 
     public List<String> getUnregisteredUsers() {

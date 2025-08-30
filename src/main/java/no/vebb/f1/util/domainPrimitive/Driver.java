@@ -2,24 +2,24 @@ package no.vebb.f1.util.domainPrimitive;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.util.exception.InvalidDriverException;
 
 public class Driver {
 	
 	public final String value;
 	public final Year year;
-	private Database db;
+	private CompetitorService competitorService;
 
-	public Driver(String value, Database db, Year year) throws InvalidDriverException {
+	public Driver(String value, CompetitorService competitorService, Year year) throws InvalidDriverException {
 		this.value = value;
-		this.db = db;
+		this.competitorService = competitorService;
 		this.year = year;
 		validate();
 	}
 
-	public Driver(String value, Database db) throws InvalidDriverException {
-		this(value, db, null);
+	public Driver(String value, CompetitorService competitorService) throws InvalidDriverException {
+		this(value, competitorService, null);
 	}
 
 	public Driver(String value) {
@@ -28,10 +28,10 @@ public class Driver {
 	}
 
 	private void validate() throws InvalidDriverException {
-		if (!db.isValidDriver(this)) {
+		if (!competitorService.isValidDriver(this)) {
 			throw new InvalidDriverException("Driver : '" + this + "' is not a valid driver");
 		}
-		if (year != null && !db.isValidDriverYear(this, year)) {
+		if (year != null && !competitorService.isValidDriverYear(this, year)) {
 			throw new InvalidDriverException("Driver : '" + this + "' is not a valid driver in '" + year + "'");
 		}
 	}
