@@ -2,26 +2,26 @@ package no.vebb.f1.util.domainPrimitive;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.domain.GuessService;
 import no.vebb.f1.util.exception.InvalidCategoryException;
 
 public class Category {
 	
 	public final String value;
-	private Database db;
+	private GuessService guessService;
 
 	public Category(String value) {
 		this.value = value;
 	}
 
-	public Category(String value, Database db) throws InvalidCategoryException {
+	public Category(String value, GuessService guessService) throws InvalidCategoryException {
 		this.value = value;
-		this.db = db;
+		this.guessService = guessService;
 		validate();
 	}
 
 	private void validate() throws InvalidCategoryException {
-		if (!db.isValidCategory(value)) {
+		if (!guessService.isValidCategory(value)) {
 			throw new InvalidCategoryException("Category : " + value + " is not a valid category");
 		}
 	}

@@ -2,6 +2,7 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
+import no.vebb.f1.domain.GuessService;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.year.YearService;
@@ -13,7 +14,6 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.database.Database;
 
 import no.vebb.f1.util.response.UserStatus;
 import no.vebb.f1.util.collection.Race;
@@ -24,16 +24,16 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RequestMapping("/api/public")
 public class GeneralApiController {
 
-    private final Database db;
     private final UserService userService;
     private final YearService yearService;
     private final RaceService raceService;
+    private final GuessService guessService;
 
-    public GeneralApiController(Database db, UserService userService, YearService yearService, RaceService raceService) {
-        this.db = db;
+    public GeneralApiController(UserService userService, YearService yearService, RaceService raceService, GuessService guessService) {
         this.userService = userService;
         this.yearService = yearService;
         this.raceService = raceService;
+        this.guessService = guessService;
     }
 
     @GetMapping("/year/list")
@@ -70,7 +70,7 @@ public class GeneralApiController {
 
     @GetMapping("/category/list")
     public ResponseEntity<List<Category>> getCategories() {
-        List<Category> categories = db.getCategories();
+        List<Category> categories = guessService.getCategories();
         return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 }

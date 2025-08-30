@@ -1,6 +1,8 @@
 package no.vebb.f1.scoring;
 
 import no.vebb.f1.database.Database;
+import no.vebb.f1.domain.GuessService;
+import no.vebb.f1.placement.PlacementService;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserEntity;
@@ -35,12 +37,16 @@ public class ScoreCalculator {
 
     private static final Logger logger = LoggerFactory.getLogger(ScoreCalculator.class);
     private final RaceService raceService;
+    private final PlacementService placementService;
+    private final GuessService guessService;
 
-    public ScoreCalculator(Database db, CutoffService cutoffService, YearService yearService, RaceService raceService) {
+    public ScoreCalculator(Database db, CutoffService cutoffService, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService) {
         this.db = db;
         this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
+        this.placementService = placementService;
+        this.guessService = guessService;
     }
 
     @Transactional
@@ -65,7 +71,7 @@ public class ScoreCalculator {
         for (RaceId raceId : raceIds) {
             Map<UUID, Summary> rankedGuessers = new HashMap<>();
             List<UserScore> userScores = guessers.stream()
-                    .map(guesser -> new UserScore(PublicUserDto.fromEntity(guesser), year, raceId, db, raceService))
+                    .map(guesser -> new UserScore(PublicUserDto.fromEntity(guesser), year, raceId, db, raceService, guessService))
                     .toList();
             Map<UUID, Placement<Points>> driversPoints = getPlacementMap(userScores, UserScore::getDriversScore);
             Map<UUID, Placement<Points>> constructorsPoints = getPlacementMap(userScores, UserScore::getConstructorsScore);
@@ -89,7 +95,7 @@ public class ScoreCalculator {
             for (Entry<UUID, Summary> entry : rankedGuessers.entrySet()) {
                 UUID id = entry.getKey();
                 Summary summary = entry.getValue();
-                db.addUserScore(id, summary, raceId, year);
+                placementService.addUserScore(id, summary, raceId, year);
             }
         }
     }

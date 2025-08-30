@@ -1,5 +1,6 @@
 package no.vebb.f1.controller.admin.season;
 
+import no.vebb.f1.domain.GuessService;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -23,10 +24,12 @@ public class ManagePointsSystemController {
 
     private final Database db;
     private final YearService yearService;
+    private final GuessService guessService;
 
-    public ManagePointsSystemController(Database db, YearService yearService) {
+    public ManagePointsSystemController(Database db, YearService yearService, GuessService guessService) {
         this.db = db;
         this.yearService = yearService;
+        this.guessService = guessService;
     }
 
     @PostMapping("/add")
@@ -40,7 +43,7 @@ public class ManagePointsSystemController {
         }
         Diff newDiff;
         try {
-            Category validCategory = new Category(category, db);
+            Category validCategory = new Category(category, guessService);
             try {
                 newDiff = db.getMaxDiffInPointsMap(validYear, validCategory).add(new Diff(1));
             } catch (NullPointerException e) {
@@ -63,7 +66,7 @@ public class ManagePointsSystemController {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            Category validCategory = new Category(category, db);
+            Category validCategory = new Category(category, guessService);
             Diff maxDiff = db.getMaxDiffInPointsMap(validYear, validCategory);
             db.removeDiffToPointsMap(validCategory, maxDiff, validYear);
             return new ResponseEntity<>(HttpStatus.OK);
@@ -84,7 +87,7 @@ public class ManagePointsSystemController {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            Category validCategory = new Category(category, db);
+            Category validCategory = new Category(category, guessService);
             Diff validDiff = new Diff(diff);
             boolean isValidDiff = db.isValidDiffInPointsMap(validCategory, validDiff, validYear);
             if (!isValidDiff) {

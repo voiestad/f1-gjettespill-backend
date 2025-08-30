@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import no.vebb.f1.domain.GuessService;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,10 +25,12 @@ public class ScoreController {
 
 	private final Database db;
 	private final YearService yearService;
+	private final GuessService guessService;
 
-	public ScoreController(Database db, YearService yearService) {
+	public ScoreController(Database db, YearService yearService, GuessService guessService) {
 		this.db = db;
 		this.yearService = yearService;
+		this.guessService = guessService;
 	}
 
 	@GetMapping("/api/public/score")
@@ -53,7 +56,7 @@ public class ScoreController {
 	}
 
 	private Map<Category, Map<Diff, Points>> getScoreMappingTables(Year year, Database db) {
-		List<Category> categories = db.getCategories();
+		List<Category> categories = guessService.getCategories();
 		Map<Category, Map<Diff, Points>> result = new HashMap<>();
 		for (Category category : categories) {
 			result.put(category, db.getDiffPointsMap(year, category)); 

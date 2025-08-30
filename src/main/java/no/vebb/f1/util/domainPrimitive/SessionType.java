@@ -2,26 +2,26 @@ package no.vebb.f1.util.domainPrimitive;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.util.exception.InvalidSessionTypeException;
 
 public class SessionType {
 	
 	public final String value;
-	private Database db;
+	private StatsService statsService;
 
 	public SessionType(String value) {
 		this.value = value;
 	}
 
-	public SessionType(String value, Database db) throws InvalidSessionTypeException {
+	public SessionType(String value, StatsService statsService) throws InvalidSessionTypeException {
 		this.value = value;
-		this.db = db;
+		this.statsService = statsService;
 		validate();
 	}
 
 	private void validate() throws InvalidSessionTypeException {
-		if (!db.isValidSessionType(value)) {
+		if (!statsService.isValidSessionType(value)) {
 			throw new InvalidSessionTypeException(String.format("'%s' is not at valid session type", value));
 		}
 	}

@@ -15,7 +15,7 @@ public class RaceOrderEntity {
     @Column(name = "position", nullable = false)
     private int position;
 
-    @OneToOne(targetEntity = RaceEntity.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "race_id", referencedColumnName = "race_id")
     private RaceEntity race;
 

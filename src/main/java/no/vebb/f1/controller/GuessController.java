@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import no.vebb.f1.competitors.CompetitorService;
+import no.vebb.f1.domain.GuessService;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
@@ -52,8 +53,9 @@ public class GuessController {
 	private final YearService yearService;
 	private final RaceService raceService;
 	private final CompetitorService competitorService;
+	private final GuessService guessService;
 
-	public GuessController(Database db, UserService userService, CutoffService cutoffService, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService) {
+	public GuessController(Database db, UserService userService, CutoffService cutoffService, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService, GuessService guessService) {
 		this.db = db;
 		this.userService = userService;
 		this.cutoffService = cutoffService;
@@ -61,6 +63,7 @@ public class GuessController {
 		this.yearService = yearService;
 		this.raceService = raceService;
 		this.competitorService = competitorService;
+		this.guessService = guessService;
 	}
 
 	@GetMapping("/categories")
@@ -208,27 +211,27 @@ public class GuessController {
 
 	@GetMapping("/tenth")
 	public ResponseEntity<CutoffCompetitorsSelected<Driver>> guessTenth() {
-		Category category = new Category("TENTH", db);
+		Category category = new Category("TENTH", guessService);
 		return handleGetChooseDriver(category);
 	}
 
 	@PostMapping("/tenth")
 	@Transactional
 	public ResponseEntity<?> guessTenth(@RequestParam String driver) {
-		Category category = new Category("TENTH", db);
+		Category category = new Category("TENTH", guessService);
 		return handlePostChooseDriver(driver, category);
 	}
 
 	@GetMapping("/first")
 	public ResponseEntity<CutoffCompetitorsSelected<Driver>> guessWinner() {
-		Category category = new Category("FIRST", db);
+		Category category = new Category("FIRST", guessService);
 		return handleGetChooseDriver(category);
 	}
 
 	@PostMapping("/first")
 	@Transactional
 	public ResponseEntity<?> guessWinner(@RequestParam String driver) {
-		Category category = new Category("FIRST", db);
+		Category category = new Category("FIRST", guessService);
 		return handlePostChooseDriver(driver, category);
 	}
 

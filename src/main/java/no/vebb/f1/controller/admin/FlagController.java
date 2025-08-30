@@ -3,6 +3,7 @@ package no.vebb.f1.controller.admin;
 import java.util.List;
 
 import no.vebb.f1.race.RaceService;
+import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
@@ -27,11 +28,13 @@ public class FlagController {
     private final Database db;
     private final YearService yearService;
     private final RaceService raceService;
+    private final StatsService statsService;
 
-    public FlagController(Database db, YearService yearService, RaceService raceService) {
+    public FlagController(Database db, YearService yearService, RaceService raceService, StatsService statsService) {
         this.db = db;
         this.yearService = yearService;
         this.raceService = raceService;
+        this.statsService = statsService;
     }
 
     @GetMapping("/types")
@@ -41,7 +44,7 @@ public class FlagController {
 
     @GetMapping("/session-types")
     public ResponseEntity<List<SessionType>> getSessionTypes() {
-        return new ResponseEntity<>(db.getSessionTypes(), HttpStatus.OK);
+        return new ResponseEntity<>(statsService.getSessionTypes(), HttpStatus.OK);
     }
 
     @GetMapping("/list/{id}")
@@ -69,7 +72,7 @@ public class FlagController {
                 throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
             }
             Flag validFlag = new Flag(flag, db);
-            SessionType validSessionType = new SessionType(sessionType, db);
+            SessionType validSessionType = new SessionType(sessionType, statsService);
             if (!isValidRound(round)) {
                 throw new IllegalArgumentException("Round : '" + round + "' out of bounds. Range: 1-100.");
             }

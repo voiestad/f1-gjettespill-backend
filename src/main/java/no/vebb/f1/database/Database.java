@@ -2,12 +2,7 @@ package no.vebb.f1.database;
 
 import java.util.*;
 
-import no.vebb.f1.graph.GuesserPointsSeason;
-import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserRespository;
-import no.vebb.f1.util.collection.userTables.Summary;
-import no.vebb.f1.year.YearService;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +17,10 @@ public class Database {
 
     private final JdbcTemplate jdbcTemplate;
     private final UserRespository userRespository;
-    private final YearService yearService;
 
-    public Database(JdbcTemplate jdbcTemplate, UserRespository userRespository, YearService yearService) {
+    public Database(JdbcTemplate jdbcTemplate, UserRespository userRespository) {
         this.jdbcTemplate = jdbcTemplate;
         this.userRespository = userRespository;
-        this.yearService = yearService;
     }
 
     public List<Map<String, Object>> getDataForFlagTable(int racePos, Year year, UUID userId) {
@@ -289,18 +282,6 @@ public class Database {
             DO UPDATE SET constructor_name = EXCLUDED.constructor_name;
          """;
         jdbcTemplate.update(addRowConstructor, userId, constructor.value, year.value, position);
-    }
-
-    public List<Category> getCategories() {
-        final String sql = "SELECT category_name FROM categories;";
-        return jdbcTemplate.queryForList(sql, String.class).stream()
-                .map(name -> new Category(name, this))
-                .toList();
-    }
-
-    public boolean isValidCategory(String category) {
-        final String validateCategory = "SELECT COUNT(*) FROM categories WHERE category_name = ?;";
-        return jdbcTemplate.queryForObject(validateCategory, Integer.class, category) > 0;
     }
 
     public Map<Diff, Points> getDiffPointsMap(Year year, Category category) {
@@ -620,18 +601,6 @@ public class Database {
         return jdbcTemplate.queryForObject(sql, Integer.class, year.value) > 0;
     }
 
-    public boolean isValidSessionType(String sessionType) {
-        final String sql = "SELECT COUNT(*) FROM session_types WHERE session_type = ?;";
-        return jdbcTemplate.queryForObject(sql, Integer.class, sessionType) > 0;
-    }
-
-    public List<SessionType> getSessionTypes() {
-        final String sql = "SELECT session_type FROM session_types ORDER BY session_type;";
-        return jdbcTemplate.queryForList(sql).stream()
-                .map(row -> new SessionType((String) row.get("session_type")))
-                .toList();
-    }
-
     public List<String> getUnregisteredUsers() {
         final String sql = """
                 	SELECT SESSION_ID, LAST_ACCESS_TIME
@@ -651,234 +620,6 @@ public class Database {
                 })
                 .map(session -> (String) session.get("SESSION_ID"))
                 .toList();
-    }
-
-    public Summary getSummary(RaceId raceId, Year year, PublicUserDto user) {
-        try {
-            List<Map<String, Object>> categoriesRes;
-            Map<String, Object> totalRes;
-            if (raceId != null) {
-                final String categoriesSql = """
-                            SELECT category_name, placement, points
-                            FROM placements_category
-                            WHERE race_id = ?
-                            AND user_id = ?;
-                        """;
-                final String totalSql = """
-                            SELECT placement, points
-                            FROM placements_race
-                            WHERE race_id = ?
-                            AND user_id = ?;
-                        """;
-                categoriesRes = jdbcTemplate.queryForList(categoriesSql, raceId.value, user.id());
-                totalRes = jdbcTemplate.queryForMap(totalSql, raceId.value, user.id());
-            } else {
-                final String categoriesSql = """
-                            SELECT category_name, placement, points
-                            FROM placements_category_year_start
-                            WHERE year = ?
-                            AND user_id = ?;
-                        """;
-                final String totalSql = """
-                            SELECT placement, points
-                            FROM placements_race_year_start
-                            WHERE year = ?
-                            AND user_id = ?;
-                        """;
-                categoriesRes = jdbcTemplate.queryForList(categoriesSql, year.value, user.id());
-                totalRes = jdbcTemplate.queryForMap(totalSql, year.value, user.id());
-            }
-            Map<Category, Placement<Points>> categories = new HashMap<>();
-            for (Map<String, Object> row : categoriesRes) {
-                Category category = new Category((String) row.get("category_name"));
-                Position pos = new Position((int) row.get("placement"));
-                Points points = new Points((int) row.get("points"));
-                Placement<Points> placement = new Placement<>(pos, points);
-                categories.put(category, placement);
-            }
-            Placement<Points> drivers = categories.get(new Category("DRIVER", this));
-            Placement<Points> constructors = categories.get(new Category("CONSTRUCTOR", this));
-            Placement<Points> flag = categories.get(new Category("FLAG", this));
-            Placement<Points> winner = categories.get(new Category("FIRST", this));
-            Placement<Points> tenth = categories.get(new Category("TENTH", this));
-            Placement<Points> total =
-                    new Placement<>(new Position((int) totalRes.get("placement")),
-                            new Points((int) totalRes.get("points")));
-            return new Summary(drivers, constructors, flag, winner, tenth, total);
-        } catch (EmptyResultDataAccessException e) {
-            return null;
-        }
-    }
-
-    public List<Placement<Year>> getPreviousPlacements(UUID userId) {
-        final String sql = """
-            SELECT placement, year
-            FROM placements_year
-            WHERE user_id = ?
-            ORDER BY year DESC;
-        """;
-        return jdbcTemplate.queryForList(sql, userId).stream()
-                .map(row ->
-                        new Placement<>(
-                                new Position((int) row.get("placement")),
-                                new Year((int) row.get("year"))
-                        ))
-                .toList();
-    }
-
-    public Medals getMedals(UUID userId) {
-        final String sql = """
-            SELECT COUNT(CASE WHEN placement = 1 THEN 1 END)::INTEGER AS gold,
-                   COUNT(CASE WHEN placement = 2 THEN 1 END)::INTEGER AS silver,
-                   COUNT(CASE WHEN placement = 3 THEN 1 END)::INTEGER AS bronze
-            FROM placements_year
-            WHERE user_id = ?;
-        """;
-        Map<String, Object> res = jdbcTemplate.queryForMap(sql, userId);
-        return new Medals(
-            new MedalCount((int) res.get("gold")),
-            new MedalCount((int) res.get("silver")),
-            new MedalCount((int) res.get("bronze"))
-        );
-    }
-
-    public void addUserScore(UUID userId, Summary summary, RaceId raceId, Year year) {
-        if (raceId != null) {
-            addUserScoreRace(userId, summary, raceId);
-        } else {
-            addUserScoreYearStart(userId, summary, year);
-        }
-    }
-
-    private void addUserScoreRace(UUID userId, Summary summary, RaceId raceId) {
-        final String addTotalSql = """
-            INSERT INTO placements_race
-            (race_id, user_id, placement, points)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT (race_id, user_id)
-            DO UPDATE SET placement = EXCLUDED.placement, points = EXCLUDED.points;
-        """;
-        final String addCategorySql = """
-            INSERT INTO placements_category
-            (race_id, user_id, category_name, placement, points)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT (race_id, user_id, category_name)
-            DO UPDATE SET placement = EXCLUDED.placement, points = EXCLUDED.points;
-        """;
-        jdbcTemplate.update(addTotalSql, raceId.value, userId, summary.total().pos().value(), summary.total().value().value);
-        jdbcTemplate.update(addCategorySql, raceId.value, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value);
-        jdbcTemplate.update(addCategorySql, raceId.value, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value);
-        jdbcTemplate.update(addCategorySql, raceId.value, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value);
-        jdbcTemplate.update(addCategorySql, raceId.value, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value);
-        jdbcTemplate.update(addCategorySql, raceId.value, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value);
-    }
-
-    private void addUserScoreYearStart(UUID userId, Summary summary, Year year) {
-        final String addTotalSql = """
-            INSERT INTO placements_race_year_start
-            (year, user_id, placement, points)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT (year, user_id)
-            DO UPDATE SET placement = EXCLUDED.placement, points = EXCLUDED.points;
-        """;
-        final String addCategorySql = """
-            INSERT INTO placements_category_year_start
-            (year, user_id, category_name, placement, points)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT (year, user_id, category_name)
-            DO UPDATE SET placement = EXCLUDED.placement, points = EXCLUDED.points;
-        """;
-        jdbcTemplate.update(addTotalSql, year.value, userId, summary.total().pos().value(), summary.total().value().value);
-        jdbcTemplate.update(addCategorySql, year.value, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value);
-        jdbcTemplate.update(addCategorySql, year.value, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value);
-        jdbcTemplate.update(addCategorySql, year.value, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value);
-        jdbcTemplate.update(addCategorySql, year.value, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value);
-        jdbcTemplate.update(addCategorySql, year.value, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value);
-    }
-
-    public List<GuesserPointsSeason> getGraph(Year year) {
-        final String sql = """
-            SELECT prys.user_id as guesser, u.username as username, prys.points as points, 0::INTEGER as position
-            FROM placements_race_year_start prys
-            JOIN users u ON u.user_id = prys.user_id
-            WHERE year = ?
-            UNION
-            (SELECT pr.user_id AS guesser, u.username as username, pr.points AS points, ro.position AS position
-            FROM placements_race pr
-            JOIN race_order ro ON ro.race_id = pr.race_id
-            JOIN users u ON u.user_id = pr.user_id
-            WHERE year = ?)
-            ORDER BY position;
-        """;
-        Map<UUID, List<Points>> userPoints = new HashMap<>();
-        Map<UUID, String> usernames = new HashMap<>();
-        List<Map<String, Object>> res = jdbcTemplate.queryForList(sql, year.value, year.value);
-        for (Map<String, Object> row : res) {
-            UUID id = (UUID) row.get("guesser");
-            Points points = new Points((int) row.get("points"));
-            if (!userPoints.containsKey(id)) {
-                String username = row.get("username").toString();
-                usernames.put(id, username);
-                userPoints.put(id, new ArrayList<>());
-            }
-            userPoints.get(id).add(points);
-        }
-        return userPoints.entrySet().stream()
-                .map(entry -> new GuesserPointsSeason(usernames.get(entry.getKey()), entry.getValue()))
-                .toList();
-    }
-
-    public List<RankedGuesser> getLeaderboard(Year year) {
-        final String maxPosSql = """
-            SELECT MAX(position)
-            FROM (
-                SELECT 0::INTEGER as position
-                FROM placements_race_year_start prys
-                UNION
-                SELECT ro.position as position
-                FROM placements_race pr
-                JOIN race_order ro ON ro.race_id = pr.race_id
-                WHERE ro.year = ?
-                GROUP BY ro.position
-                ) as positions;""";
-        int maxPos = jdbcTemplate.queryForObject(maxPosSql, Integer.class, year.value);
-        final String sql = """
-            SELECT guesser, username, points, position, placement
-            FROM (SELECT prys.user_id as guesser, u.username as username, prys.points as points, 0::INTEGER as position, prys.placement as placement
-            FROM placements_race_year_start prys
-            JOIN users u ON u.user_id = prys.user_id
-            WHERE year = ?
-            UNION
-            (SELECT pr.user_id AS guesser, u.username as username, pr.points AS points, ro.position AS position, pr.placement as placement
-            FROM placements_race pr
-            JOIN race_order ro ON ro.race_id = pr.race_id
-            JOIN users u ON u.user_id = pr.user_id
-            WHERE year = ?)) as placements_race
-            WHERE position = ?
-            ORDER BY placement, username;
-        """;
-        List<Map<String, Object>> res = jdbcTemplate.queryForList(sql, year.value, year.value, maxPos);
-        return res.stream()
-                .map(row -> new RankedGuesser(
-                        new Guesser(
-                        row.get("username").toString(),
-                        new Points((int) row.get("points")),
-                                (UUID) row.get("guesser")
-                ), new Position((int) row.get("placement"))
-                ))
-                .toList();
-    }
-
-    public void finalizeYear(Year year) {
-        if (yearService.isFinishedYear(year)) {
-            return;
-        }
-        yearService.finalizeYear(year);
-        final String addPlacement = "INSERT INTO placements_year (year, user_id, placement) VALUES (?, ?, ?);";
-        List<RankedGuesser> leaderboard = getLeaderboard(year);
-        for (RankedGuesser rankedGuesser : leaderboard) {
-            jdbcTemplate.update(addPlacement, year.value, rankedGuesser.guesser().id(), rankedGuesser.rank().value());
-        }
     }
 
     public Year getYearFromFlagId(int id) {

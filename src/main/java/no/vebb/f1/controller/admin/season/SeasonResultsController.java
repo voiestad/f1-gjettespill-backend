@@ -1,6 +1,6 @@
 package no.vebb.f1.controller.admin.season;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.placement.PlacementService;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
@@ -12,19 +12,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin/season/results")
 public class SeasonResultsController {
 
-    private final Database db;
     private final YearService yearService;
+    private final PlacementService placementService;
 
-    public SeasonResultsController(Database db, YearService yearService) {
-        this.db = db;
+    public SeasonResultsController(YearService yearService, PlacementService placementService) {
         this.yearService = yearService;
+        this.placementService = placementService;
     }
 
     @Transactional
     @PostMapping("/finalize")
     public ResponseEntity<?> finalizeSeasonResults(@RequestParam("year") int year) {
         Year validYear = new Year(year, yearService);
-        db.finalizeYear(validYear);
+        placementService.finalizeYear(validYear);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
