@@ -186,11 +186,11 @@ public class MailService {
     }
 
     public void clearMailPreferences(UUID userId) {
-        mailPreferenceRepository.deleteByUserId(userId);
+        mailPreferenceRepository.deleteByIdUserId(userId);
     }
 
     public List<MailOption> getMailingPreference(UUID userId) {
-        return mailPreferenceRepository.findAllByUserId(userId).stream()
+        return mailPreferenceRepository.findAllByIdUserIdOrderByIdMailOption(userId).stream()
                 .map(MailPreferenceEntity::mailOption)
                 .map(MailOption::new)
                 .toList();

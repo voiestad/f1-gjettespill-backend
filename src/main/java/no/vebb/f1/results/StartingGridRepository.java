@@ -6,11 +6,9 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface StartingGridRepository extends JpaRepository<StartingGridEntity, StartingGridId> {
-    @Query(value = "SELECT * FROM starting_grids WHERE race_id = :raceId ORDER BY position", nativeQuery = true)
-    List<StartingGridEntity> findAllByRaceIdOrderByPosition(int raceId);
+    List<StartingGridEntity> findAllByIdRaceIdOrderByPosition(int raceId);
 
-    @Query(value = "SELECT EXISTS (SELECT * from starting_grids WHERE race_id = :raceId)", nativeQuery = true)
-    boolean existsByRaceId(int raceId);
+    boolean existsByIdRaceId(int raceId);
 
     @Query(value = """
             SELECT DISTINCT *

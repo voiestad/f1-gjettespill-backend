@@ -26,19 +26,19 @@ public class ResultService {
     }
 
     public List<StartingGridEntity> getStartingGrid(RaceId raceId) {
-        return startingGridRepository.findAllByRaceIdOrderByPosition(raceId.value);
+        return startingGridRepository.findAllByIdRaceIdOrderByPosition(raceId.value);
     }
 
     public List<RaceResultEntity> getRaceResult(RaceId raceId) {
-        return raceResultRepository.findAllByRaceIdOrderByPosition(raceId.value);
+        return raceResultRepository.findAllByIdRaceIdOrderByIdFinishingPosition(raceId.value);
     }
 
     public List<DriverStandingsEntity> getDriverStandings(RaceId raceId) {
-        return driverStandingsRepository.findAllByRaceIdOrderByPosition(raceId.value);
+        return driverStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId.value);
     }
 
     public List<ConstructorStandingsEntity> getConstructorStandings(RaceId raceId) {
-        return constructorStandingsRepository.findAllByRaceIdOrderByPosition(raceId.value);
+        return constructorStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId.value);
     }
 
 
@@ -65,11 +65,11 @@ public class ResultService {
     }
 
     public boolean isStartingGridAdded(RaceId raceId) {
-        return startingGridRepository.existsByRaceId(raceId.value);
+        return startingGridRepository.existsByIdRaceId(raceId.value);
     }
 
     public boolean isRaceResultAdded(RaceId raceId) {
-        return raceResultRepository.existsByRaceId(raceId.value);
+        return raceResultRepository.existsByIdRaceId(raceId.value);
     }
 
     public RaceId getCurrentRaceIdToGuess() throws NoAvailableRaceException {
