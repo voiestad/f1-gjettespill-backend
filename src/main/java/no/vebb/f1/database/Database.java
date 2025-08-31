@@ -2335,9 +2335,9 @@ public class Database {
             JOIN race_order ro ON ro.race_id = pr.race_id
             JOIN users u ON u.user_id = pr.user_id
             WHERE year = ?)
-            ORDER BY position;
+            ORDER BY position, username;
         """;
-        Map<UUID, List<Points>> userPoints = new HashMap<>();
+        Map<UUID, List<Points>> userPoints = new LinkedHashMap<>();
         Map<UUID, String> usernames = new HashMap<>();
         List<Map<String, Object>> res = jdbcTemplate.queryForList(sql, year.value, year.value);
         for (Map<String, Object> row : res) {
