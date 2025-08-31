@@ -45,7 +45,7 @@ public interface PlacementRaceRepository extends JpaRepository<PlacementRaceEnti
                     JOIN race_order ro ON ro.race_id = pr.race_id
                     JOIN users u ON u.user_id = pr.user_id
                     WHERE year = :year)
-                    ORDER BY position;
+                    ORDER BY position, username;
                 """, nativeQuery = true)
     List<PlacementGraphResult> findAllByYear(int year);
 }

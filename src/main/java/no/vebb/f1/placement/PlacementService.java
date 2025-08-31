@@ -128,7 +128,7 @@ public class PlacementService {
     }
 
     public List<GuesserPointsSeason> getGraph(Year year) {
-        Map<UUID, List<Points>> userPoints = new HashMap<>();
+        Map<UUID, List<Points>> userPoints = new LinkedHashMap<>();
         Map<UUID, String> usernames = new HashMap<>();
         for (PlacementGraphResult row : placementRaceRepository.findAllByYear(year.value)) {
             UUID id = row.getUserId();
