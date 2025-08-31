@@ -2,26 +2,26 @@ package no.vebb.f1.util.domainPrimitive;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.util.exception.InvalidFlagException;
 
 public class Flag {
 	
 	public final String value;
-	private Database db;
+	private StatsService statsService;
 
 	public Flag(String value) {
 		this.value = value;
 	}
 
-	public Flag(String value, Database db) throws InvalidFlagException {
+	public Flag(String value, StatsService statsService) throws InvalidFlagException {
 		this.value = value;
-		this.db = db;
+		this.statsService = statsService;
 		validate();
 	}
 
 	private void validate() {
-		if (!db.isValidFlag(value)) {
+		if (!statsService.isValidFlag(value)) {
 			throw new InvalidFlagException("Flag : " + value + " is not a valid flag");
 		}
 	}

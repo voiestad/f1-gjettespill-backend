@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.vebb.f1.bingo.BingoService;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.util.domainPrimitive.Username;
 import org.springframework.security.core.Authentication;
@@ -11,23 +12,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.util.exception.NoUsernameException;
 import no.vebb.f1.util.exception.NotAdminException;
 
 @Service
 public class UserService {
 
-	private final Database db;
 	private final UserRespository userRespository;
 	private final AdminRepository adminRepository;
 	private final MailService mailService;
+	private final BingoService bingoService;
 
-	public UserService(Database db, UserRespository userRespository, AdminRepository adminRepository, MailService mailService) {
-		this.db = db;
+	public UserService(UserRespository userRespository, AdminRepository adminRepository, MailService mailService, BingoService bingoService) {
 		this.userRespository = userRespository;
 		this.adminRepository = adminRepository;
 		this.mailService = mailService;
+		this.bingoService = bingoService;
 	}
 
 	public Optional<UserEntity> loadUser() {
@@ -73,7 +73,7 @@ public class UserService {
 
 	public boolean isBingomaster() {
 		Optional<UserEntity> user = loadUser();
-        return user.filter(value -> db.isBingomaster(value.id())).isPresent();
+        return user.filter(value -> bingoService.isBingomaster(value.id())).isPresent();
     }
 
 	public boolean isLoggedInUser(UserEntity loggedInUserEntity) {
@@ -100,7 +100,7 @@ public class UserService {
 		UserEntity userEntity = getUser();
 		userRespository.anonymizeUser(userEntity.id());
 		mailService.clearUserFromMailing(userEntity.id());
-		db.removeBingomaster(userEntity.id());
+		bingoService.removeBingomaster(userEntity.id());
 	}
 
 }

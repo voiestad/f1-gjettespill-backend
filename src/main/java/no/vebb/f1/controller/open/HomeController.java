@@ -2,6 +2,7 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
+import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.util.response.HomePageResponse;
 import no.vebb.f1.year.YearService;
@@ -10,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.graph.GuesserPointsSeason;
 import no.vebb.f1.graph.Graph;
 import no.vebb.f1.util.TimeUtil;
@@ -21,12 +21,12 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RestController
 public class HomeController {
 
-	private final Database db;
+	private final GuessService guessService;
 	private final Graph graph;
 	private final YearService yearService;
 
-	public HomeController(Database db, Graph graphCache, YearService yearService) {
-		this.db = db;
+	public HomeController(GuessService guessService, Graph graphCache, YearService yearService) {
+		this.guessService = guessService;
 		this.graph = graphCache;
 		this.yearService = yearService;
 	}
@@ -39,7 +39,7 @@ public class HomeController {
 		try {
 			if (leaderboard == null) {
 				Year year = new Year(TimeUtil.getCurrentYear(), yearService);
-				guessers = db.getSeasonGuessers(year).stream()
+				guessers = guessService.getSeasonGuessers(year).stream()
 					.map(UserEntity::username)
 					.toList();
 			} else {

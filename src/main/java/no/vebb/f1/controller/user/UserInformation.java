@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import no.vebb.f1.database.Database;
+import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserDto;
@@ -26,14 +26,14 @@ public class UserInformation {
 	public final List<UserNotifiedCount> notifiedCount;
 	public final List<Integer> emailPreferences;
 
-	public UserInformation(UserEntity userEntity, Database db, MailService mailService) {
+	public UserInformation(UserEntity userEntity, MailService mailService, GuessService guessService) {
 		this.user = UserDto.fromEntity(userEntity);
 		this.email = mailService.getEmail(userEntity.id());
-		this.driverGuess = db.userGuessDataDriver(userEntity.id());
-		this.constructorGuess = db.userGuessDataConstructor(userEntity.id());
-		this.flagGuess = db.userGuessDataFlag(userEntity.id());
-		this.placeGuess = db.userGuessDataDriverPlace(userEntity.id());
-		this.notifiedCount = db.userDataNotified(userEntity.id());
+		this.driverGuess = guessService.userGuessDataDriver(userEntity.id());
+		this.constructorGuess = guessService.userGuessDataConstructor(userEntity.id());
+		this.flagGuess = guessService.userGuessDataFlag(userEntity.id());
+		this.placeGuess = guessService.userGuessDataDriverPlace(userEntity.id());
+		this.notifiedCount = mailService.userDataNotified(userEntity.id());
 		this.emailPreferences = mailService.getMailingPreference(userEntity.id()).stream()
 				.map(option -> option.value)
 				.collect(Collectors.collectingAndThen(Collectors.toList(), list -> {

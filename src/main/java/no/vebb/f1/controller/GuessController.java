@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import no.vebb.f1.competitors.CompetitorService;
-import no.vebb.f1.domain.GuessService;
+import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.util.TimeUtil;
@@ -46,7 +45,6 @@ import no.vebb.f1.util.domainPrimitive.Year;
 public class GuessController {
 
 	private static final Logger logger = LoggerFactory.getLogger(GuessController.class);
-	private final Database db;
 	private final UserService userService;
 	private final CutoffService cutoffService;
 	private final ResultService resultService;
@@ -55,8 +53,7 @@ public class GuessController {
 	private final CompetitorService competitorService;
 	private final GuessService guessService;
 
-	public GuessController(Database db, UserService userService, CutoffService cutoffService, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService, GuessService guessService) {
-		this.db = db;
+	public GuessController(UserService userService, CutoffService cutoffService, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService, GuessService guessService) {
 		this.userService = userService;
 		this.cutoffService = cutoffService;
 		this.resultService = resultService;
@@ -103,7 +100,7 @@ public class GuessController {
 		}
 		UUID id = userService.getUser().id();
 		long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear();
-		List<ColoredCompetitor<Driver>> competitors = db.getDriversGuess(id, year);
+		List<ColoredCompetitor<Driver>> competitors = guessService.getDriversGuess(id, year);
 		CutoffCompetitors<Driver> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
@@ -132,7 +129,7 @@ public class GuessController {
 			int position = 1;
 			UUID id = userService.getUser().id();
 			for (Driver driver : guessedDrivers) {
-				db.insertDriversYearGuess(id, driver, year, position);
+				guessService.insertDriversYearGuess(id, driver, year, position);
 				position++;
 			}
 			logger.info("User '{}' guessed on '{}' on year '{}'", id, "driver", year);
@@ -153,7 +150,7 @@ public class GuessController {
 		}
 		UUID id = userService.getUser().id();
 		long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear();
-		List<ColoredCompetitor<Constructor>> competitors = db.getConstructorsGuess(id, year);
+		List<ColoredCompetitor<Constructor>> competitors = guessService.getConstructorsGuess(id, year);
 		CutoffCompetitors<Constructor> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
@@ -182,7 +179,7 @@ public class GuessController {
 			int position = 1;
 			UUID id = userService.getUser().id();
 			for (Constructor constructor : guessedConstructors) {
-				db.insertConstructorsYearGuess(id, constructor, year, position);
+				guessService.insertConstructorsYearGuess(id, constructor, year, position);
 				position++;
 			}
 			logger.info("User '{}' guessed on '{}' on year '{}'", id, "constructor", year);
@@ -245,10 +242,10 @@ public class GuessController {
 			RaceId raceId = new RaceId(raceOrderEntity.raceId());
 			Race race = new Race(raceOrderEntity.position(), raceOrderEntity.name(), raceId, year);
 			long timeLeftToGuess = cutoffService.getTimeLeftToGuessRace(raceId);
-			List<ColoredCompetitor<Driver>> drivers = db.getDriversFromStartingGridWithColors(raceId);
+			List<ColoredCompetitor<Driver>> drivers = resultService.getDriversFromStartingGridWithColors(raceId);
 			UUID id = userService.getUser().id();
 			try {
-				Driver driver = db.getGuessedDriverPlace(raceId, category, id);
+				Driver driver = guessService.getGuessedDriverPlace(raceId, category, id);
 				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, driver, timeLeftToGuess, race);
 				return new ResponseEntity<>(res, HttpStatus.OK);
 			} catch (EmptyResultDataAccessException e) {
@@ -268,13 +265,13 @@ public class GuessController {
 			}
 			RaceId raceId = getRaceIdToGuess();
 			Driver validDriver = new Driver(driver, competitorService);
-			Set<Driver> driversCheck = new HashSet<>(db.getDriversFromStartingGrid(raceId));
+			Set<Driver> driversCheck = new HashSet<>(resultService.getDriversFromStartingGrid(raceId));
 			if (!driversCheck.contains(validDriver)) {
 				logger.warn("'{}', invalid winner driver inputted by user.", driver);
 				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
 			UUID id = userService.getUser().id();
-			db.addDriverPlaceGuess(id, raceId, validDriver, category);
+			guessService.addDriverPlaceGuess(id, raceId, validDriver, category);
 			logger.info("User '{}' guessed on category '{}' on race '{}'", id, category, raceId);
 			return new ResponseEntity<>(HttpStatus.OK);
 
@@ -303,7 +300,7 @@ public class GuessController {
 		if (yearService.isFinishedYear(year)) {
 			throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 		}
-		Flags flags = db.getFlagGuesses(userService.getUser().id(), year);
+		Flags flags = guessService.getFlagGuesses(userService.getUser().id(), year);
 		CutoffFlags res = new CutoffFlags(flags, timeLeftToGuess);
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
@@ -324,7 +321,7 @@ public class GuessController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		UUID id = userService.getUser().id();
-		db.addFlagGuesses(id, year, flags);
+		guessService.addFlagGuesses(id, year, flags);
 		logger.info("User '{}' guessed on flags on year '{}'", id, year);
 		return new ResponseEntity<>(HttpStatus.OK);
 	}

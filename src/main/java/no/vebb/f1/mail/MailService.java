@@ -5,11 +5,11 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.database.Database;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.util.TimeUtil;
+import no.vebb.f1.util.collection.UserNotifiedCount;
 import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -35,7 +37,6 @@ public class MailService {
     private final MailingListRepository mailingListRepository;
     private static final Logger logger = LoggerFactory.getLogger(MailService.class);
     private final JavaMailSender mailSender;
-    private final Database db;
     private final NotifiedRepository notifiedRepository;
     private final UserRespository userRespository;
     private final AdminRepository adminRepository;
@@ -44,14 +45,14 @@ public class MailService {
     private final YearService yearService;
     private final RaceService raceService;
     private final CutoffService cutoffService;
+    private final JdbcTemplate jdbcTemplate;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, Database db, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository, YearService yearService, RaceService raceService, CutoffService cutoffService) {
+    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository, YearService yearService, RaceService raceService, CutoffService cutoffService, JdbcTemplate jdbcTemplate) {
         this.mailingListRepository = mailingListRepository;
         this.mailSender = mailSender;
-        this.db = db;
         this.notifiedRepository = notifiedRepository;
         this.userRespository = userRespository;
         this.adminRepository = adminRepository;
@@ -60,6 +61,7 @@ public class MailService {
         this.yearService = yearService;
         this.raceService = raceService;
         this.cutoffService = cutoffService;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public void addToMailingList(UUID userId, String email) {
@@ -76,7 +78,7 @@ public class MailService {
                 return;
             }
             int timeLeftHours = (int) (timeLeft / 3600);
-            List<UserMail> mailingList = db.getMailingList(raceId);
+            List<UserMail> mailingList = getMailingList(raceId);
             List<NotifiedEntity> notifications = new ArrayList<>();
             for (UserMail user : mailingList) {
                 UUID userId = user.userEntity().id();
@@ -204,6 +206,42 @@ public class MailService {
         return mailOptionRepository.findAllByOrderByMailOption().stream()
                 .map(MailOptionEntity::mailOption)
                 .map(MailOption::new)
+                .toList();
+    }
+
+    public List<UserNotifiedCount> userDataNotified(UUID userId) {
+        final String sql = """
+                SELECT r.race_name AS name, count(*)::INTEGER as notified_count, ro.year AS year
+                FROM notified n
+                JOIN races r ON n.race_id = r.race_id
+                JOIN race_order ro ON n.race_id = ro.race_id
+                WHERE n.user_id = ?
+                GROUP BY n.race_id, ro.position, ro.year, r.race_name
+                ORDER BY ro.year DESC, ro.position;
+                """;
+        return jdbcTemplate.queryForList(sql, userId).stream()
+                .map(row -> new UserNotifiedCount(
+                        (String) row.get("name"),
+                        (int) row.get("notified_count"),
+                        new Year((int) row.get("year"))
+                )).toList();
+    }
+
+    public List<UserMail> getMailingList(RaceId raceId) {
+        final String sql = """
+                SELECT u.google_id as google_id, u.user_id as id, u.username as username, ml.email as email
+                FROM users u
+                JOIN mailing_list ml ON ml.user_id = u.user_id
+                WHERE u.user_id NOT IN
+                      (SELECT user_id FROM driver_place_guesses WHERE race_id = ? GROUP BY user_id HAVING COUNT(*) = 2);
+                """;
+        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, raceId.value);
+        return sqlRes.stream()
+                .map(row ->
+                        new UserMail(
+                                userRespository.findById((UUID) row.get("id")).get()
+                                , (String) row.get("email"))
+                )
                 .toList();
     }
 }

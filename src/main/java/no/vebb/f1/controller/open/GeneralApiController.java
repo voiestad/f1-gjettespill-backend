@@ -2,7 +2,7 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
-import no.vebb.f1.domain.GuessService;
+import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.year.YearService;

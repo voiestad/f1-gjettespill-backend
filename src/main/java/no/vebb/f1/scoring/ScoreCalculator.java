@@ -1,9 +1,10 @@
 package no.vebb.f1.scoring;
 
-import no.vebb.f1.database.Database;
-import no.vebb.f1.domain.GuessService;
+import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.placement.PlacementService;
 import no.vebb.f1.race.RaceService;
+import no.vebb.f1.results.ResultService;
+import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.cutoff.CutoffService;
@@ -21,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -29,9 +30,8 @@ import java.util.Map.Entry;
 
 import java.util.function.Function;
 
-@Component
+@Service
 public class ScoreCalculator {
-    private final Database db;
     private final CutoffService cutoffService;
     private final YearService yearService;
 
@@ -39,14 +39,19 @@ public class ScoreCalculator {
     private final RaceService raceService;
     private final PlacementService placementService;
     private final GuessService guessService;
+    private final StatsService statsService;
+    private final ScoreService scoreService;
+    private final ResultService resultService;
 
-    public ScoreCalculator(Database db, CutoffService cutoffService, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService) {
-        this.db = db;
+    public ScoreCalculator(CutoffService cutoffService, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService, StatsService statsService, ScoreService scoreService, ResultService resultService) {
         this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
         this.placementService = placementService;
         this.guessService = guessService;
+        this.statsService = statsService;
+        this.scoreService = scoreService;
+        this.resultService = resultService;
     }
 
     @Transactional
@@ -66,12 +71,12 @@ public class ScoreCalculator {
             return;
         }
         Year year = new Year(TimeUtil.getCurrentYear(), yearService);
-        List<UserEntity> guessers = db.getSeasonGuessers(year);
+        List<UserEntity> guessers = guessService.getSeasonGuessers(year);
         List<RaceId> raceIds = getSeasonRaceIds(year);
         for (RaceId raceId : raceIds) {
             Map<UUID, Summary> rankedGuessers = new HashMap<>();
             List<UserScore> userScores = guessers.stream()
-                    .map(guesser -> new UserScore(PublicUserDto.fromEntity(guesser), year, raceId, db, raceService, guessService))
+                    .map(guesser -> new UserScore(PublicUserDto.fromEntity(guesser), year, raceId, raceService, guessService, statsService, scoreService, resultService))
                     .toList();
             Map<UUID, Placement<Points>> driversPoints = getPlacementMap(userScores, UserScore::getDriversScore);
             Map<UUID, Placement<Points>> constructorsPoints = getPlacementMap(userScores, UserScore::getConstructorsScore);

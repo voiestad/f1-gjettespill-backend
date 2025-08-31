@@ -2,7 +2,7 @@ package no.vebb.f1.util.domainPrimitive;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import no.vebb.f1.domain.GuessService;
+import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.util.exception.InvalidCategoryException;
 
 public class Category {

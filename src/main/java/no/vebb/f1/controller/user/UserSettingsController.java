@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import no.vebb.f1.codes.CodeService;
+import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.util.response.ReferralCodeResponse;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidEmailException;
@@ -35,24 +35,24 @@ import no.vebb.f1.util.response.MailOptionsResponse;
 public class UserSettingsController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserSettingsController.class);
-    private final Database db;
     private final UserService userService;
     private final UserRespository userRespository;
     private final CodeService codeService;
     private final MailService mailService;
+    private final GuessService guessService;
 
-    public UserSettingsController(Database db, UserService userService, UserRespository userRespository, CodeService codeService, MailService mailService) {
-        this.db = db;
+    public UserSettingsController(UserService userService, UserRespository userRespository, CodeService codeService, MailService mailService, GuessService guessService) {
         this.userService = userService;
         this.userRespository = userRespository;
         this.codeService = codeService;
         this.mailService = mailService;
+        this.guessService = guessService;
     }
 
     @GetMapping("/info")
     public ResponseEntity<UserInformation> userInformation() {
         UserEntity userEntity = userService.getUser();
-        UserInformation userInfo = new UserInformation(userEntity, db, mailService);
+        UserInformation userInfo = new UserInformation(userEntity, mailService, guessService);
         return new ResponseEntity<>(userInfo, HttpStatus.OK);
 
     }

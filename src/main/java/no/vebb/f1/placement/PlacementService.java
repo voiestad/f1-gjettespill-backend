@@ -1,6 +1,6 @@
 package no.vebb.f1.placement;
 
-import no.vebb.f1.domain.GuessService;
+import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.graph.GuesserPointsSeason;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.util.collection.Guesser;

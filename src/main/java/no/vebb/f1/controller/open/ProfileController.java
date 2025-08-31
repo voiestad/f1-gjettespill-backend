@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import no.vebb.f1.domain.GuessService;
+import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.placement.PlacementService;
 import no.vebb.f1.race.RaceService;
+import no.vebb.f1.results.ResultService;
+import no.vebb.f1.scoring.ScoreService;
 import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.scoring.UserScoreResponse;
+import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import no.vebb.f1.year.YearService;
@@ -19,7 +22,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserService;
@@ -33,20 +35,24 @@ public class ProfileController {
 
     private final UserService userService;
     private final CutoffService cutoffService;
-    private final Database db;
     private final YearService yearService;
     private final RaceService raceService;
     private final PlacementService placementService;
     private final GuessService guessService;
+    private final StatsService statsService;
+    private final ScoreService scoreService;
+    private final ResultService resultService;
 
-    public ProfileController(UserService userService, CutoffService cutoffService, Database db, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService) {
+    public ProfileController(UserService userService, CutoffService cutoffService, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService, StatsService statsService, ScoreService scoreService, ResultService resultService) {
         this.userService = userService;
         this.cutoffService = cutoffService;
-        this.db = db;
         this.yearService = yearService;
         this.raceService = raceService;
         this.placementService = placementService;
         this.guessService = guessService;
+        this.statsService = statsService;
+        this.scoreService = scoreService;
+        this.resultService = resultService;
     }
 
     @GetMapping("/api/public/user/{id}")
@@ -85,7 +91,7 @@ public class ProfileController {
             RaceId raceId = new RaceId(inputRaceId, raceService);
             Year year = raceService.getYearFromRaceId(raceId);
             if (isAbleToSeeGuesses(userEntity, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, db, raceService, placementService, guessService);
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, raceService, placementService, guessService, statsService, scoreService, resultService);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -98,7 +104,7 @@ public class ProfileController {
         try {
             Year year = new Year(TimeUtil.getCurrentYear(), yearService);
             if (isAbleToSeeGuesses(userEntity, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, db, raceService, placementService, guessService);
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, statsService, scoreService, resultService);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {
@@ -111,7 +117,7 @@ public class ProfileController {
         try {
             Year year = new Year(inputYear, yearService);
             if (isAbleToSeeGuesses(userEntity, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, db, raceService, placementService, guessService);
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, statsService, scoreService, resultService);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {

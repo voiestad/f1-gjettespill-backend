@@ -1,6 +1,7 @@
 package no.vebb.f1.controller.admin.season;
 
-import no.vebb.f1.domain.GuessService;
+import no.vebb.f1.guessing.GuessService;
+import no.vebb.f1.scoring.ScoreService;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -9,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Points;
@@ -22,14 +22,14 @@ import no.vebb.f1.util.exception.InvalidPointsException;
 @RequestMapping("/api/admin/season/points")
 public class ManagePointsSystemController {
 
-    private final Database db;
     private final YearService yearService;
     private final GuessService guessService;
+    private final ScoreService scoreService;
 
-    public ManagePointsSystemController(Database db, YearService yearService, GuessService guessService) {
-        this.db = db;
+    public ManagePointsSystemController(YearService yearService, GuessService guessService, ScoreService scoreService) {
         this.yearService = yearService;
         this.guessService = guessService;
+        this.scoreService = scoreService;
     }
 
     @PostMapping("/add")
@@ -45,11 +45,11 @@ public class ManagePointsSystemController {
         try {
             Category validCategory = new Category(category, guessService);
             try {
-                newDiff = db.getMaxDiffInPointsMap(validYear, validCategory).add(new Diff(1));
+                newDiff = scoreService.getMaxDiffInPointsMap(validYear, validCategory).add(new Diff(1));
             } catch (NullPointerException e) {
                 newDiff = new Diff();
             }
-            db.addDiffToPointsMap(validCategory, newDiff, validYear);
+            scoreService.addDiffToPointsMap(validCategory, newDiff, validYear);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidCategoryException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -67,8 +67,8 @@ public class ManagePointsSystemController {
         }
         try {
             Category validCategory = new Category(category, guessService);
-            Diff maxDiff = db.getMaxDiffInPointsMap(validYear, validCategory);
-            db.removeDiffToPointsMap(validCategory, maxDiff, validYear);
+            Diff maxDiff = scoreService.getMaxDiffInPointsMap(validYear, validCategory);
+            scoreService.removeDiffToPointsMap(validCategory, maxDiff, validYear);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (NullPointerException | InvalidCategoryException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -89,13 +89,13 @@ public class ManagePointsSystemController {
         try {
             Category validCategory = new Category(category, guessService);
             Diff validDiff = new Diff(diff);
-            boolean isValidDiff = db.isValidDiffInPointsMap(validCategory, validDiff, validYear);
+            boolean isValidDiff = scoreService.isValidDiffInPointsMap(validCategory, validDiff, validYear);
             if (!isValidDiff) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
             Points validPoints = new Points(points);
-            db.setNewDiffToPointsInPointsMap(validCategory, validDiff, validYear, validPoints);
+            scoreService.setNewDiffToPointsInPointsMap(validCategory, validDiff, validYear, validPoints);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (EmptyResultDataAccessException | InvalidCategoryException | InvalidPointsException |
                  InvalidDiffException e) {

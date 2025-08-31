@@ -1,4 +1,4 @@
-package no.vebb.f1.domain;
+package no.vebb.f1.guessing;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

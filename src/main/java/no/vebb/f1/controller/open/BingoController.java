@@ -2,6 +2,7 @@ package no.vebb.f1.controller.open;
 
 import java.util.List;
 
+import no.vebb.f1.bingo.BingoService;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import no.vebb.f1.database.Database;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.BingoSquare;
@@ -23,21 +23,21 @@ import no.vebb.f1.util.exception.InvalidYearException;
 @RestController
 public class BingoController {
 
-    private final Database db;
 	private final UserService userService;
 	private final YearService yearService;
+	private final BingoService bingoService;
 
-	public BingoController(Database db, UserService userService, YearService yearService) {
-		this.db = db;
+	public BingoController(UserService userService, YearService yearService, BingoService bingoService) {
 		this.userService = userService;
 		this.yearService = yearService;
+		this.bingoService = bingoService;
 	}
 
 	@GetMapping("/api/public/bingo")
 	public ResponseEntity<List<BingoSquare>> getCurrentBingoCard() {
 		try {
 			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
-			return new ResponseEntity<>(db.getBingoCard(year), HttpStatus.OK);
+			return new ResponseEntity<>(bingoService.getBingoCard(year), HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
@@ -47,7 +47,7 @@ public class BingoController {
 	public ResponseEntity<List<BingoSquare>> getBingoCardYear(@PathVariable("year") int year) {
 		try {
 			Year validYear = new Year(year, yearService);
-			return new ResponseEntity<>(db.getBingoCard(validYear), HttpStatus.OK);
+			return new ResponseEntity<>(bingoService.getBingoCard(validYear), HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
@@ -69,12 +69,12 @@ public class BingoController {
 			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}
-			if (db.isBingoCardAdded(validSeason)) {
+			if (bingoService.isBingoCardAdded(validSeason)) {
 				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}
 			for (int id = 0; id < 25; id++) {
 				BingoSquare bingoSquare = new BingoSquare("", false, id, validSeason);
-				db.addBingoSquare(bingoSquare);
+				bingoService.addBingoSquare(bingoSquare);
 			}
 			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidYearException e) {
@@ -94,14 +94,14 @@ public class BingoController {
 			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}
-			if (!db.isBingoCardAdded(validSeason)) {
+			if (!bingoService.isBingoCardAdded(validSeason)) {
 				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}
 			if (id < 0 || id >= 25) {
 				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
 			String validatedText = validate(text);
-			db.setTextBingoSquare(validSeason, id, validatedText);
+			bingoService.setTextBingoSquare(validSeason, id, validatedText);
 			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -120,7 +120,7 @@ public class BingoController {
 			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}
-			db.toogleMarkBingoSquare(validSeason, id);
+			bingoService.toogleMarkBingoSquare(validSeason, id);
 			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);

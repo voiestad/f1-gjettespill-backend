@@ -1,10 +1,9 @@
 package no.vebb.f1.results;
 
-import no.vebb.f1.util.domainPrimitive.Constructor;
-import no.vebb.f1.util.domainPrimitive.Driver;
-import no.vebb.f1.util.domainPrimitive.Points;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.util.collection.ColoredCompetitor;
+import no.vebb.f1.util.domainPrimitive.*;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,12 +16,14 @@ public class ResultService {
     private final RaceResultRepository raceResultRepository;
     private final DriverStandingsRepository driverStandingsRepository;
     private final ConstructorStandingsRepository constructorStandingsRepository;
+    private final JdbcTemplate jdbcTemplate;
 
-    public ResultService(StartingGridRepository startingGridRepository, RaceResultRepository raceResultRepository, DriverStandingsRepository driverStandingsRepository, ConstructorStandingsRepository constructorStandingsRepository) {
+    public ResultService(StartingGridRepository startingGridRepository, RaceResultRepository raceResultRepository, DriverStandingsRepository driverStandingsRepository, ConstructorStandingsRepository constructorStandingsRepository, JdbcTemplate jdbcTemplate) {
         this.startingGridRepository = startingGridRepository;
         this.raceResultRepository = raceResultRepository;
         this.driverStandingsRepository = driverStandingsRepository;
         this.constructorStandingsRepository = constructorStandingsRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public List<StartingGridEntity> getStartingGrid(RaceId raceId) {
@@ -81,6 +82,60 @@ public class ResultService {
             throw new NoAvailableRaceException("Too many starting grids found");
         }
         return new RaceId(startingGridEntities.get(0).raceId());
+    }
+
+    public List<Driver> getDriverStandings(RaceId raceId, Year year) {
+        final String driverYearSql = "SELECT driver_name FROM drivers_year WHERE year = ? ORDER BY position;";
+        final String driverStandingsSql = "SELECT driver_name FROM driver_standings WHERE race_id = ? ORDER BY position;";
+        List<String> result = getCompetitors(raceId, year, driverYearSql, driverStandingsSql);
+        return result.stream().map(Driver::new).toList();
+    }
+
+    private List<String> getCompetitors(RaceId raceId, Year year, final String competitorYearSql, final String competitorStandingsSql) {
+        List<String> result;
+        if (raceId == null) {
+            result = jdbcTemplate.queryForList(competitorYearSql, String.class, year.value);
+        } else {
+            result = jdbcTemplate.queryForList(competitorStandingsSql, String.class, raceId.value);
+        }
+        return result;
+    }
+
+    public List<Constructor> getConstructorStandings(RaceId raceId, Year year) {
+        final String constructorYearSql = "SELECT constructor_name FROM constructors_year WHERE year = ? ORDER BY position;";
+        final String constructorStandingsSql = """
+                SELECT constructor_name
+                FROM constructor_standings
+                WHERE race_id = ?
+                ORDER BY position;
+                """;
+        List<String> result = getCompetitors(raceId, year, constructorYearSql, constructorStandingsSql);
+        return result.stream().map(Constructor::new).toList();
+    }
+
+    public List<Driver> getDriversFromStartingGrid(RaceId raceId) {
+        final String getDriversFromGrid = "SELECT driver_name FROM starting_grids WHERE race_id = ? ORDER BY position;";
+        return jdbcTemplate.queryForList(getDriversFromGrid, String.class, raceId.value).stream()
+                .map(Driver::new)
+                .toList();
+    }
+
+    public List<ColoredCompetitor<Driver>> getDriversFromStartingGridWithColors(RaceId raceId) {
+        final String getDriversFromGrid = """
+                SELECT sg.driver_name as driver, cc.color as color
+                FROM starting_grids sg
+                LEFT JOIN drivers_team dt ON dt.driver_name = sg.driver_name
+                LEFT JOIN constructors_color cc ON cc.constructor_name = dt.team
+                WHERE race_id = ?
+                ORDER BY position;
+                """;
+        return jdbcTemplate.queryForList(getDriversFromGrid, raceId.value).stream()
+                .map(row ->
+                        new ColoredCompetitor<>(
+                                new Driver((String) row.get("driver")),
+                                new Color((String) row.get("color")))
+                )
+                .toList();
     }
 
 }
