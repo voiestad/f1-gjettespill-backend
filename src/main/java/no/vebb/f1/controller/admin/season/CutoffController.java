@@ -78,7 +78,7 @@ public class CutoffController {
         try {
             Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
             cutoffService.setCutoffYear(cutoffTime, validYear);
-            scoreCalculator.calculateScores();
+            new Thread(scoreCalculator::calculateScores).start();
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (DateTimeParseException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
