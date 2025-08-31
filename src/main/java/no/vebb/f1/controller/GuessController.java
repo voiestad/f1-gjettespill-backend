@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.guessing.GuessService;
-import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.util.exception.*;
@@ -238,9 +237,8 @@ public class GuessController {
 			if (yearService.isFinishedYear(year)) {
 				throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 			}
-			RaceOrderEntity raceOrderEntity = raceService.getRaceFromId(getRaceIdToGuess());
-			RaceId raceId = new RaceId(raceOrderEntity.raceId());
-			Race race = new Race(raceOrderEntity.position(), raceOrderEntity.name(), raceId, year);
+			Race race = raceService.getRaceFromId(getRaceIdToGuess());
+			RaceId raceId = race.id();
 			long timeLeftToGuess = cutoffService.getTimeLeftToGuessRace(raceId);
 			List<ColoredCompetitor<Driver>> drivers = resultService.getDriversFromStartingGridWithColors(raceId);
 			UUID id = userService.getUser().id();

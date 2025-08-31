@@ -125,10 +125,6 @@ public class RaceService {
         return mapToRace(raceOrderRepository.findAllByYearJoinWithRaceResults(year.value));
     }
 
-    public RaceOrderEntity getRaceFromId(RaceId raceId) {
-        return raceOrderRepository.findById(raceId.value).orElseThrow(InvalidRaceException::new);
-    }
-
     private List<Race> mapToRace(List<RaceOrderEntity> raceOrderEntities) {
         return raceOrderEntities.stream()
                 .map(ro -> new Race(
@@ -138,6 +134,12 @@ public class RaceService {
                         new Year(ro.year())
                 ))
                 .toList();
+    }
+
+    public Race getRaceFromId(RaceId raceId) {
+        return raceOrderRepository.findById(raceId.value)
+                .map(race -> new Race(race.position(), race.name(), raceId, new Year(race.year())))
+                .orElseThrow(InvalidRaceException::new);
     }
 
 }
