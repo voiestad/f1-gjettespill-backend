@@ -94,9 +94,9 @@ public class MailService {
                     }
                     try {
                         MimeMessage message = mailSender.createMimeMessage();
-                        message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+                        message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
                         message.addRecipients(Message.RecipientType.TO, user.email());
-                        message.setSubject("F1 Tipping påminnelse", "UTF-8");
+                        message.setSubject("F1 Gjettespill påminnelse", "UTF-8");
                         message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
                         mailSender.send(message);
                         notifications.add(new NotifiedEntity(userId, raceId));
@@ -116,7 +116,7 @@ public class MailService {
 
     private String getMessageContent(UserMail user, RaceOrderEntity race, int timeLeft) {
         String greet = String.format("Hei %s!", user.userEntity().username());
-        String reminder = String.format("Dette er en påminnelse om å tippe på %s før tiden går ut.", race.name());
+        String reminder = String.format("Dette er en påminnelse om å gjette på %s før tiden går ut.", race.name());
         String hours = timeLeft == 1 ? "time" : "timer";
         String time = String.format("Det er mindre enn %d %s igjen.", timeLeft, hours);
         return String.format("%s\n\n%s %s", greet, reminder, time);
@@ -147,9 +147,9 @@ public class MailService {
                 strCode.substring(0, 3), strCode.substring(3, 6), strCode.substring(6, 9));
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+            message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
             message.addRecipients(Message.RecipientType.TO, user.email());
-            message.setSubject("Verifikasjonskode F1 Tipping");
+            message.setSubject("Verifikasjonskode F1 Gjettespill");
             message.setContent(String.format("Hei %s!\n\nHer er din verifikasjonskode: %s\n\nDen er gyldig i 10 minutter.",
                     user.userEntity().username(), formattedCode), "text/plain; charset=UTF-8");
             mailSender.send(message);
@@ -167,9 +167,9 @@ public class MailService {
         for (UserMail admin : adminsWithMail) {
             try {
                 MimeMessage message = mailSender.createMimeMessage();
-                message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+                message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
                 message.addRecipients(Message.RecipientType.TO, admin.email());
-                message.setSubject("Server melding F1 Tipping");
+                message.setSubject("Server melding F1 Gjettespill");
                 message.setContent(String.format("Hei administrator!\n\nDette er en automatisk generert melding:\n%s",
                         messageForAdmin), "text/plain; charset=UTF-8");
                 mailSender.send(message);
