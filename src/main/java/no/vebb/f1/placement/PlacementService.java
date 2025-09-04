@@ -101,30 +101,36 @@ public class PlacementService {
         return new Medals(gold, silver, bronze);
     }
 
-    public void addUserScore(UUID userId, Summary summary, RaceId raceId, Year year) {
-        if (raceId != null) {
-            addUserScoreRace(userId, summary, raceId);
-        } else {
-            addUserScoreYearStart(userId, summary, year);
+    public void addUserScores(List<PlacementObj> placementObjs) {
+        List<PlacementRaceEntity> placementRaceEntities = new ArrayList<>();
+        List<PlacementCategoryEntity> placementCategoryEntities = new ArrayList<>();
+        List<PlacementRaceYearStartEntity> placementRaceYearStartEntities = new ArrayList<>();
+        List<PlacementCategoryYearStartEntity> placementCategoryYearStartEntities = new ArrayList<>();
+        for (PlacementObj placementObj : placementObjs) {
+            UUID userId = placementObj.userId();
+            Summary summary = placementObj.summary();
+            RaceId raceId = placementObj.raceId();
+            Year year = placementObj.year();
+            if (raceId != null) {
+                placementRaceEntities.add(new PlacementRaceEntity(raceId.value, userId, summary.total().pos().value(), summary.total().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value));
+            } else {
+                placementRaceYearStartEntities.add(new PlacementRaceYearStartEntity(year.value, userId, summary.total().pos().value(), summary.total().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year.value, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year.value, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year.value, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year.value, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year.value, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value));
+            }
         }
-    }
-
-    private void addUserScoreRace(UUID userId, Summary summary, RaceId raceId) {
-        placementRaceRepository.save(new PlacementRaceEntity(raceId.value, userId, summary.total().pos().value(), summary.total().value().value));
-        placementCategoryRepository.save(new PlacementCategoryEntity(raceId.value, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value));
-        placementCategoryRepository.save(new PlacementCategoryEntity(raceId.value, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value));
-        placementCategoryRepository.save(new PlacementCategoryEntity(raceId.value, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value));
-        placementCategoryRepository.save(new PlacementCategoryEntity(raceId.value, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value));
-        placementCategoryRepository.save(new PlacementCategoryEntity(raceId.value, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value));
-    }
-
-    private void addUserScoreYearStart(UUID userId, Summary summary, Year year) {
-        placementRaceYearStartRepository.save(new PlacementRaceYearStartEntity(year.value, userId, summary.total().pos().value(), summary.total().value().value));
-        placementCategoryYearStartRepository.save(new PlacementCategoryYearStartEntity(year.value, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value));
-        placementCategoryYearStartRepository.save(new PlacementCategoryYearStartEntity(year.value, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value));
-        placementCategoryYearStartRepository.save(new PlacementCategoryYearStartEntity(year.value, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value));
-        placementCategoryYearStartRepository.save(new PlacementCategoryYearStartEntity(year.value, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value));
-        placementCategoryYearStartRepository.save(new PlacementCategoryYearStartEntity(year.value, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value));
+        placementRaceRepository.saveAll(placementRaceEntities);
+        placementCategoryRepository.saveAll(placementCategoryEntities);
+        placementRaceYearStartRepository.saveAll(placementRaceYearStartEntities);
+        placementCategoryYearStartRepository.saveAll(placementCategoryYearStartEntities);
     }
 
     public List<GuesserPointsSeason> getGraph(Year year) {

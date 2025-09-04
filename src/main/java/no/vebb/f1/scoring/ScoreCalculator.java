@@ -1,6 +1,7 @@
 package no.vebb.f1.scoring;
 
 import no.vebb.f1.guessing.GuessService;
+import no.vebb.f1.placement.PlacementObj;
 import no.vebb.f1.placement.PlacementService;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
@@ -76,6 +77,7 @@ public class ScoreCalculator {
         Year year = new Year(TimeUtil.getCurrentYear(), yearService);
         List<UserEntity> guessers = userService.getAllUsers();
         List<RaceId> raceIds = getSeasonRaceIds(year);
+        List<PlacementObj> placementObjs = new ArrayList<>();
         for (RaceId raceId : raceIds) {
             Map<UUID, Summary> rankedGuessers = new HashMap<>();
             List<UserScore> userScores = guessers.stream()
@@ -103,9 +105,10 @@ public class ScoreCalculator {
             for (Entry<UUID, Summary> entry : rankedGuessers.entrySet()) {
                 UUID id = entry.getKey();
                 Summary summary = entry.getValue();
-                placementService.addUserScore(id, summary, raceId, year);
+                placementObjs.add(new PlacementObj(id, summary, raceId, year));
             }
         }
+        placementService.addUserScores(placementObjs);
     }
 
     private Map<UUID, Placement<Points>> getPlacementMap(List<UserScore> userScores, Function<UserScore, Points> getScore) {
