@@ -2352,6 +2352,7 @@ public class Database {
         }
         return userPoints.entrySet().stream()
                 .map(entry -> new GuesserPointsSeason(usernames.get(entry.getKey()), entry.getValue()))
+                .filter(GuesserPointsSeason::hasPoints)
                 .toList();
     }
 
@@ -2393,6 +2394,7 @@ public class Database {
                                 (UUID) row.get("guesser")
                 ), new Position((int) row.get("placement"))
                 ))
+                .filter(RankedGuesser::hasPoints)
                 .toList();
     }
 

@@ -54,7 +54,7 @@ public class ScoreCalculator {
             return;
         }
         Year year = new Year(TimeUtil.getCurrentYear(), db);
-        List<User> guessers = db.getSeasonGuessers(year);
+        List<User> guessers = db.getAllUsers();
         List<RaceId> raceIds = getSeasonRaceIds(year);
         for (RaceId raceId : raceIds) {
             Map<UUID, Summary> rankedGuessers = new HashMap<>();
