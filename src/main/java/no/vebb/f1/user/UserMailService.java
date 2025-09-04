@@ -40,9 +40,9 @@ public class UserMailService {
 				strCode.substring(0, 3), strCode.substring(3, 6), strCode.substring(6, 9));
 		try {
 			MimeMessage message = mailSender.createMimeMessage();
-			message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+			message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
 			message.addRecipients(RecipientType.TO, user.email());
-			message.setSubject("Verifikasjonskode F1 Tipping");
+			message.setSubject("Verifikasjonskode F1 Gjettespill");
 			message.setContent(String.format("Hei %s!\n\nHer er din verifikasjonskode: %s\n\nDen er gyldig i 10 minutter.",
 					user.user().username(), formattedCode), "text/plain; charset=UTF-8");
 			mailSender.send(message);
@@ -61,9 +61,9 @@ public class UserMailService {
 		for (UserMail admin : adminsWithMail) {
 			try {
 				MimeMessage message = mailSender.createMimeMessage();
-				message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+				message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
 				message.addRecipients(RecipientType.TO, admin.email());
-				message.setSubject("Server melding F1 Tipping");
+				message.setSubject("Server melding F1 Gjettespill");
 				message.setContent(String.format("Hei administrator!\n\nDette er en automatisk generert melding:\n%s",
 						messageForAdmin), "text/plain; charset=UTF-8");
 				mailSender.send(message);
