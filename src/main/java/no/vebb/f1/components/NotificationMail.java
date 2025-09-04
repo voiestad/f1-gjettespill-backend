@@ -65,9 +65,9 @@ public class NotificationMail {
 					}
 					try {
 						MimeMessage message = mailSender.createMimeMessage();
-						message.setFrom(new InternetAddress(fromEmail, "F1 Tipping"));
+						message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
 						message.addRecipients(RecipientType.TO, user.email());
-						message.setSubject("F1 Tipping påminnelse", "UTF-8");
+						message.setSubject("F1 Gjettespill påminnelse", "UTF-8");
 						message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
 						mailSender.send(message);
 						db.setNotified(raceId, userId);
@@ -86,7 +86,7 @@ public class NotificationMail {
 
 	private String getMessageContent(UserMail user, CutoffRace race, int timeLeft) {
 		String greet = String.format("Hei %s!", user.user().username());
-		String reminder = String.format("Dette er en påminnelse om å tippe på %s før tiden går ut.", race.name);
+		String reminder = String.format("Dette er en påminnelse om å gjette på %s før tiden går ut.", race.name);
 		String hours = timeLeft == 1 ? "time" : "timer";
 		String time = String.format("Det er mindre enn %d %s igjen.", timeLeft, hours);
 		return String.format("%s\n\n%s %s", greet, reminder, time);
