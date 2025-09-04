@@ -141,6 +141,7 @@ public class PlacementService {
         }
         return userPoints.entrySet().stream()
                 .map(entry -> new GuesserPointsSeason(usernames.get(entry.getKey()), entry.getValue()))
+                .filter(GuesserPointsSeason::hasPoints)
                 .toList();
     }
 
@@ -155,6 +156,7 @@ public class PlacementService {
                                 row.getUserId()
                         ), new Position(row.getPlacement())
                 ))
+                .filter(RankedGuesser::hasPoints)
                 .toList();
     }
 }

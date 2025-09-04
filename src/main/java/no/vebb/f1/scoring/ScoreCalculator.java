@@ -8,6 +8,7 @@ import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.cutoff.CutoffService;
+import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Placement;
 import no.vebb.f1.util.collection.userTables.Summary;
@@ -42,8 +43,9 @@ public class ScoreCalculator {
     private final StatsService statsService;
     private final ScoreService scoreService;
     private final ResultService resultService;
+    private final UserService userService;
 
-    public ScoreCalculator(CutoffService cutoffService, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService, StatsService statsService, ScoreService scoreService, ResultService resultService) {
+    public ScoreCalculator(CutoffService cutoffService, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService, StatsService statsService, ScoreService scoreService, ResultService resultService, UserService userService) {
         this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
@@ -52,6 +54,7 @@ public class ScoreCalculator {
         this.statsService = statsService;
         this.scoreService = scoreService;
         this.resultService = resultService;
+        this.userService = userService;
     }
 
     @Transactional
@@ -71,7 +74,7 @@ public class ScoreCalculator {
             return;
         }
         Year year = new Year(TimeUtil.getCurrentYear(), yearService);
-        List<UserEntity> guessers = guessService.getSeasonGuessers(year);
+        List<UserEntity> guessers = userService.getAllUsers();
         List<RaceId> raceIds = getSeasonRaceIds(year);
         for (RaceId raceId : raceIds) {
             Map<UUID, Summary> rankedGuessers = new HashMap<>();
