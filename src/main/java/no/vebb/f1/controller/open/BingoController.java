@@ -120,7 +120,9 @@ public class BingoController {
 			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}
-			bingoService.toogleMarkBingoSquare(validSeason, id);
+			if (!bingoService.toogleMarkBingoSquare(validSeason, id)) {
+				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+			}
 			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);

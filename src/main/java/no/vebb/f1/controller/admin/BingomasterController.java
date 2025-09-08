@@ -3,6 +3,7 @@ package no.vebb.f1.controller.admin;
 import java.util.List;
 import java.util.UUID;
 
+import no.vebb.f1.bingo.BingomasterEntity;
 import no.vebb.f1.bingo.BingoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ public class BingomasterController {
     @GetMapping("/list")
     public ResponseEntity<List<PublicUserDto>> getBingomasters() {
         List<PublicUserDto> bingoMasters = bingoService.getBingomasters().stream()
+                .map(BingomasterEntity::user)
                 .map(PublicUserDto::fromEntity)
                 .toList();
         return new ResponseEntity<>(bingoMasters, HttpStatus.OK);
