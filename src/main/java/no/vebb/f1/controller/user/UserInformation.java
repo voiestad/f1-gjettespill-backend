@@ -8,10 +8,7 @@ import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserDto;
-import no.vebb.f1.util.collection.CompetitorGuessYear;
-import no.vebb.f1.util.collection.FlagGuessYear;
-import no.vebb.f1.util.collection.PlaceGuess;
-import no.vebb.f1.util.collection.UserNotifiedCount;
+import no.vebb.f1.util.collection.*;
 import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Driver;
 
