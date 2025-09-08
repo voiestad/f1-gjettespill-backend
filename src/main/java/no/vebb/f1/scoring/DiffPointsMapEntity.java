@@ -17,7 +17,7 @@ public class DiffPointsMapEntity {
     protected DiffPointsMapEntity() {}
 
     public DiffPointsMapEntity(String categoryName, int diff, int year, int points) {
-        this.id = new DiffPointsMapId(categoryName, year, points);
+        this.id = new DiffPointsMapId(categoryName, diff, year);
         this.points = points;
     }
 
