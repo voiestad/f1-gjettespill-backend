@@ -1,14 +1,21 @@
 package no.vebb.f1.util.collection;
 
+import no.vebb.f1.util.domainPrimitive.Driver;
+
 public class UserRaceGuess {
 	
 	public final String user;
-	public final String driver;
-	public final String position;
+	public final Driver driver;
+	public final int position;
 
-	public UserRaceGuess(String user, String driver, int position) {
-		this.user = user;
+	public UserRaceGuess(String username, Driver driver, int position) {
+		this.user = username;
 		this.driver = driver;
-		this.position = Integer.toString(position);
+		this.position = position;
+	}
+
+	public static UserRaceGuess fromIUserRaceGuess(IUserRaceGuess iUserRaceGuess) {
+		return new UserRaceGuess(iUserRaceGuess.getUsername(), new Driver(iUserRaceGuess.getDriverName()),
+				iUserRaceGuess.getStartPosition());
 	}
 }

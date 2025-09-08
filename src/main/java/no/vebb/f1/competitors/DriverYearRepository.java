@@ -1,5 +1,6 @@
 package no.vebb.f1.competitors;
 
+import no.vebb.f1.results.IColoredCompetitor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,14 @@ public interface DriverYearRepository extends JpaRepository<DriverYearEntity, Dr
     void updatePosition(String driverName, int year, int position);
 
     boolean existsByIdDriverName(String driverName);
+
+    @Query("""
+            SELECT dy.id.driverName as competitorName, cc.color as color
+            FROM DriverYearEntity dy
+            LEFT JOIN DriverTeamEntity dt ON dt.id.driverName = dy.id.driverName
+            LEFT JOIN ConstructorColorEntity cc ON cc.id.constructorName = dt.team
+            WHERE dy.id.year = :year
+            ORDER BY dy.position
+            """)
+    List<IColoredCompetitor> findAllByYearOrderByPosition(int year);
 }

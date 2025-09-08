@@ -26,4 +26,30 @@ public interface UserRespository extends JpaRepository<UserEntity, UUID> {
             """, nativeQuery = true)
 
     void anonymizeUser(UUID userId);
+
+    @Query("""
+            SELECT u
+            FROM UserEntity u
+            WHERE EXISTS (
+                SELECT 1
+                FROM FlagGuessEntity fg
+                WHERE fg.id.userId = u.id
+                  AND fg.id.year = :year
+            )
+              AND EXISTS (
+                SELECT 1
+                FROM DriverGuessEntity dg
+                WHERE dg.id.userId = u.id
+                  AND dg.id.year = :year
+            )
+              AND EXISTS (
+                SELECT 1
+                FROM ConstructorGuessEntity cg
+                WHERE cg.id.userId = u.id
+                  AND cg.id.year = :year
+            )
+            ORDER BY u.username
+            """)
+    List<UserEntity> findAllByGuessedYear(int year);
+
 }

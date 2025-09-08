@@ -289,6 +289,9 @@ public class PostgreSQLConfig {
 					FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
 				);
 			""");
+			jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS user_year_idx ON flag_guesses (user_id, year);");
+			jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS user_year_idx ON driver_guesses (user_id, year);");
+			jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS user_year_idx ON constructor_guesses (user_id, year);");
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS diff_points_mappings (
 					category_name TEXT NOT NULL,

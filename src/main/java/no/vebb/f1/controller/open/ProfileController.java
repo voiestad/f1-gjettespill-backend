@@ -11,7 +11,6 @@ import no.vebb.f1.results.ResultService;
 import no.vebb.f1.scoring.ScoreService;
 import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.scoring.UserScoreResponse;
-import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import no.vebb.f1.year.YearService;
@@ -39,18 +38,16 @@ public class ProfileController {
     private final RaceService raceService;
     private final PlacementService placementService;
     private final GuessService guessService;
-    private final StatsService statsService;
     private final ScoreService scoreService;
     private final ResultService resultService;
 
-    public ProfileController(UserService userService, CutoffService cutoffService, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService, StatsService statsService, ScoreService scoreService, ResultService resultService) {
+    public ProfileController(UserService userService, CutoffService cutoffService, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService, ScoreService scoreService, ResultService resultService) {
         this.userService = userService;
         this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
         this.placementService = placementService;
         this.guessService = guessService;
-        this.statsService = statsService;
         this.scoreService = scoreService;
         this.resultService = resultService;
     }
@@ -91,7 +88,7 @@ public class ProfileController {
             RaceId raceId = new RaceId(inputRaceId, raceService);
             Year year = raceService.getYearFromRaceId(raceId);
             if (isAbleToSeeGuesses(userEntity, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, raceService, placementService, guessService, statsService, scoreService, resultService);
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, raceService, placementService, guessService, scoreService, resultService);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -104,7 +101,7 @@ public class ProfileController {
         try {
             Year year = new Year(TimeUtil.getCurrentYear(), yearService);
             if (isAbleToSeeGuesses(userEntity, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, statsService, scoreService, resultService);
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {
@@ -117,7 +114,7 @@ public class ProfileController {
         try {
             Year year = new Year(inputYear, yearService);
             if (isAbleToSeeGuesses(userEntity, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, statsService, scoreService, resultService);
+                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
                 return new ResponseEntity<>(res, HttpStatus.OK);
             }
         } catch (InvalidYearException ignored) {

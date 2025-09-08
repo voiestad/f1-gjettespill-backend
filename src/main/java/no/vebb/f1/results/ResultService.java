@@ -125,11 +125,7 @@ public class ResultService {
 
     public List<ColoredCompetitor<Driver>> getDriversFromStartingGridWithColors(RaceId raceId) {
         return startingGridRepository.findAllByRaceIdWithColor(raceId.value).stream()
-                .map(driver ->
-                        new ColoredCompetitor<>(
-                                new Driver(driver.getCompetitorName()),
-                                new Color(driver.getColor())
-                ))
+                .map(ColoredCompetitor::fromIColoredCompetitorToDriver)
                 .toList();
     }
 

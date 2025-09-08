@@ -3,8 +3,9 @@ package no.vebb.f1.scoring;
 import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
-import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.user.PublicUserDto;
+import no.vebb.f1.util.collection.IFlagGuessed;
+import no.vebb.f1.util.collection.IUserRaceGuessTable;
 import no.vebb.f1.util.collection.userTables.FlagGuess;
 import no.vebb.f1.util.collection.userTables.PlaceGuess;
 import no.vebb.f1.util.collection.userTables.StandingsGuess;
@@ -20,7 +21,6 @@ public class UserScore {
 
     private final RaceService raceService;
     private final GuessService guessService;
-    private final StatsService statsService;
     private final ScoreService scoreService;
     private final ResultService resultService;
     public final PublicUserDto user;
@@ -39,7 +39,6 @@ public class UserScore {
             RaceId raceId,
             RaceService raceService,
             GuessService guessService,
-            StatsService statsService,
             ScoreService scoreService,
             ResultService resultService
     ) {
@@ -49,7 +48,6 @@ public class UserScore {
         this.raceService = raceService;
         this.racePos = getRacePosition();
         this.guessService = guessService;
-        this.statsService = statsService;
         this.scoreService = scoreService;
         this.resultService = resultService;
         initializeDriversGuesses();
@@ -64,11 +62,10 @@ public class UserScore {
             Year year,
             RaceService raceService,
             GuessService guessService,
-            StatsService statsService,
             ScoreService scoreService,
             ResultService resultService
     ) {
-        this(user, year, UserScore.getRaceId(year, raceService), raceService, guessService, statsService, scoreService, resultService);
+        this(user, year, UserScore.getRaceId(year, raceService), raceService, guessService, scoreService, resultService);
     }
 
     private static RaceId getRaceId(Year year, RaceService raceService) {
@@ -125,11 +122,11 @@ public class UserScore {
         Category category = new Category("FLAG", guessService);
         DiffPointsMap map = new DiffPointsMap(category, year, scoreService);
 
-        List<Map<String, Object>> sqlRes = guessService.getDataForFlagTable(racePos, year, user.id());
-        for (Map<String, Object> row : sqlRes) {
-            Flag flag = new Flag((String) row.get("type"), statsService);
-            int guessed = (int) row.get("guessed");
-            int actual = (int) row.get("actual");
+        List<IFlagGuessed> sqlRes = guessService.getDataForFlagTable(racePos, year, user.id());
+        for (IFlagGuessed row : sqlRes) {
+            Flag flag = new Flag(row.getFlagName());
+            int guessed = row.getGuessed();
+            int actual = row.getActual();
             Diff diff = new Diff(Math.abs(guessed - actual));
             Points points = map.getPoints(diff);
             flagGuesses.add(new FlagGuess(flag, guessed, actual, diff, points));
@@ -149,14 +146,14 @@ public class UserScore {
             return;
         }
         DiffPointsMap map = new DiffPointsMap(category, year, scoreService);
-        List<Map<String, Object>> sqlRes = guessService.getDataForPlaceGuessTable(category, user.id(), year, racePos);
+        List<IUserRaceGuessTable> sqlRes = guessService.getDataForPlaceGuessTable(category, user.id(), year, racePos);
 
-        for (Map<String, Object> row : sqlRes) {
-            int racePosition = (int) row.get("race_position");
-            String raceName = (String) row.get("race_name");
-            String driver = (String) row.get("driver");
-            int startPos = (int) row.get("start");
-            int finishPos = (int) row.get("finish");
+        for (IUserRaceGuessTable row : sqlRes) {
+            int racePosition = row.getRacePosition();
+            String raceName = row.getRaceName();
+            String driver = row.getDriverName();
+            int startPos = row.getStartPosition();
+            int finishPos = row.getFinishingPosition();
             Diff diff = new Diff(Math.abs(targetPos - finishPos));
             Points points = map.getPoints(diff);
             result.add(new PlaceGuess(racePosition, raceName, driver, startPos, finishPos, diff, points));
