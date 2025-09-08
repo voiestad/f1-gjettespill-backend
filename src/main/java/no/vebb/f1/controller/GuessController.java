@@ -1,12 +1,10 @@
 package no.vebb.f1.controller;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import no.vebb.f1.competitors.CompetitorService;
+import no.vebb.f1.guessing.ConstructorGuessEntity;
+import no.vebb.f1.guessing.DriverGuessEntity;
 import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
@@ -14,7 +12,6 @@ import no.vebb.f1.util.exception.*;
 import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -127,10 +124,12 @@ public class GuessController {
 			}
 			int position = 1;
 			UUID id = userService.getUser().id();
+			List<DriverGuessEntity> driverGuesses = new ArrayList<>();
 			for (Driver driver : guessedDrivers) {
-				guessService.insertDriversYearGuess(id, driver, year, position);
+				driverGuesses.add(new DriverGuessEntity(id, position, year.value, driver.value));
 				position++;
 			}
+			guessService.addDriversYearGuesses(driverGuesses);
 			logger.info("User '{}' guessed on '{}' on year '{}'", id, "driver", year);
 		return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidDriverException e) {
@@ -177,10 +176,12 @@ public class GuessController {
 			}
 			int position = 1;
 			UUID id = userService.getUser().id();
+			List<ConstructorGuessEntity> constructorGuesses = new ArrayList<>();
 			for (Constructor constructor : guessedConstructors) {
-				guessService.insertConstructorsYearGuess(id, constructor, year, position);
+				constructorGuesses.add(new ConstructorGuessEntity(id, position, year.value, constructor.value));
 				position++;
 			}
+			guessService.addConstructorsYearGuesses(constructorGuesses);
 			logger.info("User '{}' guessed on '{}' on year '{}'", id, "constructor", year);
 		} catch (InvalidConstructorException e) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -242,14 +243,10 @@ public class GuessController {
 			long timeLeftToGuess = cutoffService.getTimeLeftToGuessRace(raceId);
 			List<ColoredCompetitor<Driver>> drivers = resultService.getDriversFromStartingGridWithColors(raceId);
 			UUID id = userService.getUser().id();
-			try {
-				Driver driver = guessService.getGuessedDriverPlace(raceId, category, id);
-				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, driver, timeLeftToGuess, race);
-				return new ResponseEntity<>(res, HttpStatus.OK);
-			} catch (EmptyResultDataAccessException e) {
-				CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, null, timeLeftToGuess, race);
-				return new ResponseEntity<>(res, HttpStatus.OK);
-			}
+			Driver driver = guessService.getGuessedDriverPlace(raceId, category, id);
+			CutoffCompetitorsSelected<Driver> res = new CutoffCompetitorsSelected<>(drivers, driver, timeLeftToGuess, race);
+			return new ResponseEntity<>(res, HttpStatus.OK);
+
 		} catch (NoAvailableRaceException | InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}

@@ -7,10 +7,7 @@ import no.vebb.f1.util.domainPrimitive.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class GuessService {
@@ -18,11 +15,19 @@ public class GuessService {
     private final CategoryRepository categoryRepository;
     private final JdbcTemplate jdbcTemplate;
     private final UserRespository userRespository;
+    private final ConstructorGuessRepository constructorGuessRepository;
+    private final DriverGuessRepository driverGuessRepository;
+    private final FlagGuessRepository flagGuessRepository;
+    private final DriverPlaceGuessRepository driverPlaceGuessRepository;
 
-    public GuessService(CategoryRepository categoryRepository, JdbcTemplate jdbcTemplate, UserRespository userRespository) {
+    public GuessService(CategoryRepository categoryRepository, JdbcTemplate jdbcTemplate, UserRespository userRespository, ConstructorGuessRepository constructorGuessRepository, DriverGuessRepository driverGuessRepository, FlagGuessRepository flagGuessRepository, DriverPlaceGuessRepository driverPlaceGuessRepository) {
         this.categoryRepository = categoryRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.userRespository = userRespository;
+        this.constructorGuessRepository = constructorGuessRepository;
+        this.driverGuessRepository = driverGuessRepository;
+        this.flagGuessRepository = flagGuessRepository;
+        this.driverPlaceGuessRepository = driverPlaceGuessRepository;
     }
 
     public List<Category> getCategories() {
@@ -76,20 +81,15 @@ public class GuessService {
     }
 
     public List<Driver> getGuessedYearDriver(Year year, UUID userId) {
-        final String guessedSql = "SELECT driver_name FROM driver_guesses WHERE year = ?  AND user_id = ? ORDER BY position";
-        return jdbcTemplate.queryForList(guessedSql, String.class, year.value, userId).stream()
+        return driverGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year.value, userId).stream()
+                .map(DriverGuessEntity::driverName)
                 .map(Driver::new)
                 .toList();
     }
 
     public List<Constructor> getGuessedYearConstructor(Year year, UUID userId) {
-        final String guessedSql = """
-                SELECT constructor_name
-                FROM constructor_guesses
-                WHERE year = ? AND user_id = ?
-                ORDER BY position;
-                """;
-        return jdbcTemplate.queryForList(guessedSql, String.class, year.value, userId).stream()
+        return constructorGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year.value, userId).stream()
+                .map(ConstructorGuessEntity::constructorName)
                 .map(Constructor::new)
                 .toList();
     }
@@ -113,55 +113,40 @@ public class GuessService {
     }
 
     public void addFlagGuesses(UUID userId, Year year, Flags flags) {
-        final String sql = """
-            INSERT INTO flag_guesses (user_id, flag_name, year, amount)
-            values (?, ?, ?, ?)
-            ON CONFLICT (user_id, flag_name, year)
-            DO UPDATE SET amount = EXCLUDED.amount;
-        """;
-        jdbcTemplate.update(sql, userId, "Yellow Flag", year.value, flags.yellow);
-        jdbcTemplate.update(sql, userId, "Red Flag", year.value, flags.red);
-        jdbcTemplate.update(sql, userId, "Safety Car", year.value, flags.safetyCar);
+        flagGuessRepository.saveAll(Arrays.asList(
+                new FlagGuessEntity(userId, "Yellow Flag", year.value, flags.yellow),
+                new FlagGuessEntity(userId, "Red Flag", year.value, flags.red),
+                new FlagGuessEntity(userId, "Safety Car", year.value, flags.safetyCar)
+        ));
     }
 
     public Flags getFlagGuesses(UUID userId, Year year) {
-        final String sql = "SELECT flag_name, amount FROM flag_guesses WHERE user_id = ? AND year = ?;";
-        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql, userId, year.value);
         Flags flags = new Flags();
-        for (Map<String, Object> row : sqlRes) {
-            String flag = (String) row.get("flag_name");
-            int amount = (int) row.get("amount");
-            switch (flag) {
+        List<FlagGuessEntity> flagGuesses = flagGuessRepository.findAllByIdUserIdAndIdYear(userId, year.value);
+        for (FlagGuessEntity flagGuess : flagGuesses) {
+            switch (flagGuess.flagName()) {
                 case "Yellow Flag":
-                    flags.yellow = amount;
+                    flags.yellow = flagGuess.amount();
                     break;
                 case "Red Flag":
-                    flags.red = amount;
+                    flags.red = flagGuess.amount();
                     break;
                 case "Safety Car":
-                    flags.safetyCar = amount;
+                    flags.safetyCar = flagGuess.amount();
                     break;
             }
         }
         return flags;
     }
     public Driver getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
-        final String getPreviousGuessSql = """
-                SELECT driver_name
-                FROM driver_place_guesses
-                WHERE race_id = ? AND category_name = ? AND user_id = ?;
-                """;
-        return new Driver(jdbcTemplate.queryForObject(getPreviousGuessSql, String.class, raceId.value, category.value, userId));
+        return driverPlaceGuessRepository.findById(new DriverPlaceGuessId(userId, raceId.value, category.value))
+                .map(DriverPlaceGuessEntity::driverName)
+                .map(Driver::new)
+                .orElse(null);
     }
 
     public void addDriverPlaceGuess(UUID userId, RaceId raceId, Driver driver, Category category) {
-        final String insertGuessSql = """
-            INSERT INTO driver_place_guesses (user_id, race_id, driver_name, category_name)
-            values (?, ?, ?, ?)
-            ON CONFLICT (user_id, race_id, category_name)
-            DO UPDATE SET driver_name = EXCLUDED.driver_name;
-        """;
-        jdbcTemplate.update(insertGuessSql, userId, raceId.value, driver.value, category.value);
+        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId.value, category.value, driver.value));
     }
 
     public List<ColoredCompetitor<Driver>> getDriversGuess(UUID userId, Year year) {
@@ -222,24 +207,12 @@ public class GuessService {
         return competitors;
     }
 
-    public void insertDriversYearGuess(UUID userId, Driver driver, Year year, int position) {
-        final String addRowDriver = """
-            INSERT INTO driver_guesses (user_id, driver_name, year, position)
-            values (?, ?, ?, ?)
-            ON CONFLICT (user_id, position, year)
-            DO UPDATE SET driver_name = EXCLUDED.driver_name;
-        """;
-        jdbcTemplate.update(addRowDriver, userId, driver.value, year.value, position);
+    public void addDriversYearGuesses(List<DriverGuessEntity> driverGuesses) {
+        driverGuessRepository.saveAll(driverGuesses);
     }
 
-    public void insertConstructorsYearGuess(UUID userId, Constructor constructor, Year year, int position) {
-        final String addRowConstructor = """
-            INSERT INTO constructor_guesses (user_id, constructor_name, year, position)
-            values (?, ?, ?, ?)
-            ON CONFLICT (user_id, position, year)
-            DO UPDATE SET constructor_name = EXCLUDED.constructor_name;
-         """;
-        jdbcTemplate.update(addRowConstructor, userId, constructor.value, year.value, position);
+    public void addConstructorsYearGuesses(List<ConstructorGuessEntity> constructorGuesses) {
+        constructorGuessRepository.saveAll(constructorGuesses);
     }
 
     public List<UserEntity> getSeasonGuessers(Year year) {
@@ -260,51 +233,23 @@ public class GuessService {
                 .map(Optional::get)
                 .toList();
     }
+
     public List<CompetitorGuessYear<Driver>> userGuessDataDriver(UUID userId) {
-        final String sql = """
-                SELECT position, driver_name, year
-                FROM driver_guesses
-                WHERE user_id = ?
-                ORDER BY year DESC, position;
-                """;
-        return jdbcTemplate.queryForList(sql, userId).stream()
-                .map(row ->
-                        new CompetitorGuessYear<>(
-                                (int) row.get("position"),
-                                new Driver((String) row.get("driver_name")),
-                                new Year((int) row.get("year"))
-                        )).toList();
+        return driverGuessRepository.findAllByIdUserIdOrderByIdYearDescIdPosition(userId).stream()
+                .map(CompetitorGuessYear::fromEntity)
+                .toList();
     }
 
     public List<CompetitorGuessYear<Constructor>> userGuessDataConstructor(UUID userId) {
-        final String sql = """
-                SELECT position, constructor_name, year
-                FROM constructor_guesses
-                WHERE user_id = ?
-                ORDER BY year DESC, position;
-                """;
-        return jdbcTemplate.queryForList(sql, userId).stream()
-                .map(row ->
-                        new CompetitorGuessYear<>(
-                                (int) row.get("position"),
-                                new Constructor((String) row.get("constructor_name")),
-                                new Year((int) row.get("year"))
-                        )).toList();
+        return constructorGuessRepository.findAllByIdUserIdOrderByIdYearDescIdPosition(userId).stream()
+                .map(CompetitorGuessYear::fromEntity)
+                .toList();
     }
 
     public List<FlagGuessYear> userGuessDataFlag(UUID userId) {
-        final String sql = """
-                SELECT flag_name, amount, year
-                FROM flag_guesses
-                WHERE user_id = ?
-                ORDER BY year DESC, flag_name;
-                """;
-        return jdbcTemplate.queryForList(sql, userId).stream()
-                .map(row -> new FlagGuessYear(
-                        new Flag((String) row.get("flag_name")),
-                        (int) row.get("amount"),
-                        new Year((int) row.get("year"))
-                )).toList();
+        return flagGuessRepository.findAllByIdUserIdOrderByIdYearDescIdFlagName(userId).stream()
+                .map(FlagGuessYear::fromEntity)
+                .toList();
 
     }
 

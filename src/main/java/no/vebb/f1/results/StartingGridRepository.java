@@ -19,4 +19,14 @@ public interface StartingGridRepository extends JpaRepository<StartingGridEntity
             )
             """, nativeQuery = true)
     List<StartingGridEntity> findAllByNotInRaceResult();
+
+    @Query("""
+            SELECT sg.id.driverName as competitorName, cc.color as color
+            FROM StartingGridEntity sg
+            LEFT JOIN DriverTeamEntity dt ON dt.id.driverName = sg.id.driverName
+            LEFT JOIN ConstructorColorEntity cc ON cc.id.constructorName = dt.team
+            WHERE sg.id.raceId = :raceId
+            ORDER BY sg.position
+            """)
+    List<IColoredCompetitor> findAllByRaceIdWithColor(int raceId);
 }
