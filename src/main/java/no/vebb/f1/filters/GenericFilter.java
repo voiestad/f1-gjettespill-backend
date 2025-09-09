@@ -14,9 +14,6 @@ public class GenericFilter extends Filter<ILoggingEvent> {
 		if (event.getLoggerName().equals("no.vebb.f1.importing.TableImporter")) {
 			return FilterReply.DENY;
 		}
-		if (event.getLoggerName().equals("no.vebb.f1.graph.GraphCache")) {
-			return FilterReply.DENY;
-		}
 		return FilterReply.NEUTRAL;
 	}
 	
