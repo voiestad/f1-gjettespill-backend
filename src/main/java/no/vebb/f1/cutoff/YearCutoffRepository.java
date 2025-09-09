@@ -1,6 +1,7 @@
 package no.vebb.f1.cutoff;
 
+import no.vebb.f1.util.domainPrimitive.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface YearCutoffRepository extends JpaRepository<YearCutoffEntity, Integer> {
+public interface YearCutoffRepository extends JpaRepository<YearCutoffEntity, Year> {
 }

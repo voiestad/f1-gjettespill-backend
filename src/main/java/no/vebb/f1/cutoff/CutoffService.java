@@ -30,7 +30,7 @@ public class CutoffService {
     }
 
     public Instant getCutoffYear(Year year) throws InvalidYearException {
-        return yearCutoffRepository.findById(year.value).map(YearCutoffEntity::cutoff).orElseThrow(InvalidYearException::new);
+        return yearCutoffRepository.findById(year).map(YearCutoffEntity::cutoff).orElseThrow(InvalidYearException::new);
     }
 
     public Instant getCutoffRace(RaceId raceId) throws NoAvailableRaceException {
@@ -39,7 +39,7 @@ public class CutoffService {
 
     public boolean isAbleToGuessCurrentYear() {
         try {
-            return isAbleToGuessYear(new Year(TimeUtil.getCurrentYear(), yearService));
+            return isAbleToGuessYear(yearService.getCurrentYear());
         } catch (InvalidYearException e) {
             return false;
         }
@@ -82,7 +82,7 @@ public class CutoffService {
     }
 
     public void setCutoffYear(Instant cutoffTime, Year year) {
-        yearCutoffRepository.save(new YearCutoffEntity(year.value, cutoffTime));
+        yearCutoffRepository.save(new YearCutoffEntity(year, cutoffTime));
     }
 
     public long getTimeLeftToGuessRace(RaceId raceId) throws NoAvailableRaceException {
@@ -97,12 +97,12 @@ public class CutoffService {
 
     public long getTimeLeftToGuessYear() {
         Instant now = Instant.now();
-        Instant cutoffYear = getCutoffYear(new Year(TimeUtil.getCurrentYear()));
+        Instant cutoffYear = getCutoffYear(yearService.getCurrentYear());
         return Duration.between(now, cutoffYear).toSeconds();
     }
 
     public List<CutoffRace> getCutoffRaces(Year year) {
-        return raceCutoffRepository.findAllByRaceOrderYearOrderByRaceOrderPosition(year.value).stream()
+        return raceCutoffRepository.findAllByRaceOrderYearOrderByRaceOrderPosition(year).stream()
                 .map(row -> new CutoffRace(
                         row.position(),
                         row.raceName(),

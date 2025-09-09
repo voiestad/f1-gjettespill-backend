@@ -23,7 +23,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
-import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.domainPrimitive.Constructor;
 import no.vebb.f1.util.domainPrimitive.Driver;
@@ -57,7 +56,7 @@ public class Importer {
 	public void importData() {
 		logger.info("Starting import of data to database");
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+			Year year = yearService.getCurrentYear();
 			Map<Year, List<RaceId>> racesToImportFromList = getActiveRaces();
 			boolean shouldImportStandings = false;
 
@@ -133,7 +132,7 @@ public class Importer {
 		Map<Year, List<RaceId>> activeRaces = new LinkedHashMap<>();
 		List<RaceOrderEntity> sqlRes = raceService.getActiveRaces();
 		for (RaceOrderEntity race : sqlRes) {
-			Year year = new Year(race.year());
+			Year year = race.year();
 			if (!activeRaces.containsKey(year)) {
 				activeRaces.put(year, new ArrayList<>());
 			}
@@ -153,7 +152,7 @@ public class Importer {
 			logger.info("No change in race result");
 		}
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+			Year year = yearService.getCurrentYear();
 			RaceId newestRaceId = raceService.getLatestRaceId(year);
 			if (raceId.equals(newestRaceId)) {
 				logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
@@ -349,7 +348,7 @@ public class Importer {
 	}
 
 	private ResultChangeStatus importDriverStandings(Year year, RaceId newestRace) {
-		List<List<String>> standings = TableImporter.getDriverStandings(year.value);
+		List<List<String>> standings = TableImporter.getDriverStandings(year);
 		if (standings.size() <= 1) {
 			logger.info("Driver standings not available");
 			return ResultChangeStatus.NO_CHANGE;
@@ -393,7 +392,7 @@ public class Importer {
 	}
 
 	private ResultChangeStatus importConstructorStandings(Year year, RaceId newestRace) {
-		List<List<String>> standings = TableImporter.getConstructorStandings(year.value);
+		List<List<String>> standings = TableImporter.getConstructorStandings(year);
 		if (standings.size() <= 1) {
 			logger.info("Constructor standings not available");
 			return ResultChangeStatus.NO_CHANGE;

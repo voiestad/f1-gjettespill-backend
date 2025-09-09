@@ -71,7 +71,7 @@ public class ScoreCalculator {
         if (cutoffService.isAbleToGuessCurrentYear()) {
             return;
         }
-        Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+        Year year = yearService.getCurrentYear();
         List<UserEntity> guessers = userService.getAllUsers();
         List<RaceId> raceIds = getSeasonRaceIds(year);
         List<PlacementObj> placementObjs = new ArrayList<>();

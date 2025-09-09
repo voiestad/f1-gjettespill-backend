@@ -2,6 +2,8 @@ package no.vebb.f1.competitors;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.Objects;
 
@@ -9,12 +11,12 @@ import java.util.Objects;
 public class ConstructorId {
     @Column(name = "constructor_name", nullable = false)
     private String constructorName;
-    @Column(name = "year", nullable = false)
-    private int year;
+    @Embedded
+    private Year year;
 
     protected ConstructorId() {}
 
-    public ConstructorId(String constructorName, int year) {
+    public ConstructorId(String constructorName, Year year) {
         this.constructorName = constructorName;
         this.year = year;
     }
@@ -23,7 +25,7 @@ public class ConstructorId {
         return constructorName;
     }
 
-    public int year() {
+    public Year year() {
         return year;
     }
 

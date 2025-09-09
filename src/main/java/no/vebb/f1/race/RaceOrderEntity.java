@@ -1,6 +1,7 @@
 package no.vebb.f1.race;
 
 import jakarta.persistence.*;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "race_order")
@@ -9,8 +10,8 @@ public class RaceOrderEntity {
     @Column(name = "race_id")
     private int raceId;
 
-    @Column(name = "year", nullable = false)
-    private int year;
+    @Embedded
+    private Year year;
 
     @Column(name = "position", nullable = false)
     private int position;
@@ -21,7 +22,7 @@ public class RaceOrderEntity {
 
     protected RaceOrderEntity() {}
 
-    public RaceOrderEntity(int raceId, int year, int position) {
+    public RaceOrderEntity(int raceId, Year year, int position) {
         this.raceId = raceId;
         this.year = year;
         this.position = position;
@@ -31,7 +32,7 @@ public class RaceOrderEntity {
         return raceId;
     }
 
-    public int year() {
+    public Year year() {
         return year;
     }
 

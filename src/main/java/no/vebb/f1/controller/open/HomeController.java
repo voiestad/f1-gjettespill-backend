@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.graph.GuesserPointsSeason;
 import no.vebb.f1.graph.Graph;
-import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.RankedGuesser;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -38,7 +37,7 @@ public class HomeController {
 		List<GuesserPointsSeason> graph = null;
 		try {
 			if (leaderboard == null) {
-				Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+				Year year = yearService.getCurrentYear();
 				guessers = guessService.getSeasonGuessers(year).stream()
 					.map(UserEntity::username)
 					.toList();

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.BingoSquare;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -36,7 +35,7 @@ public class BingoController {
 	@GetMapping("/api/public/bingo")
 	public ResponseEntity<List<BingoSquare>> getCurrentBingoCard() {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+			Year year = yearService.getCurrentYear();
 			return new ResponseEntity<>(bingoService.getBingoCard(year), HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -46,7 +45,7 @@ public class BingoController {
 	@GetMapping("/api/public/bingo/{year}")
 	public ResponseEntity<List<BingoSquare>> getBingoCardYear(@PathVariable("year") int year) {
 		try {
-			Year validYear = new Year(year, yearService);
+			Year validYear = yearService.getYear(year);
 			return new ResponseEntity<>(bingoService.getBingoCard(validYear), HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -65,7 +64,7 @@ public class BingoController {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		try {
-			Year validSeason = new Year(year, yearService);
+			Year validSeason = yearService.getYear(year);
 			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}
@@ -90,7 +89,7 @@ public class BingoController {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		try {
-			Year validSeason = new Year(year, yearService);
+			Year validSeason = yearService.getYear(year);
 			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}
@@ -116,7 +115,7 @@ public class BingoController {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		try {
-			Year validSeason = new Year(year, yearService);
+			Year validSeason = yearService.getYear(year);
 			if (yearService.isFinishedYear(validSeason)) {
 				throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
 			}

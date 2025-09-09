@@ -91,7 +91,7 @@ public class ResultService {
 
     public List<Driver> getDriverStandings(RaceId raceId, Year year) {
         if (raceId == null) {
-            return driverYearRepository.findAllByIdYearOrderByPosition(year.value).stream()
+            return driverYearRepository.findAllByIdYearOrderByPosition(year).stream()
                     .map(DriverYearEntity::driverName)
                     .map(Driver::new)
                     .toList();
@@ -105,7 +105,7 @@ public class ResultService {
 
     public List<Constructor> getConstructorStandings(RaceId raceId, Year year) {
         if (raceId == null) {
-            return constructorYearRepository.findAllByIdYearOrderByPosition(year.value).stream()
+            return constructorYearRepository.findAllByIdYearOrderByPosition(year).stream()
                     .map(ConstructorYearEntity::constructorName)
                     .map(Constructor::new)
                     .toList();

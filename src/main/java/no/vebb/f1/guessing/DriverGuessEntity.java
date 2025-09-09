@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ public class DriverGuessEntity {
 
     protected DriverGuessEntity() {}
 
-    public DriverGuessEntity(UUID userId, int position, int year, String driverName) {
+    public DriverGuessEntity(UUID userId, int position, Year year, String driverName) {
         this.id = new CompetitorGuessId(userId, position, year);
         this.driverName = driverName;
     }
@@ -32,7 +33,7 @@ public class DriverGuessEntity {
         return id.position();
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

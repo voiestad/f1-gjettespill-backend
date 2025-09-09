@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.UUID;
 
@@ -21,13 +22,13 @@ public class PlacementRaceYearStartEntity implements PlacementRace {
 
     protected PlacementRaceYearStartEntity() {}
 
-    public PlacementRaceYearStartEntity(int year, UUID userId, int placement, int points) {
+    public PlacementRaceYearStartEntity(Year year, UUID userId, int placement, int points) {
         this.id = new PlacementRaceYearStartId(year, userId);
         this.placement = placement;
         this.points = points;
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

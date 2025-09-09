@@ -40,7 +40,7 @@ public class CutoffController {
 
     @GetMapping("/list/{year}")
     public ResponseEntity<CutoffResponse> manageCutoff(@PathVariable("year") int year) {
-        Year seasonYear = new Year(year, yearService);
+        Year seasonYear = yearService.getYear(year);
         List<CutoffRace> races = cutoffService.getCutoffRaces(seasonYear);
         LocalDateTime cutoffYear = cutoffService.getCutoffYearLocalTime(seasonYear);
         CutoffResponse res = new CutoffResponse(races, cutoffYear);
@@ -71,7 +71,7 @@ public class CutoffController {
     public ResponseEntity<String> setCutoffYear(
             @RequestParam("year") int year,
             @RequestParam("cutoff") String cutoff) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }

@@ -47,14 +47,14 @@ public class CompetitorService {
     }
 
     public List<Driver> getDriversYear(Year year) {
-        return driverYearRepository.findAllByIdYearOrderByPosition(year.value).stream()
+        return driverYearRepository.findAllByIdYearOrderByPosition(year).stream()
                 .map(DriverYearEntity::driverName)
                 .map(Driver::new)
                 .toList();
     }
 
     public List<Constructor> getConstructorsYear(Year year) {
-        return constructorYearRepository.findAllByIdYearOrderByPosition(year.value).stream()
+        return constructorYearRepository.findAllByIdYearOrderByPosition(year).stream()
                 .map(ConstructorYearEntity::constructorName)
                 .map(Constructor::new)
                 .toList();
@@ -67,11 +67,11 @@ public class CompetitorService {
     public void addDriverYear(String driver, Year year) {
         addDriver(driver);
         int position = getMaxPosDriverYear(year) + 1;
-        driverYearRepository.save(new DriverYearEntity(driver, year.value, position));
+        driverYearRepository.save(new DriverYearEntity(driver, year, position));
     }
 
     public int getMaxPosDriverYear(Year year) {
-        List<DriverYearEntity> drivers = driverYearRepository.findAllByIdYearOrderByPosition(year.value);
+        List<DriverYearEntity> drivers = driverYearRepository.findAllByIdYearOrderByPosition(year);
         if (drivers.isEmpty()) {
             return 0;
         }
@@ -79,11 +79,11 @@ public class CompetitorService {
     }
 
     public void updatePositionDriverYear(Driver driver, Year year, int position) {
-        driverYearRepository.updatePosition(driver.value, year.value, position);
+        driverYearRepository.updatePosition(driver.value, year, position);
     }
 
     public void deleteDriverYear(Driver driver, Year year) {
-        driverYearRepository.deleteById(new DriverId(driver.value, year.value));
+        driverYearRepository.deleteById(new DriverId(driver.value, year));
         entityManager.flush();
         entityManager.clear();
         if (!driverYearRepository.existsByIdDriverName(driver.value)) {
@@ -98,11 +98,11 @@ public class CompetitorService {
     public void addConstructorYear(String constructor, Year year) {
         addConstructor(constructor);
         int position = getMaxPosConstructorYear(year) + 1;
-        constructorYearRepository.save(new ConstructorYearEntity(constructor, year.value, position));
+        constructorYearRepository.save(new ConstructorYearEntity(constructor, year, position));
     }
 
     public int getMaxPosConstructorYear(Year year) {
-        List<ConstructorYearEntity> constructors = constructorYearRepository.findAllByIdYearOrderByPosition(year.value);
+        List<ConstructorYearEntity> constructors = constructorYearRepository.findAllByIdYearOrderByPosition(year);
         if (constructors.isEmpty()) {
             return 0;
         }
@@ -110,11 +110,11 @@ public class CompetitorService {
     }
 
     public void updatePositionConstructorYear(Constructor constructor, Year year, int position) {
-        constructorYearRepository.updatePosition(constructor.value, year.value, position);
+        constructorYearRepository.updatePosition(constructor.value, year, position);
     }
 
     public void deleteConstructorYear(Constructor constructor, Year year) {
-        constructorYearRepository.deleteById(new ConstructorId(constructor.value, year.value));
+        constructorYearRepository.deleteById(new ConstructorId(constructor.value, year));
         entityManager.flush();
         entityManager.clear();
         if (!constructorYearRepository.existsByIdConstructorName(constructor.value)) {
@@ -123,12 +123,12 @@ public class CompetitorService {
     }
 
     public String getAlternativeDriverName(String driver, Year year) {
-        return driverAlternativeNameRepository.findById(new DriverAlternativeNameId(driver, year.value))
+        return driverAlternativeNameRepository.findById(new DriverAlternativeNameId(driver, year))
                 .map(DriverAlternativeNameEntity::driverName).orElse(driver);
     }
 
     public Map<String, String> getAlternativeDriverNamesYear(Year year) {
-        List<DriverAlternativeNameEntity> altNames = driverAlternativeNameRepository.findAllByIdYear(year.value);
+        List<DriverAlternativeNameEntity> altNames = driverAlternativeNameRepository.findAllByIdYear(year);
         Map<String, String> linkedMap = new LinkedHashMap<>();
         for (DriverAlternativeNameEntity altName : altNames) {
             linkedMap.put(altName.alternativeName(), altName.driverName());
@@ -146,19 +146,19 @@ public class CompetitorService {
     }
 
     public void addAlternativeDriverName(Driver driver, String alternativeName, Year year) {
-        driverAlternativeNameRepository.save(new DriverAlternativeNameEntity(alternativeName, year.value, driver.value));
+        driverAlternativeNameRepository.save(new DriverAlternativeNameEntity(alternativeName, year, driver.value));
     }
 
     public void deleteAlternativeName(Driver driver, Year year, String alternativeName) {
-        driverAlternativeNameRepository.delete(new DriverAlternativeNameEntity(alternativeName, year.value, driver.value));
+        driverAlternativeNameRepository.delete(new DriverAlternativeNameEntity(alternativeName, year, driver.value));
     }
 
     public void setTeamDriver(Driver driver, Constructor team, Year year) {
-        driverTeamRepository.save(new DriverTeamEntity(driver.value, year.value, team.value));
+        driverTeamRepository.save(new DriverTeamEntity(driver.value, year, team.value));
     }
 
     public List<ValuedCompetitor<Driver, Constructor>> getDriversTeam(Year year) {
-        return driverTeamRepository.findAllByIdYearOrderByDriverYearPosition(year.value).stream()
+        return driverTeamRepository.findAllByIdYearOrderByDriverYearPosition(year).stream()
                 .map(row -> new ValuedCompetitor<>(
                         new Driver(row.driverName()),
                         new Constructor(row.team())))
@@ -166,11 +166,11 @@ public class CompetitorService {
     }
 
     public void addColorConstructor(Constructor constructor, Year year, Color color) {
-        constructorColorRepository.save(new ConstructorColorEntity(constructor.value, year.value, color.toValue()));
+        constructorColorRepository.save(new ConstructorColorEntity(constructor.value, year, color.toValue()));
     }
 
     public List<ColoredCompetitor<Constructor>> getConstructorsYearWithColors(Year year) {
-        return constructorColorRepository.findAllByIdYearOrderByConstructorYearPosition(year.value).stream()
+        return constructorColorRepository.findAllByIdYearOrderByConstructorYearPosition(year).stream()
                 .map(row -> new ColoredCompetitor<>(
                         new Constructor(row.constructorName()),
                         new Color(row.color())))
@@ -178,7 +178,7 @@ public class CompetitorService {
     }
 
     public boolean isValidDriverYear(Driver driver, Year year) {
-        return driverYearRepository.existsById(new DriverId(driver.value, year.value));
+        return driverYearRepository.existsById(new DriverId(driver.value, year));
     }
 
     public boolean isValidDriver(Driver driver) {
@@ -186,7 +186,7 @@ public class CompetitorService {
     }
 
     public boolean isValidConstructorYear(Constructor constructor, Year year) {
-        return constructorYearRepository.existsById(new ConstructorId(constructor.value, year.value));
+        return constructorYearRepository.existsById(new ConstructorId(constructor.value, year));
     }
 
     public boolean isValidConstructor(Constructor constructor) {

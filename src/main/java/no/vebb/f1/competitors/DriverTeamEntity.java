@@ -1,6 +1,7 @@
 package no.vebb.f1.competitors;
 
 import jakarta.persistence.*;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "drivers_team")
@@ -21,7 +22,7 @@ public class DriverTeamEntity {
     protected DriverTeamEntity() {
     }
 
-    public DriverTeamEntity(String driverName, int year, String team) {
+    public DriverTeamEntity(String driverName, Year year, String team) {
         this.id = new DriverId(driverName, year);
         this.team = team;
     }
@@ -30,7 +31,7 @@ public class DriverTeamEntity {
         return id.driverName();
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

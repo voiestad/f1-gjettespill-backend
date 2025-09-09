@@ -1,9 +1,10 @@
 package no.vebb.f1.scoring;
 
+import no.vebb.f1.util.domainPrimitive.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
 public interface DiffPointsMapRepository extends JpaRepository<DiffPointsMapEntity, DiffPointsMapId> {
-    List<DiffPointsMapEntity> findAllByIdYearAndIdCategoryNameOrderByIdDiff(int year, String category);
+    List<DiffPointsMapEntity> findAllByIdYearAndIdCategoryNameOrderByIdDiff(Year year, String category);
 }

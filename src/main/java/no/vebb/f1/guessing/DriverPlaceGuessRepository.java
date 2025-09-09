@@ -3,6 +3,7 @@ package no.vebb.f1.guessing;
 import no.vebb.f1.util.collection.IPlaceGuess;
 import no.vebb.f1.util.collection.IUserRaceGuess;
 import no.vebb.f1.util.collection.IUserRaceGuessTable;
+import no.vebb.f1.util.domainPrimitive.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -39,5 +40,5 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
             WHERE dpg.id.categoryName = :categoryName AND dpg.id.userId = :userId AND ro.year = :year AND ro.position <= :position
             ORDER BY ro.position
             """)
-    List<IUserRaceGuessTable> findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPosition(String categoryName, int year, int position, UUID userId);
+    List<IUserRaceGuessTable> findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPosition(String categoryName, Year year, int position, UUID userId);
 }

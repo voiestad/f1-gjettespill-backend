@@ -27,6 +27,6 @@ public class RaceStats {
 		this.flags = statsService.getRegisteredFlags(raceId);
 		int position = raceService.getPositionOfRace(raceId);
 		String raceName = raceService.getRaceFromId(raceId).name();
-		this.name = String.format("%d. %s %d", position, raceName, year.value);
+		this.name = String.format("%d. %s %s", position, raceName, year);
 	}
 }

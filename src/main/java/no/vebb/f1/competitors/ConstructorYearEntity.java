@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "constructors_year")
@@ -16,7 +17,7 @@ public class ConstructorYearEntity {
 
     protected ConstructorYearEntity() {}
 
-    public ConstructorYearEntity(String constructorName, int year, int position) {
+    public ConstructorYearEntity(String constructorName, Year year, int position) {
         id = new ConstructorId(constructorName, year);
         this.position = position;
     }
@@ -25,7 +26,7 @@ public class ConstructorYearEntity {
         return id.constructorName();
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

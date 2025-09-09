@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -50,7 +49,7 @@ public class HeaderController {
 
     private boolean isRaceGuess() {
         try {
-            Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+            Year year = yearService.getCurrentYear();
             RaceId raceId = new RaceId(raceService.getLatestRaceForPlaceGuess(year).raceId());
             return !cutoffService.isAbleToGuessRace(raceId);
         } catch (InvalidYearException | NoAvailableRaceException e) {
@@ -69,7 +68,7 @@ public class HeaderController {
 
     private Race ongoingRaceId() {
         try {
-            Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+            Year year = yearService.getCurrentYear();
             RaceId sgId = raceService.getLatestStartingGridRaceId(year);
             RaceId rrId = raceService.getLatestRaceId(year);
             if (!sgId.equals(rrId)) {

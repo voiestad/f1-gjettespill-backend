@@ -43,7 +43,7 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
 
 	private Duration getDelay() {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+			Year year = yearService.getCurrentYear();
 			Duration delay = getDelayCurrentRace(year);
 			if (delay != null) {
 				return delay;

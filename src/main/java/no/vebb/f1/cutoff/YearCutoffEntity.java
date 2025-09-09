@@ -1,30 +1,27 @@
 package no.vebb.f1.cutoff;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.time.Instant;
 
 @Entity
 @Table(name = "year_cutoffs")
 public class YearCutoffEntity {
-    @Id
-    @Column(name = "year")
-    private int year;
+    @EmbeddedId
+    private Year year;
 
     @Column(name = "cutoff", nullable = false)
     private Instant cutoff;
 
     protected YearCutoffEntity() {}
 
-    public YearCutoffEntity(int year, Instant cutoff) {
+    public YearCutoffEntity(Year year, Instant cutoff) {
         this.year = year;
         this.cutoff = cutoff;
     }
 
-    public int year() {
+    public Year year() {
         return year;
     }
 

@@ -1,5 +1,6 @@
 package no.vebb.f1.race;
 
+import no.vebb.f1.util.domainPrimitive.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,7 +17,7 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Inte
             WHERE ro.year = :year
             ORDER BY ro.position
             """)
-    List<RaceOrderEntity> findAllByYearJoinWithRaceResults(int year);
+    List<RaceOrderEntity> findAllByYearJoinWithRaceResults(Year year);
 
     @Query("""
             SELECT DISTINCT ro
@@ -25,7 +26,7 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Inte
             WHERE ro.year = :year
             ORDER BY ro.position
             """)
-    List<RaceOrderEntity> findAllByYearJoinWithStartingGrid(int year);
+    List<RaceOrderEntity> findAllByYearJoinWithStartingGrid(Year year);
 
     @Query("""
             SELECT DISTINCT ro
@@ -35,7 +36,7 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Inte
             WHERE ro.year = :year
             ORDER BY ro.position
             """)
-    List<RaceOrderEntity> findAllByYearJoinWithStandings(int year);
+    List<RaceOrderEntity> findAllByYearJoinWithStandings(Year year);
 
     @Query("""
             SELECT ro
@@ -44,7 +45,7 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Inte
             AND ro.year = :year
             ORDER BY ro.position
             """)
-    List<RaceOrderEntity> findAllByYearNotInRaceResult(int year);
+    List<RaceOrderEntity> findAllByYearNotInRaceResult(Year year);
 
     @Query("""
             SELECT ro
@@ -55,11 +56,11 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Inte
             """)
     List<RaceOrderEntity> findAllByNotFinished();
 
-    List<RaceOrderEntity> findAllByYearOrderByPosition(int year);
+    List<RaceOrderEntity> findAllByYearOrderByPosition(Year year);
 
-    boolean existsByRaceIdAndYear(int raceId, int year);
+    boolean existsByRaceIdAndYear(int raceId, Year year);
 
-    Optional<RaceOrderEntity> findTopByYearOrderByPositionDesc(int year);
+    Optional<RaceOrderEntity> findTopByYearOrderByPositionDesc(Year year);
 
     @Modifying
     @Query("""
@@ -68,5 +69,5 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Inte
        WHERE ro.raceId = :raceId
        AND ro.year = :year
        """)
-    void updatePosition(int raceId, int year, int position);
+    void updatePosition(int raceId, Year year, int position);
 }

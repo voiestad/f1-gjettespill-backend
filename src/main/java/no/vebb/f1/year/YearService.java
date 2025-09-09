@@ -1,6 +1,8 @@
 package no.vebb.f1.year;
 
+import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.util.exception.InvalidYearException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,15 +18,18 @@ public class YearService {
         this.yearFinishedRepository = yearFinishedRepository;
     }
 
+    public Year getCurrentYear() {
+        return yearRepository.findById(new Year(TimeUtil.getCurrentYear())).orElseThrow(InvalidYearException::new).year();
+    }
+
+    public Year getYear(int year) {
+        return yearRepository.findById(new Year(year)).orElseThrow(InvalidYearException::new).year();
+    }
+
     public List<Year> getAllYears() {
         return yearRepository.findAllByOrderByYearDesc().stream()
                 .map(YearEntity::year)
-                .map(Year::new)
                 .toList();
-    }
-
-    public boolean isValidSeason(int year) {
-        return yearRepository.existsById(year);
     }
 
     public void addYear(int year) {
@@ -32,10 +37,10 @@ public class YearService {
     }
 
     public boolean isFinishedYear(Year year) {
-        return yearFinishedRepository.existsById(year.value);
+        return yearFinishedRepository.existsById(year);
     }
 
     public void finalizeYear(Year year) {
-        yearFinishedRepository.save(new YearFinishedEntity(year.value));
+        yearFinishedRepository.save(new YearFinishedEntity(year));
     }
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "drivers_alternative_name")
@@ -16,7 +17,7 @@ public class DriverAlternativeNameEntity {
 
     protected DriverAlternativeNameEntity() {}
 
-    public DriverAlternativeNameEntity(String alternativeName, int year, String driverName) {
+    public DriverAlternativeNameEntity(String alternativeName, Year year, String driverName) {
         this.id = new DriverAlternativeNameId(alternativeName, year);
         this.driverName = driverName;
     }
@@ -25,7 +26,7 @@ public class DriverAlternativeNameEntity {
         return id.alternativeName();
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

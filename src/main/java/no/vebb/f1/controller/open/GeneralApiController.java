@@ -46,7 +46,7 @@ public class GeneralApiController {
             @PathVariable("year") int year,
             @RequestParam(required = false, name = "completedOnly", defaultValue = "false") boolean completedOnly) {
         try {
-            Year validYear = new Year(year);
+            Year validYear = yearService.getYear(year);
             if (completedOnly) {
                 return new ResponseEntity<>(raceService.getRacesYearFinished(validYear), HttpStatus.OK);
             }

@@ -25,7 +25,6 @@ import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
@@ -99,7 +98,7 @@ public class ProfileController {
 
     private ResponseEntity<UserScoreResponse> getUpToDate(UserEntity userEntity) {
         try {
-            Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+            Year year = yearService.getCurrentYear();
             if (isAbleToSeeGuesses(userEntity, year)) {
                 UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
                 return new ResponseEntity<>(res, HttpStatus.OK);
@@ -112,7 +111,7 @@ public class ProfileController {
 
     private ResponseEntity<UserScoreResponse> getGuesserProfileYear(UserEntity userEntity, int inputYear) {
         try {
-            Year year = new Year(inputYear, yearService);
+            Year year = yearService.getYear(inputYear);
             if (isAbleToSeeGuesses(userEntity, year)) {
                 UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
                 return new ResponseEntity<>(res, HttpStatus.OK);

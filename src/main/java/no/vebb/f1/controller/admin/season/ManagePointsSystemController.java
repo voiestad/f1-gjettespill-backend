@@ -37,7 +37,7 @@ public class ManagePointsSystemController {
     public ResponseEntity<?> addPointsMapping(
             @RequestParam("year") int year,
             @RequestParam("category") String category) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
@@ -61,7 +61,7 @@ public class ManagePointsSystemController {
     public ResponseEntity<?> deletePointsMapping(
             @RequestParam("year") int year,
             @RequestParam("category") String category) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
@@ -82,7 +82,7 @@ public class ManagePointsSystemController {
             @RequestParam("category") String category,
             @RequestParam("diff") int diff,
             @RequestParam("points") int points) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }

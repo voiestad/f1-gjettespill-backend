@@ -2,6 +2,8 @@ package no.vebb.f1.competitors;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.Objects;
 
@@ -9,12 +11,12 @@ import java.util.Objects;
 public class DriverId {
     @Column(name = "driver_name", nullable = false)
     private String driverName;
-    @Column(name = "year", nullable = false)
-    private int year;
+    @Embedded
+    private Year year;
 
     protected DriverId() {}
 
-    public DriverId(String driverName, int year) {
+    public DriverId(String driverName, Year year) {
         this.driverName = driverName;
         this.year = year;
     }
@@ -23,7 +25,7 @@ public class DriverId {
         return driverName;
     }
 
-    public int year() {
+    public Year year() {
         return year;
     }
 

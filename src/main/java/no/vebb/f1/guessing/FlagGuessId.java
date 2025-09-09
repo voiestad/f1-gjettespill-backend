@@ -2,6 +2,8 @@ package no.vebb.f1.guessing;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -14,12 +16,12 @@ public class FlagGuessId {
     @Column(name = "flag_name", nullable = false)
     private String flagName;
 
-    @Column(name = "year", nullable = false)
-    private int year;
+    @Embedded
+    private Year year;
 
     protected FlagGuessId() {}
 
-    public FlagGuessId(UUID userId, String flagName, int year) {
+    public FlagGuessId(UUID userId, String flagName, Year year) {
         this.userId = userId;
         this.flagName = flagName;
         this.year = year;
@@ -33,7 +35,7 @@ public class FlagGuessId {
         return flagName;
     }
 
-    public int year() {
+    public Year year() {
         return year;
     }
 

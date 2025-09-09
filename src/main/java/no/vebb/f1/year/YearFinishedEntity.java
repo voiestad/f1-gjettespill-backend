@@ -1,24 +1,21 @@
 package no.vebb.f1.year;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "years_finished")
 public class YearFinishedEntity {
-    @Id
-    @Column(name = "year")
-    private int year;
+    @EmbeddedId
+    private Year year;
 
     protected YearFinishedEntity() {}
 
-    public YearFinishedEntity(int year) {
+    public YearFinishedEntity(Year year) {
         this.year = year;
     }
 
-    public int year() {
+    public Year year() {
         return year;
     }
 }

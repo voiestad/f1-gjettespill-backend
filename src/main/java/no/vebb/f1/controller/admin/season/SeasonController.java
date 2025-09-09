@@ -40,13 +40,13 @@ public class SeasonController {
             @RequestParam(name = "start", required = false) Integer start,
             @RequestParam(name = "end", required = false) Integer end) {
         try {
-            new Year(year, yearService);
+            yearService.getYear(year);
             String error = String.format("Sesongen %d er allerede lagt til", year);
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         } catch (InvalidYearException ignored) {
         }
         yearService.addYear(year);
-        Year seasonYear = new Year(year, yearService);
+        Year seasonYear = yearService.getYear(year);
         Instant time = cutoffService.getDefaultInstant(seasonYear);
         cutoffService.setCutoffYear(time, seasonYear);
         if (start == null || end == null) {

@@ -35,7 +35,7 @@ public class SeasonCompetitorsController {
 
     @GetMapping("/drivers/list/{year}")
     public ResponseEntity<List<ValuedCompetitor<Driver, Constructor>>> listDrivers(@PathVariable("year") int year) {
-        Year seasonYear = new Year(year, yearService);
+        Year seasonYear = yearService.getYear(year);
         List<ValuedCompetitor<Driver, Constructor>> drivers = competitorService.getDriversTeam(seasonYear);
         return new ResponseEntity<>(drivers, HttpStatus.OK);
     }
@@ -46,7 +46,7 @@ public class SeasonCompetitorsController {
             @RequestParam("year") int year,
             @RequestParam("driver") String driver,
             @RequestParam("team") String team) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
@@ -61,7 +61,7 @@ public class SeasonCompetitorsController {
     @PostMapping("/drivers/add")
     @Transactional
     public ResponseEntity<?> addDriverToSeason(@RequestParam("year") int year, @RequestParam("driver") String driver) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
@@ -77,7 +77,7 @@ public class SeasonCompetitorsController {
     @PostMapping("/drivers/delete")
     @Transactional
     public ResponseEntity<?> removeDriverFromSeason(@RequestParam("year") int year, @RequestParam("driver") String driver) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
@@ -104,7 +104,7 @@ public class SeasonCompetitorsController {
             @RequestParam("year") int year,
             @RequestParam("driver") String driver,
             @RequestParam("newPosition") int position) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
@@ -139,7 +139,7 @@ public class SeasonCompetitorsController {
 
     @GetMapping("/constructors/list/{year}")
     public ResponseEntity<List<ColoredCompetitor<Constructor>>> listConstructors(@PathVariable("year") int year) {
-        Year seasonYear = new Year(year, yearService);
+        Year seasonYear = yearService.getYear(year);
         List<ColoredCompetitor<Constructor>> constructors = competitorService.getConstructorsYearWithColors(seasonYear);
         return new ResponseEntity<>(constructors, HttpStatus.OK);
     }
@@ -149,7 +149,7 @@ public class SeasonCompetitorsController {
     public ResponseEntity<?> addConstructorToSeason(
             @RequestParam("year") int year,
             @RequestParam("constructor") String constructor) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
@@ -167,7 +167,7 @@ public class SeasonCompetitorsController {
     public ResponseEntity<?> removeConstructorFromSeason(
             @RequestParam("year") int year,
             @RequestParam("constructor") String constructor) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
@@ -194,7 +194,7 @@ public class SeasonCompetitorsController {
             @RequestParam("year") int year,
             @RequestParam("constructor") String constructor,
             @RequestParam("newPosition") int position) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
@@ -233,7 +233,7 @@ public class SeasonCompetitorsController {
             @RequestParam("year") int year,
             @RequestParam("constructor") String constructor,
             @RequestParam("color") String color) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
@@ -247,7 +247,7 @@ public class SeasonCompetitorsController {
 
     @GetMapping("/alias/list/{year}")
     public ResponseEntity<Map<String, String>> addAlternativeNameForm(@PathVariable("year") int year) {
-        Year seasonYear = new Year(year, yearService);
+        Year seasonYear = yearService.getYear(year);
         Map<String, String> driverAliases = competitorService.getAlternativeDriverNamesYear(seasonYear);
         return new ResponseEntity<>(driverAliases, HttpStatus.OK);
     }
@@ -258,7 +258,7 @@ public class SeasonCompetitorsController {
             @RequestParam("year") int year,
             @RequestParam("driver") String driver,
             @RequestParam("alternativeName") String alternativeName) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
@@ -278,7 +278,7 @@ public class SeasonCompetitorsController {
             @RequestParam("driver") String driver,
             @RequestParam("alternativeName") String alternativeName
     ) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }

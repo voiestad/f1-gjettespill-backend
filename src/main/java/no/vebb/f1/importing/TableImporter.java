@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.vebb.f1.util.domainPrimitive.Year;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -41,13 +42,13 @@ public class TableImporter {
 		return table;
 	}
 
-	public static List<List<String>> getDriverStandings(int year) {
-		String url = String.format("https://www.formula1.com/en/results/%d/drivers", year);
+	public static List<List<String>> getDriverStandings(Year year) {
+		String url = String.format("https://www.formula1.com/en/results/%s/drivers", year);
 		return TableImporter.getTable(url);
 	}
 	
-	public static List<List<String>> getConstructorStandings(int year) {
-		String url = String.format("https://www.formula1.com/en/results/%d/team", year);
+	public static List<List<String>> getConstructorStandings(Year year) {
+		String url = String.format("https://www.formula1.com/en/results/%s/team", year);
 		return TableImporter.getTable(url);
 	}
 

@@ -59,7 +59,7 @@ public class ManageSeasonController {
             @RequestParam("year") int year,
             @RequestParam("id") int raceId,
             @RequestParam("newPosition") int position) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
@@ -100,7 +100,7 @@ public class ManageSeasonController {
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deleteRace(@RequestParam("year") int year, @RequestParam("id") int raceId) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
@@ -126,7 +126,7 @@ public class ManageSeasonController {
     @PostMapping("/add")
     @Transactional
     public ResponseEntity<?> addRace(@RequestParam("year") int year, @RequestParam("id") int raceId) {
-        Year validYear = new Year(year, yearService);
+        Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }

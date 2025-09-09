@@ -3,6 +3,7 @@ package no.vebb.f1.cutoff;
 import jakarta.persistence.*;
 import no.vebb.f1.race.RaceEntity;
 import no.vebb.f1.race.RaceOrderEntity;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.time.Instant;
 
@@ -47,7 +48,7 @@ public class RaceCutoffEntity {
         return raceOrder.position();
     }
 
-    public int year() {
+    public Year year() {
         return raceOrder.year();
     }
 }

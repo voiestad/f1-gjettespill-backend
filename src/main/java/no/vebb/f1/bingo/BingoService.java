@@ -36,14 +36,14 @@ public class BingoService {
     }
 
     public List<BingoSquare> getBingoCard(Year year) {
-        return bingoCardRepository.findAllByIdYearOrderByIdBingoSquareId(year.value).stream()
+        return bingoCardRepository.findAllByIdYearOrderByIdBingoSquareId(year).stream()
                 .map(BingoSquare::fromBingoCardEntity)
                 .toList();
     }
 
     public void addBingoSquare(BingoSquare bingoSquare) {
         BingoCardEntity square = new BingoCardEntity(
-                bingoSquare.year().value,
+                bingoSquare.year(),
                 bingoSquare.id(),
                 bingoSquare.text(),
                 bingoSquare.marked()
@@ -52,7 +52,7 @@ public class BingoService {
     }
 
     public boolean toogleMarkBingoSquare(Year year, int id) {
-        Optional<BingoCardEntity> square = bingoCardRepository.findById(new BingoCardId(year.value, id));
+        Optional<BingoCardEntity> square = bingoCardRepository.findById(new BingoCardId(year, id));
         if (square.isEmpty()) {
             return false;
         }
@@ -61,10 +61,10 @@ public class BingoService {
     }
 
     public void setTextBingoSquare(Year year, int id, String text) {
-        bingoCardRepository.updateText(year.value, id, text);
+        bingoCardRepository.updateText(year, id, text);
     }
 
     public boolean isBingoCardAdded(Year year) {
-        return bingoCardRepository.existsByIdYear(year.value);
+        return bingoCardRepository.existsByIdYear(year);
     }
 }

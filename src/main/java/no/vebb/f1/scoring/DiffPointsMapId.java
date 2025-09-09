@@ -2,6 +2,8 @@ package no.vebb.f1.scoring;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.Objects;
 
@@ -12,13 +14,12 @@ public class DiffPointsMapId {
 
     @Column(name = "diff", nullable = false)
     private int diff;
-
-    @Column(name = "year", nullable = false)
-    private int year;
+    @Embedded
+    private Year year;
 
     protected DiffPointsMapId() {}
 
-    public DiffPointsMapId(String categoryName, int diff, int year) {
+    public DiffPointsMapId(String categoryName, int diff, Year year) {
         this.categoryName = categoryName;
         this.diff = diff;
         this.year = year;
@@ -32,7 +33,7 @@ public class DiffPointsMapId {
         return diff;
     }
 
-    public int year() {
+    public Year year() {
         return year;
     }
 

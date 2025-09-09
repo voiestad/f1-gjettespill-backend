@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "diff_points_mappings")
@@ -16,7 +17,7 @@ public class DiffPointsMapEntity {
 
     protected DiffPointsMapEntity() {}
 
-    public DiffPointsMapEntity(String categoryName, int diff, int year, int points) {
+    public DiffPointsMapEntity(String categoryName, int diff, Year year, int points) {
         this.id = new DiffPointsMapId(categoryName, diff, year);
         this.points = points;
     }
@@ -29,7 +30,7 @@ public class DiffPointsMapEntity {
         return id.diff();
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

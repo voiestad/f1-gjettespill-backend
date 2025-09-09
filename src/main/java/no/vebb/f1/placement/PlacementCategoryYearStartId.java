@@ -2,14 +2,16 @@ package no.vebb.f1.placement;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.Objects;
 import java.util.UUID;
 
 @Embeddable
 public class PlacementCategoryYearStartId {
-    @Column(name = "year")
-    private int year;
+    @Embedded
+    private Year year;
 
     @Column(name = "user_id")
     private UUID userId;
@@ -19,13 +21,13 @@ public class PlacementCategoryYearStartId {
 
     protected PlacementCategoryYearStartId() {}
 
-    public PlacementCategoryYearStartId(int year, UUID userId, String categoryName) {
+    public PlacementCategoryYearStartId(Year year, UUID userId, String categoryName) {
         this.year = year;
         this.userId = userId;
         this.categoryName = categoryName;
     }
 
-    public int year() {
+    public Year year() {
         return year;
     }
 

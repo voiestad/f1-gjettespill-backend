@@ -2,28 +2,18 @@ package no.vebb.f1.util.domainPrimitive;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import no.vebb.f1.util.exception.InvalidYearException;
-import no.vebb.f1.year.YearService;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
-public class Year {
+@Embeddable
+public class Year implements Comparable<Year> {
+	@Column(name = "year", nullable = false)
+	public int value;
 
-	public final int value;
-	private YearService yearService;
-
-	public Year(int value, YearService yearService) throws InvalidYearException {
-		this.value = value;
-		this.yearService = yearService;
-		validate();
-	}
+	protected Year() {}
 
 	public Year(int value) {
 		this.value = value;
-	}
-
-	private void validate() throws InvalidYearException {
-		if (!yearService.isValidSeason(value)) {
-			throw new InvalidYearException("Year : " + value + " is not a valid season");
-		}
 	}
 
 	@JsonValue
@@ -56,4 +46,8 @@ public class Year {
         return value == other.value;
     }
 
+	@Override
+	public int compareTo(Year o) {
+		return Integer.compare(value, o.value);
+	}
 }

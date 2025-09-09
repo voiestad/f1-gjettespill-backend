@@ -1,6 +1,7 @@
 package no.vebb.f1.competitors;
 
 import jakarta.persistence.*;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "constructors_color")
@@ -20,7 +21,7 @@ public class ConstructorColorEntity {
 
     protected ConstructorColorEntity() {}
 
-    public ConstructorColorEntity(String constructorName, int year, String color) {
+    public ConstructorColorEntity(String constructorName, Year year, String color) {
         this.id = new ConstructorId(constructorName, year);
         this.color = color;
     }
@@ -29,7 +30,7 @@ public class ConstructorColorEntity {
         return id.constructorName();
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

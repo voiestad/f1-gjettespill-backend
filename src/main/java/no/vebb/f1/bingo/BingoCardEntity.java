@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "bingo_cards")
@@ -19,13 +20,13 @@ public class BingoCardEntity {
 
     protected BingoCardEntity() {}
 
-    public BingoCardEntity(int year, int bingoSquareId, String squareText, boolean marked) {
+    public BingoCardEntity(Year year, int bingoSquareId, String squareText, boolean marked) {
         this.id = new BingoCardId(year, bingoSquareId);
         this.squareText = squareText;
         this.marked = marked;
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

@@ -1,5 +1,6 @@
 package no.vebb.f1.placement;
 
+import no.vebb.f1.util.domainPrimitive.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -17,7 +18,7 @@ public interface PlacementRaceRepository extends JpaRepository<PlacementRaceEnti
                 GROUP BY ro.position
                 ORDER BY position
             """)
-    List<PositionResult> findAllByYearOrderByPosition(int year);
+    List<PositionResult> findAllByYearOrderByPosition(Year year);
     @Query(value = """
                 SELECT user_id, username, points, position, placement
                 FROM (SELECT prys.user_id as user_id, u.username :: text as username, prys.points as points, 0::INTEGER as position, prys.placement as placement

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Points;
@@ -36,7 +35,7 @@ public class ScoreController {
 	@GetMapping("/api/public/score")
 	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTables() {
 		try {
-			Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+			Year year = yearService.getCurrentYear();
 			var res = getScoreMappingTables(year);
 			return new ResponseEntity<>(res, HttpStatus.OK); 
 		} catch (InvalidYearException e) {	
@@ -47,7 +46,7 @@ public class ScoreController {
 	@GetMapping("/api/public/score/{year}")
 	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTablesYear(@PathVariable("year") int year) {
 		try {
-			Year validYear = new Year(year, yearService);
+			Year validYear = yearService.getYear(year);
 			var res = getScoreMappingTables(validYear);
 			return new ResponseEntity<>(res, HttpStatus.OK);
 		} catch (InvalidYearException e) {

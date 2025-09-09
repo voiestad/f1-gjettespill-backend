@@ -12,7 +12,6 @@ import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.UserNotifiedCount;
 import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.util.domainPrimitive.RaceId;
-import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.year.YearService;
@@ -67,7 +66,7 @@ public class MailService {
     @Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
     public void notifyUsers() {
         try {
-            RaceOrderEntity race = raceService.getLatestRaceForPlaceGuess(new Year(TimeUtil.getCurrentYear(), yearService));
+            RaceOrderEntity race = raceService.getLatestRaceForPlaceGuess(yearService.getCurrentYear());
             RaceId raceId = new RaceId(race.raceId());
             long timeLeft = cutoffService.getTimeLeftToGuessRace(raceId);
             if (timeLeft < 0) {

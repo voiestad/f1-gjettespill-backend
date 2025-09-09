@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.UUID;
 
@@ -18,12 +19,12 @@ public class PlacementYearEntity {
 
     protected PlacementYearEntity() {}
 
-    public PlacementYearEntity(int year, UUID userId, int placement) {
+    public PlacementYearEntity(Year year, UUID userId, int placement) {
         this.id = new PlacementYearId(year, userId);
         this.placement = placement;
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

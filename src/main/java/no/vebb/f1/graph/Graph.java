@@ -7,7 +7,6 @@ import no.vebb.f1.year.YearService;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.RankedGuesser;
 import no.vebb.f1.util.domainPrimitive.Year;
 
@@ -28,7 +27,7 @@ public class Graph {
 		if (cutoffService.isAbleToGuessCurrentYear()) {
 			return null;
 		}
-		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+		Year year = yearService.getCurrentYear();
 		return placementService.getGraph(year);
 	}
 
@@ -36,7 +35,7 @@ public class Graph {
 		if (cutoffService.isAbleToGuessCurrentYear()) {
 			return null;
 		}
-		Year year = new Year(TimeUtil.getCurrentYear(), yearService);
+		Year year = yearService.getCurrentYear();
 		return placementService.getLeaderboard(year);
 	}
 }

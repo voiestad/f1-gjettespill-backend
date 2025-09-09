@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ public class ConstructorGuessEntity {
 
     protected ConstructorGuessEntity() {}
 
-    public ConstructorGuessEntity(UUID userId, int position, int year, String constructorName) {
+    public ConstructorGuessEntity(UUID userId, int position, Year year, String constructorName) {
         this.id = new CompetitorGuessId(userId, position, year);
         this.constructorName = constructorName;
     }
@@ -32,7 +33,7 @@ public class ConstructorGuessEntity {
         return id.position();
     }
 
-    public int year() {
+    public Year year() {
         return id.year();
     }
 

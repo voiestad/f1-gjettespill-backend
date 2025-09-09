@@ -1,5 +1,6 @@
 package no.vebb.f1.user;
 
+import no.vebb.f1.util.domainPrimitive.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -50,6 +51,6 @@ public interface UserRespository extends JpaRepository<UserEntity, UUID> {
             )
             ORDER BY u.username
             """)
-    List<UserEntity> findAllByGuessedYear(int year);
+    List<UserEntity> findAllByGuessedYear(Year year);
 
 }

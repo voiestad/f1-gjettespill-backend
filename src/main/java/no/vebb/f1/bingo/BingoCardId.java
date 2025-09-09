@@ -2,25 +2,27 @@ package no.vebb.f1.bingo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.util.Objects;
 
 @Embeddable
 public class BingoCardId {
-    @Column(name = "year", nullable = false)
-    private int year;
+    @Embedded
+    private Year year;
 
     @Column(name = "bingo_square_id", nullable = false)
     private int bingoSquareId;
 
     protected BingoCardId() {}
 
-    public BingoCardId(int year, int bingoSquareId) {
+    public BingoCardId(Year year, int bingoSquareId) {
         this.year = year;
         this.bingoSquareId = bingoSquareId;
     }
 
-    public int year() {
+    public Year year() {
         return year;
     }
 
