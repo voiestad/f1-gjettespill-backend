@@ -14,14 +14,14 @@ public class NotifiedEntity {
     private int id;
     @Column(name = "user_id", nullable = false)
     private UUID userId;
-    @Column(name = "race_id", nullable = false)
-    private int raceId;
+    @Embedded
+    private RaceId raceId;
 
     public NotifiedEntity() {}
 
     public NotifiedEntity(UUID userId, RaceId raceId) {
         this.userId = userId;
-        this.raceId = raceId.value;
+        this.raceId = raceId;
     }
 
     public UUID userId() {
@@ -29,6 +29,6 @@ public class NotifiedEntity {
     }
 
     public RaceId raceId() {
-        return new RaceId(raceId);
+        return raceId;
     }
 }

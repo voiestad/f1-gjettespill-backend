@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 
 import java.util.UUID;
 
@@ -21,13 +22,13 @@ public class PlacementCategoryEntity implements PlacementCategory {
 
     protected PlacementCategoryEntity() {}
 
-    public PlacementCategoryEntity(int raceId, UUID userId, String categoryName, int placement, int points) {
+    public PlacementCategoryEntity(RaceId raceId, UUID userId, String categoryName, int placement, int points) {
         this.id = new PlacementCategoryId(raceId, userId, categoryName);
         this.placement = placement;
         this.points = points;
     }
 
-    public int raceId() {
+    public RaceId raceId() {
         return id.raceId();
     }
 

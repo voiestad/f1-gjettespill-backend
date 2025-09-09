@@ -137,7 +137,7 @@ public class Importer {
 				activeRaces.put(year, new ArrayList<>());
 			}
 			List<RaceId> races = activeRaces.get(year);
-			races.add(new RaceId(race.raceId()));
+			races.add(race.raceId());
 		}
 		return activeRaces;
 	}
@@ -164,7 +164,7 @@ public class Importer {
 	}
 
 	private void importStartingGridData(RaceId raceId) {
-		List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId.value);
+		List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
 		if (startingGrid.size() <= 1) {
 			return;
 		}
@@ -172,7 +172,7 @@ public class Importer {
 	}
 
 	private ResultChangeStatus importRaceResultData(RaceId raceId) {
-		List<List<String>> raceResult = TableImporter.getRaceResult(raceId.value);
+		List<List<String>> raceResult = TableImporter.getRaceResult(raceId);
 		if (raceResult.size() <= 1) {
 			return ResultChangeStatus.NO_CHANGE;
 		}
@@ -228,7 +228,7 @@ public class Importer {
 			if (isAlreadyAdded) {
 				continue;
 			}
-			List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId.value);
+			List<List<String>> startingGrid = TableImporter.getStartingGrid(raceId);
 			if (startingGrid.size() <= 1) {
 				break;
 			}
@@ -260,7 +260,7 @@ public class Importer {
 			if (isAlreadyAdded) {
 				throw new RuntimeException("Race is already added and was attempted added again");
 			}
-			List<List<String>> raceResult = TableImporter.getRaceResult(raceId.value);
+			List<List<String>> raceResult = TableImporter.getRaceResult(raceId);
 			if (raceResult.size() <= 1) {
 				break;
 			}
@@ -322,7 +322,7 @@ public class Importer {
 			return false;
 		}
 		raceService.insertRace(raceId, raceName);
-		RaceId validRaceId = new RaceId(raceId, raceService);
+		RaceId validRaceId = raceService.getRaceId(raceId);
 		raceService.insertRaceOrder(validRaceId, year, position);
 		return true;
 	}

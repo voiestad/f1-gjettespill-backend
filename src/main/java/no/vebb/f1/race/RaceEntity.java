@@ -1,16 +1,13 @@
 package no.vebb.f1.race;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 
 @Entity
 @Table(name = "races")
 public class RaceEntity {
-    @Id
-    @Column(name = "race_id")
-    private int raceId;
+    @EmbeddedId
+    private RaceId raceId;
 
     @Column(name = "race_name", nullable = false)
     private String raceName;
@@ -18,11 +15,11 @@ public class RaceEntity {
     protected RaceEntity() {}
 
     public RaceEntity(int raceId, String raceName) {
-        this.raceId = raceId;
+        this.raceId = new RaceId(raceId);
         this.raceName = raceName;
     }
 
-    public int raceId() {
+    public RaceId raceId() {
         return raceId;
     }
 

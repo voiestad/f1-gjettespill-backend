@@ -1,14 +1,15 @@
 package no.vebb.f1.results;
 
+import no.vebb.f1.util.domainPrimitive.RaceId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
 public interface StartingGridRepository extends JpaRepository<StartingGridEntity, StartingGridId> {
-    List<StartingGridEntity> findAllByIdRaceIdOrderByPosition(int raceId);
+    List<StartingGridEntity> findAllByIdRaceIdOrderByPosition(RaceId raceId);
 
-    boolean existsByIdRaceId(int raceId);
+    boolean existsByIdRaceId(RaceId raceId);
 
     @Query(value = """
             SELECT DISTINCT *
@@ -28,5 +29,5 @@ public interface StartingGridRepository extends JpaRepository<StartingGridEntity
             WHERE sg.id.raceId = :raceId
             ORDER BY sg.position
             """)
-    List<IColoredCompetitor> findAllByRaceIdWithColor(int raceId);
+    List<IColoredCompetitor> findAllByRaceIdWithColor(RaceId raceId);
 }

@@ -32,7 +32,7 @@ public class StatsController {
 	@GetMapping("/race/{raceId}")
 	public ResponseEntity<RaceStats> raceStats(@PathVariable("raceId") int raceId) {
 		try {
-			RaceId validRaceId = new RaceId(raceId, raceService);
+			RaceId validRaceId = raceService.getRaceId(raceId);
 			Year year = raceService.getYearFromRaceId(validRaceId);
 			RaceStats res = new RaceStats(validRaceId, year, resultService, raceService, statsService);
 			return new ResponseEntity<>(res, HttpStatus.OK);

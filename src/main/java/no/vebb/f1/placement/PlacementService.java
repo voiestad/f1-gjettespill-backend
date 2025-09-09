@@ -56,10 +56,10 @@ public class PlacementService {
 
     public Summary getSummary(RaceId raceId, Year year, PublicUserDto user) {
         List<? extends PlacementCategory> categoriesRes = raceId != null ?
-                placementCategoryRepository.findByIdRaceIdAndIdUserId(raceId.value, user.id()) :
+                placementCategoryRepository.findByIdRaceIdAndIdUserId(raceId, user.id()) :
                 placementCategoryYearStartRepository.findByIdYearAndIdUserId(year, user.id());
         Optional<? extends PlacementRace> optTotalRes = raceId != null ?
-                placementRaceRepository.findAllByIdRaceIdAndIdUserId(raceId.value, user.id()) :
+                placementRaceRepository.findAllByIdRaceIdAndIdUserId(raceId, user.id()) :
                 placementRaceYearStartRepository.findByIdYearAndIdUserId(year, user.id());
         if (optTotalRes.isEmpty() || categoriesRes.isEmpty()) {
             return null;
@@ -112,12 +112,12 @@ public class PlacementService {
             RaceId raceId = placementObj.raceId();
             Year year = placementObj.year();
             if (raceId != null) {
-                placementRaceEntities.add(new PlacementRaceEntity(raceId.value, userId, summary.total().pos().value(), summary.total().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId.value, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value));
+                placementRaceEntities.add(new PlacementRaceEntity(raceId, userId, summary.total().pos().value(), summary.total().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value));
             } else {
                 placementRaceYearStartEntities.add(new PlacementRaceYearStartEntity(year, userId, summary.total().pos().value(), summary.total().value().value));
                 placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value));

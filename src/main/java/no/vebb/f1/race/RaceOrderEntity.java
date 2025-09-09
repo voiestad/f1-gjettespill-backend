@@ -1,14 +1,14 @@
 package no.vebb.f1.race;
 
 import jakarta.persistence.*;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "race_order")
 public class RaceOrderEntity {
-    @Id
-    @Column(name = "race_id")
-    private int raceId;
+    @EmbeddedId
+    private RaceId raceId;
 
     @Embedded
     private Year year;
@@ -22,13 +22,13 @@ public class RaceOrderEntity {
 
     protected RaceOrderEntity() {}
 
-    public RaceOrderEntity(int raceId, Year year, int position) {
+    public RaceOrderEntity(RaceId raceId, Year year, int position) {
         this.raceId = raceId;
         this.year = year;
         this.position = position;
     }
 
-    public int raceId() {
+    public RaceId raceId() {
         return raceId;
     }
 

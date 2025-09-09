@@ -53,7 +53,7 @@ public class CutoffController {
             @RequestParam("id") int raceId,
             @RequestParam("cutoff") String cutoff) {
         try {
-            RaceId validRaceId = new RaceId(raceId, raceService);
+            RaceId validRaceId = raceService.getRaceId(raceId);
             Year year = raceService.getYearFromRaceId(validRaceId);
             if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");

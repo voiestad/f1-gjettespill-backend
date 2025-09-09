@@ -2,6 +2,8 @@ package no.vebb.f1.guessing;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -11,15 +13,15 @@ public class DriverPlaceGuessId {
     @Column(name = "user_id")
     private UUID userId;
 
-    @Column(name = "race_id")
-    private int raceId;
+    @Embedded
+    private RaceId raceId;
 
     @Column(name = "category_name")
     private String categoryName;
 
     protected DriverPlaceGuessId() {}
 
-    public DriverPlaceGuessId(UUID userId, int raceId, String categoryName) {
+    public DriverPlaceGuessId(UUID userId, RaceId raceId, String categoryName) {
         this.userId = userId;
         this.raceId = raceId;
         this.categoryName = categoryName;
@@ -29,7 +31,7 @@ public class DriverPlaceGuessId {
         return userId;
     }
 
-    public int raceId() {
+    public RaceId raceId() {
         return raceId;
     }
 

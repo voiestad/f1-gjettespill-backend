@@ -84,7 +84,7 @@ public class ProfileController {
             return getGuesserProfileYear(userEntity, inputYear);
         }
         try {
-            RaceId raceId = new RaceId(inputRaceId, raceService);
+            RaceId raceId = raceService.getRaceId(inputRaceId);
             Year year = raceService.getYearFromRaceId(raceId);
             if (isAbleToSeeGuesses(userEntity, year)) {
                 UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, raceService, placementService, guessService, scoreService, resultService);

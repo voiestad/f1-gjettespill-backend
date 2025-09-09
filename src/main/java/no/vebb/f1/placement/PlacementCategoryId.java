@@ -2,14 +2,16 @@ package no.vebb.f1.placement;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 
 import java.util.Objects;
 import java.util.UUID;
 
 @Embeddable
 public class PlacementCategoryId {
-    @Column(name = "race_id", nullable = false)
-    private int raceId;
+    @Embedded
+    private RaceId raceId;
 
     @Column(name = "user_id", nullable = false)
     private UUID userId;
@@ -19,13 +21,13 @@ public class PlacementCategoryId {
 
     protected PlacementCategoryId() {}
 
-    public PlacementCategoryId(int raceId, UUID userId, String categoryName) {
+    public PlacementCategoryId(RaceId raceId, UUID userId, String categoryName) {
         this.raceId = raceId;
         this.userId = userId;
         this.categoryName = categoryName;
     }
 
-    public int raceId() {
+    public RaceId raceId() {
         return raceId;
     }
 

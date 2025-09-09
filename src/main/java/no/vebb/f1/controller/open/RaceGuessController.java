@@ -40,7 +40,7 @@ public class RaceGuessController {
 		try {
 			Year year = yearService.getCurrentYear();
 			RaceOrderEntity race = raceService.getLatestRaceForPlaceGuess(year);
-			RaceId raceId = new RaceId(race.raceId());
+			RaceId raceId = race.raceId();
 			if (cutoffService.isAbleToGuessRace(raceId)) {
 				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}

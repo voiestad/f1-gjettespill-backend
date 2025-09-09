@@ -47,7 +47,7 @@ public class FlagController {
     @GetMapping("/list/{id}")
     public ResponseEntity<List<RegisteredFlag>> getRegisteredFlag(@PathVariable("id") int raceId) {
         try {
-            RaceId validRaceId = new RaceId(raceId, raceService);
+            RaceId validRaceId = raceService.getRaceId(raceId);
             List<RegisteredFlag> registeredFlags = statsService.getRegisteredFlags(validRaceId);
             return new ResponseEntity<>(registeredFlags, HttpStatus.OK);
         } catch (InvalidRaceException e) {
@@ -63,7 +63,7 @@ public class FlagController {
             @RequestParam("raceId") int raceId,
             @RequestParam("sessionType") String sessionType) {
         try {
-            RaceId validRaceId = new RaceId(raceId, raceService);
+            RaceId validRaceId = raceService.getRaceId(raceId);
             Year year = raceService.getYearFromRaceId(validRaceId);
             if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");

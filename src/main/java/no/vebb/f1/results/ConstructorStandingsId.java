@@ -2,25 +2,27 @@ package no.vebb.f1.results;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 
 import java.util.Objects;
 
 @Embeddable
 public class ConstructorStandingsId {
-    @Column(name = "race_id", nullable = false)
-    private int raceId;
+    @Embedded
+    private RaceId raceId;
     @Column(name = "constructor_name", nullable = false)
     private String constructorName;
 
     protected ConstructorStandingsId() {
     }
 
-    public ConstructorStandingsId(int raceId, String constructorName) {
+    public ConstructorStandingsId(RaceId raceId, String constructorName) {
         this.raceId = raceId;
         this.constructorName = constructorName;
     }
 
-    public int raceId() {
+    public RaceId raceId() {
         return raceId;
     }
 

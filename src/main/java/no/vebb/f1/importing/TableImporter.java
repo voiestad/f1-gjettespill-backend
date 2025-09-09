@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -52,18 +53,18 @@ public class TableImporter {
 		return TableImporter.getTable(url);
 	}
 
-	public static List<List<String>> getStartingGrid(int race) {
-		String url = String.format("https://www.formula1.com/en/results/a/races/%d/a/starting-grid", race);
+	public static List<List<String>> getStartingGrid(RaceId raceId) {
+		String url = String.format("https://www.formula1.com/en/results/a/races/%s/a/starting-grid", raceId);
 		return TableImporter.getTable(url);
 	}
 
-	public static List<List<String>> getRaceResult(int race) {
-		String url = String.format("https://www.formula1.com/en/results/a/races/%d/a/race-result", race);
+	public static List<List<String>> getRaceResult(RaceId raceId) {
+		String url = String.format("https://www.formula1.com/en/results/a/races/%s/a/race-result", raceId);
 		return TableImporter.getTable(url);
 	}
 	
-	public static String getGrandPrixName(int race) {
-		String url = String.format("https://www.formula1.com/en/results/a/races/%d/a/race-result", race);
+	public static String getGrandPrixName(int raceId) {
+		String url = String.format("https://www.formula1.com/en/results/a/races/%d/a/race-result", raceId);
 		String name = "";
 		try {
 			Document doc = Jsoup.connect(url).ignoreContentType(true).get();

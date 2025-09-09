@@ -39,7 +39,7 @@ public class ManageSeasonController {
     @Transactional
     public ResponseEntity<?> reloadRace(@RequestParam("id") int raceId) {
         try {
-            RaceId validRaceId = new RaceId(raceId, raceService);
+            RaceId validRaceId = raceService.getRaceId(raceId);
             Year year = raceService.getYearFromRaceId(validRaceId);
             if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
@@ -64,7 +64,7 @@ public class ManageSeasonController {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            RaceId validRaceId = new RaceId(raceId, raceService);
+            RaceId validRaceId = raceService.getRaceId(raceId);
             boolean isRaceInSeason = raceService.isRaceInSeason(validRaceId, validYear);
             if (!isRaceInSeason) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -105,7 +105,7 @@ public class ManageSeasonController {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            RaceId validRaceId = new RaceId(raceId, raceService);
+            RaceId validRaceId = raceService.getRaceId(raceId);
             boolean isRaceInSeason = raceService.isRaceInSeason(validRaceId, validYear);
             if (!isRaceInSeason) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -131,13 +131,13 @@ public class ManageSeasonController {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            new RaceId(raceId, raceService);
+            raceService.getRaceId(raceId);
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         } catch (InvalidRaceException ignored) {
         }
         importer.importRaceName(raceId, validYear);
         importer.importData();
-        RaceId validRaceId = new RaceId(raceId, raceService);
+        RaceId validRaceId = raceService.getRaceId(raceId);
         cutoffService.setCutoffRace(cutoffService.getDefaultInstant(validYear), validRaceId);
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -71,7 +71,7 @@ public class GuessService {
     }
 
     public List<UserRaceGuess> getUserGuessesDriverPlace(RaceId raceId, Category category) {
-        return driverPlaceGuessRepository.findAllByRaceIdAndCategoryNameOrderByUsername(category.value, raceId.value).stream()
+        return driverPlaceGuessRepository.findAllByRaceIdAndCategoryNameOrderByUsername(category.value, raceId).stream()
                 .map(UserRaceGuess::fromIUserRaceGuess)
                 .toList();
     }
@@ -104,14 +104,14 @@ public class GuessService {
     }
 
     public Driver getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
-        return driverPlaceGuessRepository.findById(new DriverPlaceGuessId(userId, raceId.value, category.value))
+        return driverPlaceGuessRepository.findById(new DriverPlaceGuessId(userId, raceId, category.value))
                 .map(DriverPlaceGuessEntity::driverName)
                 .map(Driver::new)
                 .orElse(null);
     }
 
     public void addDriverPlaceGuess(UUID userId, RaceId raceId, Driver driver, Category category) {
-        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId.value, category.value, driver.value));
+        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category.value, driver.value));
     }
 
     public List<ColoredCompetitor<Driver>> getDriversGuess(UUID userId, Year year) {

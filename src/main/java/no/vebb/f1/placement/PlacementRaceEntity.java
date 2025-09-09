@@ -1,6 +1,7 @@
 package no.vebb.f1.placement;
 
 import jakarta.persistence.*;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 
 import java.util.UUID;
 
@@ -18,13 +19,13 @@ public class PlacementRaceEntity implements PlacementRace {
 
     protected PlacementRaceEntity() {}
 
-    public PlacementRaceEntity(int raceId, UUID userId, int placement, int points) {
+    public PlacementRaceEntity(RaceId raceId, UUID userId, int placement, int points) {
         this.id = new PlacementRaceId(raceId, userId);
         this.placement = placement;
         this.points = points;
     }
 
-    public int raceId() {
+    public RaceId raceId() {
         return id.raceId();
     }
 

@@ -32,50 +32,50 @@ public class ResultService {
     }
 
     public List<StartingGridEntity> getStartingGrid(RaceId raceId) {
-        return startingGridRepository.findAllByIdRaceIdOrderByPosition(raceId.value);
+        return startingGridRepository.findAllByIdRaceIdOrderByPosition(raceId);
     }
 
     public List<RaceResultEntity> getRaceResult(RaceId raceId) {
-        return raceResultRepository.findAllByIdRaceIdOrderByIdFinishingPosition(raceId.value);
+        return raceResultRepository.findAllByIdRaceIdOrderByIdFinishingPosition(raceId);
     }
 
     public List<DriverStandingsEntity> getDriverStandings(RaceId raceId) {
-        return driverStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId.value);
+        return driverStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId);
     }
 
     public List<ConstructorStandingsEntity> getConstructorStandings(RaceId raceId) {
-        return constructorStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId.value);
+        return constructorStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId);
     }
 
 
     public void insertDriverStartingGrid(RaceId raceId, int position, Driver driver) {
-        StartingGridEntity startingGridEntity = new StartingGridEntity(raceId.value, driver.value, position);
+        StartingGridEntity startingGridEntity = new StartingGridEntity(raceId, driver.value, position);
         startingGridRepository.save(startingGridEntity);
     }
 
     public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, Points points, int finishingPosition) {
-        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId.value, finishingPosition, position, driver.value, points.value);
+        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driver.value, points.value);
         raceResultRepository.save(raceResultEntity);
     }
 
 
     public void insertDriverIntoStandings(RaceId raceId, Driver driver, int position, Points points) {
-        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId.value, driver.value, position, points.value);
+        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver.value, position, points.value);
         driverStandingsRepository.save(driverStandingsEntity);
     }
 
 
     public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, int position, Points points) {
-        ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId.value, constructor.value, position, points.value);
+        ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor.value, position, points.value);
         constructorStandingsRepository.save(constructorStandingsEntity);
     }
 
     public boolean isStartingGridAdded(RaceId raceId) {
-        return startingGridRepository.existsByIdRaceId(raceId.value);
+        return startingGridRepository.existsByIdRaceId(raceId);
     }
 
     public boolean isRaceResultAdded(RaceId raceId) {
-        return raceResultRepository.existsByIdRaceId(raceId.value);
+        return raceResultRepository.existsByIdRaceId(raceId);
     }
 
     public RaceId getCurrentRaceIdToGuess() throws NoAvailableRaceException {
@@ -86,7 +86,7 @@ public class ResultService {
         if (startingGridEntities.size() > 1) {
             throw new NoAvailableRaceException("Too many starting grids found");
         }
-        return new RaceId(startingGridEntities.get(0).raceId());
+        return startingGridEntities.get(0).raceId();
     }
 
     public List<Driver> getDriverStandings(RaceId raceId, Year year) {
@@ -96,7 +96,7 @@ public class ResultService {
                     .map(Driver::new)
                     .toList();
         }
-        return driverStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId.value).stream()
+        return driverStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId).stream()
                 .map(DriverStandingsEntity::driverName)
                 .map(Driver::new)
                 .toList();
@@ -110,7 +110,7 @@ public class ResultService {
                     .map(Constructor::new)
                     .toList();
         }
-        return constructorStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId.value).stream()
+        return constructorStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId).stream()
                 .map(ConstructorStandingsEntity::constructorName)
                 .map(Constructor::new)
                 .toList();
@@ -124,7 +124,7 @@ public class ResultService {
     }
 
     public List<ColoredCompetitor<Driver>> getDriversFromStartingGridWithColors(RaceId raceId) {
-        return startingGridRepository.findAllByRaceIdWithColor(raceId.value).stream()
+        return startingGridRepository.findAllByRaceIdWithColor(raceId).stream()
                 .map(ColoredCompetitor::fromIColoredCompetitorToDriver)
                 .toList();
     }

@@ -1,5 +1,6 @@
 package no.vebb.f1.race;
 
+import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -8,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
-public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Integer> {
+public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, RaceId> {
 
     @Query("""
             SELECT DISTINCT ro
@@ -58,7 +59,7 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Inte
 
     List<RaceOrderEntity> findAllByYearOrderByPosition(Year year);
 
-    boolean existsByRaceIdAndYear(int raceId, Year year);
+    boolean existsByRaceIdAndYear(RaceId raceId, Year year);
 
     Optional<RaceOrderEntity> findTopByYearOrderByPositionDesc(Year year);
 
@@ -69,5 +70,5 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Inte
        WHERE ro.raceId = :raceId
        AND ro.year = :year
        """)
-    void updatePosition(int raceId, Year year, int position);
+    void updatePosition(RaceId raceId, Year year, int position);
 }

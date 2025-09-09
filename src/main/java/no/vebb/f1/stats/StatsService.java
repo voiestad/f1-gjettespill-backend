@@ -50,7 +50,7 @@ public class StatsService {
     }
 
     public List<RegisteredFlag> getRegisteredFlags(RaceId raceId) {
-        return flagStatRepository.findAllByRaceIdOrderBySessionTypeAscRoundAsc(raceId.value).stream()
+        return flagStatRepository.findAllByRaceIdOrderBySessionTypeAscRoundAsc(raceId).stream()
                 .map(row -> new RegisteredFlag(
                         new Flag(row.flagName()),
                         row.round(),
@@ -61,7 +61,7 @@ public class StatsService {
     }
 
     public void insertFlagStats(Flag flag, int round, RaceId raceId, SessionType sessionType) {
-        flagStatRepository.save(new FlagStatEntity(flag.value, raceId.value, round, sessionType.value));
+        flagStatRepository.save(new FlagStatEntity(flag.value, raceId, round, sessionType.value));
     }
 
     public void deleteFlagStatsById(int flagId) {

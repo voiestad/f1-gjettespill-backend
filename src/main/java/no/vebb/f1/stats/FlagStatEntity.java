@@ -1,6 +1,7 @@
 package no.vebb.f1.stats;
 
 import jakarta.persistence.*;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 
 @Entity
 @Table(name = "flag_stats")
@@ -13,8 +14,8 @@ public class FlagStatEntity {
     @Column(name = "flag_name")
     private String flagName;
 
-    @Column(name = "race_id")
-    private int raceId;
+    @Embedded
+    private RaceId raceId;
 
     @Column(name = "round")
     private int round;
@@ -24,7 +25,7 @@ public class FlagStatEntity {
 
     protected FlagStatEntity() {}
 
-    public FlagStatEntity(String flagName, int raceId, int round, String sessionType) {
+    public FlagStatEntity(String flagName, RaceId raceId, int round, String sessionType) {
         this.flagName = flagName;
         this.raceId = raceId;
         this.round = round;
@@ -39,7 +40,7 @@ public class FlagStatEntity {
         return flagName;
     }
 
-    public int raceId() {
+    public RaceId raceId() {
         return raceId;
     }
 

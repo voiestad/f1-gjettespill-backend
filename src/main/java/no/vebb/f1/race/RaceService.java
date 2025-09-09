@@ -24,7 +24,7 @@ public class RaceService {
     }
 
     public Year getYearFromRaceId(RaceId raceId) throws InvalidRaceException {
-        return raceOrderRepository.findById(raceId.value).map(RaceOrderEntity::year).orElseThrow(InvalidRaceException::new);
+        return raceOrderRepository.findById(raceId).map(RaceOrderEntity::year).orElseThrow(InvalidRaceException::new);
     }
 
     public RaceId getLatestRaceId(Year year) throws InvalidYearException {
@@ -32,11 +32,11 @@ public class RaceService {
         if (races.isEmpty()) {
             throw new InvalidYearException("No races completed for " + year);
         }
-        return new RaceId(races.get(races.size() - 1).raceId());
+        return races.get(races.size() - 1).raceId();
     }
 
     public int getPositionOfRace(RaceId raceId) throws InvalidRaceException {
-        return raceOrderRepository.findById(raceId.value).map(RaceOrderEntity::position).orElseThrow(InvalidRaceException::new);
+        return raceOrderRepository.findById(raceId).map(RaceOrderEntity::position).orElseThrow(InvalidRaceException::new);
     }
 
     public RaceOrderEntity getLatestRaceForPlaceGuess(Year year) throws InvalidYearException {
@@ -50,7 +50,6 @@ public class RaceService {
     public List<RaceId> getRaceIdsFinished(Year year) {
         return raceOrderRepository.findAllByYearJoinWithRaceResults(year).stream()
                 .map(RaceOrderEntity::raceId)
-                .map(RaceId::new)
                 .toList();
     }
 
@@ -59,7 +58,7 @@ public class RaceService {
     }
 
     public RaceId getLatestStartingGridRaceId(Year year) throws InvalidYearException {
-        return new RaceId(getLatestRaceForPlaceGuess(year).raceId());
+        return getLatestRaceForPlaceGuess(year).raceId();
     }
 
     public RaceId getUpcomingRaceId(Year year) {
@@ -67,7 +66,7 @@ public class RaceService {
         if (races.isEmpty()) {
             throw new InvalidYearException("Every races are complete for " + year);
         }
-        return new RaceId(races.get(0).raceId());
+        return races.get(0).raceId();
     }
 
     public RaceId getLatestStandingsId(Year year) throws InvalidYearException {
@@ -75,11 +74,11 @@ public class RaceService {
         if (races.isEmpty()) {
             throw new InvalidYearException("No races has starting grid for " + year);
         }
-        return new RaceId(races.get(races.size() - 1).raceId());
+        return races.get(races.size() - 1).raceId();
     }
 
     public boolean isRaceAdded(int raceId) {
-        return raceRepository.existsById(raceId);
+        return raceRepository.existsById(new RaceId(raceId));
     }
 
     public void insertRace(int raceId, String raceName) {
@@ -92,28 +91,27 @@ public class RaceService {
     }
 
     public void insertRaceOrder(RaceId raceId, Year year, int position) {
-        RaceOrderEntity raceOrderEntity = new RaceOrderEntity(raceId.value, year, position);
+        RaceOrderEntity raceOrderEntity = new RaceOrderEntity(raceId, year, position);
         raceOrderRepository.save(raceOrderEntity);
     }
 
     public void updateRaceOrderPosition(RaceId raceId, Year year, int position) {
-        raceOrderRepository.updatePosition(raceId.value, year, position);
+        raceOrderRepository.updatePosition(raceId, year, position);
     }
 
     public void deleteRace(RaceId raceId) {
-        raceRepository.deleteById(raceId.value);
+        raceRepository.deleteById(raceId);
         entityManager.flush();
         entityManager.clear();
     }
 
     public boolean isRaceInSeason(RaceId raceId, Year year) {
-        return raceOrderRepository.existsByRaceIdAndYear(raceId.value, year);
+        return raceOrderRepository.existsByRaceIdAndYear(raceId, year);
     }
 
     public List<RaceId> getRacesFromSeason(Year year) {
         return raceOrderRepository.findAllByYearOrderByPosition(year).stream()
                 .map(RaceOrderEntity::raceId)
-                .map(RaceId::new)
                 .toList();
     }
 
@@ -130,16 +128,20 @@ public class RaceService {
                 .map(ro -> new Race(
                         ro.position(),
                         ro.name(),
-                        new RaceId(ro.raceId()),
+                        ro.raceId(),
                         ro.year()
                 ))
                 .toList();
     }
 
     public Race getRaceFromId(RaceId raceId) {
-        return raceOrderRepository.findById(raceId.value)
+        return raceOrderRepository.findById(raceId)
                 .map(race -> new Race(race.position(), race.name(), raceId, race.year()))
                 .orElseThrow(InvalidRaceException::new);
+    }
+
+    public RaceId getRaceId(int raceId) {
+        return raceRepository.findById(new RaceId(raceId)).orElseThrow(InvalidRaceException::new).raceId();
     }
 
 }

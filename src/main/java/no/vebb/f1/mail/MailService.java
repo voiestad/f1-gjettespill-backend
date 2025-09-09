@@ -67,7 +67,7 @@ public class MailService {
     public void notifyUsers() {
         try {
             RaceOrderEntity race = raceService.getLatestRaceForPlaceGuess(yearService.getCurrentYear());
-            RaceId raceId = new RaceId(race.raceId());
+            RaceId raceId = race.raceId();
             long timeLeft = cutoffService.getTimeLeftToGuessRace(raceId);
             if (timeLeft < 0) {
                 return;
@@ -77,7 +77,7 @@ public class MailService {
             List<NotifiedEntity> notifications = new ArrayList<>();
             for (UserMail user : mailingList) {
                 UUID userId = user.userEntity().id();
-                int notifiedCount = notifiedRepository.countAllByRaceIdAndUserId(raceId.value, userId);
+                int notifiedCount = notifiedRepository.countAllByRaceIdAndUserId(raceId, userId);
                 List<MailOption> options = getMailingPreference(userId);
                 for (MailOption option : options) {
                     if (notifiedCount > 0) {
@@ -211,7 +211,7 @@ public class MailService {
     }
 
     public List<UserMail> getMailingList(RaceId raceId) {
-        return mailingListRepository.findAllByRaceId(raceId.value).stream()
+        return mailingListRepository.findAllByRaceId(raceId).stream()
                 .map(user ->
                         new UserMail(
                                 user.user(),

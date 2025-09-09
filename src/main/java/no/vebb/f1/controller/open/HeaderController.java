@@ -50,7 +50,7 @@ public class HeaderController {
     private boolean isRaceGuess() {
         try {
             Year year = yearService.getCurrentYear();
-            RaceId raceId = new RaceId(raceService.getLatestRaceForPlaceGuess(year).raceId());
+            RaceId raceId = raceService.getLatestRaceForPlaceGuess(year).raceId();
             return !cutoffService.isAbleToGuessRace(raceId);
         } catch (InvalidYearException | NoAvailableRaceException e) {
             return false;

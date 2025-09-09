@@ -34,7 +34,7 @@ public class CutoffService {
     }
 
     public Instant getCutoffRace(RaceId raceId) throws NoAvailableRaceException {
-        return raceCutoffRepository.findById(raceId.value).map(RaceCutoffEntity::cutoff).orElseThrow(NoAvailableRaceException::new);
+        return raceCutoffRepository.findById(raceId).map(RaceCutoffEntity::cutoff).orElseThrow(NoAvailableRaceException::new);
     }
 
     public boolean isAbleToGuessCurrentYear() {
@@ -78,7 +78,7 @@ public class CutoffService {
     }
 
     public void setCutoffRace(Instant cutoffTime, RaceId raceId) {
-        raceCutoffRepository.save(new RaceCutoffEntity(raceId.value, cutoffTime));
+        raceCutoffRepository.save(new RaceCutoffEntity(raceId, cutoffTime));
     }
 
     public void setCutoffYear(Instant cutoffTime, Year year) {
@@ -106,7 +106,7 @@ public class CutoffService {
                 .map(row -> new CutoffRace(
                         row.position(),
                         row.raceName(),
-                        new RaceId(row.raceId()),
+                        row.raceId(),
                         TimeUtil.instantToLocalTime(row.cutoff()),
                         year
                 ))

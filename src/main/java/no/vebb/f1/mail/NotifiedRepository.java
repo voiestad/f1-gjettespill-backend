@@ -1,6 +1,7 @@
 package no.vebb.f1.mail;
 
 import no.vebb.f1.util.collection.IUserNotifiedCount;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -9,7 +10,7 @@ import java.util.UUID;
 
 public interface NotifiedRepository extends JpaRepository<NotifiedEntity, Integer> {
 
-    int countAllByRaceIdAndUserId(int raceId, UUID userId);
+    int countAllByRaceIdAndUserId(RaceId raceId, UUID userId);
     
     void deleteByUserId(UUID userId);
 

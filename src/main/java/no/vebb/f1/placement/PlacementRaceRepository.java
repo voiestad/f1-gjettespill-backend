@@ -1,5 +1,6 @@
 package no.vebb.f1.placement;
 
+import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PlacementRaceRepository extends JpaRepository<PlacementRaceEntity, PlacementRaceId> {
-    Optional<PlacementRaceEntity> findAllByIdRaceIdAndIdUserId(int raceId, UUID userId);
+    Optional<PlacementRaceEntity> findAllByIdRaceIdAndIdUserId(RaceId raceId, UUID userId);
     @Query(value = """
                 SELECT ro.position as position
                 FROM PlacementRaceEntity pr

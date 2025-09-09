@@ -3,6 +3,7 @@ package no.vebb.f1.cutoff;
 import jakarta.persistence.*;
 import no.vebb.f1.race.RaceEntity;
 import no.vebb.f1.race.RaceOrderEntity;
+import no.vebb.f1.util.domainPrimitive.RaceId;
 import no.vebb.f1.util.domainPrimitive.Year;
 
 import java.time.Instant;
@@ -10,9 +11,8 @@ import java.time.Instant;
 @Entity
 @Table(name = "race_cutoffs")
 public class RaceCutoffEntity {
-    @Id
-    @Column(name = "race_id")
-    private int raceId;
+    @EmbeddedId
+    private RaceId raceId;
 
     @Column(name = "cutoff", nullable = false)
     private Instant cutoff;
@@ -27,12 +27,12 @@ public class RaceCutoffEntity {
 
     protected RaceCutoffEntity() {}
 
-    public RaceCutoffEntity(int raceId, Instant cutoff) {
+    public RaceCutoffEntity(RaceId raceId, Instant cutoff) {
         this.raceId = raceId;
         this.cutoff = cutoff;
     }
 
-    public int raceId() {
+    public RaceId raceId() {
         return raceId;
     }
 
