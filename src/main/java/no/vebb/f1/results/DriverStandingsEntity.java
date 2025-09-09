@@ -4,7 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.race.RaceId;
 
 @Entity
 @Table(name = "driver_standings")
@@ -19,7 +20,7 @@ public class DriverStandingsEntity {
     protected DriverStandingsEntity() {
     }
 
-    public DriverStandingsEntity(RaceId raceId, String driverName, int position, int points) {
+    public DriverStandingsEntity(RaceId raceId, Driver driverName, int position, int points) {
         this.id = new DriverStandingsId(raceId, driverName);
         this.position = position;
         this.points = points;
@@ -29,7 +30,7 @@ public class DriverStandingsEntity {
         return id.raceId();
     }
 
-    public String driverName() {
+    public Driver driverName() {
         return id.driverName();
     }
 

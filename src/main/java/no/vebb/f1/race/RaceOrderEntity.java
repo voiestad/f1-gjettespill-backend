@@ -1,8 +1,7 @@
 package no.vebb.f1.race;
 
 import jakarta.persistence.*;
-import no.vebb.f1.util.domainPrimitive.RaceId;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 
 @Entity
 @Table(name = "race_order")

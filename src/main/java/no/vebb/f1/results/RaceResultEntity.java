@@ -1,10 +1,8 @@
 package no.vebb.f1.results;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import jakarta.persistence.*;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.race.RaceId;
 
 @Entity
 @Table(name = "race_results")
@@ -13,14 +11,14 @@ public class RaceResultEntity {
     private RaceResultId id;
     @Column(name = "position", nullable = false)
     private String position;
-    @Column(name = "driver_name", nullable = false)
-    private String driverName;
+    @Embedded
+    private Driver driverName;
     @Column(name = "points", nullable = false)
     private int points;
 
     protected RaceResultEntity() {}
 
-    public RaceResultEntity(RaceId raceId, int finishingPosition, String position, String driverName, int points) {
+    public RaceResultEntity(RaceId raceId, int finishingPosition, String position, Driver driverName, int points) {
         this.id = new RaceResultId(raceId, finishingPosition);
         this.position = position;
         this.driverName = driverName;
@@ -39,7 +37,7 @@ public class RaceResultEntity {
         return position;
     }
 
-    public String driverName() {
+    public Driver driverName() {
         return driverName;
     }
 

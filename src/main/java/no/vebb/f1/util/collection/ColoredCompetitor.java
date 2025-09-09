@@ -1,9 +1,9 @@
 package no.vebb.f1.util.collection;
 
 import no.vebb.f1.results.IColoredCompetitor;
-import no.vebb.f1.util.domainPrimitive.Color;
-import no.vebb.f1.util.domainPrimitive.Constructor;
-import no.vebb.f1.util.domainPrimitive.Driver;
+import no.vebb.f1.competitors.domain.Color;
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.domain.Driver;
 
 public record ColoredCompetitor<T>(T competitor, Color color) {
     public static ColoredCompetitor<Driver> fromIColoredCompetitorToDriver(IColoredCompetitor iColoredCompetitor) {

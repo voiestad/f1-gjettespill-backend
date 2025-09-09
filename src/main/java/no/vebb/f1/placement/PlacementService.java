@@ -2,6 +2,7 @@ package no.vebb.f1.placement;
 
 import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.graph.GuesserPointsSeason;
+import no.vebb.f1.race.RaceId;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.util.collection.Guesser;
 import no.vebb.f1.util.collection.Medals;
@@ -9,6 +10,7 @@ import no.vebb.f1.util.collection.Placement;
 import no.vebb.f1.util.collection.RankedGuesser;
 import no.vebb.f1.util.collection.userTables.Summary;
 import no.vebb.f1.util.domainPrimitive.*;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.year.YearService;
 import org.springframework.stereotype.Service;
 

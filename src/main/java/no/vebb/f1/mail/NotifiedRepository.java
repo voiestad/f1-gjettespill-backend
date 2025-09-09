@@ -1,7 +1,7 @@
 package no.vebb.f1.mail;
 
 import no.vebb.f1.util.collection.IUserNotifiedCount;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.race.RaceId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

@@ -1,10 +1,8 @@
 package no.vebb.f1.guessing;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import no.vebb.f1.util.domainPrimitive.Year;
+import jakarta.persistence.*;
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.year.Year;
 
 import java.util.UUID;
 
@@ -14,12 +12,12 @@ public class ConstructorGuessEntity {
     @EmbeddedId
     private CompetitorGuessId id;
 
-    @Column(name = "constructor_name")
-    private String constructorName;
+    @Embedded
+    private Constructor constructorName;
 
     protected ConstructorGuessEntity() {}
 
-    public ConstructorGuessEntity(UUID userId, int position, Year year, String constructorName) {
+    public ConstructorGuessEntity(UUID userId, int position, Year year, Constructor constructorName) {
         this.id = new CompetitorGuessId(userId, position, year);
         this.constructorName = constructorName;
     }
@@ -37,7 +35,7 @@ public class ConstructorGuessEntity {
         return id.year();
     }
 
-    public String constructorName() {
+    public Constructor constructorName() {
         return constructorName;
     }
 }

@@ -1,9 +1,10 @@
 package no.vebb.f1.bingo;
 
 import no.vebb.f1.util.collection.BingoSquare;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,14 +42,12 @@ public class BingoService {
                 .toList();
     }
 
-    public void addBingoSquare(BingoSquare bingoSquare) {
-        BingoCardEntity square = new BingoCardEntity(
-                bingoSquare.year(),
-                bingoSquare.id(),
-                bingoSquare.text(),
-                bingoSquare.marked()
-        );
-        bingoCardRepository.save(square);
+    public void addBingoCard(Year year) {
+        List<BingoCardEntity> bingoCard = new ArrayList<>();
+        for (int id = 0; id < 25; id++) {
+            bingoCard.add(new BingoCardEntity(year, id, "", false));
+        }
+        bingoCardRepository.saveAll(bingoCard);
     }
 
     public boolean toogleMarkBingoSquare(Year year, int id) {

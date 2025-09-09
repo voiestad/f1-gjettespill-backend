@@ -1,6 +1,6 @@
-package no.vebb.f1.competitors;
+package no.vebb.f1.competitors.driver;
 
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

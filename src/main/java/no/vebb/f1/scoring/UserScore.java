@@ -1,6 +1,9 @@
 package no.vebb.f1.scoring;
 
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.guessing.GuessService;
+import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.user.PublicUserDto;
@@ -11,6 +14,7 @@ import no.vebb.f1.util.collection.userTables.PlaceGuess;
 import no.vebb.f1.util.collection.userTables.StandingsGuess;
 import no.vebb.f1.util.domainPrimitive.*;
 import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.year.Year;
 
 import java.util.ArrayList;
 import java.util.HashMap;

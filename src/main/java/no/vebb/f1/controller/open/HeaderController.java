@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.util.domainPrimitive.RaceId;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.race.RaceId;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.util.response.HeaderResponse;

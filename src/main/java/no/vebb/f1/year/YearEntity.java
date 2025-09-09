@@ -1,7 +1,6 @@
 package no.vebb.f1.year;
 
 import jakarta.persistence.*;
-import no.vebb.f1.util.domainPrimitive.Year;
 
 @Entity
 @Table(name = "years")

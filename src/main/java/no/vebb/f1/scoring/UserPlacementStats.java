@@ -3,7 +3,7 @@ package no.vebb.f1.scoring;
 import no.vebb.f1.placement.PlacementService;
 import no.vebb.f1.util.collection.Medals;
 import no.vebb.f1.util.collection.Placement;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 
 import java.util.List;
 import java.util.UUID;

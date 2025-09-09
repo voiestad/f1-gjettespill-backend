@@ -1,7 +1,7 @@
 package no.vebb.f1.cutoff;
 
 import jakarta.persistence.*;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 
 import java.time.Instant;
 

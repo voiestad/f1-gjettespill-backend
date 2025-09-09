@@ -46,12 +46,16 @@ public class CodeService {
         );
     }
 
-    private boolean isExpired(Code verificationCode) {
-        return verificationCode.cutoff().compareTo(Instant.now()) < 0;
+    private boolean isExpired(Code code) {
+        return code.cutoff().compareTo(Instant.now()) < 0;
+    }
+
+    private boolean isValid(Code code) {
+        return !isExpired(code);
     }
 
     public boolean hasVerificationCode(UUID userId) {
-        return verificationCodeRepository.findById(userId).isPresent();
+        return verificationCodeRepository.existsById(userId);
     }
 
     public boolean validateVerificationCode(UUID userId, int code) {
@@ -64,7 +68,7 @@ public class CodeService {
         if (!isValidCode) {
             return false;
         }
-        boolean isValidCutoff = verificationCodeEntity.cutoff().compareTo(Instant.now()) > 0;
+        boolean isValidCutoff = isValid(verificationCodeEntity);
         if (!isValidCutoff) {
             return false;
         }
@@ -75,9 +79,7 @@ public class CodeService {
     }
 
     public boolean isValidReferralCode(long code) {
-        return referralCodeRepository.findByCode(code)
-                .map(referralCodeEntity ->
-                        referralCodeEntity.cutoff().compareTo(Instant.now()) > 0).orElse(false);
+        return referralCodeRepository.findByCode(code).map(this::isValid).orElse(false);
     }
 
     public void removeExpiredReferralCodes() {

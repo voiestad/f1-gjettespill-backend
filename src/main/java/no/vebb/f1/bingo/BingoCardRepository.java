@@ -1,6 +1,6 @@
 package no.vebb.f1.bingo;
 
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

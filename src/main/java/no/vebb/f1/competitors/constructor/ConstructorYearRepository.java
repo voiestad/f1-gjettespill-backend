@@ -1,9 +1,9 @@
-package no.vebb.f1.competitors;
+package no.vebb.f1.competitors.constructor;
 
+import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.results.IColoredCompetitor;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -11,16 +11,7 @@ import java.util.List;
 public interface ConstructorYearRepository extends JpaRepository<ConstructorYearEntity, ConstructorId> {
     List<ConstructorYearEntity> findAllByIdYearOrderByPosition(Year year);
 
-    boolean existsByIdConstructorName(String constructorName);
-
-    @Modifying
-    @Query("""
-       UPDATE ConstructorYearEntity cy
-       SET cy.position = :position
-       WHERE cy.id.constructorName = :constructorName
-       AND cy.id.year = :year
-       """)
-    void updatePosition(String constructorName, Year year, int position);
+    boolean existsByIdConstructorName(Constructor constructorName);
 
     @Query("""
             SELECT cy.id.constructorName as constructor, cc.color as color

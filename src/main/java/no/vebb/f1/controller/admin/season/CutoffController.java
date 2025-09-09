@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.CutoffRace;
-import no.vebb.f1.util.domainPrimitive.RaceId;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.race.RaceId;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidRaceException;
 
 @RestController

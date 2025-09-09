@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import no.vebb.f1.graph.GuesserPointsSeason;
 import no.vebb.f1.graph.Graph;
 import no.vebb.f1.util.collection.RankedGuesser;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
 @RestController

@@ -1,6 +1,6 @@
 package no.vebb.f1.util.collection;
 
-import no.vebb.f1.util.domainPrimitive.Driver;
+import no.vebb.f1.competitors.domain.Driver;
 
 public class UserRaceGuess {
 	

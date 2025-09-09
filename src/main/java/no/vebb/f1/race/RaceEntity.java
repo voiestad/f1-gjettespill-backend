@@ -1,7 +1,6 @@
 package no.vebb.f1.race;
 
 import jakarta.persistence.*;
-import no.vebb.f1.util.domainPrimitive.RaceId;
 
 @Entity
 @Table(name = "races")

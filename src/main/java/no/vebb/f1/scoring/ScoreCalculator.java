@@ -14,8 +14,8 @@ import no.vebb.f1.util.collection.Placement;
 import no.vebb.f1.util.collection.userTables.Summary;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.util.domainPrimitive.Position;
-import no.vebb.f1.util.domainPrimitive.RaceId;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.race.RaceId;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
 import no.vebb.f1.year.YearService;

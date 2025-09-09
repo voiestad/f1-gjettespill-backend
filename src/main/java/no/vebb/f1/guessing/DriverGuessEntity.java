@@ -1,10 +1,8 @@
 package no.vebb.f1.guessing;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import no.vebb.f1.util.domainPrimitive.Year;
+import jakarta.persistence.*;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.year.Year;
 
 import java.util.UUID;
 
@@ -14,12 +12,12 @@ public class DriverGuessEntity {
     @EmbeddedId
     private CompetitorGuessId id;
 
-    @Column(name = "driver_name")
-    private String driverName;
+    @Embedded
+    private Driver driverName;
 
     protected DriverGuessEntity() {}
 
-    public DriverGuessEntity(UUID userId, int position, Year year, String driverName) {
+    public DriverGuessEntity(UUID userId, int position, Year year, Driver driverName) {
         this.id = new CompetitorGuessId(userId, position, year);
         this.driverName = driverName;
     }
@@ -37,7 +35,7 @@ public class DriverGuessEntity {
         return id.year();
     }
 
-    public String driverName() {
+    public Driver driverName() {
         return driverName;
     }
 }

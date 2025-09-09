@@ -1,27 +1,27 @@
-package no.vebb.f1.competitors;
+package no.vebb.f1.competitors.driver;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.year.Year;
 
 import java.util.Objects;
 
 @Embeddable
 public class DriverId {
-    @Column(name = "driver_name", nullable = false)
-    private String driverName;
+    @Embedded
+    private Driver driverName;
     @Embedded
     private Year year;
 
     protected DriverId() {}
 
-    public DriverId(String driverName, Year year) {
+    public DriverId(Driver driverName, Year year) {
         this.driverName = driverName;
         this.year = year;
     }
 
-    public String driverName() {
+    public Driver driverName() {
         return driverName;
     }
 

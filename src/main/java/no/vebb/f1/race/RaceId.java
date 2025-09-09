@@ -1,4 +1,4 @@
-package no.vebb.f1.util.domainPrimitive;
+package no.vebb.f1.race;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

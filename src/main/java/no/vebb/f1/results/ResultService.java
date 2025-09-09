@@ -1,19 +1,22 @@
 package no.vebb.f1.results;
 
-import no.vebb.f1.competitors.ConstructorYearEntity;
-import no.vebb.f1.competitors.ConstructorYearRepository;
-import no.vebb.f1.competitors.DriverYearEntity;
-import no.vebb.f1.competitors.DriverYearRepository;
+import no.vebb.f1.competitors.constructor.ConstructorYearEntity;
+import no.vebb.f1.competitors.constructor.ConstructorYearRepository;
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.competitors.driver.DriverYearEntity;
+import no.vebb.f1.competitors.driver.DriverYearRepository;
+import no.vebb.f1.race.RaceId;
 import no.vebb.f1.util.collection.ColoredCompetitor;
 import no.vebb.f1.util.domainPrimitive.*;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
+import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class ResultService {
-
 
     private final StartingGridRepository startingGridRepository;
     private final RaceResultRepository raceResultRepository;
@@ -49,24 +52,24 @@ public class ResultService {
 
 
     public void insertDriverStartingGrid(RaceId raceId, int position, Driver driver) {
-        StartingGridEntity startingGridEntity = new StartingGridEntity(raceId, driver.value, position);
+        StartingGridEntity startingGridEntity = new StartingGridEntity(raceId, driver, position);
         startingGridRepository.save(startingGridEntity);
     }
 
     public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, Points points, int finishingPosition) {
-        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driver.value, points.value);
+        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driver, points.value);
         raceResultRepository.save(raceResultEntity);
     }
 
 
     public void insertDriverIntoStandings(RaceId raceId, Driver driver, int position, Points points) {
-        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver.value, position, points.value);
+        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver, position, points.value);
         driverStandingsRepository.save(driverStandingsEntity);
     }
 
 
     public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, int position, Points points) {
-        ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor.value, position, points.value);
+        ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor, position, points.value);
         constructorStandingsRepository.save(constructorStandingsEntity);
     }
 
@@ -93,12 +96,10 @@ public class ResultService {
         if (raceId == null) {
             return driverYearRepository.findAllByIdYearOrderByPosition(year).stream()
                     .map(DriverYearEntity::driverName)
-                    .map(Driver::new)
                     .toList();
         }
         return driverStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId).stream()
                 .map(DriverStandingsEntity::driverName)
-                .map(Driver::new)
                 .toList();
 
     }
@@ -107,19 +108,16 @@ public class ResultService {
         if (raceId == null) {
             return constructorYearRepository.findAllByIdYearOrderByPosition(year).stream()
                     .map(ConstructorYearEntity::constructorName)
-                    .map(Constructor::new)
                     .toList();
         }
         return constructorStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId).stream()
                 .map(ConstructorStandingsEntity::constructorName)
-                .map(Constructor::new)
                 .toList();
     }
 
     public List<Driver> getDriversFromStartingGrid(RaceId raceId) {
         return getStartingGrid(raceId).stream()
                 .map(StartingGridEntity::driverName)
-                .map(Driver::new)
                 .toList();
     }
 

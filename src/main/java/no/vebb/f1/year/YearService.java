@@ -1,7 +1,6 @@
 package no.vebb.f1.year;
 
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.domainPrimitive.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import org.springframework.stereotype.Service;
 

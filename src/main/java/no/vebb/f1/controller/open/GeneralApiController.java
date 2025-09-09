@@ -17,7 +17,7 @@ import no.vebb.f1.user.UserService;
 
 import no.vebb.f1.util.response.UserStatus;
 import no.vebb.f1.util.collection.Race;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
 @RestController

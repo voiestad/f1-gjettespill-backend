@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.collection.BingoSquare;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
 @RestController
@@ -71,10 +71,7 @@ public class BingoController {
 			if (bingoService.isBingoCardAdded(validSeason)) {
 				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}
-			for (int id = 0; id < 25; id++) {
-				BingoSquare bingoSquare = new BingoSquare("", false, id, validSeason);
-				bingoService.addBingoSquare(bingoSquare);
-			}
+			bingoService.addBingoCard(validSeason);
 			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (InvalidYearException e) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);

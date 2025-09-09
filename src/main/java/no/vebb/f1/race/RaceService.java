@@ -2,8 +2,7 @@ package no.vebb.f1.race;
 
 import jakarta.persistence.EntityManager;
 import no.vebb.f1.util.collection.Race;
-import no.vebb.f1.util.domainPrimitive.RaceId;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import no.vebb.f1.util.exception.InvalidYearException;
 import org.springframework.stereotype.Service;

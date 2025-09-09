@@ -3,7 +3,7 @@ package no.vebb.f1.guessing;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.race.RaceId;
 
 import java.util.Objects;
 import java.util.UUID;

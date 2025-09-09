@@ -1,7 +1,8 @@
 package no.vebb.f1.results;
 
 import jakarta.persistence.*;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.race.RaceId;
 
 @Entity
 @Table(name = "starting_grids")
@@ -15,7 +16,7 @@ public class StartingGridEntity {
     protected StartingGridEntity() {
     }
 
-    public StartingGridEntity(RaceId raceId, String driverName, int position) {
+    public StartingGridEntity(RaceId raceId, Driver driverName, int position) {
         this.id = new StartingGridId(raceId, driverName);
         this.position = position;
     }
@@ -24,7 +25,7 @@ public class StartingGridEntity {
         return id.raceId();
     }
 
-    public String driverName() {
+    public Driver driverName() {
         return id.driverName();
     }
 

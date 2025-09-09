@@ -11,7 +11,7 @@ import no.vebb.f1.results.ResultService;
 import no.vebb.f1.scoring.ScoreService;
 import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.scoring.UserScoreResponse;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.race.RaceId;
 import no.vebb.f1.util.exception.InvalidRaceException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
@@ -25,7 +25,7 @@ import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
 @RestController

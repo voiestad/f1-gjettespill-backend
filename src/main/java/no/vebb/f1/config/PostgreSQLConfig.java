@@ -155,11 +155,11 @@ public class PostgreSQLConfig {
 			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS drivers_team (
 					driver_name TEXT NOT NULL,
-					team TEXT NOT NULL,
+					constructor_name TEXT NOT NULL,
 					year INTEGER NOT NULL,
 					PRIMARY KEY (driver_name, year),
 					FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
-					FOREIGN KEY (team) REFERENCES constructors(constructor_name) ON DELETE CASCADE,
+					FOREIGN KEY (constructor_name) REFERENCES constructors(constructor_name) ON DELETE CASCADE,
 					FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 				);
 			""");

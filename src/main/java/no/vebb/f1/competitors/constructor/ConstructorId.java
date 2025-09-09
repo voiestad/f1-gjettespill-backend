@@ -1,27 +1,27 @@
-package no.vebb.f1.competitors;
+package no.vebb.f1.competitors.constructor;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.year.Year;
 
 import java.util.Objects;
 
 @Embeddable
 public class ConstructorId {
-    @Column(name = "constructor_name", nullable = false)
-    private String constructorName;
+    @Embedded
+    private Constructor constructorName;
     @Embedded
     private Year year;
 
     protected ConstructorId() {}
 
-    public ConstructorId(String constructorName, Year year) {
+    public ConstructorId(Constructor constructorName, Year year) {
         this.constructorName = constructorName;
         this.year = year;
     }
 
-    public String constructorName() {
+    public Constructor constructorName() {
         return constructorName;
     }
 

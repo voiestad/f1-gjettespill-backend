@@ -3,7 +3,7 @@ package no.vebb.f1.scoring;
 import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Points;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;

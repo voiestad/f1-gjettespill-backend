@@ -30,10 +30,10 @@ import no.vebb.f1.util.collection.CutoffCompetitors;
 import no.vebb.f1.util.collection.CutoffCompetitorsSelected;
 import no.vebb.f1.util.collection.CutoffFlags;
 import no.vebb.f1.util.domainPrimitive.Category;
-import no.vebb.f1.util.domainPrimitive.Constructor;
-import no.vebb.f1.util.domainPrimitive.Driver;
-import no.vebb.f1.util.domainPrimitive.RaceId;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.race.RaceId;
+import no.vebb.f1.year.Year;
 
 @RestController
 @RequestMapping("/api/guess")
@@ -114,7 +114,7 @@ public class GuessController {
 			List<Driver> validationList = competitorService.getDriversYear(year);
 			Set<Driver> competitors = new HashSet<>(validationList);
 			List<Driver> guessedDrivers = rankedCompetitors.stream()
-					.map(driver -> new Driver(driver, competitorService))
+					.map(competitorService::getDriver)
 					.toList();
 			String error = validateGuessList(guessedDrivers, competitors);
 			if (error != null) {
@@ -125,7 +125,7 @@ public class GuessController {
 			UUID id = userService.getUser().id();
 			List<DriverGuessEntity> driverGuesses = new ArrayList<>();
 			for (Driver driver : guessedDrivers) {
-				driverGuesses.add(new DriverGuessEntity(id, position, year, driver.value));
+				driverGuesses.add(new DriverGuessEntity(id, position, year, driver));
 				position++;
 			}
 			guessService.addDriversYearGuesses(driverGuesses);
@@ -166,7 +166,7 @@ public class GuessController {
 			List<Constructor> validationList = competitorService.getConstructorsYear(year);
 			Set<Constructor> competitors = new HashSet<>(validationList);
 			List<Constructor> guessedConstructors = rankedCompetitors.stream()
-					.map(constructor -> new Constructor(constructor, competitorService))
+					.map(competitorService::getConstructor)
 					.toList();
 			String error = validateGuessList(guessedConstructors, competitors);
 			if (error != null) {
@@ -177,7 +177,7 @@ public class GuessController {
 			UUID id = userService.getUser().id();
 			List<ConstructorGuessEntity> constructorGuesses = new ArrayList<>();
 			for (Constructor constructor : guessedConstructors) {
-				constructorGuesses.add(new ConstructorGuessEntity(id, position, year, constructor.value));
+				constructorGuesses.add(new ConstructorGuessEntity(id, position, year, constructor));
 				position++;
 			}
 			guessService.addConstructorsYearGuesses(constructorGuesses);
@@ -258,7 +258,7 @@ public class GuessController {
 				throw new YearFinishedException("Year '" + year + "' is over and not available for guessing");
 			}
 			RaceId raceId = getRaceIdToGuess();
-			Driver validDriver = new Driver(driver, competitorService);
+			Driver validDriver = competitorService.getDriver(driver);
 			Set<Driver> driversCheck = new HashSet<>(resultService.getDriversFromStartingGrid(raceId));
 			if (!driversCheck.contains(validDriver)) {
 				logger.warn("'{}', invalid winner driver inputted by user.", driver);

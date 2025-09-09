@@ -1,12 +1,16 @@
 package no.vebb.f1.guessing;
 
-import no.vebb.f1.competitors.ConstructorYearRepository;
-import no.vebb.f1.competitors.DriverYearRepository;
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.constructor.ConstructorYearRepository;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.competitors.driver.DriverYearRepository;
+import no.vebb.f1.race.RaceId;
 import no.vebb.f1.results.IColoredCompetitor;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.collection.*;
 import no.vebb.f1.util.domainPrimitive.*;
+import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -59,14 +63,12 @@ public class GuessService {
     public List<Driver> getGuessedYearDriver(Year year, UUID userId) {
         return driverGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
                 .map(DriverGuessEntity::driverName)
-                .map(Driver::new)
                 .toList();
     }
 
     public List<Constructor> getGuessedYearConstructor(Year year, UUID userId) {
         return constructorGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
                 .map(ConstructorGuessEntity::constructorName)
-                .map(Constructor::new)
                 .toList();
     }
 
@@ -106,17 +108,16 @@ public class GuessService {
     public Driver getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
         return driverPlaceGuessRepository.findById(new DriverPlaceGuessId(userId, raceId, category.value))
                 .map(DriverPlaceGuessEntity::driverName)
-                .map(Driver::new)
                 .orElse(null);
     }
 
     public void addDriverPlaceGuess(UUID userId, RaceId raceId, Driver driver, Category category) {
-        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category.value, driver.value));
+        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category.value, driver));
     }
 
     public List<ColoredCompetitor<Driver>> getDriversGuess(UUID userId, Year year) {
         List<IColoredCompetitor> guessed = driverGuessRepository.findAllByUserIdOrderByIdPosition(userId, year);
-        List<IColoredCompetitor> result = guessed.isEmpty() ? driverYearRepository.findAllByYearOrderByPosition(year) : guessed;
+        List<IColoredCompetitor> result = guessed.isEmpty() ? driverYearRepository.findAllByYearOrderByPositionWithColor(year) : guessed;
         return result.stream()
                 .map(ColoredCompetitor::fromIColoredCompetitorToDriver)
                 .toList();

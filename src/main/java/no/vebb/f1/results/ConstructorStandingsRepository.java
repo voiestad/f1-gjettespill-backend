@@ -1,6 +1,6 @@
 package no.vebb.f1.results;
 
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.race.RaceId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

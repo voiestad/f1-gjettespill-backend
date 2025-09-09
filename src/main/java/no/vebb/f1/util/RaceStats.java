@@ -2,21 +2,23 @@ package no.vebb.f1.util;
 
 import java.util.List;
 
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.util.collection.RegisteredFlag;
-import no.vebb.f1.util.domainPrimitive.RaceId;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.race.RaceId;
+import no.vebb.f1.year.Year;
 
 public class RaceStats {
 
 	public final String name;
-	public final List<PositionedCompetitor> startingGrid;
-	public final List<PositionedCompetitor> raceResult;
-	public final List<PositionedCompetitor> driverStandings;
-	public final List<PositionedCompetitor> constructorStandings;
+	public final List<PositionedCompetitor<Driver>> startingGrid;
+	public final List<PositionedCompetitor<Driver>> raceResult;
+	public final List<PositionedCompetitor<Driver>> driverStandings;
+	public final List<PositionedCompetitor<Constructor>> constructorStandings;
 	public final List<RegisteredFlag> flags;
 
 	public RaceStats(RaceId raceId, Year year, ResultService resultService, RaceService raceService, StatsService statsService) {

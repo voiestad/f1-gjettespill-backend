@@ -4,7 +4,7 @@ import java.util.List;
 
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.stats.StatsService;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.domainPrimitive.Flag;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.race.RaceId;
 import no.vebb.f1.util.domainPrimitive.SessionType;
 import no.vebb.f1.util.exception.InvalidFlagException;
 import no.vebb.f1.util.exception.InvalidRaceException;

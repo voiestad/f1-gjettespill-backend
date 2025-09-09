@@ -4,7 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.race.RaceId;
 
 @Entity
 @Table(name = "constructor_standings")
@@ -19,7 +20,7 @@ public class ConstructorStandingsEntity {
     protected ConstructorStandingsEntity() {
     }
 
-    public ConstructorStandingsEntity(RaceId raceId, String constructorName, int position, int points) {
+    public ConstructorStandingsEntity(RaceId raceId, Constructor constructorName, int position, int points) {
         this.id = new ConstructorStandingsId(raceId, constructorName);
         this.position = position;
         this.points = points;
@@ -29,7 +30,7 @@ public class ConstructorStandingsEntity {
         return id.raceId();
     }
 
-    public String constructorName() {
+    public Constructor constructorName() {
         return id.constructorName();
     }
 

@@ -1,9 +1,12 @@
 package no.vebb.f1.controller.admin.season;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import no.vebb.f1.competitors.CompetitorService;
+import no.vebb.f1.competitors.constructor.ConstructorYearEntity;
+import no.vebb.f1.competitors.driver.DriverYearEntity;
 import no.vebb.f1.util.collection.ColoredCompetitor;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
@@ -13,10 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.util.collection.ValuedCompetitor;
-import no.vebb.f1.util.domainPrimitive.Color;
-import no.vebb.f1.util.domainPrimitive.Constructor;
-import no.vebb.f1.util.domainPrimitive.Driver;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.competitors.domain.Color;
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidColorException;
 import no.vebb.f1.util.exception.InvalidConstructorException;
 import no.vebb.f1.util.exception.InvalidDriverException;
@@ -51,7 +54,7 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            competitorService.setTeamDriver(new Driver(driver, competitorService, validYear), new Constructor(team, competitorService, validYear), validYear);
+            competitorService.setTeamDriver(competitorService.getDriver(driver, validYear), competitorService.getConstructor(team, validYear), validYear);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidDriverException | InvalidConstructorException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -66,7 +69,7 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            new Driver(driver, competitorService, validYear);
+            competitorService.getDriver(driver, validYear);
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         } catch (InvalidDriverException e) {
             competitorService.addDriverYear(driver, validYear);
@@ -82,16 +85,17 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            Driver validDriver = new Driver(driver, competitorService, validYear);
+            Driver validDriver = competitorService.getDriver(driver, validYear);
 
             competitorService.deleteDriverYear(validDriver, validYear);
             List<Driver> drivers = competitorService.getDriversYear(validYear);
 
             int position = 1;
+            List<DriverYearEntity> newOrder = new ArrayList<>();
             for (Driver currentDriver : drivers) {
-                competitorService.updatePositionDriverYear(currentDriver, validYear, position);
-                position++;
+                newOrder.add(new DriverYearEntity(currentDriver, validYear, position++));
             }
+            competitorService.setDriverYearOrder(newOrder);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidDriverException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -109,28 +113,29 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            Driver validDriver = new Driver(driver, competitorService, validYear);
+            Driver validDriver = competitorService.getDriver(driver, validYear);
             int maxPos = competitorService.getMaxPosDriverYear(validYear);
             boolean isPosOutOfBounds = position < 1 || position > maxPos;
             if (isPosOutOfBounds) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
-            competitorService.deleteDriverYear(validDriver, validYear);
             List<Driver> drivers = competitorService.getDriversYear(validYear);
-
+            List<DriverYearEntity> newOrder = new ArrayList<>();
             int currentPos = 1;
             for (Driver currentDriver : drivers) {
-                if (currentPos == position) {
-                    competitorService.updatePositionDriverYear(validDriver, validYear, currentPos);
-                    currentPos++;
+                if (currentDriver.equals(validDriver)) {
+                    continue;
                 }
-                competitorService.updatePositionDriverYear(currentDriver, validYear, currentPos);
-                currentPos++;
+                if (currentPos == position) {
+                    newOrder.add(new DriverYearEntity(validDriver, validYear, currentPos++));
+                }
+                newOrder.add(new DriverYearEntity(currentDriver, validYear, currentPos++));
             }
             if (currentPos == position) {
-                competitorService.updatePositionDriverYear(validDriver, validYear, currentPos);
+                newOrder.add(new DriverYearEntity(validDriver, validYear, currentPos));
             }
+            competitorService.setDriverYearOrder(newOrder);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidDriverException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -154,7 +159,7 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            new Constructor(constructor, competitorService, validYear);
+            competitorService.getConstructor(constructor, validYear);
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         } catch (InvalidConstructorException e) {
             competitorService.addConstructorYear(constructor, validYear);
@@ -172,16 +177,17 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            Constructor validConstructor = new Constructor(constructor, competitorService);
+            Constructor validConstructor = competitorService.getConstructor(constructor);
 
             competitorService.deleteConstructorYear(validConstructor, validYear);
             List<Constructor> constructors = competitorService.getConstructorsYear(validYear);
 
             int position = 1;
+            List<ConstructorYearEntity> newOrder = new ArrayList<>();
             for (Constructor currentConstructor : constructors) {
-                competitorService.updatePositionConstructorYear(currentConstructor, validYear, position);
-                position++;
+                newOrder.add(new ConstructorYearEntity(currentConstructor, validYear, position++));
             }
+            competitorService.setConstructorYearOrder(newOrder);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidConstructorException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -199,28 +205,29 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            Constructor validConstructor = new Constructor(constructor, competitorService);
+            Constructor validConstructor = competitorService.getConstructor(constructor);
             int maxPos = competitorService.getMaxPosConstructorYear(validYear);
             boolean isPosOutOfBounds = position < 1 || position > maxPos;
             if (isPosOutOfBounds) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
-            competitorService.deleteConstructorYear(validConstructor, validYear);
             List<Constructor> constructors = competitorService.getConstructorsYear(validYear);
-
+            List<ConstructorYearEntity> newOrder = new ArrayList<>();
             int currentPos = 1;
             for (Constructor currentConstructor : constructors) {
-                if (currentPos == position) {
-                    competitorService.updatePositionConstructorYear(validConstructor, validYear, currentPos);
-                    currentPos++;
+                if (currentConstructor.equals(validConstructor)) {
+                    continue;
                 }
-                competitorService.updatePositionConstructorYear(currentConstructor, validYear, currentPos);
-                currentPos++;
+                if (currentPos == position) {
+                    newOrder.add(new ConstructorYearEntity(validConstructor, validYear, currentPos++));
+                }
+                newOrder.add(new ConstructorYearEntity(currentConstructor, validYear, currentPos++));
             }
             if (currentPos == position) {
-                competitorService.updatePositionConstructorYear(validConstructor, validYear, currentPos);
+                newOrder.add(new ConstructorYearEntity(validConstructor, validYear, currentPos));
             }
+            competitorService.setConstructorYearOrder(newOrder);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidConstructorException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -238,7 +245,7 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            competitorService.addColorConstructor(new Constructor(constructor, competitorService, validYear), validYear, new Color(color));
+            competitorService.addColorConstructor(competitorService.getConstructor(constructor, validYear), validYear, new Color(color));
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidConstructorException | InvalidColorException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -246,9 +253,9 @@ public class SeasonCompetitorsController {
     }
 
     @GetMapping("/alias/list/{year}")
-    public ResponseEntity<Map<String, String>> addAlternativeNameForm(@PathVariable("year") int year) {
+    public ResponseEntity<Map<String, Driver>> addAlternativeNameForm(@PathVariable("year") int year) {
         Year seasonYear = yearService.getYear(year);
-        Map<String, String> driverAliases = competitorService.getAlternativeDriverNamesYear(seasonYear);
+        Map<String, Driver> driverAliases = competitorService.getAlternativeDriverNamesYear(seasonYear);
         return new ResponseEntity<>(driverAliases, HttpStatus.OK);
     }
 
@@ -263,7 +270,7 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            Driver validDriver = new Driver(driver, competitorService, validYear);
+            Driver validDriver = competitorService.getDriver(driver, validYear);
             competitorService.addAlternativeDriverName(validDriver, alternativeName, validYear);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidDriverException e) {
@@ -283,7 +290,7 @@ public class SeasonCompetitorsController {
             throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
         }
         try {
-            Driver validDriver = new Driver(driver, competitorService, validYear);
+            Driver validDriver = competitorService.getDriver(driver, validYear);
             competitorService.deleteAlternativeName(validDriver, validYear, alternativeName);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidDriverException e) {

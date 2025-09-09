@@ -1,16 +1,20 @@
-package no.vebb.f1.util.domainPrimitive;
+package no.vebb.f1.competitors.domain;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import no.vebb.f1.util.exception.InvalidColorException;
 import org.springframework.lang.NonNull;
 
-public record Color(String value) {
+@Embeddable
+public class Color {
+	@Column(name = "color", nullable = false)
+	private String value;
 
-	/**
-	 * @throws InvalidColorException if color not in #00ffee format
-	 */
-	public Color(String value) {
+	protected Color() {}
+
+	public Color(String value) throws InvalidColorException {
 		this.value = value;
 		validate();
 	}

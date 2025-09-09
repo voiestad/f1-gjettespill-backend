@@ -3,7 +3,7 @@ package no.vebb.f1.scoring;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 
 import java.util.Objects;
 

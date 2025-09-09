@@ -1,7 +1,7 @@
 package no.vebb.f1.controller.admin.season;
 
 import no.vebb.f1.placement.PlacementService;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

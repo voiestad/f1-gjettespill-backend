@@ -2,12 +2,13 @@ package no.vebb.f1.scoring;
 
 import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.placement.PlacementService;
+import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.util.collection.userTables.Summary;
-import no.vebb.f1.util.domainPrimitive.*;
 
 import no.vebb.f1.user.PublicUserDto;
+import no.vebb.f1.year.Year;
 
 public class UserScoreResponse {
 

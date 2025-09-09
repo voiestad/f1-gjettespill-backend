@@ -2,9 +2,9 @@ package no.vebb.f1.stats;
 
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.domainPrimitive.Flag;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.race.RaceId;
 import no.vebb.f1.util.domainPrimitive.SessionType;
-import no.vebb.f1.util.domainPrimitive.Year;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidFlagException;
 import org.springframework.stereotype.Service;
 

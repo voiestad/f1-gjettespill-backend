@@ -9,8 +9,8 @@ import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserDto;
 import no.vebb.f1.util.collection.*;
-import no.vebb.f1.util.domainPrimitive.Constructor;
-import no.vebb.f1.util.domainPrimitive.Driver;
+import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.domain.Driver;
 
 public class UserInformation {
 

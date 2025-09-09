@@ -1,9 +1,9 @@
 package no.vebb.f1.results;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
-import no.vebb.f1.util.domainPrimitive.RaceId;
+import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.race.RaceId;
 
 import java.util.Objects;
 
@@ -11,12 +11,12 @@ import java.util.Objects;
 public class StartingGridId {
     @Embedded
     private RaceId raceId;
-    @Column(name = "driver_name", nullable = false)
-    private String driverName;
+    @Embedded
+    private Driver driverName;
 
     protected StartingGridId() {}
 
-    public StartingGridId(RaceId raceId, String driverName) {
+    public StartingGridId(RaceId raceId, Driver driverName) {
         this.raceId = raceId;
         this.driverName = driverName;
     }
@@ -25,7 +25,7 @@ public class StartingGridId {
         return raceId;
     }
 
-    public String driverName() {
+    public Driver driverName() {
         return driverName;
     }
 
