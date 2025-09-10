@@ -3,6 +3,7 @@ package no.vebb.f1.components;
 import no.vebb.f1.util.exception.YearFinishedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -45,5 +46,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(YearFinishedException.class)
     public ResponseEntity<?> handleYearFinished() {
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(ConversionFailedException.class)
+    public ResponseEntity<String> handleConversionFailed() {
+        return new ResponseEntity<>("Invalid inputted value", HttpStatus.BAD_REQUEST);
     }
 }

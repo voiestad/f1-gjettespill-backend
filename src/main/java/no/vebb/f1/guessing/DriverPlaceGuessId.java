@@ -1,8 +1,6 @@
 package no.vebb.f1.guessing;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
+import jakarta.persistence.*;
 import no.vebb.f1.race.RaceId;
 
 import java.util.Objects;
@@ -10,18 +8,19 @@ import java.util.UUID;
 
 @Embeddable
 public class DriverPlaceGuessId {
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
 
     @Embedded
     private RaceId raceId;
 
-    @Column(name = "category_name")
-    private String categoryName;
+    @Column(name = "category_name", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Category categoryName;
 
     protected DriverPlaceGuessId() {}
 
-    public DriverPlaceGuessId(UUID userId, RaceId raceId, String categoryName) {
+    public DriverPlaceGuessId(UUID userId, RaceId raceId, Category categoryName) {
         this.userId = userId;
         this.raceId = raceId;
         this.categoryName = categoryName;
@@ -35,7 +34,7 @@ public class DriverPlaceGuessId {
         return raceId;
     }
 
-    public String categoryName() {
+    public Category categoryName() {
         return categoryName;
     }
 

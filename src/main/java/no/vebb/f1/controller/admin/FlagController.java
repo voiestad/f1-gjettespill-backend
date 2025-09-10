@@ -15,10 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.race.RaceId;
-import no.vebb.f1.util.domainPrimitive.SessionType;
+import no.vebb.f1.stats.SessionType;
 import no.vebb.f1.util.exception.InvalidFlagException;
 import no.vebb.f1.util.exception.InvalidRaceException;
-import no.vebb.f1.util.exception.InvalidSessionTypeException;
 
 @RestController
 @RequestMapping("/api/admin/flag")
@@ -61,7 +60,7 @@ public class FlagController {
             @RequestParam("flag") String flag,
             @RequestParam("round") int round,
             @RequestParam("raceId") int raceId,
-            @RequestParam("sessionType") String sessionType) {
+            @RequestParam("sessionType") SessionType sessionType) {
         try {
             RaceId validRaceId = raceService.getRaceId(raceId);
             Year year = raceService.getYearFromRaceId(validRaceId);
@@ -69,14 +68,12 @@ public class FlagController {
                 throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
             }
             Flag validFlag = new Flag(flag, statsService);
-            SessionType validSessionType = new SessionType(sessionType, statsService);
             if (!isValidRound(round)) {
                 throw new IllegalArgumentException("Round : '" + round + "' out of bounds. Range: 1-100.");
             }
-            statsService.insertFlagStats(validFlag, round, validRaceId, validSessionType);
+            statsService.insertFlagStats(validFlag, round, validRaceId, sessionType);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (InvalidRaceException | InvalidFlagException | IllegalArgumentException |
-                 InvalidSessionTypeException e) {
+        } catch (InvalidRaceException | InvalidFlagException | IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }

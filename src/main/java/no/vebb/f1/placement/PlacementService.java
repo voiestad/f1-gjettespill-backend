@@ -1,7 +1,8 @@
 package no.vebb.f1.placement;
 
-import no.vebb.f1.guessing.GuessService;
+import no.vebb.f1.guessing.Category;
 import no.vebb.f1.graph.GuesserPointsSeason;
+import no.vebb.f1.guessing.GuessPosition;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.util.collection.Guesser;
@@ -19,7 +20,6 @@ import java.util.*;
 @Service
 public class PlacementService {
 
-    private final GuessService guessService;
     private final YearService yearService;
     private final PlacementYearRepository placementYearRepository;
     private final PlacementRaceRepository placementRaceRepository;
@@ -28,7 +28,6 @@ public class PlacementService {
     private final PlacementCategoryYearStartRepository placementCategoryYearStartRepository;
 
     public PlacementService(
-            GuessService guessService,
             YearService yearService,
             PlacementYearRepository placementYearRepository,
             PlacementRaceRepository placementRaceRepository,
@@ -36,7 +35,6 @@ public class PlacementService {
             PlacementRaceYearStartRepository placementRaceYearStartRepository,
             PlacementCategoryYearStartRepository placementCategoryYearStartRepository
     ) {
-        this.guessService = guessService;
         this.yearService = yearService;
         this.placementYearRepository = placementYearRepository;
         this.placementRaceRepository = placementRaceRepository;
@@ -51,7 +49,7 @@ public class PlacementService {
         }
         yearService.finalizeYear(year);
         List<PlacementYearEntity> placements = getLeaderboard(year).stream()
-                .map(guesser -> new PlacementYearEntity(year, guesser.guesser().id(), guesser.rank().value()))
+                .map(guesser -> new PlacementYearEntity(year, guesser.guesser().id(), guesser.rank().toValue()))
                 .toList();
         placementYearRepository.saveAll(placements);
     }
@@ -69,19 +67,19 @@ public class PlacementService {
         PlacementRace totalRes = optTotalRes.get();
         Map<Category, Placement<Points>> categories = new HashMap<>();
         for (PlacementCategory row : categoriesRes) {
-            Category category = new Category(row.categoryName());
-            Position pos = new Position(row.placement());
+            Category category = row.categoryName();
+            GuessPosition pos = new GuessPosition(row.placement());
             Points points = new Points(row.points());
             Placement<Points> placement = new Placement<>(pos, points);
             categories.put(category, placement);
         }
-        Placement<Points> drivers = categories.get(new Category("DRIVER", guessService));
-        Placement<Points> constructors = categories.get(new Category("CONSTRUCTOR", guessService));
-        Placement<Points> flag = categories.get(new Category("FLAG", guessService));
-        Placement<Points> winner = categories.get(new Category("FIRST", guessService));
-        Placement<Points> tenth = categories.get(new Category("TENTH", guessService));
+        Placement<Points> drivers = categories.get(Category.DRIVER);
+        Placement<Points> constructors = categories.get(Category.CONSTRUCTOR);
+        Placement<Points> flag = categories.get(Category.FLAG);
+        Placement<Points> winner = categories.get(Category.FIRST);
+        Placement<Points> tenth = categories.get(Category.TENTH);
         Placement<Points> total =
-                new Placement<>(new Position(totalRes.placement()),
+                new Placement<>(new GuessPosition(totalRes.placement()),
                         new Points(totalRes.points()));
         return new Summary(drivers, constructors, flag, winner, tenth, total);
     }
@@ -90,7 +88,7 @@ public class PlacementService {
         return placementYearRepository.findByIdUserId(userId).stream()
                 .map(row ->
                         new Placement<>(
-                                new Position(row.placement()),
+                                new GuessPosition(row.placement()),
                                 row.year()
                         ))
                 .toList();
@@ -114,19 +112,19 @@ public class PlacementService {
             RaceId raceId = placementObj.raceId();
             Year year = placementObj.year();
             if (raceId != null) {
-                placementRaceEntities.add(new PlacementRaceEntity(raceId, userId, summary.total().pos().value(), summary.total().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value));
+                placementRaceEntities.add(new PlacementRaceEntity(raceId, userId, summary.total().pos().toValue(), summary.total().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.DRIVER, summary.drivers().pos().toValue(), summary.drivers().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.CONSTRUCTOR, summary.constructors().pos().toValue(), summary.constructors().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.FLAG, summary.flag().pos().toValue(), summary.flag().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.FIRST, summary.winner().pos().toValue(), summary.winner().value().value));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.TENTH, summary.tenth().pos().toValue(), summary.tenth().value().value));
             } else {
-                placementRaceYearStartEntities.add(new PlacementRaceYearStartEntity(year, userId, summary.total().pos().value(), summary.total().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, new Category("DRIVER").value, summary.drivers().pos().value(), summary.drivers().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, new Category("CONSTRUCTOR").value, summary.constructors().pos().value(), summary.constructors().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, new Category("FLAG").value, summary.flag().pos().value(), summary.flag().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, new Category("FIRST").value, summary.winner().pos().value(), summary.winner().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, new Category("TENTH").value, summary.tenth().pos().value(), summary.tenth().value().value));
+                placementRaceYearStartEntities.add(new PlacementRaceYearStartEntity(year, userId, summary.total().pos().toValue(), summary.total().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.DRIVER, summary.drivers().pos().toValue(), summary.drivers().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.CONSTRUCTOR, summary.constructors().pos().toValue(), summary.constructors().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.FLAG, summary.flag().pos().toValue(), summary.flag().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.FIRST, summary.winner().pos().toValue(), summary.winner().value().value));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.TENTH, summary.tenth().pos().toValue(), summary.tenth().value().value));
             }
         }
         placementRaceRepository.saveAll(placementRaceEntities);
@@ -155,14 +153,14 @@ public class PlacementService {
 
     public List<RankedGuesser> getLeaderboard(Year year) {
         List<PositionResult> races = placementRaceRepository.findAllByYearOrderByPosition(year);
-        int maxPos = races.isEmpty() ? 0 : races.get(races.size() - 1).getPosition();
+        int maxPos = races.isEmpty() ? 0 : races.get(races.size() - 1).getPosition().toValue();
         return placementRaceRepository.getPlacementsByPositionAndYear(maxPos, year.value).stream()
                 .map(row -> new RankedGuesser(
                         new Guesser(
                                 row.getUsername(),
                                 new Points(row.getPoints()),
                                 row.getUserId()
-                        ), new Position(row.getPlacement())
+                        ), new GuessPosition(row.getPlacement())
                 ))
                 .filter(RankedGuesser::hasPoints)
                 .toList();

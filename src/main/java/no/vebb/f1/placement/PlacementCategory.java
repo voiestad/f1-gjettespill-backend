@@ -1,7 +1,9 @@
 package no.vebb.f1.placement;
 
+import no.vebb.f1.guessing.Category;
+
 public interface PlacementCategory {
-    String categoryName();
+    Category categoryName();
     int placement();
     int points();
 }

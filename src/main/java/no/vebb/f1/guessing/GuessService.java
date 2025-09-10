@@ -5,11 +5,11 @@ import no.vebb.f1.competitors.constructor.ConstructorYearRepository;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.competitors.driver.DriverYearRepository;
 import no.vebb.f1.race.RaceId;
+import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.results.IColoredCompetitor;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.collection.*;
-import no.vebb.f1.util.domainPrimitive.*;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
@@ -41,22 +41,17 @@ public class GuessService {
     public List<Category> getCategories() {
         return categoryRepository.findAll().stream()
                 .map(CategoryEntity::categoryName)
-                .map(Category::new)
                 .toList();
     }
 
-    public boolean isValidCategory(String category) {
-        return categoryRepository.existsById(category);
-    }
-
-    public List<IFlagGuessed> getDataForFlagTable(int racePos, Year year, UUID userId) {
-        return (racePos == 0 ? flagGuessRepository.findAllByUserIdAndYear(userId, year) :
+    public List<IFlagGuessed> getDataForFlagTable(RacePosition racePos, Year year, UUID userId) {
+        return (racePos == null ? flagGuessRepository.findAllByUserIdAndYear(userId, year) :
                 flagGuessRepository.findAllByUserIdAndYearAndPosition(userId, year, racePos));
     }
 
-    public List<IUserRaceGuessTable> getDataForPlaceGuessTable(Category category, UUID userId, Year year, int racePos) {
+    public List<IUserRaceGuessTable> getDataForPlaceGuessTable(Category category, UUID userId, Year year, RacePosition racePos) {
         return driverPlaceGuessRepository.findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPosition(
-                category.value, year, racePos, userId
+                category, year, racePos, userId
         );
     }
 
@@ -73,7 +68,7 @@ public class GuessService {
     }
 
     public List<UserRaceGuess> getUserGuessesDriverPlace(RaceId raceId, Category category) {
-        return driverPlaceGuessRepository.findAllByRaceIdAndCategoryNameOrderByUsername(category.value, raceId).stream()
+        return driverPlaceGuessRepository.findAllByRaceIdAndCategoryNameOrderByUsername(category, raceId).stream()
                 .map(UserRaceGuess::fromIUserRaceGuess)
                 .toList();
     }
@@ -106,13 +101,13 @@ public class GuessService {
     }
 
     public Driver getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
-        return driverPlaceGuessRepository.findById(new DriverPlaceGuessId(userId, raceId, category.value))
+        return driverPlaceGuessRepository.findById(new DriverPlaceGuessId(userId, raceId, category))
                 .map(DriverPlaceGuessEntity::driverName)
                 .orElse(null);
     }
 
     public void addDriverPlaceGuess(UUID userId, RaceId raceId, Driver driver, Category category) {
-        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category.value, driver));
+        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category, driver));
     }
 
     public List<ColoredCompetitor<Driver>> getDriversGuess(UUID userId, Year year) {

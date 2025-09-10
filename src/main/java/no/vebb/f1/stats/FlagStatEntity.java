@@ -17,15 +17,16 @@ public class FlagStatEntity {
     @Embedded
     private RaceId raceId;
 
-    @Column(name = "round")
+    @Column(name = "round", nullable = false)
     private int round;
 
-    @Column(name = "session_type")
-    private String sessionType;
+    @Column(name = "session_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SessionType sessionType;
 
     protected FlagStatEntity() {}
 
-    public FlagStatEntity(String flagName, RaceId raceId, int round, String sessionType) {
+    public FlagStatEntity(String flagName, RaceId raceId, int round, SessionType sessionType) {
         this.flagName = flagName;
         this.raceId = raceId;
         this.round = round;
@@ -48,7 +49,7 @@ public class FlagStatEntity {
         return round;
     }
 
-    public String sessionType() {
+    public SessionType sessionType() {
         return sessionType;
     }
 }

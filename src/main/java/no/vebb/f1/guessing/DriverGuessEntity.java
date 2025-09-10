@@ -17,17 +17,16 @@ public class DriverGuessEntity {
 
     protected DriverGuessEntity() {}
 
-    public DriverGuessEntity(UUID userId, int position, Year year, Driver driverName) {
+    public DriverGuessEntity(UUID userId, GuessPosition position, Year year, Driver driverName) {
         this.id = new CompetitorGuessId(userId, position, year);
         this.driverName = driverName;
     }
-
 
     public UUID userId() {
         return id.userId();
     }
 
-    public int position() {
+    public GuessPosition position() {
         return id.position();
     }
 

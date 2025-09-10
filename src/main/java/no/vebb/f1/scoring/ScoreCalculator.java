@@ -13,7 +13,7 @@ import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Placement;
 import no.vebb.f1.util.collection.userTables.Summary;
 import no.vebb.f1.util.domainPrimitive.Points;
-import no.vebb.f1.util.domainPrimitive.Position;
+import no.vebb.f1.guessing.GuessPosition;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -121,7 +121,7 @@ public class ScoreCalculator {
             if (previousPlacement != null && previousPlacement.value().equals(scoredUser.score())) {
                 placement = new Placement<>(previousPlacement.pos(), scoredUser.score());
             } else {
-                placement = new Placement<>(new Position( i+1), scoredUser.score());
+                placement = new Placement<>(new GuessPosition( i+1), scoredUser.score());
             }
             placementMap.put(scoredUser.id, placement);
             previousPlacement = placement;

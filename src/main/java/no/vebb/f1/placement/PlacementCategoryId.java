@@ -1,8 +1,7 @@
 package no.vebb.f1.placement;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
+import jakarta.persistence.*;
+import no.vebb.f1.guessing.Category;
 import no.vebb.f1.race.RaceId;
 
 import java.util.Objects;
@@ -17,11 +16,12 @@ public class PlacementCategoryId {
     private UUID userId;
 
     @Column(name = "category_name", nullable = false)
-    private String categoryName;
+    @Enumerated(EnumType.STRING)
+    private Category categoryName;
 
     protected PlacementCategoryId() {}
 
-    public PlacementCategoryId(RaceId raceId, UUID userId, String categoryName) {
+    public PlacementCategoryId(RaceId raceId, UUID userId, Category categoryName) {
         this.raceId = raceId;
         this.userId = userId;
         this.categoryName = categoryName;
@@ -35,7 +35,7 @@ public class PlacementCategoryId {
         return userId;
     }
 
-    public String categoryName() {
+    public Category categoryName() {
         return categoryName;
     }
 

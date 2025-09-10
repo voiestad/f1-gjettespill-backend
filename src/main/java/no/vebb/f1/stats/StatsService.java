@@ -3,7 +3,6 @@ package no.vebb.f1.stats;
 import no.vebb.f1.util.collection.RegisteredFlag;
 import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.race.RaceId;
-import no.vebb.f1.util.domainPrimitive.SessionType;
 import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidFlagException;
 import org.springframework.stereotype.Service;
@@ -23,14 +22,9 @@ public class StatsService {
         this.flagStatRepository = flagStatRepository;
     }
 
-    public boolean isValidSessionType(String sessionType) {
-        return sessionTypeRepository.existsById(sessionType);
-    }
-
     public List<SessionType> getSessionTypes() {
         return sessionTypeRepository.findAll().stream()
                 .map(SessionTypeEntity::sessionType)
-                .map(SessionType::new)
                 .toList();
     }
 
@@ -55,13 +49,13 @@ public class StatsService {
                         new Flag(row.flagName()),
                         row.round(),
                         row.flagId(),
-                        new SessionType(row.sessionType())
+                        row.sessionType()
                 ))
                 .toList();
     }
 
     public void insertFlagStats(Flag flag, int round, RaceId raceId, SessionType sessionType) {
-        flagStatRepository.save(new FlagStatEntity(flag.value, raceId, round, sessionType.value));
+        flagStatRepository.save(new FlagStatEntity(flag.value, raceId, round, sessionType));
     }
 
     public void deleteFlagStatsById(int flagId) {

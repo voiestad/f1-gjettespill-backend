@@ -1,6 +1,5 @@
 package no.vebb.f1.controller.admin.season;
 
-import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.scoring.ScoreService;
 import no.vebb.f1.util.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
@@ -10,11 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.guessing.Category;
 import no.vebb.f1.util.domainPrimitive.Diff;
 import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidCategoryException;
 import no.vebb.f1.util.exception.InvalidDiffException;
 import no.vebb.f1.util.exception.InvalidPointsException;
 
@@ -23,12 +21,10 @@ import no.vebb.f1.util.exception.InvalidPointsException;
 public class ManagePointsSystemController {
 
     private final YearService yearService;
-    private final GuessService guessService;
     private final ScoreService scoreService;
 
-    public ManagePointsSystemController(YearService yearService, GuessService guessService, ScoreService scoreService) {
+    public ManagePointsSystemController(YearService yearService, ScoreService scoreService) {
         this.yearService = yearService;
-        this.guessService = guessService;
         this.scoreService = scoreService;
     }
 
@@ -36,41 +32,35 @@ public class ManagePointsSystemController {
     @Transactional
     public ResponseEntity<?> addPointsMapping(
             @RequestParam("year") int year,
-            @RequestParam("category") String category) {
+            @RequestParam("category") Category category) {
         Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         Diff newDiff;
         try {
-            Category validCategory = new Category(category, guessService);
-            try {
-                newDiff = scoreService.getMaxDiffInPointsMap(validYear, validCategory).add(new Diff(1));
-            } catch (NullPointerException e) {
-                newDiff = new Diff();
-            }
-            scoreService.addDiffToPointsMap(validCategory, newDiff, validYear);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (InvalidCategoryException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            newDiff = scoreService.getMaxDiffInPointsMap(validYear, category).add(new Diff(1));
+        } catch (NullPointerException e) {
+            newDiff = new Diff();
         }
+        scoreService.addDiffToPointsMap(category, newDiff, validYear);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deletePointsMapping(
             @RequestParam("year") int year,
-            @RequestParam("category") String category) {
+            @RequestParam("category") Category category) {
         Year validYear = yearService.getYear(year);
         if (yearService.isFinishedYear(validYear)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            Category validCategory = new Category(category, guessService);
-            Diff maxDiff = scoreService.getMaxDiffInPointsMap(validYear, validCategory);
-            scoreService.removeDiffToPointsMap(validCategory, maxDiff, validYear);
+            Diff maxDiff = scoreService.getMaxDiffInPointsMap(validYear, category);
+            scoreService.removeDiffToPointsMap(category, maxDiff, validYear);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (NullPointerException | InvalidCategoryException e) {
+        } catch (NullPointerException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -79,7 +69,7 @@ public class ManagePointsSystemController {
     @Transactional
     public ResponseEntity<?> setPointsMapping(
             @RequestParam("year") int year,
-            @RequestParam("category") String category,
+            @RequestParam("category") Category category,
             @RequestParam("diff") int diff,
             @RequestParam("points") int points) {
         Year validYear = yearService.getYear(year);
@@ -87,17 +77,16 @@ public class ManagePointsSystemController {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            Category validCategory = new Category(category, guessService);
             Diff validDiff = new Diff(diff);
-            boolean isValidDiff = scoreService.isValidDiffInPointsMap(validCategory, validDiff, validYear);
+            boolean isValidDiff = scoreService.isValidDiffInPointsMap(category, validDiff, validYear);
             if (!isValidDiff) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
             Points validPoints = new Points(points);
-            scoreService.setNewDiffToPointsInPointsMap(validCategory, validDiff, validYear, validPoints);
+            scoreService.setNewDiffToPointsInPointsMap(category, validDiff, validYear, validPoints);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (EmptyResultDataAccessException | InvalidCategoryException | InvalidPointsException |
+        } catch (EmptyResultDataAccessException | InvalidPointsException |
                  InvalidDiffException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

@@ -3,9 +3,7 @@ package no.vebb.f1.controller;
 import java.util.*;
 
 import no.vebb.f1.competitors.CompetitorService;
-import no.vebb.f1.guessing.ConstructorGuessEntity;
-import no.vebb.f1.guessing.DriverGuessEntity;
-import no.vebb.f1.guessing.GuessService;
+import no.vebb.f1.guessing.*;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.util.exception.*;
@@ -29,7 +27,6 @@ import no.vebb.f1.util.collection.ColoredCompetitor;
 import no.vebb.f1.util.collection.CutoffCompetitors;
 import no.vebb.f1.util.collection.CutoffCompetitorsSelected;
 import no.vebb.f1.util.collection.CutoffFlags;
-import no.vebb.f1.util.domainPrimitive.Category;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.race.RaceId;
@@ -69,13 +66,13 @@ public class GuessController {
 		} catch (InvalidYearException ignored) {
 		}
 		if (cutoffService.isAbleToGuessCurrentYear()) {
-			res.add(new Category("DRIVER"));
-			res.add(new Category("CONSTRUCTOR"));
-			res.add(new Category("FLAG"));
+			res.add(Category.DRIVER);
+			res.add(Category.CONSTRUCTOR);
+			res.add(Category.FLAG);
 		}
 		if (isRaceToGuess()) {
-			res.add(new Category("FIRST"));
-			res.add(new Category("TENTH"));
+			res.add(Category.FIRST);
+			res.add(Category.TENTH);
 		}
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
@@ -125,7 +122,7 @@ public class GuessController {
 			UUID id = userService.getUser().id();
 			List<DriverGuessEntity> driverGuesses = new ArrayList<>();
 			for (Driver driver : guessedDrivers) {
-				driverGuesses.add(new DriverGuessEntity(id, position, year, driver));
+				driverGuesses.add(new DriverGuessEntity(id, new GuessPosition(position), year, driver));
 				position++;
 			}
 			guessService.addDriversYearGuesses(driverGuesses);
@@ -177,7 +174,7 @@ public class GuessController {
 			UUID id = userService.getUser().id();
 			List<ConstructorGuessEntity> constructorGuesses = new ArrayList<>();
 			for (Constructor constructor : guessedConstructors) {
-				constructorGuesses.add(new ConstructorGuessEntity(id, position, year, constructor));
+				constructorGuesses.add(new ConstructorGuessEntity(id, new GuessPosition(position), year, constructor));
 				position++;
 			}
 			guessService.addConstructorsYearGuesses(constructorGuesses);
@@ -207,28 +204,24 @@ public class GuessController {
 
 	@GetMapping("/tenth")
 	public ResponseEntity<CutoffCompetitorsSelected<Driver>> guessTenth() {
-		Category category = new Category("TENTH", guessService);
-		return handleGetChooseDriver(category);
+		return handleGetChooseDriver(Category.TENTH);
 	}
 
 	@PostMapping("/tenth")
 	@Transactional
 	public ResponseEntity<?> guessTenth(@RequestParam String driver) {
-		Category category = new Category("TENTH", guessService);
-		return handlePostChooseDriver(driver, category);
+		return handlePostChooseDriver(driver, Category.TENTH);
 	}
 
 	@GetMapping("/first")
 	public ResponseEntity<CutoffCompetitorsSelected<Driver>> guessWinner() {
-		Category category = new Category("FIRST", guessService);
-		return handleGetChooseDriver(category);
+		return handleGetChooseDriver(Category.FIRST);
 	}
 
 	@PostMapping("/first")
 	@Transactional
 	public ResponseEntity<?> guessWinner(@RequestParam String driver) {
-		Category category = new Category("FIRST", guessService);
-		return handlePostChooseDriver(driver, category);
+		return handlePostChooseDriver(driver, Category.FIRST);
 	}
 
 	private ResponseEntity<CutoffCompetitorsSelected<Driver>> handleGetChooseDriver(Category category) {

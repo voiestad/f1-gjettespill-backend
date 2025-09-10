@@ -13,6 +13,7 @@ import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.competitors.domain.Competitor;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.race.RaceOrderEntity;
+import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.scoring.ScoreCalculator;
@@ -297,20 +298,20 @@ public class Importer {
 	}
 
 	public void importRaceNames(List<Integer> racesToImportFrom, Year year) {
-		int position = 1;
+		RacePosition position = new RacePosition();
 		for (int raceId : racesToImportFrom) {
 			if (addRace(raceId, year, position)) {
-				position++;
+				position = position.next();
 			}
 		}
 	}
 
 	public void importRaceName(int raceId, Year year) {
-		int position = raceService.getMaxRaceOrderPosition(year) + 1;
+		RacePosition position = raceService.getNewMaxRaceOrderPosition(year);
 		addRace(raceId, year, position);
 	}
 
-	private boolean addRace(int raceId, Year year, int position) {
+	private boolean addRace(int raceId, Year year, RacePosition position) {
 		boolean isAlreadyAdded = raceService.isRaceAdded(raceId);
 		if (isAlreadyAdded) {
 			throw new RuntimeException("Race name was already added");

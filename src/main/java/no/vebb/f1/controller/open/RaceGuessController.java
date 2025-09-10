@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.guessing.Category;
 import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
@@ -44,9 +44,9 @@ public class RaceGuessController {
 			if (cutoffService.isAbleToGuessRace(raceId)) {
 				return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 			}
-			var first = guessService.getUserGuessesDriverPlace(raceId, new Category("FIRST", guessService));
-			var tenth = guessService.getUserGuessesDriverPlace(raceId, new Category("TENTH", guessService));
-			String raceName = String.format("%d. %s %s", race.position(), race.name(), year);
+			var first = guessService.getUserGuessesDriverPlace(raceId, Category.FIRST);
+			var tenth = guessService.getUserGuessesDriverPlace(raceId, Category.TENTH);
+			String raceName = String.format("%s. %s %s", race.position(), race.name(), year);
 			RaceGuessResponse res = new RaceGuessResponse(raceName, first, tenth);
 
 			return new ResponseEntity<>(res, HttpStatus.OK);

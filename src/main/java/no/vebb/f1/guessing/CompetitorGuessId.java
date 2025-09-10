@@ -13,15 +13,15 @@ public class CompetitorGuessId {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "position", nullable = false)
-    private int position;
+    @Embedded
+    private GuessPosition position;
 
     @Embedded
     private Year year;
 
     protected CompetitorGuessId() {}
 
-    public CompetitorGuessId(UUID userId, int position, Year year) {
+    public CompetitorGuessId(UUID userId, GuessPosition position, Year year) {
         this.userId = userId;
         this.position = position;
         this.year = year;
@@ -31,7 +31,7 @@ public class CompetitorGuessId {
         return userId;
     }
 
-    public int position() {
+    public GuessPosition position() {
         return position;
     }
 

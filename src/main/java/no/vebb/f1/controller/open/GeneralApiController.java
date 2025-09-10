@@ -4,7 +4,7 @@ import java.util.List;
 
 import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.race.RaceService;
-import no.vebb.f1.util.domainPrimitive.Category;
+import no.vebb.f1.guessing.Category;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

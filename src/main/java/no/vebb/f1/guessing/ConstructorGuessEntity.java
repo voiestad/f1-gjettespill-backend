@@ -17,7 +17,7 @@ public class ConstructorGuessEntity {
 
     protected ConstructorGuessEntity() {}
 
-    public ConstructorGuessEntity(UUID userId, int position, Year year, Constructor constructorName) {
+    public ConstructorGuessEntity(UUID userId, GuessPosition position, Year year, Constructor constructorName) {
         this.id = new CompetitorGuessId(userId, position, year);
         this.constructorName = constructorName;
     }
@@ -27,7 +27,7 @@ public class ConstructorGuessEntity {
         return id.userId();
     }
 
-    public int position() {
+    public GuessPosition position() {
         return id.position();
     }
 

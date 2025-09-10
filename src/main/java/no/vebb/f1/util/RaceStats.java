@@ -4,6 +4,7 @@ import java.util.List;
 
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.stats.StatsService;
@@ -27,8 +28,8 @@ public class RaceStats {
 		this.driverStandings = resultService.getDriverStandings(raceId).stream().map(PositionedCompetitor::fromDriverStandings).toList();
 		this.constructorStandings = resultService.getConstructorStandings(raceId).stream().map(PositionedCompetitor::fromConstructorStandings).toList();
 		this.flags = statsService.getRegisteredFlags(raceId);
-		int position = raceService.getPositionOfRace(raceId);
+		RacePosition position = raceService.getPositionOfRace(raceId);
 		String raceName = raceService.getRaceFromId(raceId).name();
-		this.name = String.format("%d. %s %s", position, raceName, year);
+		this.name = String.format("%s. %s %s", position, raceName, year);
 	}
 }

@@ -69,5 +69,5 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Race
        WHERE ro.raceId = :raceId
        AND ro.year = :year
        """)
-    void updatePosition(RaceId raceId, Year year, int position);
+    void updatePosition(RaceId raceId, Year year, RacePosition position);
 }

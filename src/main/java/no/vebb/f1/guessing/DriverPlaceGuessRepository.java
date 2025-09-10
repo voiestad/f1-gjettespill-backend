@@ -1,5 +1,6 @@
 package no.vebb.f1.guessing;
 
+import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.util.collection.IPlaceGuess;
 import no.vebb.f1.util.collection.IUserRaceGuess;
 import no.vebb.f1.util.collection.IUserRaceGuessTable;
@@ -30,7 +31,7 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
             WHERE dpg.id.raceId = :raceId AND dpg.id.categoryName = :categoryName
             ORDER BY u.username
             """)
-    List<IUserRaceGuess> findAllByRaceIdAndCategoryNameOrderByUsername(String categoryName, RaceId raceId);
+    List<IUserRaceGuess> findAllByRaceIdAndCategoryNameOrderByUsername(Category categoryName, RaceId raceId);
     @Query("""
             SELECT ro.position as racePosition, r.raceName AS raceName, dpg.driverName AS driverName, sg.position AS startPosition, rr.id.finishingPosition AS finishingPosition
             FROM DriverPlaceGuessEntity dpg
@@ -41,5 +42,5 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
             WHERE dpg.id.categoryName = :categoryName AND dpg.id.userId = :userId AND ro.year = :year AND ro.position <= :position
             ORDER BY ro.position
             """)
-    List<IUserRaceGuessTable> findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPosition(String categoryName, Year year, int position, UUID userId);
+    List<IUserRaceGuessTable> findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPosition(Category categoryName, Year year, RacePosition position, UUID userId);
 }

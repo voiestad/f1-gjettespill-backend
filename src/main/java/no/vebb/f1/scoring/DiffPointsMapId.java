@@ -1,8 +1,7 @@
 package no.vebb.f1.scoring;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
+import jakarta.persistence.*;
+import no.vebb.f1.guessing.Category;
 import no.vebb.f1.year.Year;
 
 import java.util.Objects;
@@ -10,8 +9,8 @@ import java.util.Objects;
 @Embeddable
 public class DiffPointsMapId {
     @Column(name = "category_name", nullable = false)
-    private String categoryName;
-
+    @Enumerated(EnumType.STRING)
+    private Category categoryName;
     @Column(name = "diff", nullable = false)
     private int diff;
     @Embedded
@@ -19,13 +18,13 @@ public class DiffPointsMapId {
 
     protected DiffPointsMapId() {}
 
-    public DiffPointsMapId(String categoryName, int diff, Year year) {
+    public DiffPointsMapId(Category categoryName, int diff, Year year) {
         this.categoryName = categoryName;
         this.diff = diff;
         this.year = year;
     }
 
-    public String categoryName() {
+    public Category categoryName() {
         return categoryName;
     }
 

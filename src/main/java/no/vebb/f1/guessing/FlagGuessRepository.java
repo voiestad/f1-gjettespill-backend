@@ -1,5 +1,6 @@
 package no.vebb.f1.guessing;
 
+import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.util.collection.IFlagGuessed;
 import no.vebb.f1.year.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,6 +29,6 @@ public interface FlagGuessRepository extends JpaRepository<FlagGuessEntity, Flag
             WHERE ro.year = :year AND fg.id.userId = :userId AND ro.position <= :position
             GROUP BY fg.id.flagName, fg.amount
             """)
-    List<IFlagGuessed> findAllByUserIdAndYearAndPosition(UUID userId, Year year, int position);
+    List<IFlagGuessed> findAllByUserIdAndYearAndPosition(UUID userId, Year year, RacePosition position);
 
 }

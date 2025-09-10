@@ -2,8 +2,10 @@ package no.vebb.f1.scoring;
 
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.guessing.Category;
 import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.race.RaceId;
+import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.user.PublicUserDto;
@@ -30,7 +32,7 @@ public class UserScore {
     public final PublicUserDto user;
     public final Year year;
     public final RaceId raceId;
-    public final int racePos;
+    public final RacePosition racePos;
     public final List<StandingsGuess<Driver>> driversGuesses = new ArrayList<>();
     public final List<StandingsGuess<Constructor>> constructorsGuesses = new ArrayList<>();
     public final List<FlagGuess> flagGuesses = new ArrayList<>();
@@ -80,9 +82,9 @@ public class UserScore {
         }
     }
 
-    private int getRacePosition() {
+    private RacePosition getRacePosition() {
         if (raceId == null) {
-            return 0;
+            return null;
         }
         return raceService.getPositionOfRace(raceId);
     }
@@ -90,15 +92,13 @@ public class UserScore {
     private void initializeDriversGuesses() {
         List<Driver> guessedDriver = guessService.getGuessedYearDriver(year, user.id());
         List<Driver> drivers = resultService.getDriverStandings(raceId, year);
-        Category category = new Category("DRIVER", guessService);
-        getGuessedToPos(category, guessedDriver, drivers, driversGuesses);
+        getGuessedToPos(Category.DRIVER, guessedDriver, drivers, driversGuesses);
     }
 
     private void initializeConstructorsGuesses() {
         List<Constructor> guessedConstructor = guessService.getGuessedYearConstructor(year, user.id());
         List<Constructor> constructors = resultService.getConstructorStandings(raceId, year);
-        Category category = new Category("CONSTRUCTOR", guessService);
-        getGuessedToPos(category, guessedConstructor, constructors, constructorsGuesses);
+        getGuessedToPos(Category.CONSTRUCTOR, guessedConstructor, constructors, constructorsGuesses);
     }
 
     private <T> void getGuessedToPos(Category category, List<T> guessed,
@@ -123,8 +123,7 @@ public class UserScore {
     }
 
     private void initializeFlagsGuesses() {
-        Category category = new Category("FLAG", guessService);
-        DiffPointsMap map = new DiffPointsMap(category, year, scoreService);
+        DiffPointsMap map = new DiffPointsMap(Category.FLAG, year, scoreService);
 
         List<IFlagGuessed> sqlRes = guessService.getDataForFlagTable(racePos, year, user.id());
         for (IFlagGuessed row : sqlRes) {
@@ -138,11 +137,11 @@ public class UserScore {
     }
 
     private void initializeWinnerGuesses() {
-        getDriverPlaceGuessTable(new Category("FIRST", guessService), 1, winnerGuesses);
+        getDriverPlaceGuessTable(Category.FIRST, 1, winnerGuesses);
     }
 
     private void initializeTenthGuesses() {
-        getDriverPlaceGuessTable(new Category("TENTH", guessService), 10, tenthGuesses);
+        getDriverPlaceGuessTable(Category.TENTH, 10, tenthGuesses);
     }
 
     private void getDriverPlaceGuessTable(Category category, int targetPos, List<PlaceGuess> result) {
@@ -153,7 +152,7 @@ public class UserScore {
         List<IUserRaceGuessTable> sqlRes = guessService.getDataForPlaceGuessTable(category, user.id(), year, racePos);
 
         for (IUserRaceGuessTable row : sqlRes) {
-            int racePosition = row.getRacePosition();
+            RacePosition racePosition = row.getRacePosition();
             String raceName = row.getRaceName();
             String driver = row.getDriverName();
             int startPos = row.getStartPosition();

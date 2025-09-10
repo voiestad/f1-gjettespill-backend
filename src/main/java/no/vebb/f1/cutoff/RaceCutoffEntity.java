@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import no.vebb.f1.race.RaceEntity;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceId;
+import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.year.Year;
 
 import java.time.Instant;
@@ -44,7 +45,7 @@ public class RaceCutoffEntity {
         return race.name();
     }
 
-    public int position() {
+    public RacePosition position() {
         return raceOrder.position();
     }
 

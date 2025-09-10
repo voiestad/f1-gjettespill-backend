@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.guessing.Category;
 import no.vebb.f1.year.Year;
 
 import java.util.UUID;
@@ -22,7 +23,7 @@ public class PlacementCategoryYearStartEntity implements PlacementCategory {
 
     protected PlacementCategoryYearStartEntity() {}
 
-    public PlacementCategoryYearStartEntity(Year year, UUID userId, String categoryName, int placement, int points) {
+    public PlacementCategoryYearStartEntity(Year year, UUID userId, Category categoryName, int placement, int points) {
         this.id = new PlacementCategoryYearStartId(year, userId, categoryName);
         this.placement = placement;
         this.points = points;
@@ -37,7 +38,7 @@ public class PlacementCategoryYearStartEntity implements PlacementCategory {
     }
 
     @Override
-    public String categoryName() {
+    public Category categoryName() {
         return id.categoryName();
     }
 

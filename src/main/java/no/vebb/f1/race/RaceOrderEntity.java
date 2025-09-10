@@ -12,8 +12,8 @@ public class RaceOrderEntity {
     @Embedded
     private Year year;
 
-    @Column(name = "position", nullable = false)
-    private int position;
+    @Embedded
+    private RacePosition position;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "race_id", referencedColumnName = "race_id")
@@ -21,7 +21,7 @@ public class RaceOrderEntity {
 
     protected RaceOrderEntity() {}
 
-    public RaceOrderEntity(RaceId raceId, Year year, int position) {
+    public RaceOrderEntity(RaceId raceId, Year year, RacePosition position) {
         this.raceId = raceId;
         this.year = year;
         this.position = position;
@@ -35,7 +35,7 @@ public class RaceOrderEntity {
         return year;
     }
 
-    public int position() {
+    public RacePosition position() {
         return position;
     }
 

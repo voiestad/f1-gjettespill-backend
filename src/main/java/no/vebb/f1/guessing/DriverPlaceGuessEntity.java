@@ -17,7 +17,7 @@ public class DriverPlaceGuessEntity {
 
     protected DriverPlaceGuessEntity() {}
 
-    public DriverPlaceGuessEntity(UUID userId, RaceId raceId, String categoryName, Driver driverName) {
+    public DriverPlaceGuessEntity(UUID userId, RaceId raceId, Category categoryName, Driver driverName) {
         this.id = new DriverPlaceGuessId(userId, raceId, categoryName);
         this.driverName = driverName;
     }
@@ -30,7 +30,7 @@ public class DriverPlaceGuessEntity {
         return id.raceId();
     }
 
-    public String categoryName() {
+    public Category categoryName() {
         return id.categoryName();
     }
 

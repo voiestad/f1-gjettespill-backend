@@ -5,9 +5,10 @@ import no.vebb.f1.guessing.ConstructorGuessEntity;
 import no.vebb.f1.guessing.DriverGuessEntity;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.guessing.GuessPosition;
 import no.vebb.f1.year.Year;
 
-public record CompetitorGuessYear<T extends Competitor>(int position, T competitor, Year year) {
+public record CompetitorGuessYear<T extends Competitor>(GuessPosition position, T competitor, Year year) {
     public static CompetitorGuessYear<Constructor> fromEntity(ConstructorGuessEntity entity) {
         return new CompetitorGuessYear<>(entity.position(), entity.constructorName(), entity.year());
     }

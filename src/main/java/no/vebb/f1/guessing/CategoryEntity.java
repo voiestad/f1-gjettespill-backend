@@ -1,24 +1,18 @@
 package no.vebb.f1.guessing;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "categories")
 public class CategoryEntity {
     @Id
     @Column(name = "category_name")
-    private String categoryName;
+    @Enumerated(EnumType.STRING)
+    private Category categoryName;
 
     protected CategoryEntity() {}
 
-    public CategoryEntity(String categoryName) {
-        this.categoryName = categoryName;
-    }
-
-    public String categoryName() {
+    public Category categoryName() {
         return categoryName;
     }
 }

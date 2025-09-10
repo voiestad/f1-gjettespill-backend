@@ -34,7 +34,7 @@ public class RaceService {
         return races.get(races.size() - 1).raceId();
     }
 
-    public int getPositionOfRace(RaceId raceId) throws InvalidRaceException {
+    public RacePosition getPositionOfRace(RaceId raceId) throws InvalidRaceException {
         return raceOrderRepository.findById(raceId).map(RaceOrderEntity::position).orElseThrow(InvalidRaceException::new);
     }
 
@@ -85,16 +85,17 @@ public class RaceService {
         raceRepository.save(newRace);
     }
 
-    public int getMaxRaceOrderPosition(Year year) {
-        return raceOrderRepository.findTopByYearOrderByPositionDesc(year).map(RaceOrderEntity::position).orElse(0);
+    public RacePosition getNewMaxRaceOrderPosition(Year year) {
+        return raceOrderRepository.findTopByYearOrderByPositionDesc(year).map(RaceOrderEntity::position)
+                .map(RacePosition::next).orElse(new RacePosition());
     }
 
-    public void insertRaceOrder(RaceId raceId, Year year, int position) {
+    public void insertRaceOrder(RaceId raceId, Year year, RacePosition position) {
         RaceOrderEntity raceOrderEntity = new RaceOrderEntity(raceId, year, position);
         raceOrderRepository.save(raceOrderEntity);
     }
 
-    public void updateRaceOrderPosition(RaceId raceId, Year year, int position) {
+    public void updateRaceOrderPosition(RaceId raceId, Year year, RacePosition position) {
         raceOrderRepository.updatePosition(raceId, year, position);
     }
 
