@@ -4,6 +4,7 @@ import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.guessing.GuessService;
+import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
@@ -113,10 +114,10 @@ public class UserScore {
             T competitor = competitors.get(i);
             Integer guessedPos = guessedToPos.get(competitor);
             if (guessedPos == null) {
-                result.add(new StandingsGuess<>(actualPos, competitor, null, null, new Points()));
+                result.add(new StandingsGuess<>(actualPos, competitor, null, null, new UserPoints()));
             } else {
                 Diff diff = new Diff(Math.abs(actualPos - guessedPos));
-                Points points = map.getPoints(diff);
+                UserPoints points = map.getPoints(diff);
                 result.add(new StandingsGuess<>(actualPos, competitor, guessedPos, diff, points));
             }
         }
@@ -131,7 +132,7 @@ public class UserScore {
             int guessed = row.getGuessed();
             int actual = row.getActual();
             Diff diff = new Diff(Math.abs(guessed - actual));
-            Points points = map.getPoints(diff);
+            UserPoints points = map.getPoints(diff);
             flagGuesses.add(new FlagGuess(flag, guessed, actual, diff, points));
         }
     }
@@ -158,13 +159,13 @@ public class UserScore {
             int startPos = row.getStartPosition();
             int finishPos = row.getFinishingPosition();
             Diff diff = new Diff(Math.abs(targetPos - finishPos));
-            Points points = map.getPoints(diff);
+            UserPoints points = map.getPoints(diff);
             result.add(new PlaceGuess(racePosition, raceName, driver, startPos, finishPos, diff, points));
         }
     }
 
-    public Points getScore() {
-        Points score = new Points();
+    public UserPoints getScore() {
+        UserPoints score = new UserPoints();
         score = score.add(getDriversScore());
         score = score.add(getConstructorsScore());
         score = score.add(getFlagScore());
@@ -173,23 +174,23 @@ public class UserScore {
         return score;
     }
 
-    public Points getDriversScore() {
-        return driversGuesses.stream().map(StandingsGuess::points).reduce(new Points(), Points::add);
+    public UserPoints getDriversScore() {
+        return driversGuesses.stream().map(StandingsGuess::points).reduce(new UserPoints(), UserPoints::add);
     }
 
-    public Points getConstructorsScore() {
-        return constructorsGuesses.stream().map(StandingsGuess::points).reduce(new Points(), Points::add);
+    public UserPoints getConstructorsScore() {
+        return constructorsGuesses.stream().map(StandingsGuess::points).reduce(new UserPoints(), UserPoints::add);
     }
 
-    public Points getFlagScore() {
-        return flagGuesses.stream().map(FlagGuess::points).reduce(new Points(), Points::add);
+    public UserPoints getFlagScore() {
+        return flagGuesses.stream().map(FlagGuess::points).reduce(new UserPoints(), UserPoints::add);
     }
 
-    public Points getWinnerScore() {
-        return winnerGuesses.stream().map(PlaceGuess::points).reduce(new Points(), Points::add);
+    public UserPoints getWinnerScore() {
+        return winnerGuesses.stream().map(PlaceGuess::points).reduce(new UserPoints(), UserPoints::add);
     }
 
-    public Points getTenthScore() {
-        return tenthGuesses.stream().map(PlaceGuess::points).reduce(new Points(), Points::add);
+    public UserPoints getTenthScore() {
+        return tenthGuesses.stream().map(PlaceGuess::points).reduce(new UserPoints(), UserPoints::add);
     }
 }

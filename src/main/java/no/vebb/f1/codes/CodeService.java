@@ -1,6 +1,6 @@
 package no.vebb.f1.codes;
 
-import no.vebb.f1.mail.Email;
+import no.vebb.f1.mail.domain.Email;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.UserMail;
 import org.springframework.lang.Nullable;

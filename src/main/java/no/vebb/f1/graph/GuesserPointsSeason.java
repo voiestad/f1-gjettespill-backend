@@ -1,13 +1,13 @@
 package no.vebb.f1.graph;
 
-import no.vebb.f1.util.domainPrimitive.Points;
+import no.vebb.f1.placement.domain.UserPoints;
 
 import java.util.Collections;
 import java.util.List;
 
-public record GuesserPointsSeason(String name, List<Points> scores) {
+public record GuesserPointsSeason(String name, List<UserPoints> scores) {
 
-	public GuesserPointsSeason(String name, List<Points> scores) {
+	public GuesserPointsSeason(String name, List<UserPoints> scores) {
 		this.name = name;
 		this.scores = Collections.unmodifiableList(scores);
 	}

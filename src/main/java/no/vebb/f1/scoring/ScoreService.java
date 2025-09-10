@@ -2,7 +2,7 @@ package no.vebb.f1.scoring;
 
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.util.domainPrimitive.Diff;
-import no.vebb.f1.util.domainPrimitive.Points;
+import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +18,13 @@ public class ScoreService {
         this.diffPointsMapRepository = diffPointsMapRepository;
     }
 
-    public Map<Diff, Points> getDiffPointsMap(Year year, Category category) {
+    public Map<Diff, UserPoints> getDiffPointsMap(Year year, Category category) {
         List<DiffPointsMapEntity> res = diffPointsMapRepository.findAllByIdYearAndIdCategoryNameOrderByIdDiff(year, category);
 
-        Map<Diff, Points> map = new LinkedHashMap<>();
+        Map<Diff, UserPoints> map = new LinkedHashMap<>();
         for (DiffPointsMapEntity entry : res) {
             Diff diff = new Diff(entry.diff());
-            Points points = new Points(entry.points());
+            UserPoints points = new UserPoints(entry.points());
             map.put(diff, points);
         }
         return map;
@@ -48,7 +48,7 @@ public class ScoreService {
         diffPointsMapRepository.deleteById(diffPointsMapId);
     }
 
-    public void setNewDiffToPointsInPointsMap(Category category, Diff diff, Year year, Points points) {
+    public void setNewDiffToPointsInPointsMap(Category category, Diff diff, Year year, UserPoints points) {
         DiffPointsMapEntity diffPointsMapEntity = new DiffPointsMapEntity(category, diff.value, year, points.value);
         diffPointsMapRepository.save(diffPointsMapEntity);
     }

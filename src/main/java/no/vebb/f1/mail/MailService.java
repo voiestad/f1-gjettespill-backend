@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import no.vebb.f1.cutoff.CutoffService;
+import no.vebb.f1.mail.domain.Email;
 import no.vebb.f1.mail.mailOption.MailOption;
 import no.vebb.f1.mail.mailOption.MailOptionEntity;
 import no.vebb.f1.mail.mailOption.MailOptionRepository;

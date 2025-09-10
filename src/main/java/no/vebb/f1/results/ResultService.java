@@ -7,8 +7,16 @@ import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.competitors.driver.DriverYearEntity;
 import no.vebb.f1.competitors.driver.DriverYearRepository;
 import no.vebb.f1.race.RaceId;
+import no.vebb.f1.results.constructorStandings.ConstructorStandingsEntity;
+import no.vebb.f1.results.constructorStandings.ConstructorStandingsRepository;
+import no.vebb.f1.results.domain.CompetitorPoints;
+import no.vebb.f1.results.driverStandings.DriverStandingsEntity;
+import no.vebb.f1.results.driverStandings.DriverStandingsRepository;
+import no.vebb.f1.results.raceResult.RaceResultEntity;
+import no.vebb.f1.results.raceResult.RaceResultRepository;
+import no.vebb.f1.results.startingGrid.StartingGridEntity;
+import no.vebb.f1.results.startingGrid.StartingGridRepository;
 import no.vebb.f1.util.collection.ColoredCompetitor;
-import no.vebb.f1.util.domainPrimitive.*;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
@@ -56,19 +64,19 @@ public class ResultService {
         startingGridRepository.save(startingGridEntity);
     }
 
-    public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, Points points, int finishingPosition) {
+    public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, CompetitorPoints points, int finishingPosition) {
         RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driver, points.value);
         raceResultRepository.save(raceResultEntity);
     }
 
 
-    public void insertDriverIntoStandings(RaceId raceId, Driver driver, int position, Points points) {
+    public void insertDriverIntoStandings(RaceId raceId, Driver driver, int position, CompetitorPoints points) {
         DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver, position, points.value);
         driverStandingsRepository.save(driverStandingsEntity);
     }
 
 
-    public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, int position, Points points) {
+    public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, int position, CompetitorPoints points) {
         ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor, position, points.value);
         constructorStandingsRepository.save(constructorStandingsEntity);
     }

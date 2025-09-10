@@ -3,7 +3,7 @@ package no.vebb.f1.guessing.constructor;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
-import no.vebb.f1.guessing.GuessPosition;
+import no.vebb.f1.guessing.domain.GuessPosition;
 import no.vebb.f1.year.Year;
 
 import java.util.Objects;

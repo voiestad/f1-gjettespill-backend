@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.util.domainPrimitive.Diff;
-import no.vebb.f1.util.domainPrimitive.Points;
+import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidDiffException;
 import no.vebb.f1.util.exception.InvalidPointsException;
@@ -83,7 +83,7 @@ public class ManagePointsSystemController {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
-            Points validPoints = new Points(points);
+            UserPoints validPoints = new UserPoints(points);
             scoreService.setNewDiffToPointsInPointsMap(category, validDiff, validYear, validPoints);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (EmptyResultDataAccessException | InvalidPointsException |

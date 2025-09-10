@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.util.domainPrimitive.Diff;
-import no.vebb.f1.util.domainPrimitive.Points;
+import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 
@@ -33,7 +33,7 @@ public class ScoreController {
 	}
 
 	@GetMapping("/api/public/score")
-	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTables() {
+	public ResponseEntity<Map<Category, Map<Diff, UserPoints>>> scoreMappingTables() {
 		try {
 			Year year = yearService.getCurrentYear();
 			var res = getScoreMappingTables(year);
@@ -44,7 +44,7 @@ public class ScoreController {
 	}
 
 	@GetMapping("/api/public/score/{year}")
-	public ResponseEntity<Map<Category, Map<Diff, Points>>> scoreMappingTablesYear(@PathVariable("year") int year) {
+	public ResponseEntity<Map<Category, Map<Diff, UserPoints>>> scoreMappingTablesYear(@PathVariable("year") int year) {
 		try {
 			Year validYear = yearService.getYear(year);
 			var res = getScoreMappingTables(validYear);
@@ -54,9 +54,9 @@ public class ScoreController {
 		}
 	}
 
-	private Map<Category, Map<Diff, Points>> getScoreMappingTables(Year year) {
+	private Map<Category, Map<Diff, UserPoints>> getScoreMappingTables(Year year) {
 		List<Category> categories = guessService.getCategories();
-		Map<Category, Map<Diff, Points>> result = new HashMap<>();
+		Map<Category, Map<Diff, UserPoints>> result = new HashMap<>();
 		for (Category category : categories) {
 			result.put(category, scoreService.getDiffPointsMap(year, category));
 		}

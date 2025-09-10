@@ -2,7 +2,15 @@ package no.vebb.f1.placement;
 
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.graph.GuesserPointsSeason;
-import no.vebb.f1.guessing.GuessPosition;
+import no.vebb.f1.placement.collection.PlacementGraphResult;
+import no.vebb.f1.placement.collection.PlacementObj;
+import no.vebb.f1.placement.collection.PositionResult;
+import no.vebb.f1.placement.domain.UserPoints;
+import no.vebb.f1.placement.domain.UserPosition;
+import no.vebb.f1.placement.placementCategory.*;
+import no.vebb.f1.placement.placementRace.*;
+import no.vebb.f1.placement.placementYear.PlacementYearEntity;
+import no.vebb.f1.placement.placementYear.PlacementYearRepository;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.util.collection.Guesser;
@@ -49,7 +57,7 @@ public class PlacementService {
         }
         yearService.finalizeYear(year);
         List<PlacementYearEntity> placements = getLeaderboard(year).stream()
-                .map(guesser -> new PlacementYearEntity(year, guesser.guesser().id(), guesser.rank().toValue()))
+                .map(guesser -> new PlacementYearEntity(year, guesser.guesser().id(), guesser.rank()))
                 .toList();
         placementYearRepository.saveAll(placements);
     }
@@ -65,22 +73,22 @@ public class PlacementService {
             return null;
         }
         PlacementRace totalRes = optTotalRes.get();
-        Map<Category, Placement<Points>> categories = new HashMap<>();
+        Map<Category, Placement<UserPoints>> categories = new HashMap<>();
         for (PlacementCategory row : categoriesRes) {
             Category category = row.categoryName();
-            GuessPosition pos = new GuessPosition(row.placement());
-            Points points = new Points(row.points());
-            Placement<Points> placement = new Placement<>(pos, points);
+            UserPosition pos = row.placement();
+            UserPoints points = row.points();
+            Placement<UserPoints> placement = new Placement<>(pos, points);
             categories.put(category, placement);
         }
-        Placement<Points> drivers = categories.get(Category.DRIVER);
-        Placement<Points> constructors = categories.get(Category.CONSTRUCTOR);
-        Placement<Points> flag = categories.get(Category.FLAG);
-        Placement<Points> winner = categories.get(Category.FIRST);
-        Placement<Points> tenth = categories.get(Category.TENTH);
-        Placement<Points> total =
-                new Placement<>(new GuessPosition(totalRes.placement()),
-                        new Points(totalRes.points()));
+        Placement<UserPoints> drivers = categories.get(Category.DRIVER);
+        Placement<UserPoints> constructors = categories.get(Category.CONSTRUCTOR);
+        Placement<UserPoints> flag = categories.get(Category.FLAG);
+        Placement<UserPoints> winner = categories.get(Category.FIRST);
+        Placement<UserPoints> tenth = categories.get(Category.TENTH);
+        Placement<UserPoints> total =
+                new Placement<>(totalRes.placement(),
+                        totalRes.points());
         return new Summary(drivers, constructors, flag, winner, tenth, total);
     }
 
@@ -88,16 +96,16 @@ public class PlacementService {
         return placementYearRepository.findByIdUserId(userId).stream()
                 .map(row ->
                         new Placement<>(
-                                new GuessPosition(row.placement()),
+                                row.placement(),
                                 row.year()
                         ))
                 .toList();
     }
 
     public Medals getMedals(UUID userId) {
-        MedalCount gold = new MedalCount(placementYearRepository.countByPlacementAndIdUserId(1, userId));
-        MedalCount silver = new MedalCount(placementYearRepository.countByPlacementAndIdUserId(1, userId));
-        MedalCount bronze = new MedalCount(placementYearRepository.countByPlacementAndIdUserId(1, userId));
+        MedalCount gold = new MedalCount(placementYearRepository.countByPlacementAndIdUserId(new UserPosition(1), userId));
+        MedalCount silver = new MedalCount(placementYearRepository.countByPlacementAndIdUserId(new UserPosition(2), userId));
+        MedalCount bronze = new MedalCount(placementYearRepository.countByPlacementAndIdUserId(new UserPosition(3), userId));
         return new Medals(gold, silver, bronze);
     }
 
@@ -112,19 +120,19 @@ public class PlacementService {
             RaceId raceId = placementObj.raceId();
             Year year = placementObj.year();
             if (raceId != null) {
-                placementRaceEntities.add(new PlacementRaceEntity(raceId, userId, summary.total().pos().toValue(), summary.total().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.DRIVER, summary.drivers().pos().toValue(), summary.drivers().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.CONSTRUCTOR, summary.constructors().pos().toValue(), summary.constructors().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.FLAG, summary.flag().pos().toValue(), summary.flag().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.FIRST, summary.winner().pos().toValue(), summary.winner().value().value));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.TENTH, summary.tenth().pos().toValue(), summary.tenth().value().value));
+                placementRaceEntities.add(new PlacementRaceEntity(raceId, userId, summary.total().pos(), summary.total().value()));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.DRIVER, summary.drivers().pos(), summary.drivers().value()));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.CONSTRUCTOR, summary.constructors().pos(), summary.constructors().value()));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.FLAG, summary.flag().pos(), summary.flag().value()));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.FIRST, summary.winner().pos(), summary.winner().value()));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.TENTH, summary.tenth().pos(), summary.tenth().value()));
             } else {
-                placementRaceYearStartEntities.add(new PlacementRaceYearStartEntity(year, userId, summary.total().pos().toValue(), summary.total().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.DRIVER, summary.drivers().pos().toValue(), summary.drivers().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.CONSTRUCTOR, summary.constructors().pos().toValue(), summary.constructors().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.FLAG, summary.flag().pos().toValue(), summary.flag().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.FIRST, summary.winner().pos().toValue(), summary.winner().value().value));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.TENTH, summary.tenth().pos().toValue(), summary.tenth().value().value));
+                placementRaceYearStartEntities.add(new PlacementRaceYearStartEntity(year, userId, summary.total().pos(), summary.total().value()));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.DRIVER, summary.drivers().pos(), summary.drivers().value()));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.CONSTRUCTOR, summary.constructors().pos(), summary.constructors().value()));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.FLAG, summary.flag().pos(), summary.flag().value()));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.FIRST, summary.winner().pos(), summary.winner().value()));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.TENTH, summary.tenth().pos(), summary.tenth().value()));
             }
         }
         placementRaceRepository.saveAll(placementRaceEntities);
@@ -134,11 +142,11 @@ public class PlacementService {
     }
 
     public List<GuesserPointsSeason> getGraph(Year year) {
-        Map<UUID, List<Points>> userPoints = new LinkedHashMap<>();
+        Map<UUID, List<UserPoints>> userPoints = new LinkedHashMap<>();
         Map<UUID, String> usernames = new HashMap<>();
         for (PlacementGraphResult row : placementRaceRepository.findAllByYear(year.value)) {
             UUID id = row.getUserId();
-            Points points = new Points(row.getPoints());
+            UserPoints points = new UserPoints(row.getPoints());
             if (!userPoints.containsKey(id)) {
                 usernames.put(id, row.getUsername());
                 userPoints.put(id, new ArrayList<>());
@@ -158,9 +166,9 @@ public class PlacementService {
                 .map(row -> new RankedGuesser(
                         new Guesser(
                                 row.getUsername(),
-                                new Points(row.getPoints()),
+                                new UserPoints(row.getPoints()),
                                 row.getUserId()
-                        ), new GuessPosition(row.getPlacement())
+                        ), new UserPosition(row.getPlacement())
                 ))
                 .filter(RankedGuesser::hasPoints)
                 .toList();

@@ -5,7 +5,7 @@ import no.vebb.f1.guessing.constructor.ConstructorGuessEntity;
 import no.vebb.f1.guessing.driver.DriverGuessEntity;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
-import no.vebb.f1.guessing.GuessPosition;
+import no.vebb.f1.guessing.domain.GuessPosition;
 import no.vebb.f1.year.Year;
 
 public record CompetitorGuessYear<T extends Competitor>(GuessPosition position, T competitor, Year year) {

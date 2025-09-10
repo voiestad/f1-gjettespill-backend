@@ -1,7 +1,7 @@
 package no.vebb.f1.codes;
 
 import jakarta.persistence.*;
-import no.vebb.f1.mail.Email;
+import no.vebb.f1.mail.domain.Email;
 
 import java.time.Instant;
 import java.util.UUID;

@@ -6,6 +6,7 @@ import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.guessing.*;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.guessing.constructor.ConstructorGuessEntity;
+import no.vebb.f1.guessing.domain.GuessPosition;
 import no.vebb.f1.guessing.driver.DriverGuessEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;

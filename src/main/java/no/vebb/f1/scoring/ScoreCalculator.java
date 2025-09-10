@@ -1,8 +1,9 @@
 package no.vebb.f1.scoring;
 
 import no.vebb.f1.guessing.GuessService;
-import no.vebb.f1.placement.PlacementObj;
+import no.vebb.f1.placement.collection.PlacementObj;
 import no.vebb.f1.placement.PlacementService;
+import no.vebb.f1.placement.domain.UserPosition;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.user.PublicUserDto;
@@ -12,8 +13,7 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.Placement;
 import no.vebb.f1.util.collection.userTables.Summary;
-import no.vebb.f1.util.domainPrimitive.Points;
-import no.vebb.f1.guessing.GuessPosition;
+import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -80,12 +80,12 @@ public class ScoreCalculator {
             List<UserScore> userScores = guessers.stream()
                     .map(guesser -> new UserScore(PublicUserDto.fromEntity(guesser), year, raceId, raceService, guessService, scoreService, resultService))
                     .toList();
-            Map<UUID, Placement<Points>> driversPoints = getPlacementMap(userScores, UserScore::getDriversScore);
-            Map<UUID, Placement<Points>> constructorsPoints = getPlacementMap(userScores, UserScore::getConstructorsScore);
-            Map<UUID, Placement<Points>> flagPoints = getPlacementMap(userScores, UserScore::getFlagScore);
-            Map<UUID, Placement<Points>> winnerPoints = getPlacementMap(userScores, UserScore::getWinnerScore);
-            Map<UUID, Placement<Points>> tenthPoints = getPlacementMap(userScores, UserScore::getTenthScore);
-            Map<UUID, Placement<Points>> totalPoints = getPlacementMap(userScores, UserScore::getScore);
+            Map<UUID, Placement<UserPoints>> driversPoints = getPlacementMap(userScores, UserScore::getDriversScore);
+            Map<UUID, Placement<UserPoints>> constructorsPoints = getPlacementMap(userScores, UserScore::getConstructorsScore);
+            Map<UUID, Placement<UserPoints>> flagPoints = getPlacementMap(userScores, UserScore::getFlagScore);
+            Map<UUID, Placement<UserPoints>> winnerPoints = getPlacementMap(userScores, UserScore::getWinnerScore);
+            Map<UUID, Placement<UserPoints>> tenthPoints = getPlacementMap(userScores, UserScore::getTenthScore);
+            Map<UUID, Placement<UserPoints>> totalPoints = getPlacementMap(userScores, UserScore::getScore);
 
             for (UserEntity guesser : guessers) {
                 UUID id = guesser.id();
@@ -108,20 +108,20 @@ public class ScoreCalculator {
         placementService.addUserScores(placementObjs);
     }
 
-    private Map<UUID, Placement<Points>> getPlacementMap(List<UserScore> userScores, Function<UserScore, Points> getScore) {
+    private Map<UUID, Placement<UserPoints>> getPlacementMap(List<UserScore> userScores, Function<UserScore, UserPoints> getScore) {
         List<ScoredUser> scoredUsers = userScores.stream()
                 .map(userScore -> new ScoredUser(userScore.user.id(), getScore.apply(userScore)))
                 .sorted(Collections.reverseOrder())
                 .toList();
-        Map<UUID, Placement<Points>> placementMap = new HashMap<>();
-        Placement<Points> previousPlacement = null;
+        Map<UUID, Placement<UserPoints>> placementMap = new HashMap<>();
+        Placement<UserPoints> previousPlacement = null;
         for (int i = 0; i < scoredUsers.size(); i++) {
             ScoredUser scoredUser = scoredUsers.get(i);
-            Placement<Points> placement;
+            Placement<UserPoints> placement;
             if (previousPlacement != null && previousPlacement.value().equals(scoredUser.score())) {
                 placement = new Placement<>(previousPlacement.pos(), scoredUser.score());
             } else {
-                placement = new Placement<>(new GuessPosition( i+1), scoredUser.score());
+                placement = new Placement<>(new UserPosition( i+1), scoredUser.score());
             }
             placementMap.put(scoredUser.id, placement);
             previousPlacement = placement;
@@ -136,7 +136,7 @@ public class ScoreCalculator {
         return raceIds;
     }
 
-    private record ScoredUser(UUID id, Points score) implements Comparable<ScoredUser> {
+    private record ScoredUser(UUID id, UserPoints score) implements Comparable<ScoredUser> {
 
         @Override
         public int compareTo(ScoredUser o) {

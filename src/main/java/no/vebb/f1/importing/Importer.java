@@ -15,6 +15,7 @@ import no.vebb.f1.mail.MailService;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
+import no.vebb.f1.results.domain.CompetitorPoints;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.scoring.ScoreCalculator;
 import no.vebb.f1.year.YearService;
@@ -28,7 +29,6 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import no.vebb.f1.util.collection.PositionedCompetitor;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
-import no.vebb.f1.util.domainPrimitive.Points;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
@@ -158,7 +158,7 @@ public class Importer {
 			RaceId newestRaceId = raceService.getLatestRaceId(year);
 			if (raceId.equals(newestRaceId)) {
 				logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
-				importStandings(year, new Points());
+				importStandings(year, new CompetitorPoints());
 			}
 		} catch (InvalidYearException | EmptyResultDataAccessException ignored) {
 		}
@@ -184,7 +184,7 @@ public class Importer {
 		if (preList.size() != postList.size()) {
 			logger.info("Different size");
 			ResultChangeStatus status = ResultChangeStatus.POINTS_CHANGE;
-			Points change = compPoints(postList);
+			CompetitorPoints change = compPoints(postList);
 			status.setPointsChange(change);
 			return status;
 		}
@@ -293,7 +293,7 @@ public class Importer {
 	private void insertRaceResultRow(RaceId raceId, List<String> row, int finishingPosition) {
 		String position = row.get(0);
 		Driver driver = getDriver(row.get(2), raceId);
-		Points points = new Points((int) Double.parseDouble(row.get(6)));
+		CompetitorPoints points = new CompetitorPoints((int) Double.parseDouble(row.get(6)));
 		resultService.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
 	}
 
@@ -326,7 +326,7 @@ public class Importer {
 		return true;
 	}
 
-	private boolean importStandings(Year year, Points expectedChange) {
+	private boolean importStandings(Year year, CompetitorPoints expectedChange) {
 		try {
 			RaceId newestRace = raceService.getLatestRaceId(year);
 			ResultChangeStatus driverStatus = importDriverStandings(year, newestRace);
@@ -340,7 +340,7 @@ public class Importer {
 		}
 	}
 
-	private boolean validResultStatus(ResultChangeStatus status, Points expectedChange) {
+	private boolean validResultStatus(ResultChangeStatus status, CompetitorPoints expectedChange) {
 		boolean hasChanged = status == ResultChangeStatus.POINTS_CHANGE;
 		boolean greatEnoughChange = status.getPointsChange().compareTo(expectedChange) >= 0;
 		return hasChanged && greatEnoughChange; 
@@ -370,7 +370,7 @@ public class Importer {
 			for (PositionedCompetitor<Driver> competitor : currentStandings) {
 				Driver driver = competitorService.getDriver(competitor.name().toString());
 				int position = Integer.parseInt(competitor.position());
-				Points points = new Points(competitor.points());
+				CompetitorPoints points = new CompetitorPoints(competitor.points());
 				resultService.insertDriverIntoStandings(newestRace, driver, position, points);
 			}
 			logger.info("Driver standings added for race '{}'", newestRace);
@@ -413,7 +413,7 @@ public class Importer {
 			}
 			for (PositionedCompetitor<Constructor> competitor : currentStandings) {
 				int position = Integer.parseInt(competitor.position());
-				Points points = new Points(competitor.points());
+				CompetitorPoints points = new CompetitorPoints(competitor.points());
 				Constructor validConstructor = competitor.name();
 				resultService.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
 			}
@@ -452,21 +452,21 @@ public class Importer {
 			}
 		}
 		int diff = Math.abs(compPoints(standings).value - compPoints(previousStandings).value);
-		status.setPointsChange(new Points(diff));
+		status.setPointsChange(new CompetitorPoints(diff));
 		return status;
 	}
 
 	private <T extends Competitor> ResultChangeStatus changeWithSum(List<PositionedCompetitor<T>> competitors) {
 		ResultChangeStatus status = ResultChangeStatus.POINTS_CHANGE;
-		Points change = compPoints(competitors);
+		CompetitorPoints change = compPoints(competitors);
 		status.setPointsChange(change);
 		return status;
 	}
 
-	private <T extends Competitor> Points compPoints(List<PositionedCompetitor<T>> competitors) {
+	private <T extends Competitor> CompetitorPoints compPoints(List<PositionedCompetitor<T>> competitors) {
 		return competitors.stream()
-			.map(comp -> new Points(comp.points()))
-			.reduce(new Points(), Points::add);
+			.map(comp -> new CompetitorPoints(comp.points()))
+			.reduce(new CompetitorPoints(), CompetitorPoints::add);
 	}
 
 	private String parseDriverName(String driverName) {
@@ -494,13 +494,13 @@ public class Importer {
 		POINTS_CHANGE, 
 		OUTSIDE_POINTS_CHANGE;
 
-		private Points changeInPoints = new Points();
+		private CompetitorPoints changeInPoints = new CompetitorPoints();
 
-		public void setPointsChange(Points changeInPoints) {
+		public void setPointsChange(CompetitorPoints changeInPoints) {
 			this.changeInPoints = changeInPoints;
 		}
 		
-		public Points getPointsChange() {
+		public CompetitorPoints getPointsChange() {
 			return changeInPoints;
 		}
 	}
