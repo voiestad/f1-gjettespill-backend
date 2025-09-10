@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.guessing.Category;
+import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.year.Year;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;

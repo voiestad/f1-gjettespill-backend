@@ -1,4 +1,4 @@
-package no.vebb.f1.guessing;
+package no.vebb.f1.guessing.constructor;
 
 import no.vebb.f1.results.IColoredCompetitor;
 import no.vebb.f1.year.Year;

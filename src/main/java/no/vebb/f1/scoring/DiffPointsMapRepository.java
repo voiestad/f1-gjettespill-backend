@@ -1,6 +1,6 @@
 package no.vebb.f1.scoring;
 
-import no.vebb.f1.guessing.Category;
+import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.year.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 

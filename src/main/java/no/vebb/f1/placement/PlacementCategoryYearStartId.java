@@ -1,7 +1,7 @@
 package no.vebb.f1.placement;
 
 import jakarta.persistence.*;
-import no.vebb.f1.guessing.Category;
+import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.year.Year;
 
 import java.util.Objects;

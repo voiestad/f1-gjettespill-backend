@@ -1,7 +1,8 @@
-package no.vebb.f1.guessing;
+package no.vebb.f1.guessing.driverPlace;
 
 import jakarta.persistence.*;
 import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.race.RaceId;
 
 import java.util.UUID;

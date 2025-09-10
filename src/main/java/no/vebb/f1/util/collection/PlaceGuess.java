@@ -1,6 +1,6 @@
 package no.vebb.f1.util.collection;
 
-import no.vebb.f1.guessing.Category;
+import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.year.Year;
 

@@ -1,6 +1,6 @@
 package no.vebb.f1.placement;
 
-import no.vebb.f1.guessing.Category;
+import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.graph.GuesserPointsSeason;
 import no.vebb.f1.guessing.GuessPosition;
 import no.vebb.f1.race.RaceId;

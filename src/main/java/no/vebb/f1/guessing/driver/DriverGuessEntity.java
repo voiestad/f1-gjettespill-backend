@@ -1,7 +1,9 @@
-package no.vebb.f1.guessing;
+package no.vebb.f1.guessing.driver;
 
 import jakarta.persistence.*;
 import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.guessing.GuessPosition;
+import no.vebb.f1.guessing.constructor.CompetitorGuessId;
 import no.vebb.f1.year.Year;
 
 import java.util.UUID;

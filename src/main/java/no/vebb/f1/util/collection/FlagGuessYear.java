@@ -1,6 +1,6 @@
 package no.vebb.f1.util.collection;
 
-import no.vebb.f1.guessing.FlagGuessEntity;
+import no.vebb.f1.guessing.flag.FlagGuessEntity;
 import no.vebb.f1.util.domainPrimitive.Flag;
 import no.vebb.f1.year.Year;
 

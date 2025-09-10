@@ -1,8 +1,8 @@
 package no.vebb.f1.util.collection;
 
 import no.vebb.f1.competitors.domain.Competitor;
-import no.vebb.f1.guessing.ConstructorGuessEntity;
-import no.vebb.f1.guessing.DriverGuessEntity;
+import no.vebb.f1.guessing.constructor.ConstructorGuessEntity;
+import no.vebb.f1.guessing.driver.DriverGuessEntity;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.guessing.GuessPosition;

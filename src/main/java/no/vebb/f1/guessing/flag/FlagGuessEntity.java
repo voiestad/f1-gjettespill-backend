@@ -1,4 +1,4 @@
-package no.vebb.f1.guessing;
+package no.vebb.f1.guessing.flag;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;

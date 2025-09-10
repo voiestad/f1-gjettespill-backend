@@ -1,4 +1,4 @@
-package no.vebb.f1.guessing;
+package no.vebb.f1.guessing.category;
 
 public enum Category {
     DRIVER, CONSTRUCTOR, FLAG, FIRST, TENTH
