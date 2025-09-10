@@ -15,7 +15,7 @@ public class MailPreferenceEntity {
         this.id = id;
     }
 
-    public int mailOption() {
+    public MailOption mailOption() {
         return id.mailOption();
     }
 }

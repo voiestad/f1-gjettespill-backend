@@ -1,9 +1,7 @@
 package no.vebb.f1.codes;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import no.vebb.f1.mail.Email;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,15 +14,15 @@ public class VerificationCodeEntity implements Code {
     private UUID userId;
     @Column(nullable = false, name = "verification_code")
     private int code;
-    @Column(nullable = false, name = "email")
-    private String email;
+    @Embedded
+    private Email email;
     @Column(nullable = false, name = "cutoff")
     private Instant cutoff;
 
     protected VerificationCodeEntity() {
     }
 
-    public VerificationCodeEntity(UUID userId, int code, String email, Instant cutoff) {
+    public VerificationCodeEntity(UUID userId, int code, Email email, Instant cutoff) {
         this.userId = userId;
         this.code = code;
         this.email = email;
@@ -35,7 +33,7 @@ public class VerificationCodeEntity implements Code {
         return code;
     }
 
-    public String email() {
+    public Email email() {
         return email;
     }
 

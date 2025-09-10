@@ -1,5 +1,6 @@
 package no.vebb.f1.codes;
 
+import no.vebb.f1.mail.Email;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.UserMail;
 import org.springframework.lang.Nullable;
@@ -72,7 +73,7 @@ public class CodeService {
         if (!isValidCutoff) {
             return false;
         }
-        String email = verificationCodeEntity.email();
+        Email email = verificationCodeEntity.email();
         mailService.addToMailingList(userId, email);
         removeVerificationCode(userId);
         return true;

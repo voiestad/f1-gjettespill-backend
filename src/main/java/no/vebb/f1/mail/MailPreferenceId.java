@@ -14,17 +14,17 @@ public class MailPreferenceId implements Serializable {
     private UUID userId;
 
     @Column(name = "mail_option", nullable = false)
-    private int mailOption;
+    private MailOption mailOption;
 
     protected MailPreferenceId() {
     }
 
-    public MailPreferenceId(UUID userId, int mailOption) {
+    public MailPreferenceId(UUID userId, MailOption mailOption) {
         this.userId = userId;
         this.mailOption = mailOption;
     }
 
-    public int mailOption() {
+    public MailOption mailOption() {
         return mailOption;
     }
 

@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import no.vebb.f1.codes.CodeService;
 import no.vebb.f1.guessing.GuessService;
+import no.vebb.f1.mail.Email;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.util.response.ReferralCodeResponse;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import no.vebb.f1.util.domainPrimitive.MailOption;
+import no.vebb.f1.mail.MailOption;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidEmailException;
 import no.vebb.f1.util.exception.InvalidUsernameException;
@@ -131,7 +132,7 @@ public class UserSettingsController {
     public ResponseEntity<?> addMailingList(@RequestParam("email") String email) {
         try {
             UserEntity userEntity = userService.getUser();
-            UserMail userMail = new UserMail(userEntity, email);
+            UserMail userMail = new UserMail(userEntity, new Email(email));
             codeService.sendVerificationCode(userMail);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (InvalidEmailException e) {
@@ -172,7 +173,7 @@ public class UserSettingsController {
     public ResponseEntity<?> addMailingOption(@RequestParam("option") int option) {
         try {
             UserEntity userEntity = userService.getUser();
-            MailOption mailOption = new MailOption(option, mailService);
+            MailOption mailOption = mailService.getMailOption(option);
             mailService.addMailOption(userEntity.id(), mailOption);
         } catch (InvalidEmailException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -185,7 +186,7 @@ public class UserSettingsController {
     public ResponseEntity<?> removeMailingOption(@RequestParam("option") int option) {
         try {
             UserEntity userEntity = userService.getUser();
-            MailOption mailOption = new MailOption(option);
+            MailOption mailOption = mailService.getMailOption(option);
             mailService.removeMailOption(userEntity.id(), mailOption);
         } catch (InvalidEmailException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

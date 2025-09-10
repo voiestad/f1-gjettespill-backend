@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import no.vebb.f1.guessing.GuessService;
+import no.vebb.f1.mail.Email;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserDto;
@@ -15,7 +16,7 @@ import no.vebb.f1.competitors.domain.Driver;
 public class UserInformation {
 
 	public final UserDto user;
-	public final String email;
+	public final Email email;
 	public final List<CompetitorGuessYear<Driver>> driverGuess;
 	public final List<CompetitorGuessYear<Constructor>> constructorGuess;
 	public final List<FlagGuessYear> flagGuess;

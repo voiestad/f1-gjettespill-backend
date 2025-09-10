@@ -12,8 +12,8 @@ public class MailingListEntity {
     @Column(name = "user_id")
     private UUID userId;
 
-    @Column(unique = true, nullable = false, name = "email")
-    private String email;
+    @Embedded
+    private Email email;
 
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
@@ -22,7 +22,7 @@ public class MailingListEntity {
     protected MailingListEntity() {
     }
 
-    public MailingListEntity(UUID userId, String email) {
+    public MailingListEntity(UUID userId, Email email) {
         this.userId = userId;
         this.email = email;
     }
@@ -31,7 +31,7 @@ public class MailingListEntity {
         return userId;
     }
 
-    public String email() {
+    public Email email() {
         return email;
     }
 

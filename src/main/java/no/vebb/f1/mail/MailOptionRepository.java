@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface MailOptionRepository extends JpaRepository<MailOptionEntity, Integer> {
+public interface MailOptionRepository extends JpaRepository<MailOptionEntity, MailOption> {
     List<MailOptionEntity> findAllByOrderByMailOption();
 }

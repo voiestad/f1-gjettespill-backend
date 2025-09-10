@@ -1,18 +1,14 @@
 package no.vebb.f1.mail;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "mail_options")
 public class MailOptionEntity {
-    @Id
-    @Column(name = "mail_option")
-    private int mailOption;
+    @EmbeddedId
+    private MailOption mailOption;
 
-    public int mailOption() {
+    public MailOption mailOption() {
         return mailOption;
     }
 }

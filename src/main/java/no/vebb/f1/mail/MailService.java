@@ -10,8 +10,8 @@ import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.util.collection.UserNotifiedCount;
-import no.vebb.f1.util.domainPrimitive.MailOption;
 import no.vebb.f1.race.RaceId;
+import no.vebb.f1.util.exception.InvalidEmailException;
 import no.vebb.f1.util.exception.InvalidYearException;
 import no.vebb.f1.util.exception.NoAvailableRaceException;
 import no.vebb.f1.year.YearService;
@@ -59,7 +59,7 @@ public class MailService {
         this.cutoffService = cutoffService;
     }
 
-    public void addToMailingList(UUID userId, String email) {
+    public void addToMailingList(UUID userId, Email email) {
         mailingListRepository.save(new MailingListEntity(userId, email));
     }
 
@@ -90,7 +90,7 @@ public class MailService {
                     try {
                         MimeMessage message = mailSender.createMimeMessage();
                         message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
-                        message.addRecipients(Message.RecipientType.TO, user.email());
+                        message.addRecipients(Message.RecipientType.TO, user.email().toString());
                         message.setSubject("F1 Gjettespill påminnelse", "UTF-8");
                         message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
                         mailSender.send(message);
@@ -131,7 +131,7 @@ public class MailService {
         return mailingListRepository.existsById(userId);
     }
 
-    public String getEmail(UUID userId) {
+    public Email getEmail(UUID userId) {
         return mailingListRepository.findById(userId).map(MailingListEntity::email).orElse(null);
     }
 
@@ -143,7 +143,7 @@ public class MailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
-            message.addRecipients(Message.RecipientType.TO, user.email());
+            message.addRecipients(Message.RecipientType.TO, user.email().toString());
             message.setSubject("Verifikasjonskode F1 Gjettespill");
             message.setContent(String.format("Hei %s!\n\nHer er din verifikasjonskode: %s\n\nDen er gyldig i 10 minutter.",
                     user.userEntity().username(), formattedCode), "text/plain; charset=UTF-8");
@@ -163,7 +163,7 @@ public class MailService {
             try {
                 MimeMessage message = mailSender.createMimeMessage();
                 message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
-                message.addRecipients(Message.RecipientType.TO, admin.email());
+                message.addRecipients(Message.RecipientType.TO, admin.email().toString());
                 message.setSubject("Server melding F1 Gjettespill");
                 message.setContent(String.format("Hei administrator!\n\nDette er en automatisk generert melding:\n%s",
                         messageForAdmin), "text/plain; charset=UTF-8");
@@ -174,16 +174,12 @@ public class MailService {
         }
     }
 
-    public boolean isValidMailOption(int option) {
-        return mailOptionRepository.existsById(option);
-    }
-
     public void addMailOption(UUID userId, MailOption option) {
-        mailPreferenceRepository.save(new MailPreferenceEntity(new MailPreferenceId(userId, option.value)));
+        mailPreferenceRepository.save(new MailPreferenceEntity(new MailPreferenceId(userId, option)));
     }
 
     public void removeMailOption(UUID userId, MailOption option) {
-        mailPreferenceRepository.deleteById(new MailPreferenceId(userId, option.value));
+        mailPreferenceRepository.deleteById(new MailPreferenceId(userId, option));
     }
 
     public void clearMailPreferences(UUID userId) {
@@ -193,14 +189,12 @@ public class MailService {
     public List<MailOption> getMailingPreference(UUID userId) {
         return mailPreferenceRepository.findAllByIdUserIdOrderByIdMailOption(userId).stream()
                 .map(MailPreferenceEntity::mailOption)
-                .map(MailOption::new)
                 .toList();
     }
 
     public List<MailOption> getMailingOptions() {
         return mailOptionRepository.findAllByOrderByMailOption().stream()
                 .map(MailOptionEntity::mailOption)
-                .map(MailOption::new)
                 .toList();
     }
 
@@ -219,5 +213,9 @@ public class MailService {
                         )
                 )
                 .toList();
+    }
+
+    public MailOption getMailOption(int option) {
+        return mailOptionRepository.findById(new MailOption(option)).orElseThrow(InvalidEmailException::new).mailOption();
     }
 }
