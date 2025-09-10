@@ -1,4 +1,4 @@
-package no.vebb.f1.mail;
+package no.vebb.f1.mail.mailPreference;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

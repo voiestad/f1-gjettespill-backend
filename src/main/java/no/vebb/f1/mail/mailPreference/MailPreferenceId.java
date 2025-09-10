@@ -1,7 +1,8 @@
-package no.vebb.f1.mail;
+package no.vebb.f1.mail.mailPreference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import no.vebb.f1.mail.mailOption.MailOption;
 
 import java.io.Serializable;
 import java.util.Objects;

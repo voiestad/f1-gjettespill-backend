@@ -1,6 +1,7 @@
-package no.vebb.f1.mail;
+package no.vebb.f1.mail.mailingList;
 
 import jakarta.persistence.*;
+import no.vebb.f1.mail.Email;
 import no.vebb.f1.user.UserEntity;
 
 import java.util.UUID;

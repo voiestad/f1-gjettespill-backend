@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import no.vebb.f1.mail.MailOption;
+import no.vebb.f1.mail.mailOption.MailOption;
 import no.vebb.f1.util.domainPrimitive.Username;
 import no.vebb.f1.util.exception.InvalidEmailException;
 import no.vebb.f1.util.exception.InvalidUsernameException;

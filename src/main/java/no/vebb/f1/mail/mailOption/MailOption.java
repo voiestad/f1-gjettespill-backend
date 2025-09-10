@@ -1,4 +1,4 @@
-package no.vebb.f1.mail;
+package no.vebb.f1.mail.mailOption;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -9,7 +9,7 @@ public class MailOption {
 	public int value;
 
 	protected MailOption() {}
-	protected MailOption(int value) {
+	public MailOption(int value) {
 		this.value = value;
 	}
 

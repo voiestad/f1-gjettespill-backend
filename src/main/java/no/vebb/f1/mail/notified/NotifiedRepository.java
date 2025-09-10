@@ -1,4 +1,4 @@
-package no.vebb.f1.mail;
+package no.vebb.f1.mail.notified;
 
 import no.vebb.f1.util.collection.IUserNotifiedCount;
 import no.vebb.f1.race.RaceId;

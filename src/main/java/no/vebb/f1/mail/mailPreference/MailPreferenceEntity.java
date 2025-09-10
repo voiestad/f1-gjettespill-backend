@@ -1,6 +1,7 @@
-package no.vebb.f1.mail;
+package no.vebb.f1.mail.mailPreference;
 
 import jakarta.persistence.*;
+import no.vebb.f1.mail.mailOption.MailOption;
 
 
 @Entity

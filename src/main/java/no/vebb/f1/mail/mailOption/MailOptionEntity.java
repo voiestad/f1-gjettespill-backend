@@ -1,4 +1,4 @@
-package no.vebb.f1.mail;
+package no.vebb.f1.mail.mailOption;
 
 import jakarta.persistence.*;
 

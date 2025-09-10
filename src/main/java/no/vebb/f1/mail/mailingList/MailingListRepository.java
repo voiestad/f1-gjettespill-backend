@@ -1,4 +1,4 @@
-package no.vebb.f1.mail;
+package no.vebb.f1.mail.mailingList;
 
 import no.vebb.f1.race.RaceId;
 import org.springframework.data.jpa.repository.JpaRepository;
