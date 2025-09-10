@@ -11,12 +11,12 @@ import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.collection.Placement;
-import no.vebb.f1.util.collection.userTables.Summary;
+import no.vebb.f1.collection.Placement;
+import no.vebb.f1.scoring.userTables.Summary;
 import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.exception.InvalidYearException;
 
 import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;

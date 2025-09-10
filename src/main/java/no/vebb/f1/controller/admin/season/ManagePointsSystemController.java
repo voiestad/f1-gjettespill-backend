@@ -1,7 +1,7 @@
 package no.vebb.f1.controller.admin.season;
 
 import no.vebb.f1.scoring.ScoreService;
-import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
@@ -10,11 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.guessing.category.Category;
-import no.vebb.f1.util.domainPrimitive.Diff;
+import no.vebb.f1.scoring.domain.Diff;
 import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidDiffException;
-import no.vebb.f1.util.exception.InvalidPointsException;
+import no.vebb.f1.exception.InvalidDiffException;
+import no.vebb.f1.exception.InvalidPointsException;
 
 @RestController
 @RequestMapping("/api/admin/season/points")

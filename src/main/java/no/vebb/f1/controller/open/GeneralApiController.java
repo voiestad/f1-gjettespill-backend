@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.user.UserService;
 
-import no.vebb.f1.util.response.UserStatus;
-import no.vebb.f1.util.collection.Race;
+import no.vebb.f1.response.UserStatus;
+import no.vebb.f1.collection.Race;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.exception.InvalidYearException;
 
 @RestController
 @RequestMapping("/api/public")

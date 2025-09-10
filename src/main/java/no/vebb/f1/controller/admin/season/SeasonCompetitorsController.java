@@ -7,22 +7,22 @@ import java.util.Map;
 import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.competitors.constructor.ConstructorYearEntity;
 import no.vebb.f1.competitors.driver.DriverYearEntity;
-import no.vebb.f1.util.collection.ColoredCompetitor;
-import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.collection.ColoredCompetitor;
+import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import no.vebb.f1.util.collection.ValuedCompetitor;
+import no.vebb.f1.collection.ValuedCompetitor;
 import no.vebb.f1.competitors.domain.Color;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidColorException;
-import no.vebb.f1.util.exception.InvalidConstructorException;
-import no.vebb.f1.util.exception.InvalidDriverException;
+import no.vebb.f1.exception.InvalidColorException;
+import no.vebb.f1.exception.InvalidConstructorException;
+import no.vebb.f1.exception.InvalidDriverException;
 
 @RestController
 @RequestMapping("/api/admin/season/competitors")

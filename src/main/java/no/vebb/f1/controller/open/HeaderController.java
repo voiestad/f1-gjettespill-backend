@@ -2,7 +2,7 @@ package no.vebb.f1.controller.open;
 
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
-import no.vebb.f1.util.collection.Race;
+import no.vebb.f1.collection.Race;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +13,9 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
-import no.vebb.f1.util.exception.NoAvailableRaceException;
-import no.vebb.f1.util.response.HeaderResponse;
+import no.vebb.f1.exception.InvalidYearException;
+import no.vebb.f1.exception.NoAvailableRaceException;
+import no.vebb.f1.response.HeaderResponse;
 
 @RestController
 public class HeaderController {

@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
-import no.vebb.f1.util.exception.NoAvailableRaceException;
-import no.vebb.f1.util.response.RaceGuessResponse;
+import no.vebb.f1.exception.InvalidYearException;
+import no.vebb.f1.exception.NoAvailableRaceException;
+import no.vebb.f1.response.RaceGuessResponse;
 
 @RestController
 @RequestMapping("/api/public/race-guess")

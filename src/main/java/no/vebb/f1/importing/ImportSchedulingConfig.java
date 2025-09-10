@@ -6,7 +6,7 @@ import java.util.concurrent.Executors;
 
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceService;
-import no.vebb.f1.util.exception.NoAvailableRaceException;
+import no.vebb.f1.exception.NoAvailableRaceException;
 import no.vebb.f1.year.YearService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -18,7 +18,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.exception.InvalidYearException;
 
 @Configuration
 public class ImportSchedulingConfig implements SchedulingConfigurer {

@@ -9,14 +9,17 @@ import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
+import no.vebb.f1.results.domain.CompetitorPosition;
+import no.vebb.f1.scoring.domain.Diff;
+import no.vebb.f1.scoring.diffPointsMap.DiffPointsMap;
+import no.vebb.f1.stats.domain.Flag;
 import no.vebb.f1.user.PublicUserDto;
-import no.vebb.f1.util.collection.IFlagGuessed;
-import no.vebb.f1.util.collection.IUserRaceGuessTable;
-import no.vebb.f1.util.collection.userTables.FlagGuess;
-import no.vebb.f1.util.collection.userTables.PlaceGuess;
-import no.vebb.f1.util.collection.userTables.StandingsGuess;
-import no.vebb.f1.util.domainPrimitive.*;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.guessing.collection.IFlagGuessed;
+import no.vebb.f1.guessing.collection.IUserRaceGuessTable;
+import no.vebb.f1.scoring.userTables.FlagGuess;
+import no.vebb.f1.scoring.userTables.PlaceGuess;
+import no.vebb.f1.scoring.userTables.StandingsGuess;
+import no.vebb.f1.exception.InvalidYearException;
 import no.vebb.f1.year.Year;
 
 import java.util.ArrayList;
@@ -116,7 +119,7 @@ public class UserScore {
             if (guessedPos == null) {
                 result.add(new StandingsGuess<>(actualPos, competitor, null, null, new UserPoints()));
             } else {
-                Diff diff = new Diff(Math.abs(actualPos - guessedPos));
+                Diff diff = new Diff(actualPos - guessedPos);
                 UserPoints points = map.getPoints(diff);
                 result.add(new StandingsGuess<>(actualPos, competitor, guessedPos, diff, points));
             }
@@ -128,10 +131,10 @@ public class UserScore {
 
         List<IFlagGuessed> sqlRes = guessService.getDataForFlagTable(racePos, year, user.id());
         for (IFlagGuessed row : sqlRes) {
-            Flag flag = new Flag(row.getFlagName());
+            Flag flag = row.getFlagName();
             int guessed = row.getGuessed();
             int actual = row.getActual();
-            Diff diff = new Diff(Math.abs(guessed - actual));
+            Diff diff = new Diff(guessed - actual);
             UserPoints points = map.getPoints(diff);
             flagGuesses.add(new FlagGuess(flag, guessed, actual, diff, points));
         }
@@ -156,9 +159,9 @@ public class UserScore {
             RacePosition racePosition = row.getRacePosition();
             String raceName = row.getRaceName();
             String driver = row.getDriverName();
-            int startPos = row.getStartPosition();
-            int finishPos = row.getFinishingPosition();
-            Diff diff = new Diff(Math.abs(targetPos - finishPos));
+            CompetitorPosition startPos = row.getStartPosition();
+            CompetitorPosition finishPos = row.getFinishingPosition();
+            Diff diff = new Diff(targetPos - finishPos.toValue());
             UserPoints points = map.getPoints(diff);
             result.add(new PlaceGuess(racePosition, raceName, driver, startPos, finishPos, diff, points));
         }

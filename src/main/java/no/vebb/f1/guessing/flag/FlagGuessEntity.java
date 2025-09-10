@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import no.vebb.f1.stats.domain.Flag;
 import no.vebb.f1.year.Year;
 
 import java.util.UUID;
@@ -19,7 +20,7 @@ public class FlagGuessEntity {
 
     protected FlagGuessEntity() {}
 
-    public FlagGuessEntity(UUID userId, String flagName, Year year, int amount) {
+    public FlagGuessEntity(UUID userId, Flag flagName, Year year, int amount) {
         this.id = new FlagGuessId(userId, flagName, year);
         this.amount = amount;
     }
@@ -28,7 +29,7 @@ public class FlagGuessEntity {
         return id.userId();
     }
 
-    public String flagName() {
+    public Flag flagName() {
         return id.flagName();
     }
 

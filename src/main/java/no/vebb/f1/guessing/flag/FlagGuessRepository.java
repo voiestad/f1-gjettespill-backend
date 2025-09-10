@@ -1,7 +1,7 @@
 package no.vebb.f1.guessing.flag;
 
 import no.vebb.f1.race.RacePosition;
-import no.vebb.f1.util.collection.IFlagGuessed;
+import no.vebb.f1.guessing.collection.IFlagGuessed;
 import no.vebb.f1.year.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

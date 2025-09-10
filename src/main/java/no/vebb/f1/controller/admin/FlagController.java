@@ -1,23 +1,23 @@
 package no.vebb.f1.controller.admin;
 
 import java.util.List;
+import java.util.Optional;
 
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import no.vebb.f1.util.collection.RegisteredFlag;
-import no.vebb.f1.util.domainPrimitive.Flag;
+import no.vebb.f1.collection.RegisteredFlag;
+import no.vebb.f1.stats.domain.Flag;
 import no.vebb.f1.race.RaceId;
-import no.vebb.f1.stats.SessionType;
-import no.vebb.f1.util.exception.InvalidFlagException;
-import no.vebb.f1.util.exception.InvalidRaceException;
+import no.vebb.f1.stats.domain.SessionType;
+import no.vebb.f1.exception.InvalidRaceException;
 
 @RestController
 @RequestMapping("/api/admin/flag")
@@ -57,7 +57,7 @@ public class FlagController {
     @PostMapping("/add")
     @Transactional
     public ResponseEntity<?> registerFlag(
-            @RequestParam("flag") String flag,
+            @RequestParam("flag") Flag flag,
             @RequestParam("round") int round,
             @RequestParam("raceId") int raceId,
             @RequestParam("sessionType") SessionType sessionType) {
@@ -67,13 +67,12 @@ public class FlagController {
             if (yearService.isFinishedYear(year)) {
                 throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
             }
-            Flag validFlag = new Flag(flag, statsService);
             if (!isValidRound(round)) {
                 throw new IllegalArgumentException("Round : '" + round + "' out of bounds. Range: 1-100.");
             }
-            statsService.insertFlagStats(validFlag, round, validRaceId, sessionType);
+            statsService.insertFlagStats(flag, round, validRaceId, sessionType);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (InvalidRaceException | InvalidFlagException | IllegalArgumentException e) {
+        } catch (InvalidRaceException | IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -81,16 +80,16 @@ public class FlagController {
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deleteFlag(@RequestParam("id") int id) {
-        try {
-            Year year = statsService.getYearFromFlagId(id);
-            if (yearService.isFinishedYear(year)) {
-                throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
-            }
-                statsService.deleteFlagStatsById(id);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (InvalidFlagException e) {
+        Optional<Year> optYear = statsService.getYearFromFlagId(id);
+        if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        Year year = optYear.get();
+        if (yearService.isFinishedYear(year)) {
+            throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
+        }
+        statsService.deleteFlagStatsById(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     private boolean isValidRound(int round) {

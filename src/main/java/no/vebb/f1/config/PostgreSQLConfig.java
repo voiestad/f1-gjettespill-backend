@@ -235,9 +235,9 @@ public class PostgreSQLConfig {
 			jdbcTemplate.execute("""
                 INSERT INTO flags (flag_name)
                 VALUES
-                    ('Yellow Flag'),
-                    ('Red Flag'),
-                    ('Safety Car')
+                    ('YELLOW_FLAG'),
+                    ('RED_FLAG'),
+                    ('SAFETY_CAR')
                 ON CONFLICT(flag_name) DO NOTHING;
             """);
 			jdbcTemplate.execute("""

@@ -15,7 +15,7 @@ import no.vebb.f1.importing.Importer;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.exception.InvalidYearException;
 
 @RestController
 @RequestMapping("/api/admin/season")

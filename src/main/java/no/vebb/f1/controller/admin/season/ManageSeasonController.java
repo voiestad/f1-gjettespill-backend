@@ -4,7 +4,7 @@ import java.util.List;
 
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
-import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ import no.vebb.f1.importing.Importer;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidRaceException;
+import no.vebb.f1.exception.InvalidRaceException;
 
 @RestController
 @RequestMapping("/api/admin/season/manage")

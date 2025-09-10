@@ -1,10 +1,10 @@
 package no.vebb.f1.race;
 
 import jakarta.persistence.EntityManager;
-import no.vebb.f1.util.collection.Race;
+import no.vebb.f1.collection.Race;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidRaceException;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.exception.InvalidRaceException;
+import no.vebb.f1.exception.InvalidYearException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

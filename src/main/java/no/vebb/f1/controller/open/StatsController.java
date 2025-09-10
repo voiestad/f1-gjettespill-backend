@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import no.vebb.f1.util.RaceStats;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidRaceException;
+import no.vebb.f1.exception.InvalidRaceException;
 
 @RestController
 @RequestMapping("/api/public/stats")

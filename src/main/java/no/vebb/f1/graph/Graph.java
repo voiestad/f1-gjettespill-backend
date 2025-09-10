@@ -7,7 +7,7 @@ import no.vebb.f1.year.YearService;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.util.collection.RankedGuesser;
+import no.vebb.f1.collection.RankedGuesser;
 import no.vebb.f1.year.Year;
 
 @Component

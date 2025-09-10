@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.util.exception.InvalidPointsException;
+import no.vebb.f1.exception.InvalidPointsException;
 
 @Embeddable
 public class UserPoints implements Comparable<UserPoints> {

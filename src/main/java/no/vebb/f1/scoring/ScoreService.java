@@ -1,7 +1,10 @@
 package no.vebb.f1.scoring;
 
 import no.vebb.f1.guessing.category.Category;
-import no.vebb.f1.util.domainPrimitive.Diff;
+import no.vebb.f1.scoring.diffPointsMap.DiffPointsMapEntity;
+import no.vebb.f1.scoring.diffPointsMap.DiffPointsMapId;
+import no.vebb.f1.scoring.diffPointsMap.DiffPointsMapRepository;
+import no.vebb.f1.scoring.domain.Diff;
 import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
@@ -23,8 +26,8 @@ public class ScoreService {
 
         Map<Diff, UserPoints> map = new LinkedHashMap<>();
         for (DiffPointsMapEntity entry : res) {
-            Diff diff = new Diff(entry.diff());
-            UserPoints points = new UserPoints(entry.points());
+            Diff diff = entry.diff();
+            UserPoints points = entry.points();
             map.put(diff, points);
         }
         return map;
@@ -35,26 +38,26 @@ public class ScoreService {
         if (diffs.isEmpty()) {
             return new Diff();
         }
-        return new Diff(diffs.get(diffs.size() - 1).diff());
+        return diffs.get(diffs.size() - 1).diff();
     }
 
     public void addDiffToPointsMap(Category category, Diff diff, Year year) {
-        DiffPointsMapEntity diffPointsMapEntity = new DiffPointsMapEntity(category, diff.value, year, 0);
+        DiffPointsMapEntity diffPointsMapEntity = new DiffPointsMapEntity(category, diff, year, new UserPoints());
         diffPointsMapRepository.save(diffPointsMapEntity);
     }
 
     public void removeDiffToPointsMap(Category category, Diff diff, Year year) {
-        DiffPointsMapId diffPointsMapId = new DiffPointsMapId(category, diff.value, year);
+        DiffPointsMapId diffPointsMapId = new DiffPointsMapId(category, diff, year);
         diffPointsMapRepository.deleteById(diffPointsMapId);
     }
 
     public void setNewDiffToPointsInPointsMap(Category category, Diff diff, Year year, UserPoints points) {
-        DiffPointsMapEntity diffPointsMapEntity = new DiffPointsMapEntity(category, diff.value, year, points.value);
+        DiffPointsMapEntity diffPointsMapEntity = new DiffPointsMapEntity(category, diff, year, points);
         diffPointsMapRepository.save(diffPointsMapEntity);
     }
 
     public boolean isValidDiffInPointsMap(Category category, Diff diff, Year year) {
-        DiffPointsMapId diffPointsMapId = new DiffPointsMapId(category, diff.value, year);
+        DiffPointsMapId diffPointsMapId = new DiffPointsMapId(category, diff, year);
         return diffPointsMapRepository.existsById(diffPointsMapId);
     }
 

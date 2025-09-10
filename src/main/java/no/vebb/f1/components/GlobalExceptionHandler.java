@@ -1,6 +1,6 @@
 package no.vebb.f1.components;
 
-import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.exception.YearFinishedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.ConversionFailedException;
@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.exception.InvalidYearException;
-import no.vebb.f1.util.exception.NoUsernameException;
-import no.vebb.f1.util.exception.NotAdminException;
+import no.vebb.f1.exception.InvalidYearException;
+import no.vebb.f1.exception.NoUsernameException;
+import no.vebb.f1.exception.NotAdminException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {

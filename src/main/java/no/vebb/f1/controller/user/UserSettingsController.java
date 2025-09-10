@@ -10,7 +10,7 @@ import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.mail.domain.Email;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.*;
-import no.vebb.f1.util.response.ReferralCodeResponse;
+import no.vebb.f1.response.ReferralCodeResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -26,10 +26,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.mail.mailOption.MailOption;
-import no.vebb.f1.util.domainPrimitive.Username;
-import no.vebb.f1.util.exception.InvalidEmailException;
-import no.vebb.f1.util.exception.InvalidUsernameException;
-import no.vebb.f1.util.response.MailOptionsResponse;
+import no.vebb.f1.user.domain.Username;
+import no.vebb.f1.exception.InvalidEmailException;
+import no.vebb.f1.exception.InvalidUsernameException;
+import no.vebb.f1.response.MailOptionsResponse;
 
 @RestController
 @RequestMapping("/api/settings")

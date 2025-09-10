@@ -8,8 +8,8 @@ import java.util.List;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.scoring.ScoreCalculator;
-import no.vebb.f1.util.exception.YearFinishedException;
-import no.vebb.f1.util.response.CutoffResponse;
+import no.vebb.f1.exception.YearFinishedException;
+import no.vebb.f1.response.CutoffResponse;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.collection.CutoffRace;
+import no.vebb.f1.collection.CutoffRace;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidRaceException;
+import no.vebb.f1.exception.InvalidRaceException;
 
 @RestController
 @RequestMapping("/api/admin/season/cutoff")

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.util.exception.InvalidColorException;
+import no.vebb.f1.exception.InvalidColorException;
 import org.springframework.lang.NonNull;
 
 @Embeddable

@@ -6,14 +6,15 @@ import java.util.UUID;
 
 import no.vebb.f1.bingo.BingoService;
 import no.vebb.f1.mail.MailService;
-import no.vebb.f1.util.domainPrimitive.Username;
+import no.vebb.f1.user.admin.AdminRepository;
+import no.vebb.f1.user.domain.Username;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import no.vebb.f1.util.exception.NoUsernameException;
-import no.vebb.f1.util.exception.NotAdminException;
+import no.vebb.f1.exception.NoUsernameException;
+import no.vebb.f1.exception.NotAdminException;
 
 @Service
 public class UserService {

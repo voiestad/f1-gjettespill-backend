@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.guessing.category.Category;
-import no.vebb.f1.util.domainPrimitive.Diff;
+import no.vebb.f1.scoring.domain.Diff;
 import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.exception.InvalidYearException;
 
 @RestController
 public class ScoreController {

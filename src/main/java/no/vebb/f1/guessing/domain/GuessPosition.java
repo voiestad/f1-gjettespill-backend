@@ -3,7 +3,7 @@ package no.vebb.f1.guessing.domain;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.util.exception.InvalidPositionException;
+import no.vebb.f1.exception.InvalidPositionException;
 import org.springframework.lang.NonNull;
 
 @Embeddable

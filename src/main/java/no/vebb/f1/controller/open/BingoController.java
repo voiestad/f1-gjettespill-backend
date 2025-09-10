@@ -3,7 +3,7 @@ package no.vebb.f1.controller.open;
 import java.util.List;
 
 import no.vebb.f1.bingo.BingoService;
-import no.vebb.f1.util.exception.YearFinishedException;
+import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.collection.BingoSquare;
+import no.vebb.f1.bingo.BingoSquare;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.exception.InvalidYearException;
 
 @RestController
 public class BingoController {

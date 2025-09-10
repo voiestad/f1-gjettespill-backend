@@ -1,6 +1,5 @@
 package no.vebb.f1.bingo;
 
-import no.vebb.f1.util.collection.BingoSquare;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 

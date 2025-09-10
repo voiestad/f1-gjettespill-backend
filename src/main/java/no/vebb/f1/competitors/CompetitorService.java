@@ -8,10 +8,10 @@ import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.competitors.driver.*;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RaceService;
-import no.vebb.f1.util.collection.ColoredCompetitor;
-import no.vebb.f1.util.collection.ValuedCompetitor;
-import no.vebb.f1.util.exception.InvalidConstructorException;
-import no.vebb.f1.util.exception.InvalidDriverException;
+import no.vebb.f1.collection.ColoredCompetitor;
+import no.vebb.f1.collection.ValuedCompetitor;
+import no.vebb.f1.exception.InvalidConstructorException;
+import no.vebb.f1.exception.InvalidDriverException;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 

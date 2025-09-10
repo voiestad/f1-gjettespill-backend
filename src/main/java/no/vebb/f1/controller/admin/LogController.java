@@ -12,7 +12,7 @@ import java.util.Stack;
 import java.time.LocalDate;
 
 import no.vebb.f1.util.IOUtil;
-import no.vebb.f1.util.exception.InvalidLogTypeException;
+import no.vebb.f1.exception.InvalidLogTypeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

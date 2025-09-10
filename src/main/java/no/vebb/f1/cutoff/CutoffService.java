@@ -7,14 +7,14 @@ import java.util.Calendar;
 import java.util.List;
 
 import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.util.collection.CutoffRace;
+import no.vebb.f1.collection.CutoffRace;
 import no.vebb.f1.year.YearService;
 import org.springframework.stereotype.Service;
 
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
-import no.vebb.f1.util.exception.NoAvailableRaceException;
+import no.vebb.f1.exception.InvalidYearException;
+import no.vebb.f1.exception.NoAvailableRaceException;
 
 @Service
 public class CutoffService {

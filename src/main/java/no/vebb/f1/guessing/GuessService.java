@@ -1,5 +1,6 @@
 package no.vebb.f1.guessing;
 
+import no.vebb.f1.collection.*;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.constructor.ConstructorYearRepository;
 import no.vebb.f1.competitors.domain.Driver;
@@ -7,6 +8,9 @@ import no.vebb.f1.competitors.driver.DriverYearRepository;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.guessing.category.CategoryEntity;
 import no.vebb.f1.guessing.category.CategoryRepository;
+import no.vebb.f1.guessing.collection.IFlagGuessed;
+import no.vebb.f1.guessing.collection.IUserRaceGuessTable;
+import no.vebb.f1.guessing.collection.UserRaceGuess;
 import no.vebb.f1.guessing.constructor.ConstructorGuessEntity;
 import no.vebb.f1.guessing.constructor.ConstructorGuessRepository;
 import no.vebb.f1.guessing.driver.DriverGuessEntity;
@@ -16,12 +20,13 @@ import no.vebb.f1.guessing.driverPlace.DriverPlaceGuessId;
 import no.vebb.f1.guessing.driverPlace.DriverPlaceGuessRepository;
 import no.vebb.f1.guessing.flag.FlagGuessEntity;
 import no.vebb.f1.guessing.flag.FlagGuessRepository;
+import no.vebb.f1.guessing.collection.PlaceGuess;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.results.collection.IColoredCompetitor;
+import no.vebb.f1.stats.domain.Flag;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserRespository;
-import no.vebb.f1.util.collection.*;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
@@ -87,9 +92,9 @@ public class GuessService {
 
     public void addFlagGuesses(UUID userId, Year year, Flags flags) {
         flagGuessRepository.saveAll(Arrays.asList(
-                new FlagGuessEntity(userId, "Yellow Flag", year, flags.yellow),
-                new FlagGuessEntity(userId, "Red Flag", year, flags.red),
-                new FlagGuessEntity(userId, "Safety Car", year, flags.safetyCar)
+                new FlagGuessEntity(userId, Flag.YELLOW_FLAG, year, flags.yellow),
+                new FlagGuessEntity(userId, Flag.RED_FLAG, year, flags.red),
+                new FlagGuessEntity(userId, Flag.SAFETY_CAR, year, flags.safetyCar)
         ));
     }
 
@@ -98,13 +103,13 @@ public class GuessService {
         List<FlagGuessEntity> flagGuesses = flagGuessRepository.findAllByIdUserIdAndIdYear(userId, year);
         for (FlagGuessEntity flagGuess : flagGuesses) {
             switch (flagGuess.flagName()) {
-                case "Yellow Flag":
+                case YELLOW_FLAG:
                     flags.yellow = flagGuess.amount();
                     break;
-                case "Red Flag":
+                case RED_FLAG:
                     flags.red = flagGuess.amount();
                     break;
-                case "Safety Car":
+                case SAFETY_CAR:
                     flags.safetyCar = flagGuess.amount();
                     break;
             }

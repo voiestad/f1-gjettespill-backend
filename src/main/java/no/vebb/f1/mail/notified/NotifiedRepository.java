@@ -1,6 +1,5 @@
 package no.vebb.f1.mail.notified;
 
-import no.vebb.f1.util.collection.IUserNotifiedCount;
 import no.vebb.f1.race.RaceId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -3,7 +3,7 @@ package no.vebb.f1.mail.domain;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.util.exception.InvalidEmailException;
+import no.vebb.f1.exception.InvalidEmailException;
 
 @Embeddable
 public class Email {

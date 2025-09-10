@@ -4,12 +4,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import no.vebb.f1.collection.CompetitorGuessYear;
+import no.vebb.f1.collection.FlagGuessYear;
+import no.vebb.f1.guessing.collection.PlaceGuess;
+import no.vebb.f1.collection.UserNotifiedCount;
 import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.mail.domain.Email;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserDto;
-import no.vebb.f1.util.collection.*;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
 

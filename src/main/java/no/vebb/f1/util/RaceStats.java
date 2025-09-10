@@ -8,8 +8,8 @@ import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.stats.StatsService;
-import no.vebb.f1.util.collection.PositionedCompetitor;
-import no.vebb.f1.util.collection.RegisteredFlag;
+import no.vebb.f1.collection.PositionedCompetitor;
+import no.vebb.f1.collection.RegisteredFlag;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
 

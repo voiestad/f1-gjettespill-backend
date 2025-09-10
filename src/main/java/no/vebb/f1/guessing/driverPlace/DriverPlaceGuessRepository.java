@@ -2,9 +2,9 @@ package no.vebb.f1.guessing.driverPlace;
 
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.race.RacePosition;
-import no.vebb.f1.util.collection.IPlaceGuess;
-import no.vebb.f1.util.collection.IUserRaceGuess;
-import no.vebb.f1.util.collection.IUserRaceGuessTable;
+import no.vebb.f1.guessing.collection.IPlaceGuess;
+import no.vebb.f1.guessing.collection.IUserRaceGuess;
+import no.vebb.f1.guessing.collection.IUserRaceGuessTable;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
 import org.springframework.data.jpa.repository.JpaRepository;

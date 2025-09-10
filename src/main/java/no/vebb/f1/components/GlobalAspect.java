@@ -4,8 +4,8 @@ import org.aspectj.lang.annotation.Before;
 import org.springframework.stereotype.Component;
 
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.util.exception.NoUsernameException;
-import no.vebb.f1.util.exception.NotAdminException;
+import no.vebb.f1.exception.NoUsernameException;
+import no.vebb.f1.exception.NotAdminException;
 
 @Aspect
 @Component

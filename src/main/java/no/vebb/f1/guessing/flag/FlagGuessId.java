@@ -1,8 +1,7 @@
 package no.vebb.f1.guessing.flag;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
+import jakarta.persistence.*;
+import no.vebb.f1.stats.domain.Flag;
 import no.vebb.f1.year.Year;
 
 import java.util.Objects;
@@ -14,14 +13,15 @@ public class FlagGuessId {
     private UUID userId;
 
     @Column(name = "flag_name", nullable = false)
-    private String flagName;
+    @Enumerated(EnumType.STRING)
+    private Flag flagName;
 
     @Embedded
     private Year year;
 
     protected FlagGuessId() {}
 
-    public FlagGuessId(UUID userId, String flagName, Year year) {
+    public FlagGuessId(UUID userId, Flag flagName, Year year) {
         this.userId = userId;
         this.flagName = flagName;
         this.year = year;
@@ -31,7 +31,7 @@ public class FlagGuessId {
         return userId;
     }
 
-    public String flagName() {
+    public Flag flagName() {
         return flagName;
     }
 

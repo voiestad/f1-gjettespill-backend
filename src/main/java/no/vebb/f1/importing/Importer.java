@@ -19,6 +19,7 @@ import no.vebb.f1.results.domain.CompetitorPoints;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.results.domain.CompetitorPosition;
 import no.vebb.f1.scoring.ScoreCalculator;
+import no.vebb.f1.scoring.domain.Diff;
 import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +28,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
-import no.vebb.f1.util.collection.PositionedCompetitor;
+import no.vebb.f1.collection.PositionedCompetitor;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.exception.InvalidYearException;
 
 @Component
 public class Importer {
@@ -454,8 +455,8 @@ public class Importer {
                 status = ResultChangeStatus.NO_CHANGE;
             }
         }
-        int diff = Math.abs(compPoints(standings).value - compPoints(previousStandings).value);
-        status.setPointsChange(new CompetitorPoints(diff));
+        Diff diff = new Diff(compPoints(standings).value - compPoints(previousStandings).value);
+        status.setPointsChange(new CompetitorPoints(diff.toValue()));
         return status;
     }
 

@@ -4,7 +4,7 @@ import java.util.List;
 
 import no.vebb.f1.guessing.GuessService;
 import no.vebb.f1.user.UserEntity;
-import no.vebb.f1.util.response.HomePageResponse;
+import no.vebb.f1.response.HomePageResponse;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.graph.GuesserPointsSeason;
 import no.vebb.f1.graph.Graph;
-import no.vebb.f1.util.collection.RankedGuesser;
+import no.vebb.f1.collection.RankedGuesser;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.util.exception.InvalidYearException;
+import no.vebb.f1.exception.InvalidYearException;
 
 @RestController
 public class HomeController {

@@ -17,8 +17,8 @@ import no.vebb.f1.results.raceResult.RaceResultEntity;
 import no.vebb.f1.results.raceResult.RaceResultRepository;
 import no.vebb.f1.results.startingGrid.StartingGridEntity;
 import no.vebb.f1.results.startingGrid.StartingGridRepository;
-import no.vebb.f1.util.collection.ColoredCompetitor;
-import no.vebb.f1.util.exception.NoAvailableRaceException;
+import no.vebb.f1.collection.ColoredCompetitor;
+import no.vebb.f1.exception.NoAvailableRaceException;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
