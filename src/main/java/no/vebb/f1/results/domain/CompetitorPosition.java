@@ -8,16 +8,22 @@ import org.springframework.lang.NonNull;
 
 @Embeddable
 public class CompetitorPosition implements Comparable<CompetitorPosition> {
-    @Column(name = "placement", nullable = false)
+    @Column(name = "position", nullable = false)
     private int value;
 
-    protected CompetitorPosition() {}
+    public CompetitorPosition() {
+        this.value = 1;
+    }
 
     public CompetitorPosition(int value) {
         if (value < 1) {
             throw new InvalidPositionException("Positions can't be non-positive. Was " + value);
         }
         this.value = value;
+    }
+
+    public CompetitorPosition next() {
+        return new CompetitorPosition(this.value + 1);
     }
 
     @JsonValue

@@ -18,7 +18,7 @@ import no.vebb.f1.guessing.flag.FlagGuessEntity;
 import no.vebb.f1.guessing.flag.FlagGuessRepository;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RacePosition;
-import no.vebb.f1.results.IColoredCompetitor;
+import no.vebb.f1.results.collection.IColoredCompetitor;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserRespository;
 import no.vebb.f1.util.collection.*;

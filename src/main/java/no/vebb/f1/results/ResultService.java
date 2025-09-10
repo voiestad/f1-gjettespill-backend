@@ -10,6 +10,7 @@ import no.vebb.f1.race.RaceId;
 import no.vebb.f1.results.constructorStandings.ConstructorStandingsEntity;
 import no.vebb.f1.results.constructorStandings.ConstructorStandingsRepository;
 import no.vebb.f1.results.domain.CompetitorPoints;
+import no.vebb.f1.results.domain.CompetitorPosition;
 import no.vebb.f1.results.driverStandings.DriverStandingsEntity;
 import no.vebb.f1.results.driverStandings.DriverStandingsRepository;
 import no.vebb.f1.results.raceResult.RaceResultEntity;
@@ -59,25 +60,25 @@ public class ResultService {
     }
 
 
-    public void insertDriverStartingGrid(RaceId raceId, int position, Driver driver) {
+    public void insertDriverStartingGrid(RaceId raceId, CompetitorPosition position, Driver driver) {
         StartingGridEntity startingGridEntity = new StartingGridEntity(raceId, driver, position);
         startingGridRepository.save(startingGridEntity);
     }
 
-    public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, CompetitorPoints points, int finishingPosition) {
-        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driver, points.value);
+    public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, CompetitorPoints points, CompetitorPosition finishingPosition) {
+        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driver, points);
         raceResultRepository.save(raceResultEntity);
     }
 
 
-    public void insertDriverIntoStandings(RaceId raceId, Driver driver, int position, CompetitorPoints points) {
-        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver, position, points.value);
+    public void insertDriverIntoStandings(RaceId raceId, Driver driver, CompetitorPosition position, CompetitorPoints points) {
+        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver, position, points);
         driverStandingsRepository.save(driverStandingsEntity);
     }
 
 
-    public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, int position, CompetitorPoints points) {
-        ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor, position, points.value);
+    public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, CompetitorPosition position, CompetitorPoints points) {
+        ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor, position, points);
         constructorStandingsRepository.save(constructorStandingsEntity);
     }
 

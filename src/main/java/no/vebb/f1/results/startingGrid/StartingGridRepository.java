@@ -1,7 +1,7 @@
 package no.vebb.f1.results.startingGrid;
 
 import no.vebb.f1.race.RaceId;
-import no.vebb.f1.results.IColoredCompetitor;
+import no.vebb.f1.results.collection.IColoredCompetitor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

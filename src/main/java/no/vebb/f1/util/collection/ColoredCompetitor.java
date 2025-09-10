@@ -1,6 +1,6 @@
 package no.vebb.f1.util.collection;
 
-import no.vebb.f1.results.IColoredCompetitor;
+import no.vebb.f1.results.collection.IColoredCompetitor;
 import no.vebb.f1.competitors.domain.Color;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;

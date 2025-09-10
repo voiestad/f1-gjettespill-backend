@@ -1,9 +1,9 @@
 package no.vebb.f1.results.raceResult;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import no.vebb.f1.race.RaceId;
+import no.vebb.f1.results.domain.CompetitorPosition;
 
 import java.util.Objects;
 
@@ -11,12 +11,12 @@ import java.util.Objects;
 public class RaceResultId {
     @Embedded
     private RaceId raceId;
-    @Column(name = "finishing_position", nullable = false)
-    private int finishingPosition;
+    @Embedded
+    private CompetitorPosition finishingPosition;
 
     protected RaceResultId() {}
 
-    public RaceResultId(RaceId raceId, int finishingPosition) {
+    public RaceResultId(RaceId raceId, CompetitorPosition finishingPosition) {
         this.raceId = raceId;
         this.finishingPosition = finishingPosition;
     }
@@ -24,7 +24,7 @@ public class RaceResultId {
         return raceId;
     }
 
-    public int finishingPosition() {
+    public CompetitorPosition finishingPosition() {
         return finishingPosition;
     }
 

@@ -1,6 +1,6 @@
 package no.vebb.f1.guessing.constructor;
 
-import no.vebb.f1.results.IColoredCompetitor;
+import no.vebb.f1.results.collection.IColoredCompetitor;
 import no.vebb.f1.year.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

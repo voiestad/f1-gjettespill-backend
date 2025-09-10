@@ -1,10 +1,13 @@
 package no.vebb.f1.results.domain;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import no.vebb.f1.util.exception.InvalidPointsException;
 
+@Embeddable
 public class CompetitorPoints implements Comparable<CompetitorPoints> {
-	
+	@Column(name = "points", nullable = false)
 	public final int value;
 
 	public CompetitorPoints(int value) throws InvalidPointsException {
