@@ -4,15 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Stack;
+import java.util.*;
 import java.time.LocalDate;
 
 import no.vebb.f1.util.IOUtil;
-import no.vebb.f1.exception.InvalidLogTypeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,16 +20,16 @@ public class LogController {
 
     @GetMapping("/list")
     public ResponseEntity<List<String>> listDates(@RequestParam("type") String type) {
-        try {
-            LogType logType = new LogType(type);
-            List<String> files = getFileNamesInFolder(logType).stream()
-                    .map(file -> file.substring(0, 10))
-                    .sorted(Collections.reverseOrder())
-                    .toList();
-            return new ResponseEntity<>(files, HttpStatus.OK);
-        } catch (InvalidLogTypeException ignored) {
+        Optional<LogType> optLogType = LogType.getLogType(type);
+        if (optLogType.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        LogType logType = optLogType.get();
+        List<String> files = getFileNamesInFolder(logType).stream()
+                .map(file -> file.substring(0, 10))
+                .sorted(Collections.reverseOrder())
+                .toList();
+        return new ResponseEntity<>(files, HttpStatus.OK);
     }
 
     @GetMapping("/file")
@@ -43,7 +38,11 @@ public class LogController {
             @RequestParam("date") String date) {
         try {
             LocalDate localDate = LocalDate.parse(date);
-            LogType logType = new LogType(type);
+            Optional<LogType> optLogType = LogType.getLogType(type);
+            if (optLogType.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            LogType logType = optLogType.get();
             List<String> files = getFileNamesInFolder(logType);
             String dateFileName = localDate + ".log";
             if (!files.contains(dateFileName)) {
@@ -71,7 +70,7 @@ public class LogController {
             return new ResponseEntity<>(buffer.toString(), HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (DateTimeParseException | InvalidLogTypeException e) {
+        } catch (DateTimeParseException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
@@ -79,7 +78,7 @@ public class LogController {
     private List<String> getFileNamesInFolder(LogType logType) {
         List<String> fileNames = new ArrayList<>();
         try {
-            File folder = new File(String.format("%s/%s", logPath, logType.type));
+            File folder = new File(String.format("%s/%s", logPath, logType.type()));
             IOUtil.getFileNamesInFolder(fileNames, folder);
         } catch (IOException ignored) {
         }
@@ -95,18 +94,4 @@ public class LogController {
         }
         return true;
     }
-
-    private record LogType(String type) {
-        private LogType {
-            if (type == null || isInvalidLogType(type)) {
-                throw new InvalidLogTypeException("Type is not a valid log type");
-            }
-        }
-
-        private boolean isInvalidLogType(String type) {
-            return !type.matches("error|info|cache|importer");
-        }
-    }
-
-
 }

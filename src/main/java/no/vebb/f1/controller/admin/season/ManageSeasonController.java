@@ -57,41 +57,41 @@ public class ManageSeasonController {
     @PostMapping("/move")
     @Transactional
     public ResponseEntity<?> changeRaceOrder(
-            @RequestParam("year") int year,
+            @RequestParam("year") Year year,
             @RequestParam("id") int raceId,
             @RequestParam("newPosition") int inputPosition) {
-        Year validYear = yearService.getYear(year);
-        if (yearService.isFinishedYear(validYear)) {
+        if (yearService.isFinishedYear(year)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
             RaceId validRaceId = raceService.getRaceId(raceId);
-            boolean isRaceInSeason = raceService.isRaceInSeason(validRaceId, validYear);
+            boolean isRaceInSeason = raceService.isRaceInSeason(validRaceId, year);
             if (!isRaceInSeason) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
-            RacePosition maxPos = raceService.getNewMaxRaceOrderPosition(validYear);
+            RacePosition maxPos = raceService.getNewMaxRaceOrderPosition(year);
             boolean isPosOutOfBounds = inputPosition < 1 || inputPosition > maxPos.toValue() - 1;
             if (isPosOutOfBounds) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
-            List<RaceId> races = raceService.getRacesFromSeason(validYear);
+            List<RaceId> races = raceService.getRacesFromSeason(year);
             RacePosition currentPos = new RacePosition();
             RacePosition position = new RacePosition(inputPosition);
+            // TODO: update all at once
             for (RaceId id : races) {
                 if (id.equals(validRaceId)) {
                     continue;
                 }
                 if (currentPos.equals(position)) {
-                    raceService.updateRaceOrderPosition(validRaceId, validYear, currentPos);
+                    raceService.updateRaceOrderPosition(validRaceId, year, currentPos);
                     currentPos = currentPos.next();
                 }
-                raceService.updateRaceOrderPosition(id, validYear, currentPos);
+                raceService.updateRaceOrderPosition(id, year, currentPos);
                 currentPos = currentPos.next();
 
             }
             if (currentPos == position) {
-                raceService.updateRaceOrderPosition(validRaceId, validYear, currentPos);
+                raceService.updateRaceOrderPosition(validRaceId, year, currentPos);
             }
             importer.importData();
             return new ResponseEntity<>(HttpStatus.OK);
@@ -102,22 +102,21 @@ public class ManageSeasonController {
 
     @PostMapping("/delete")
     @Transactional
-    public ResponseEntity<?> deleteRace(@RequestParam("year") int year, @RequestParam("id") int raceId) {
-        Year validYear = yearService.getYear(year);
-        if (yearService.isFinishedYear(validYear)) {
+    public ResponseEntity<?> deleteRace(@RequestParam("year") Year year, @RequestParam("id") int raceId) {
+        if (yearService.isFinishedYear(year)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
             RaceId validRaceId = raceService.getRaceId(raceId);
-            boolean isRaceInSeason = raceService.isRaceInSeason(validRaceId, validYear);
+            boolean isRaceInSeason = raceService.isRaceInSeason(validRaceId, year);
             if (!isRaceInSeason) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             raceService.deleteRace(validRaceId);
-            List<RaceId> races = raceService.getRacesFromSeason(validYear);
+            List<RaceId> races = raceService.getRacesFromSeason(year);
             RacePosition currentPos = new RacePosition();
             for (RaceId id : races) {
-                raceService.updateRaceOrderPosition(id, validYear, currentPos);
+                raceService.updateRaceOrderPosition(id, year, currentPos);
                 currentPos = currentPos.next();
             }
             return new ResponseEntity<>(HttpStatus.OK);
@@ -128,9 +127,8 @@ public class ManageSeasonController {
 
     @PostMapping("/add")
     @Transactional
-    public ResponseEntity<?> addRace(@RequestParam("year") int year, @RequestParam("id") int raceId) {
-        Year validYear = yearService.getYear(year);
-        if (yearService.isFinishedYear(validYear)) {
+    public ResponseEntity<?> addRace(@RequestParam("year") Year year, @RequestParam("id") int raceId) {
+        if (yearService.isFinishedYear(year)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
@@ -138,10 +136,10 @@ public class ManageSeasonController {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         } catch (InvalidRaceException ignored) {
         }
-        importer.importRaceName(raceId, validYear);
+        importer.importRaceName(raceId, year);
         importer.importData();
         RaceId validRaceId = raceService.getRaceId(raceId);
-        cutoffService.setCutoffRace(cutoffService.getDefaultInstant(validYear), validRaceId);
+        cutoffService.setCutoffRace(cutoffService.getDefaultInstant(year), validRaceId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

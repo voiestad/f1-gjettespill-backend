@@ -3,6 +3,7 @@ package no.vebb.f1.controller.admin.season;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.year.YearService;
@@ -15,7 +16,6 @@ import no.vebb.f1.importing.Importer;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidYearException;
 
 @RestController
 @RequestMapping("/api/admin/season")
@@ -36,19 +36,18 @@ public class SeasonController {
     @PostMapping("/add")
     @Transactional
     public ResponseEntity<String> addSeason(
-            @RequestParam("year") int year,
+            @RequestParam("year") int inputYear,
             @RequestParam(name = "start", required = false) Integer start,
             @RequestParam(name = "end", required = false) Integer end) {
-        try {
-            yearService.getYear(year);
-            String error = String.format("Sesongen %d er allerede lagt til", year);
+
+        Optional<Year> optYear = yearService.getYear(inputYear);
+        if (optYear.isPresent()) {
+            String error = String.format("Sesongen %d er allerede lagt til", inputYear);
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-        } catch (InvalidYearException ignored) {
         }
-        yearService.addYear(year);
-        Year seasonYear = yearService.getYear(year);
-        Instant time = cutoffService.getDefaultInstant(seasonYear);
-        cutoffService.setCutoffYear(time, seasonYear);
+        Year year = yearService.addYear(inputYear);
+        Instant time = cutoffService.getDefaultInstant(year);
+        cutoffService.setCutoffYear(time, year);
         if (start == null || end == null) {
             return new ResponseEntity<>("OK", HttpStatus.OK);
         }
@@ -56,7 +55,7 @@ public class SeasonController {
             String error = "Starten av året kan ikke være etter slutten av året";
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
-        if (start < 0 || year < 0) {
+        if (start < 0) {
             String error = "Verdiene kan ikke være negative";
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
@@ -66,10 +65,10 @@ public class SeasonController {
             races.add(i);
         }
 
-        importer.importRaceNames(races, seasonYear);
+        importer.importRaceNames(races, year);
         importer.importData();
 
-        setDefaultCutoffRaces(seasonYear, time);
+        setDefaultCutoffRaces(year, time);
 
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }

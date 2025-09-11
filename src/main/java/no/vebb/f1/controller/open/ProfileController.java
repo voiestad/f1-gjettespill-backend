@@ -26,7 +26,6 @@ import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidYearException;
 
 @RestController
 public class ProfileController {
@@ -97,27 +96,27 @@ public class ProfileController {
     }
 
     private ResponseEntity<UserScoreResponse> getUpToDate(UserEntity userEntity) {
-        try {
-            Year year = yearService.getCurrentYear();
-            if (isAbleToSeeGuesses(userEntity, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
-                return new ResponseEntity<>(res, HttpStatus.OK);
-            }
-        } catch (InvalidYearException ignored) {
+        Optional<Year> optYear = yearService.getCurrentYear();
+        if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        Year year = optYear.get();
+        if (isAbleToSeeGuesses(userEntity, year)) {
+            UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
     private ResponseEntity<UserScoreResponse> getGuesserProfileYear(UserEntity userEntity, int inputYear) {
-        try {
-            Year year = yearService.getYear(inputYear);
-            if (isAbleToSeeGuesses(userEntity, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
-                return new ResponseEntity<>(res, HttpStatus.OK);
-            }
-        } catch (InvalidYearException ignored) {
+        Optional<Year> optYear = yearService.getYear(inputYear);
+        if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        Year year = optYear.get();
+        if (isAbleToSeeGuesses(userEntity, year)) {
+            UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }

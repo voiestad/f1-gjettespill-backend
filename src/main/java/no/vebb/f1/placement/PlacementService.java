@@ -1,7 +1,7 @@
 package no.vebb.f1.placement;
 
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.guessing.category.Category;
-import no.vebb.f1.graph.GuesserPointsSeason;
 import no.vebb.f1.placement.collection.PlacementGraphResult;
 import no.vebb.f1.placement.collection.PlacementObj;
 import no.vebb.f1.placement.collection.PositionResult;
@@ -34,6 +34,7 @@ public class PlacementService {
     private final PlacementCategoryRepository placementCategoryRepository;
     private final PlacementRaceYearStartRepository placementRaceYearStartRepository;
     private final PlacementCategoryYearStartRepository placementCategoryYearStartRepository;
+    private final CutoffService cutoffService;
 
     public PlacementService(
             YearService yearService,
@@ -41,14 +42,15 @@ public class PlacementService {
             PlacementRaceRepository placementRaceRepository,
             PlacementCategoryRepository placementCategoryRepository,
             PlacementRaceYearStartRepository placementRaceYearStartRepository,
-            PlacementCategoryYearStartRepository placementCategoryYearStartRepository
-    ) {
+            PlacementCategoryYearStartRepository placementCategoryYearStartRepository,
+            CutoffService cutoffService) {
         this.yearService = yearService;
         this.placementYearRepository = placementYearRepository;
         this.placementRaceRepository = placementRaceRepository;
         this.placementCategoryRepository = placementCategoryRepository;
         this.placementRaceYearStartRepository = placementRaceYearStartRepository;
         this.placementCategoryYearStartRepository = placementCategoryYearStartRepository;
+        this.cutoffService = cutoffService;
     }
 
     public void finalizeYear(Year year) {
@@ -142,6 +144,9 @@ public class PlacementService {
     }
 
     public List<GuesserPointsSeason> getGraph(Year year) {
+        if (cutoffService.isAbleToGuessYear(year)) {
+            return null;
+        }
         Map<UUID, List<UserPoints>> userPoints = new LinkedHashMap<>();
         Map<UUID, String> usernames = new HashMap<>();
         for (PlacementGraphResult row : placementRaceRepository.findAllByYear(year.value)) {
@@ -160,6 +165,9 @@ public class PlacementService {
     }
 
     public List<RankedGuesser> getLeaderboard(Year year) {
+        if (cutoffService.isAbleToGuessYear(year)) {
+            return null;
+        }
         List<PositionResult> races = placementRaceRepository.findAllByYearOrderByPosition(year);
         int maxPos = races.isEmpty() ? 0 : races.get(races.size() - 1).getPosition().toValue();
         return placementRaceRepository.getPlacementsByPositionAndYear(maxPos, year.value).stream()

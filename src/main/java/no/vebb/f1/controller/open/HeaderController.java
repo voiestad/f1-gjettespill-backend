@@ -1,5 +1,6 @@
 package no.vebb.f1.controller.open;
 
+import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.collection.Race;
@@ -13,9 +14,9 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidYearException;
-import no.vebb.f1.exception.NoAvailableRaceException;
 import no.vebb.f1.response.HeaderResponse;
+
+import java.util.Optional;
 
 @RestController
 public class HeaderController {
@@ -48,33 +49,33 @@ public class HeaderController {
     }
 
     private boolean isRaceGuess() {
-        try {
-            Year year = yearService.getCurrentYear();
-            RaceId raceId = raceService.getLatestRaceForPlaceGuess(year).raceId();
-            return !cutoffService.isAbleToGuessRace(raceId);
-        } catch (InvalidYearException | NoAvailableRaceException e) {
+        Optional<Year> optYear = yearService.getCurrentYear();
+        if (optYear.isEmpty()) {
             return false;
         }
+        Year year = optYear.get();
+        return raceService.getLatestRaceForPlaceGuess(year).map(RaceOrderEntity::raceId)
+                .filter(raceId -> !cutoffService.isAbleToGuessRace(raceId)).isPresent();
     }
 
     private boolean isRaceToGuess() {
-        try {
-            RaceId raceId = resultService.getCurrentRaceIdToGuess();
-            return cutoffService.isAbleToGuessRace(raceId);
-        } catch (NoAvailableRaceException e) {
-            return false;
-        }
+        return resultService.getCurrentRaceIdToGuess().filter(cutoffService::isAbleToGuessRace).isPresent();
     }
 
     private Race ongoingRaceId() {
-        try {
-            Year year = yearService.getCurrentYear();
-            RaceId sgId = raceService.getLatestStartingGridRaceId(year);
-            RaceId rrId = raceService.getLatestRaceId(year);
+        Optional<Year> optYear = yearService.getCurrentYear();
+        if (optYear.isEmpty()) {
+            return null;
+        }
+        Year year = optYear.get();
+        Optional<RaceId> optSgId = raceService.getLatestStartingGridRaceId(year);
+        Optional<RaceId> optRrId = raceService.getLatestRaceId(year);
+        if (optSgId.isPresent() && optRrId.isPresent()) {
+            RaceId sgId = optSgId.get();
+            RaceId rrId = optRrId.get();
             if (!sgId.equals(rrId)) {
-                return raceService.getRaceFromId(sgId);
+                return raceService.getRaceFromId(optSgId.get());
             }
-        } catch (InvalidYearException ignored) {
         }
         return null;
     }

@@ -7,9 +7,9 @@ import no.vebb.f1.competitors.domain.Driver;
 
 public record ColoredCompetitor<T>(T competitor, Color color) {
     public static ColoredCompetitor<Driver> fromIColoredCompetitorToDriver(IColoredCompetitor iColoredCompetitor) {
-        return new ColoredCompetitor<>(new Driver(iColoredCompetitor.getCompetitorName()), new Color(iColoredCompetitor.getColor()));
+        return new ColoredCompetitor<>(new Driver(iColoredCompetitor.getCompetitorName()), Color.getColor(iColoredCompetitor.getColor()).orElse(null));
     }
     public static ColoredCompetitor<Constructor> fromIColoredCompetitorToConstructor(IColoredCompetitor iColoredCompetitor) {
-        return new ColoredCompetitor<>(new Constructor(iColoredCompetitor.getCompetitorName()), new Color(iColoredCompetitor.getColor()));
+        return new ColoredCompetitor<>(new Constructor(iColoredCompetitor.getCompetitorName()), Color.getColor(iColoredCompetitor.getColor()).orElse(null));
     }
 }

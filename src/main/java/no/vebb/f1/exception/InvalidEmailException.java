@@ -1,6 +1,6 @@
 package no.vebb.f1.exception;
 
-public class InvalidEmailException extends RuntimeException {
+public class InvalidEmailException extends Exception {
 	public InvalidEmailException() {
 		super();
 	}

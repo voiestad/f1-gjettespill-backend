@@ -1,4 +1,4 @@
-package no.vebb.f1.graph;
+package no.vebb.f1.placement;
 
 import no.vebb.f1.placement.domain.UserPoints;
 

@@ -10,14 +10,13 @@ import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.collection.ColoredCompetitor;
 import no.vebb.f1.collection.ValuedCompetitor;
-import no.vebb.f1.exception.InvalidConstructorException;
-import no.vebb.f1.exception.InvalidDriverException;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class CompetitorService {
@@ -121,12 +120,14 @@ public class CompetitorService {
     }
 
     public Driver getAlternativeDriverName(String driver, Year year) {
-        try {
-            return driverAlternativeNameRepository.findById(new DriverAlternativeNameId(driver, year))
-                    .map(DriverAlternativeNameEntity::driverName).orElse(getDriver(driver, year));
-        } catch (InvalidDriverException e) {
-            return addDriverYear(driver, year);
+        Optional<Driver> optDriverAltName = driverAlternativeNameRepository
+                .findById(new DriverAlternativeNameId(driver, year))
+                .map(DriverAlternativeNameEntity::driverName);
+        if (optDriverAltName.isPresent()) {
+            return optDriverAltName.get();
         }
+        Optional<Driver> optDriver = getDriver(driver, year);
+        return optDriver.orElseGet(() -> addDriverYear(driver, year));
     }
 
     public Map<String, Driver> getAlternativeDriverNamesYear(Year year) {
@@ -175,20 +176,20 @@ public class CompetitorService {
                 .toList();
     }
 
-    public Driver getDriver(String driverName) throws InvalidDriverException {
-        return driverRepository.findById(new Driver(driverName)).orElseThrow(InvalidDriverException::new).driverName();
+    public Optional<Driver> getDriver(String driverName) {
+        return driverRepository.findById(new Driver(driverName)).map(DriverEntity::driverName);
     }
 
-    public Driver getDriver(String driverName, Year year) throws InvalidDriverException {
-        return driverYearRepository.findById(new DriverId(new Driver(driverName), year)).orElseThrow(InvalidDriverException::new).driverName();
+    public Optional<Driver> getDriver(String driverName, Year year) {
+        return driverYearRepository.findById(new DriverId(new Driver(driverName), year)).map(DriverYearEntity::driverName);
     }
 
-    public Constructor getConstructor(String constructorName) throws InvalidConstructorException {
-        return constructorRepository.findById(new Constructor(constructorName)).orElseThrow(InvalidDriverException::new).constructorName();
+    public Optional<Constructor> getConstructor(String constructorName) {
+        return constructorRepository.findById(new Constructor(constructorName)).map(ConstructorEntity::constructorName);
     }
 
-    public Constructor getConstructor(String constructorName, Year year) throws InvalidConstructorException {
-        return constructorYearRepository.findById(new ConstructorId(new Constructor(constructorName), year)).orElseThrow(InvalidConstructorException::new).constructorName();
+    public Optional<Constructor> getConstructor(String constructorName, Year year) {
+        return constructorYearRepository.findById(new ConstructorId(new Constructor(constructorName), year)).map(ConstructorYearEntity::constructorName);
     }
 
     public void setDriverYearOrder(List<DriverYearEntity> newOrder) {

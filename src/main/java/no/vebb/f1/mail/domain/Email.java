@@ -12,7 +12,7 @@ public class Email {
 
     protected Email() {}
 
-    public Email(String value) {
+    public Email(String value) throws InvalidEmailException {
         this.value = value;
         validate();
     }

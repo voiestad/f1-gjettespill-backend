@@ -28,7 +28,7 @@ public class RaceStats {
 		this.driverStandings = resultService.getDriverStandings(raceId).stream().map(PositionedCompetitor::fromDriverStandings).toList();
 		this.constructorStandings = resultService.getConstructorStandings(raceId).stream().map(PositionedCompetitor::fromConstructorStandings).toList();
 		this.flags = statsService.getRegisteredFlags(raceId);
-		RacePosition position = raceService.getPositionOfRace(raceId);
+		RacePosition position = raceService.getPositionOfRace(raceId).orElse(null);
 		String raceName = raceService.getRaceFromId(raceId).name();
 		this.name = String.format("%s. %s %s", position, raceName, year);
 	}

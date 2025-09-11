@@ -22,15 +22,13 @@ public class SeasonResultsController {
 
     @Transactional
     @PostMapping("/finalize")
-    public ResponseEntity<?> finalizeSeasonResults(@RequestParam("year") int year) {
-        Year validYear = yearService.getYear(year);
-        placementService.finalizeYear(validYear);
+    public ResponseEntity<?> finalizeSeasonResults(@RequestParam("year") Year year) {
+        placementService.finalizeYear(year);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/is-finished/{year}")
-    public ResponseEntity<Boolean> isFinalized(@PathVariable("year") int year) {
-        Year validYear = yearService.getYear(year);
-        return new ResponseEntity<>(yearService.isFinishedYear(validYear), HttpStatus.OK);
+    public ResponseEntity<Boolean> isFinalized(@PathVariable("year") Year year) {
+        return new ResponseEntity<>(yearService.isFinishedYear(year), HttpStatus.OK);
     }
 }

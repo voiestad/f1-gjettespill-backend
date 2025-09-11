@@ -16,7 +16,6 @@ import no.vebb.f1.scoring.userTables.Summary;
 import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidYearException;
 
 import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
@@ -59,19 +58,22 @@ public class ScoreCalculator {
     @Scheduled(initialDelay = TimeUtil.SECOND * 10)
     public void calculateScores() {
         logger.info("Calculating scores");
-        try {
-            calculate();
-        } catch (InvalidYearException e) {
-            logger.warn("Failed to calculate scores due to invalid year: {}", e.getMessage());
+        if (calculate()) {
+            logger.info("Finished calculating scores");
+        } else {
+            logger.warn("Did not calculate scores");
         }
-        logger.info("Finished calculating scores");
     }
 
-    private void calculate() {
+    private boolean calculate() {
         if (cutoffService.isAbleToGuessCurrentYear()) {
-            return;
+            return false;
         }
-        Year year = yearService.getCurrentYear();
+        Optional<Year> optYear = yearService.getCurrentYear();
+        if (optYear.isEmpty()) {
+            return false;
+        }
+        Year year = optYear.get();
         List<UserEntity> guessers = userService.getAllUsers();
         List<RaceId> raceIds = getSeasonRaceIds(year);
         List<PlacementObj> placementObjs = new ArrayList<>();
@@ -106,6 +108,7 @@ public class ScoreCalculator {
             }
         }
         placementService.addUserScores(placementObjs);
+        return true;
     }
 
     private Map<UUID, Placement<UserPoints>> getPlacementMap(List<UserScore> userScores, Function<UserScore, UserPoints> getScore) {

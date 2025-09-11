@@ -18,7 +18,6 @@ import no.vebb.f1.user.UserService;
 import no.vebb.f1.response.UserStatus;
 import no.vebb.f1.collection.Race;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidYearException;
 
 @RestController
 @RequestMapping("/api/public")
@@ -43,17 +42,12 @@ public class GeneralApiController {
 
     @GetMapping("/race/list/{year}")
     public ResponseEntity<List<Race>> listRaces(
-            @PathVariable("year") int year,
+            @PathVariable("year") Year year,
             @RequestParam(required = false, name = "completedOnly", defaultValue = "false") boolean completedOnly) {
-        try {
-            Year validYear = yearService.getYear(year);
-            if (completedOnly) {
-                return new ResponseEntity<>(raceService.getRacesYearFinished(validYear), HttpStatus.OK);
-            }
-            return new ResponseEntity<>(raceService.getRacesYear(validYear), HttpStatus.OK);
-        } catch (InvalidYearException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (completedOnly) {
+            return new ResponseEntity<>(raceService.getRacesYearFinished(year), HttpStatus.OK);
         }
+        return new ResponseEntity<>(raceService.getRacesYear(year), HttpStatus.OK);
     }
 
     @GetMapping("/user/status")

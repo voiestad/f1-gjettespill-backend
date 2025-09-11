@@ -3,7 +3,6 @@ package no.vebb.f1.controller.admin.season;
 import no.vebb.f1.scoring.ScoreService;
 import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +12,6 @@ import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.scoring.domain.Diff;
 import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidDiffException;
 import no.vebb.f1.exception.InvalidPointsException;
 
 @RestController
@@ -31,34 +29,32 @@ public class ManagePointsSystemController {
     @PostMapping("/add")
     @Transactional
     public ResponseEntity<?> addPointsMapping(
-            @RequestParam("year") int year,
+            @RequestParam("year") Year year,
             @RequestParam("category") Category category) {
-        Year validYear = yearService.getYear(year);
-        if (yearService.isFinishedYear(validYear)) {
+        if (yearService.isFinishedYear(year)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         Diff newDiff;
         try {
-            newDiff = scoreService.getMaxDiffInPointsMap(validYear, category).add(new Diff(1));
+            newDiff = scoreService.getMaxDiffInPointsMap(year, category).add(new Diff(1));
         } catch (NullPointerException e) {
             newDiff = new Diff();
         }
-        scoreService.addDiffToPointsMap(category, newDiff, validYear);
+        scoreService.addDiffToPointsMap(category, newDiff, year);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deletePointsMapping(
-            @RequestParam("year") int year,
+            @RequestParam("year") Year year,
             @RequestParam("category") Category category) {
-        Year validYear = yearService.getYear(year);
-        if (yearService.isFinishedYear(validYear)) {
+        if (yearService.isFinishedYear(year)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
-            Diff maxDiff = scoreService.getMaxDiffInPointsMap(validYear, category);
-            scoreService.removeDiffToPointsMap(category, maxDiff, validYear);
+            Diff maxDiff = scoreService.getMaxDiffInPointsMap(year, category);
+            scoreService.removeDiffToPointsMap(category, maxDiff, year);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (NullPointerException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -68,26 +64,24 @@ public class ManagePointsSystemController {
     @PostMapping("/set")
     @Transactional
     public ResponseEntity<?> setPointsMapping(
-            @RequestParam("year") int year,
+            @RequestParam("year") Year year,
             @RequestParam("category") Category category,
             @RequestParam("diff") int diff,
             @RequestParam("points") int points) {
-        Year validYear = yearService.getYear(year);
-        if (yearService.isFinishedYear(validYear)) {
+        if (yearService.isFinishedYear(year)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
             Diff validDiff = new Diff(diff);
-            boolean isValidDiff = scoreService.isValidDiffInPointsMap(category, validDiff, validYear);
+            boolean isValidDiff = scoreService.isValidDiffInPointsMap(category, validDiff, year);
             if (!isValidDiff) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
             UserPoints validPoints = new UserPoints(points);
-            scoreService.setNewDiffToPointsInPointsMap(category, validDiff, validYear, validPoints);
+            scoreService.setNewDiffToPointsInPointsMap(category, validDiff, year, validPoints);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (EmptyResultDataAccessException | InvalidPointsException |
-                 InvalidDiffException e) {
+        } catch (InvalidPointsException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }

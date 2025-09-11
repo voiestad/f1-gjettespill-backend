@@ -1,6 +1,6 @@
 package no.vebb.f1.components;
 
-import no.vebb.f1.exception.YearFinishedException;
+import no.vebb.f1.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.ConversionFailedException;
@@ -10,9 +10,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import no.vebb.f1.user.UserService;
-import no.vebb.f1.exception.InvalidYearException;
-import no.vebb.f1.exception.NoUsernameException;
-import no.vebb.f1.exception.NotAdminException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,12 +20,7 @@ public class GlobalExceptionHandler {
     public GlobalExceptionHandler(UserService userService) {
         this.userService = userService;
     }
-
-    @ExceptionHandler(InvalidYearException.class)
-    public ResponseEntity<?> handleInvalidYear() {
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
-
+    
     @ExceptionHandler(NotAdminException.class)
     public ResponseEntity<?> handleNotAdmin() {
         userService.loadUser().ifPresentOrElse(
@@ -50,6 +42,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConversionFailedException.class)
     public ResponseEntity<String> handleConversionFailed() {
+        return new ResponseEntity<>("Invalid inputted value", HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(DomainConversionException.class)
+    public ResponseEntity<String> handleDomainConversion() {
         return new ResponseEntity<>("Invalid inputted value", HttpStatus.BAD_REQUEST);
     }
 }

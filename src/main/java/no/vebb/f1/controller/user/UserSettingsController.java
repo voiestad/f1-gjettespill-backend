@@ -1,9 +1,6 @@
 package no.vebb.f1.controller.user;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import no.vebb.f1.codes.CodeService;
 import no.vebb.f1.guessing.GuessService;
@@ -171,26 +168,24 @@ public class UserSettingsController {
     @PostMapping("/mail/option/add")
     @Transactional
     public ResponseEntity<?> addMailingOption(@RequestParam("option") int option) {
-        try {
-            UserEntity userEntity = userService.getUser();
-            MailOption mailOption = mailService.getMailOption(option);
-            mailService.addMailOption(userEntity.id(), mailOption);
-        } catch (InvalidEmailException e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        UserEntity userEntity = userService.getUser();
+        Optional<MailOption> mailOption = mailService.getMailOption(option);
+        if (mailOption.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        mailService.addMailOption(userEntity.id(), mailOption.get());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/mail/option/remove")
     @Transactional
     public ResponseEntity<?> removeMailingOption(@RequestParam("option") int option) {
-        try {
-            UserEntity userEntity = userService.getUser();
-            MailOption mailOption = mailService.getMailOption(option);
-            mailService.removeMailOption(userEntity.id(), mailOption);
-        } catch (InvalidEmailException e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        UserEntity userEntity = userService.getUser();
+        Optional<MailOption> mailOption = mailService.getMailOption(option);
+        if (mailOption.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        mailService.removeMailOption(userEntity.id(), mailOption.get());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

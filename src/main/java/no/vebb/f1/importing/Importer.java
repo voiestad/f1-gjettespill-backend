@@ -1,9 +1,6 @@
 package no.vebb.f1.importing;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import java.io.StringWriter;
@@ -23,7 +20,6 @@ import no.vebb.f1.scoring.domain.Diff;
 import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
@@ -33,7 +29,6 @@ import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidYearException;
 
 @Component
 public class Importer {
@@ -60,7 +55,12 @@ public class Importer {
     public void importData() {
         logger.info("Starting import of data to database");
         try {
-            Year year = yearService.getCurrentYear();
+            Optional<Year> optYear = yearService.getCurrentYear();
+            if (optYear.isEmpty()) {
+                logger.error("Could not import data to the database because current year is not valid");
+                return;
+            }
+            Year year = optYear.get();
             Map<Year, List<RaceId>> racesToImportFromList = getActiveRaces();
             boolean shouldImportStandings = false;
 
@@ -106,8 +106,6 @@ public class Importer {
                 }
             }
             logger.info("Finished import of data to database");
-        } catch (InvalidYearException e) {
-            logger.error("Could not import data to the database because current year is not valid");
         } catch (Exception e) {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             StringWriter stringWriter = new StringWriter();
@@ -119,17 +117,17 @@ public class Importer {
     }
 
     private boolean areStandingsUpToDate(Year year) {
-        try {
-            RaceId latestRaceId = raceService.getLatestRaceId(year);
-            try {
-                RaceId standingsRaceId = raceService.getLatestStandingsId(year);
-                return latestRaceId.equals(standingsRaceId);
-            } catch (InvalidYearException e) {
-                return false;
-            }
-        } catch (InvalidYearException e) {
+        Optional<RaceId> optLatestRaceId = raceService.getLatestRaceId(year);
+        if (optLatestRaceId.isEmpty()) {
             return true;
         }
+        RaceId latestRaceId = optLatestRaceId.get();
+        Optional<RaceId> optStandingsRaceId = raceService.getLatestStandingsId(year);
+        if (optStandingsRaceId.isEmpty()) {
+            return true;
+        }
+        RaceId standingsRaceId = optStandingsRaceId.get();
+        return latestRaceId.equals(standingsRaceId);
     }
 
     private Map<Year, List<RaceId>> getActiveRaces() {
@@ -155,14 +153,16 @@ public class Importer {
         } else {
             logger.info("No change in race result");
         }
-        try {
-            Year year = yearService.getCurrentYear();
-            RaceId newestRaceId = raceService.getLatestRaceId(year);
-            if (raceId.equals(newestRaceId)) {
-                logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
-                importStandings(year, new CompetitorPoints());
+        Optional<Year> optYear = yearService.getCurrentYear();
+        if (optYear.isPresent()) {
+            Year year = optYear.get();
+            Optional<RaceId> optNewestRaceId = raceService.getLatestRaceId(year);
+            if (optNewestRaceId.isPresent()) {
+                if (raceId.equals(optNewestRaceId.get())) {
+                    logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
+                    importStandings(year, new CompetitorPoints());
+                }
             }
-        } catch (InvalidYearException | EmptyResultDataAccessException ignored) {
         }
         scoreCalculator.calculateScores();
     }
@@ -209,20 +209,16 @@ public class Importer {
     }
 
     private void refreshLatestStartingGrid(Year year) {
-        try {
-            RaceId raceId = raceService.getLatestStartingGridRaceId(year);
-            importStartingGridData(raceId);
-        } catch (InvalidYearException ignored) {
-        }
+        Optional<RaceId> optRaceId = raceService.getLatestStartingGridRaceId(year);
+        optRaceId.ifPresent(this::importStartingGridData);
     }
 
     private ResultChangeStatus refreshLatestRaceResult(Year year) {
-        try {
-            RaceId raceId = raceService.getLatestRaceId(year);
-            return importRaceResultData(raceId);
-        } catch (InvalidYearException e) {
+        Optional<RaceId> optRaceId = raceService.getLatestRaceId(year);
+        if (optRaceId.isEmpty()) {
             return ResultChangeStatus.NO_CHANGE;
         }
+        return importRaceResultData(optRaceId.get());
     }
 
     private int importStartingGrids(List<RaceId> racesToImportFrom) {
@@ -331,17 +327,17 @@ public class Importer {
     }
 
     private boolean importStandings(Year year, CompetitorPoints expectedChange) {
-        try {
-            RaceId newestRace = raceService.getLatestRaceId(year);
-            ResultChangeStatus driverStatus = importDriverStandings(year, newestRace);
-            ResultChangeStatus constructorStatus = importConstructorStandings(year, newestRace);
-            boolean equalPointsChange = driverStatus.getPointsChange().equals(constructorStatus.getPointsChange());
-            boolean driverValidStatus = validResultStatus(driverStatus, expectedChange);
-            boolean constructorValidStatus = validResultStatus(constructorStatus, expectedChange);
-            return equalPointsChange && driverValidStatus && constructorValidStatus;
-        } catch (InvalidYearException e) {
+        Optional<RaceId> optNewestRace = raceService.getLatestRaceId(year);
+        if (optNewestRace.isEmpty()) {
             throw new RuntimeException("Should not call importStandings without having a race result");
         }
+        RaceId newestRace = optNewestRace.get();
+        ResultChangeStatus driverStatus = importDriverStandings(year, newestRace);
+        ResultChangeStatus constructorStatus = importConstructorStandings(year, newestRace);
+        boolean equalPointsChange = driverStatus.getPointsChange().equals(constructorStatus.getPointsChange());
+        boolean driverValidStatus = validResultStatus(driverStatus, expectedChange);
+        boolean constructorValidStatus = validResultStatus(constructorStatus, expectedChange);
+        return equalPointsChange && driverValidStatus && constructorValidStatus;
     }
 
     private boolean validResultStatus(ResultChangeStatus status, CompetitorPoints expectedChange) {
@@ -372,7 +368,7 @@ public class Importer {
                 return ResultChangeStatus.NO_CHANGE;
             }
             for (PositionedCompetitor<Driver> competitor : currentStandings) {
-                Driver driver = competitorService.getDriver(competitor.name().toString());
+                Driver driver = competitor.name();
                 CompetitorPosition position = new CompetitorPosition(Integer.parseInt(competitor.position()));
                 CompetitorPoints points = competitor.points();
                 resultService.insertDriverIntoStandings(newestRace, driver, position, points);
@@ -385,13 +381,12 @@ public class Importer {
     }
 
     private ResultChangeStatus isDriverStandingsNew(List<PositionedCompetitor<Driver>> standings, Year year) {
-        try {
-            RaceId previousRaceId = raceService.getLatestStandingsId(year);
-            List<PositionedCompetitor<Driver>> previousStandings = resultService.getDriverStandings(previousRaceId).stream().map(PositionedCompetitor::fromDriverStandings).toList();
-            return compareStandings(standings, previousStandings);
-        } catch (InvalidYearException e) {
+        Optional<RaceId> optPreviousRaceId = raceService.getLatestStandingsId(year);
+        if (optPreviousRaceId.isEmpty()) {
             return changeWithSum(standings);
         }
+        List<PositionedCompetitor<Driver>> previousStandings = resultService.getDriverStandings(optPreviousRaceId.get()).stream().map(PositionedCompetitor::fromDriverStandings).toList();
+        return compareStandings(standings, previousStandings);
     }
 
     private ResultChangeStatus importConstructorStandings(Year year, RaceId newestRace) {
@@ -406,7 +401,7 @@ public class Importer {
                     .map(row ->
                             new PositionedCompetitor<>(
                                     String.valueOf(Integer.parseInt(row.get(0))),
-                                    competitorService.getConstructor(row.get(1)),
+                                    competitorService.getConstructor(row.get(1)).orElseThrow(RuntimeException::new),
                                     new CompetitorPoints(Integer.parseInt(row.get(2)))
                             ))
                     .toList();
@@ -429,13 +424,12 @@ public class Importer {
     }
 
     private ResultChangeStatus isConstructorStandingsNew(List<PositionedCompetitor<Constructor>> standings, Year year) {
-        try {
-            RaceId previousRaceId = raceService.getLatestStandingsId(year);
-            List<PositionedCompetitor<Constructor>> previousStandings = resultService.getConstructorStandings(previousRaceId).stream().map(PositionedCompetitor::fromConstructorStandings).toList();
-            return compareStandings(standings, previousStandings);
-        } catch (InvalidYearException e) {
+        Optional<RaceId> optPreviousRaceId = raceService.getLatestStandingsId(year);
+        if (optPreviousRaceId.isEmpty()) {
             return changeWithSum(standings);
         }
+        List<PositionedCompetitor<Constructor>> previousStandings = resultService.getConstructorStandings(optPreviousRaceId.get()).stream().map(PositionedCompetitor::fromConstructorStandings).toList();
+        return compareStandings(standings, previousStandings);
     }
 
     private <T extends Competitor> ResultChangeStatus compareStandings(List<PositionedCompetitor<T>> standings, List<PositionedCompetitor<T>> previousStandings) {

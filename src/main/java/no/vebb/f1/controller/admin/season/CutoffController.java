@@ -39,10 +39,9 @@ public class CutoffController {
     }
 
     @GetMapping("/list/{year}")
-    public ResponseEntity<CutoffResponse> manageCutoff(@PathVariable("year") int year) {
-        Year seasonYear = yearService.getYear(year);
-        List<CutoffRace> races = cutoffService.getCutoffRaces(seasonYear);
-        LocalDateTime cutoffYear = cutoffService.getCutoffYearLocalTime(seasonYear);
+    public ResponseEntity<CutoffResponse> manageCutoff(@PathVariable("year") Year year) {
+        List<CutoffRace> races = cutoffService.getCutoffRaces(year);
+        LocalDateTime cutoffYear = cutoffService.getCutoffYearLocalTime(year).orElse(null);
         CutoffResponse res = new CutoffResponse(races, cutoffYear);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
@@ -69,15 +68,14 @@ public class CutoffController {
     @PostMapping("/set/year")
     @Transactional
     public ResponseEntity<String> setCutoffYear(
-            @RequestParam("year") int year,
+            @RequestParam("year") Year year,
             @RequestParam("cutoff") String cutoff) {
-        Year validYear = yearService.getYear(year);
-        if (yearService.isFinishedYear(validYear)) {
+        if (yearService.isFinishedYear(year)) {
             throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
         }
         try {
             Instant cutoffTime = TimeUtil.parseTimeInput(cutoff);
-            cutoffService.setCutoffYear(cutoffTime, validYear);
+            cutoffService.setCutoffYear(cutoffTime, year);
             new Thread(scoreCalculator::calculateScores).start();
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (DateTimeParseException e) {

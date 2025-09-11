@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Optional;
 
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.collection.CutoffRace;
@@ -13,8 +14,6 @@ import org.springframework.stereotype.Service;
 
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidYearException;
-import no.vebb.f1.exception.NoAvailableRaceException;
 
 @Service
 public class CutoffService {
@@ -29,30 +28,24 @@ public class CutoffService {
         this.yearCutoffRepository = yearCutoffRepository;
     }
 
-    public Instant getCutoffYear(Year year) throws InvalidYearException {
-        return yearCutoffRepository.findById(year).map(YearCutoffEntity::cutoff).orElseThrow(InvalidYearException::new);
+    public Optional<Instant> getCutoffYear(Year year) {
+        return yearCutoffRepository.findById(year).map(YearCutoffEntity::cutoff);
     }
 
-    public Instant getCutoffRace(RaceId raceId) throws NoAvailableRaceException {
-        return raceCutoffRepository.findById(raceId).map(RaceCutoffEntity::cutoff).orElseThrow(NoAvailableRaceException::new);
+    public Optional<Instant> getCutoffRace(RaceId raceId) {
+        return raceCutoffRepository.findById(raceId).map(RaceCutoffEntity::cutoff);
     }
 
     public boolean isAbleToGuessCurrentYear() {
-        try {
-            return isAbleToGuessYear(yearService.getCurrentYear());
-        } catch (InvalidYearException e) {
-            return false;
-        }
+        return yearService.getCurrentYear().filter(this::isAbleToGuessYear).isPresent();
     }
 
     public boolean isAbleToGuessYear(Year year) {
-        Instant cutoff = getCutoffYear(year);
-        return isAbleToGuess(cutoff);
+        return getCutoffYear(year).filter(this::isAbleToGuess).isPresent();
     }
 
-    public boolean isAbleToGuessRace(RaceId raceId) throws NoAvailableRaceException {
-        Instant cutoff = getCutoffRace(raceId);
-        return isAbleToGuess(cutoff);
+    public boolean isAbleToGuessRace(RaceId raceId) {
+        return getCutoffRace(raceId).filter(this::isAbleToGuess).isPresent();
     }
 
     private boolean isAbleToGuess(Instant cutoff) {
@@ -73,8 +66,8 @@ public class CutoffService {
         return calendar.toInstant();
     }
 
-    public LocalDateTime getCutoffYearLocalTime(Year year) {
-        return TimeUtil.instantToLocalTime(getCutoffYear(year));
+    public Optional<LocalDateTime> getCutoffYearLocalTime(Year year) {
+        return getCutoffYear(year).map(TimeUtil::instantToLocalTime);
     }
 
     public void setCutoffRace(Instant cutoffTime, RaceId raceId) {
@@ -85,20 +78,17 @@ public class CutoffService {
         yearCutoffRepository.save(new YearCutoffEntity(year, cutoffTime));
     }
 
-    public long getTimeLeftToGuessRace(RaceId raceId) throws NoAvailableRaceException {
-        Instant now = Instant.now();
-        Instant cutoff = getCutoffRace(raceId);
-        return Duration.between(now, cutoff).toSeconds();
+    public long getTimeLeftToGuessRace(RaceId raceId) {
+        return getCutoffRace(raceId).map(instant -> Duration.between(Instant.now(), instant).toSeconds()).orElse(0L);
     }
 
-    public int getTimeLeftToGuessRaceHours(RaceId raceId) throws NoAvailableRaceException {
+    public int getTimeLeftToGuessRaceHours(RaceId raceId) {
         return (int) (getTimeLeftToGuessRace(raceId) / 3600L);
     }
 
-    public long getTimeLeftToGuessYear() {
-        Instant now = Instant.now();
-        Instant cutoffYear = getCutoffYear(yearService.getCurrentYear());
-        return Duration.between(now, cutoffYear).toSeconds();
+    public long getTimeLeftToGuessYear(Year year) {
+        return getCutoffYear(year)
+                .map(cutoffYear -> Duration.between(Instant.now(), cutoffYear).toSeconds()).orElse(0L);
     }
 
     public List<CutoffRace> getCutoffRaces(Year year) {

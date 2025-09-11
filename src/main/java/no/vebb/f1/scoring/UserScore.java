@@ -19,13 +19,9 @@ import no.vebb.f1.guessing.collection.IUserRaceGuessTable;
 import no.vebb.f1.scoring.userTables.FlagGuess;
 import no.vebb.f1.scoring.userTables.PlaceGuess;
 import no.vebb.f1.scoring.userTables.StandingsGuess;
-import no.vebb.f1.exception.InvalidYearException;
 import no.vebb.f1.year.Year;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class UserScore {
 
@@ -79,18 +75,11 @@ public class UserScore {
     }
 
     private static RaceId getRaceId(Year year, RaceService raceService) {
-        try {
-            return raceService.getLatestRaceId(year);
-        } catch (InvalidYearException e) {
-            return null;
-        }
+        return raceService.getLatestRaceId(year).orElse(null);
     }
 
     private RacePosition getRacePosition() {
-        if (raceId == null) {
-            return null;
-        }
-        return raceService.getPositionOfRace(raceId);
+        return raceId == null ? null : raceService.getPositionOfRace(raceId).orElse(null);
     }
 
     private void initializeDriversGuesses() {

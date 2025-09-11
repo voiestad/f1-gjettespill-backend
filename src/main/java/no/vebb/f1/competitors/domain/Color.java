@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.exception.InvalidColorException;
 import org.springframework.lang.NonNull;
+
+import java.util.Optional;
 
 @Embeddable
 public class Color {
@@ -14,18 +15,20 @@ public class Color {
 
 	protected Color() {}
 
-	public Color(String value) throws InvalidColorException {
+	private Color(String value) {
 		this.value = value;
-		validate();
 	}
 
-	private void validate() throws InvalidColorException {
-		if (value == null) {
-			return;
+	public static Optional<Color> getColor(String value) {
+		Color color = new Color(value);
+		if (color.isValid()) {
+			return Optional.of(color);
 		}
-		if (!value.matches("^#[0-9A-Fa-f]{6}$")) {
-			throw new InvalidColorException(value + " is not a valid color");
-		}
+		return Optional.empty();
+	}
+
+	private boolean isValid() {
+		return value != null && !value.matches("^#[0-9A-Fa-f]{6}$");
 	}
 
 	@JsonValue

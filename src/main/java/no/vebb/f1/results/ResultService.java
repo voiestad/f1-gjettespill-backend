@@ -18,11 +18,11 @@ import no.vebb.f1.results.raceResult.RaceResultRepository;
 import no.vebb.f1.results.startingGrid.StartingGridEntity;
 import no.vebb.f1.results.startingGrid.StartingGridRepository;
 import no.vebb.f1.collection.ColoredCompetitor;
-import no.vebb.f1.exception.NoAvailableRaceException;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ResultService {
@@ -90,15 +90,15 @@ public class ResultService {
         return raceResultRepository.existsByIdRaceId(raceId);
     }
 
-    public RaceId getCurrentRaceIdToGuess() throws NoAvailableRaceException {
+    public Optional<RaceId> getCurrentRaceIdToGuess() {
         List<StartingGridEntity> startingGridEntities = startingGridRepository.findAllByNotInRaceResult();
         if (startingGridEntities.isEmpty()) {
-            throw new NoAvailableRaceException("No starting grid found that is not in race result");
+            return Optional.empty();
         }
         if (startingGridEntities.size() > 1) {
-            throw new NoAvailableRaceException("Too many starting grids found");
+            return Optional.empty();
         }
-        return startingGridEntities.get(0).raceId();
+        return Optional.of(startingGridEntities.get(0).raceId());
     }
 
     public List<Driver> getDriverStandings(RaceId raceId, Year year) {

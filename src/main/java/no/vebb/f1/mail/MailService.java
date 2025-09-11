@@ -24,14 +24,11 @@ import no.vebb.f1.user.admin.AdminRepository;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.collection.UserNotifiedCount;
 import no.vebb.f1.race.RaceId;
-import no.vebb.f1.exception.InvalidEmailException;
-import no.vebb.f1.exception.InvalidYearException;
-import no.vebb.f1.exception.NoAvailableRaceException;
+import no.vebb.f1.year.Year;
 import no.vebb.f1.year.YearService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -39,6 +36,7 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -78,48 +76,54 @@ public class MailService {
 
     @Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
     public void notifyUsers() {
-        try {
-            RaceOrderEntity race = raceService.getLatestRaceForPlaceGuess(yearService.getCurrentYear());
-            RaceId raceId = race.raceId();
-            long timeLeft = cutoffService.getTimeLeftToGuessRace(raceId);
-            if (timeLeft < 0) {
-                return;
-            }
-            int timeLeftHours = (int) (timeLeft / 3600);
-            List<UserMail> mailingList = getMailingList(raceId);
-            List<NotifiedEntity> notifications = new ArrayList<>();
-            for (UserMail user : mailingList) {
-                UUID userId = user.userEntity().id();
-                int notifiedCount = notifiedRepository.countAllByRaceIdAndUserId(raceId, userId);
-                List<MailOption> options = getMailingPreference(userId);
-                for (MailOption option : options) {
-                    if (notifiedCount > 0) {
-                        notifiedCount--;
-                        continue;
-                    }
-                    if (option.value <= timeLeftHours) {
-                        break;
-                    }
-                    try {
-                        MimeMessage message = mailSender.createMimeMessage();
-                        message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
-                        message.addRecipients(Message.RecipientType.TO, user.email().toString());
-                        message.setSubject("F1 Gjettespill påminnelse", "UTF-8");
-                        message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
-                        mailSender.send(message);
-                        notifications.add(new NotifiedEntity(userId, raceId));
-                        logger.info("Successfully notified '{}' about '{}'", userId, race.name());
-                    } catch (MessagingException e) {
-                        logger.info("Message fail");
-                    } catch (UnsupportedEncodingException e) {
-                        logger.info("Encoding fail");
-                    }
+        Optional<Year> optYear = yearService.getCurrentYear();
+        if (optYear.isEmpty()) {
+            return;
+        }
+        Year year = optYear.get();
+        Optional<RaceOrderEntity> optRace = raceService.getLatestRaceForPlaceGuess(year);
+        if (optRace.isEmpty()) {
+            return;
+        }
+        RaceOrderEntity race = optRace.get();
+        RaceId raceId = race.raceId();
+        long timeLeft = cutoffService.getTimeLeftToGuessRace(raceId);
+        if (timeLeft < 0) {
+            return;
+        }
+        int timeLeftHours = (int) (timeLeft / 3600);
+        List<UserMail> mailingList = getMailingList(raceId);
+        List<NotifiedEntity> notifications = new ArrayList<>();
+        for (UserMail user : mailingList) {
+            UUID userId = user.userEntity().id();
+            int notifiedCount = notifiedRepository.countAllByRaceIdAndUserId(raceId, userId);
+            List<MailOption> options = getMailingPreference(userId);
+            for (MailOption option : options) {
+                if (notifiedCount > 0) {
+                    notifiedCount--;
+                    continue;
+                }
+                if (option.value <= timeLeftHours) {
                     break;
                 }
+                try {
+                    MimeMessage message = mailSender.createMimeMessage();
+                    message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
+                    message.addRecipients(Message.RecipientType.TO, user.email().toString());
+                    message.setSubject("F1 Gjettespill påminnelse", "UTF-8");
+                    message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
+                    mailSender.send(message);
+                    notifications.add(new NotifiedEntity(userId, raceId));
+                    logger.info("Successfully notified '{}' about '{}'", userId, race.name());
+                } catch (MessagingException e) {
+                    logger.info("Message fail");
+                } catch (UnsupportedEncodingException e) {
+                    logger.info("Encoding fail");
+                }
+                break;
             }
-            notifiedRepository.saveAll(notifications);
-        } catch (InvalidYearException | EmptyResultDataAccessException | NoAvailableRaceException ignored) {
         }
+        notifiedRepository.saveAll(notifications);
     }
 
     private String getMessageContent(UserMail user, RaceOrderEntity race, int timeLeft) {
@@ -228,7 +232,7 @@ public class MailService {
                 .toList();
     }
 
-    public MailOption getMailOption(int option) {
-        return mailOptionRepository.findById(new MailOption(option)).orElseThrow(InvalidEmailException::new).mailOption();
+    public Optional<MailOption> getMailOption(int option) {
+        return mailOptionRepository.findById(new MailOption(option)).map(MailOptionEntity::mailOption);
     }
 }
