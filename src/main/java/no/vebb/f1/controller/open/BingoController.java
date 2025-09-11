@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import no.vebb.f1.bingo.BingoService;
-import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,7 +58,8 @@ public class BingoController {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the bingo can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         if (bingoService.isBingoCardAdded(year)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -76,7 +76,8 @@ public class BingoController {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the bingo can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         if (!bingoService.isBingoCardAdded(year)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -97,7 +98,8 @@ public class BingoController {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the bingo can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the bingo can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         if (!bingoService.toogleMarkBingoSquare(year, id)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);

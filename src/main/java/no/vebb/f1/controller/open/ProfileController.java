@@ -12,7 +12,6 @@ import no.vebb.f1.scoring.ScoreService;
 import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.scoring.UserScoreResponse;
 import no.vebb.f1.race.RaceId;
-import no.vebb.f1.exception.InvalidRaceException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -82,17 +81,22 @@ public class ProfileController {
             }
             return getGuesserProfileYear(userEntity, inputYear);
         }
-        try {
-            RaceId raceId = raceService.getRaceId(inputRaceId);
-            Year year = raceService.getYearFromRaceId(raceId);
-            if (isAbleToSeeGuesses(userEntity, year)) {
-                UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, raceService, placementService, guessService, scoreService, resultService);
-                return new ResponseEntity<>(res, HttpStatus.OK);
-            }
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        } catch (InvalidRaceException e) {
+        Optional<RaceId> optRaceId = raceService.getRaceId(inputRaceId);
+        if (optRaceId.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        RaceId raceId = optRaceId.get();
+        Optional<Year> optYear = raceService.getYearFromRaceId(raceId);
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        Year year = optYear.get();
+        if (!isAbleToSeeGuesses(userEntity, year)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, raceService,
+                placementService, guessService, scoreService, resultService);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     private ResponseEntity<UserScoreResponse> getUpToDate(UserEntity userEntity) {

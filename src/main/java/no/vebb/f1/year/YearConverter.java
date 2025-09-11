@@ -15,9 +15,6 @@ public class YearConverter implements Converter<String, Year> {
 
     @Override
     public Year convert(String source) {
-        if (source == null) {
-            throw new DomainConversionException("Year is null");
-        }
         try {
             int year = Integer.parseInt(source);
             return yearService.getYear(year).orElseThrow(DomainConversionException::new);

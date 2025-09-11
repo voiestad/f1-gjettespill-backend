@@ -6,7 +6,6 @@ import java.util.Optional;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.stats.StatsService;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,6 @@ import no.vebb.f1.collection.RegisteredFlag;
 import no.vebb.f1.stats.domain.Flag;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.stats.domain.SessionType;
-import no.vebb.f1.exception.InvalidRaceException;
 
 @RestController
 @RequestMapping("/api/admin/flag")
@@ -44,14 +42,9 @@ public class FlagController {
     }
 
     @GetMapping("/list/{id}")
-    public ResponseEntity<List<RegisteredFlag>> getRegisteredFlag(@PathVariable("id") int raceId) {
-        try {
-            RaceId validRaceId = raceService.getRaceId(raceId);
-            List<RegisteredFlag> registeredFlags = statsService.getRegisteredFlags(validRaceId);
-            return new ResponseEntity<>(registeredFlags, HttpStatus.OK);
-        } catch (InvalidRaceException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<List<RegisteredFlag>> getRegisteredFlag(@PathVariable("id") RaceId raceId) {
+        List<RegisteredFlag> registeredFlags = statsService.getRegisteredFlags(raceId);
+        return new ResponseEntity<>(registeredFlags, HttpStatus.OK);
     }
 
     @PostMapping("/add")
@@ -59,22 +52,23 @@ public class FlagController {
     public ResponseEntity<?> registerFlag(
             @RequestParam("flag") Flag flag,
             @RequestParam("round") int round,
-            @RequestParam("raceId") int raceId,
+            @RequestParam("raceId") RaceId raceId,
             @RequestParam("sessionType") SessionType sessionType) {
-        try {
-            RaceId validRaceId = raceService.getRaceId(raceId);
-            Year year = raceService.getYearFromRaceId(validRaceId);
-            if (yearService.isFinishedYear(year)) {
-                throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
-            }
-            if (!isValidRound(round)) {
-                throw new IllegalArgumentException("Round : '" + round + "' out of bounds. Range: 1-100.");
-            }
-            statsService.insertFlagStats(flag, round, validRaceId, sessionType);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (InvalidRaceException | IllegalArgumentException e) {
+        Optional<Year> optYear = raceService.getYearFromRaceId(raceId);
+        if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        Year year = optYear.get();
+        if (yearService.isFinishedYear(year)) {
+            return new ResponseEntity<>("Year '" + year + "' is over and the flags can't be changed",
+                    HttpStatus.FORBIDDEN);
+        }
+        if (!isValidRound(round)) {
+            return new ResponseEntity<>("Round : '" + round + "' out of bounds. Range: 1-100.",
+                    HttpStatus.BAD_REQUEST);
+        }
+        statsService.insertFlagStats(flag, round, raceId, sessionType);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/delete")
@@ -86,7 +80,8 @@ public class FlagController {
         }
         Year year = optYear.get();
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the flags can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the flags can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         statsService.deleteFlagStatsById(id);
         return new ResponseEntity<>(HttpStatus.OK);

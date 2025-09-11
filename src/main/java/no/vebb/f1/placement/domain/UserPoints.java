@@ -4,26 +4,32 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.exception.InvalidPointsException;
+
+import java.util.Optional;
 
 @Embeddable
 public class UserPoints implements Comparable<UserPoints> {
 	@Column(name = "points", nullable = false)
 	public final int value;
 
-	public UserPoints(int value) throws InvalidPointsException {
+	private UserPoints(int value) {
 		this.value = value;
-		validate();
 	}
 
 	public UserPoints() {
 		this.value = 0;
 	}
 
-	private void validate() throws InvalidPointsException {
-		if (value < 0) {
-			throw new InvalidPointsException("Points can't be negative");
+	public static Optional<UserPoints> getUserPoints(int value) {
+		UserPoints userPoints = new UserPoints(value);
+		if (userPoints.isValid()) {
+			return Optional.of(userPoints);
 		}
+		return Optional.empty();
+	}
+
+	private boolean isValid() {
+		return value >= 0;
 	}
 
 	public UserPoints add(UserPoints other) {

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ScoreService {
@@ -33,12 +34,12 @@ public class ScoreService {
         return map;
     }
 
-    public Diff getMaxDiffInPointsMap(Year year, Category category) {
+    public Optional<Diff> getMaxDiffInPointsMap(Year year, Category category) {
         List<DiffPointsMapEntity> diffs = diffPointsMapRepository.findAllByIdYearAndIdCategoryNameOrderByIdDiff(year, category);
         if (diffs.isEmpty()) {
-            return new Diff();
+            return Optional.empty();
         }
-        return diffs.get(diffs.size() - 1).diff();
+        return Optional.of(diffs.get(diffs.size() - 1).diff());
     }
 
     public void addDiffToPointsMap(Category category, Diff diff, Year year) {

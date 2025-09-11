@@ -2,6 +2,7 @@ package no.vebb.f1.util;
 
 import java.util.List;
 
+import no.vebb.f1.collection.Race;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.race.RacePosition;
@@ -29,7 +30,7 @@ public class RaceStats {
 		this.constructorStandings = resultService.getConstructorStandings(raceId).stream().map(PositionedCompetitor::fromConstructorStandings).toList();
 		this.flags = statsService.getRegisteredFlags(raceId);
 		RacePosition position = raceService.getPositionOfRace(raceId).orElse(null);
-		String raceName = raceService.getRaceFromId(raceId).name();
+		String raceName = raceService.getRaceFromId(raceId).map(Race::name).orElse(null);
 		this.name = String.format("%s. %s %s", position, raceName, year);
 	}
 }

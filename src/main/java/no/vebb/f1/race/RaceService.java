@@ -3,7 +3,6 @@ package no.vebb.f1.race;
 import jakarta.persistence.EntityManager;
 import no.vebb.f1.collection.Race;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidRaceException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,8 +21,8 @@ public class RaceService {
         this.entityManager = entityManager;
     }
 
-    public Year getYearFromRaceId(RaceId raceId) throws InvalidRaceException {
-        return raceOrderRepository.findById(raceId).map(RaceOrderEntity::year).orElseThrow(InvalidRaceException::new);
+    public Optional<Year> getYearFromRaceId(RaceId raceId) {
+        return raceOrderRepository.findById(raceId).map(RaceOrderEntity::year);
     }
 
     public Optional<RaceId> getLatestRaceId(Year year) {
@@ -134,14 +133,13 @@ public class RaceService {
                 .toList();
     }
 
-    public Race getRaceFromId(RaceId raceId) {
+    public Optional<Race> getRaceFromId(RaceId raceId) {
         return raceOrderRepository.findById(raceId)
-                .map(race -> new Race(race.position(), race.name(), raceId, race.year()))
-                .orElseThrow(InvalidRaceException::new);
+                .map(race -> new Race(race.position(), race.name(), raceId, race.year()));
     }
 
-    public RaceId getRaceId(int raceId) {
-        return raceRepository.findById(new RaceId(raceId)).orElseThrow(InvalidRaceException::new).raceId();
+    public Optional<RaceId> getRaceId(int raceId) {
+        return raceRepository.findById(new RaceId(raceId)).map(RaceEntity::raceId);
     }
 
 }

@@ -19,7 +19,7 @@ public class DiffPointsMap {
 	public UserPoints getPoints(Diff diff) {
 		UserPoints points = map.get(diff);
 		if (points == null) {
-			return new UserPoints(0);
+			return new UserPoints();
 		}
 		return points;
 	}

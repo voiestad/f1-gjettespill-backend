@@ -1,7 +1,6 @@
 package no.vebb.f1.controller.admin.season;
 
 import no.vebb.f1.scoring.ScoreService;
-import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +11,8 @@ import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.scoring.domain.Diff;
 import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidPointsException;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/admin/season/points")
@@ -32,12 +32,14 @@ public class ManagePointsSystemController {
             @RequestParam("year") Year year,
             @RequestParam("category") Category category) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
+        Optional<Diff> optMaxDiff = scoreService.getMaxDiffInPointsMap(year, category);
         Diff newDiff;
-        try {
-            newDiff = scoreService.getMaxDiffInPointsMap(year, category).add(new Diff(1));
-        } catch (NullPointerException e) {
+        if (optMaxDiff.isPresent()) {
+            newDiff = optMaxDiff.get().add(new Diff(1));
+        } else {
             newDiff = new Diff();
         }
         scoreService.addDiffToPointsMap(category, newDiff, year);
@@ -50,15 +52,16 @@ public class ManagePointsSystemController {
             @RequestParam("year") Year year,
             @RequestParam("category") Category category) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
-        try {
-            Diff maxDiff = scoreService.getMaxDiffInPointsMap(year, category);
-            scoreService.removeDiffToPointsMap(category, maxDiff, year);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (NullPointerException e) {
+        Optional<Diff> optMaxDiff = scoreService.getMaxDiffInPointsMap(year, category);
+        if (optMaxDiff.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        scoreService.removeDiffToPointsMap(category, optMaxDiff.get(), year);
+        return new ResponseEntity<>(HttpStatus.OK);
+
     }
 
     @PostMapping("/set")
@@ -66,23 +69,17 @@ public class ManagePointsSystemController {
     public ResponseEntity<?> setPointsMapping(
             @RequestParam("year") Year year,
             @RequestParam("category") Category category,
-            @RequestParam("diff") int diff,
-            @RequestParam("points") int points) {
+            @RequestParam("diff") Diff diff,
+            @RequestParam("points") UserPoints points) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the race can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
-        try {
-            Diff validDiff = new Diff(diff);
-            boolean isValidDiff = scoreService.isValidDiffInPointsMap(category, validDiff, year);
-            if (!isValidDiff) {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-
-            UserPoints validPoints = new UserPoints(points);
-            scoreService.setNewDiffToPointsInPointsMap(category, validDiff, year, validPoints);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (InvalidPointsException e) {
+        boolean isValidDiff = scoreService.isValidDiffInPointsMap(category, diff, year);
+        if (!isValidDiff) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        scoreService.setNewDiffToPointsInPointsMap(category, diff, year, points);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

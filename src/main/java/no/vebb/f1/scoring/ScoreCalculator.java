@@ -118,16 +118,17 @@ public class ScoreCalculator {
                 .toList();
         Map<UUID, Placement<UserPoints>> placementMap = new HashMap<>();
         Placement<UserPoints> previousPlacement = null;
-        for (int i = 0; i < scoredUsers.size(); i++) {
-            ScoredUser scoredUser = scoredUsers.get(i);
+        UserPosition userPos = new UserPosition();
+        for (ScoredUser scoredUser : scoredUsers) {
             Placement<UserPoints> placement;
             if (previousPlacement != null && previousPlacement.value().equals(scoredUser.score())) {
                 placement = new Placement<>(previousPlacement.pos(), scoredUser.score());
             } else {
-                placement = new Placement<>(new UserPosition( i+1), scoredUser.score());
+                placement = new Placement<>(userPos, scoredUser.score());
             }
             placementMap.put(scoredUser.id, placement);
             previousPlacement = placement;
+            userPos = userPos.next();
         }
         return placementMap;
     }

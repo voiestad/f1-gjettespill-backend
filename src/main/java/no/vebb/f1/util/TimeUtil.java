@@ -22,10 +22,9 @@ public class TimeUtil {
 		return Year.now().getValue();
 	}
 
-	public static Instant parseTimeInput(String inputTime) throws DateTimeParseException {
-		LocalDateTime localDateTime = LocalDateTime.parse(inputTime);
+	public static Instant localTimeToInstant(LocalDateTime inputTime) throws DateTimeParseException {
 		ZoneId zoneId = ZoneId.of("Europe/Paris");
-		ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);
+		ZonedDateTime zonedDateTime = inputTime.atZone(zoneId);
 		return zonedDateTime.toInstant();
 	}
 

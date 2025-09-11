@@ -3,8 +3,9 @@ package no.vebb.f1.results.domain;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.exception.InvalidPositionException;
 import org.springframework.lang.NonNull;
+
+import java.util.Optional;
 
 @Embeddable
 public class CompetitorPosition implements Comparable<CompetitorPosition> {
@@ -15,11 +16,15 @@ public class CompetitorPosition implements Comparable<CompetitorPosition> {
         this.value = 1;
     }
 
-    public CompetitorPosition(int value) {
-        if (value < 1) {
-            throw new InvalidPositionException("Positions can't be non-positive. Was " + value);
-        }
+    private CompetitorPosition(int value) {
         this.value = value;
+    }
+
+    public static Optional<CompetitorPosition> getCompetitorPosition(int value) {
+        if (value < 1) {
+            return Optional.empty();
+        }
+        return Optional.of(new CompetitorPosition(value));
     }
 
     public CompetitorPosition next() {

@@ -3,8 +3,9 @@ package no.vebb.f1.race;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.exception.InvalidPositionException;
 import org.springframework.lang.NonNull;
+
+import java.util.Optional;
 
 @Embeddable
 public class RacePosition implements Comparable<RacePosition> {
@@ -15,11 +16,15 @@ public class RacePosition implements Comparable<RacePosition> {
         this.value = 1;
     }
 
-    public RacePosition(int value) {
-        if (value < 1) {
-            throw new InvalidPositionException("Positions can't be non-positive. Was " + value);
-        }
+    private RacePosition(int value) {
         this.value = value;
+    }
+
+    public static Optional<RacePosition> getRacePosition(int value) {
+        if (value < 1) {
+            return Optional.empty();
+        }
+        return Optional.of(new RacePosition(value));
     }
 
     public RacePosition next() {

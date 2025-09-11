@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     public GlobalExceptionHandler(UserService userService) {
         this.userService = userService;
     }
-    
+
     @ExceptionHandler(NotAdminException.class)
     public ResponseEntity<?> handleNotAdmin() {
         userService.loadUser().ifPresentOrElse(
@@ -33,11 +33,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoUsernameException.class)
     public ResponseEntity<?> handleNoUsername() {
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-    }
-
-    @ExceptionHandler(YearFinishedException.class)
-    public ResponseEntity<?> handleYearFinished() {
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(ConversionFailedException.class)

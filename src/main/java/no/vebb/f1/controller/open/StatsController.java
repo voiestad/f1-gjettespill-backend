@@ -13,31 +13,30 @@ import org.springframework.web.bind.annotation.RestController;
 import no.vebb.f1.util.RaceStats;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
-import no.vebb.f1.exception.InvalidRaceException;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/public/stats")
 public class StatsController {
 
-	private final ResultService resultService;
-	private final RaceService raceService;
-	private final StatsService statsService;
+    private final ResultService resultService;
+    private final RaceService raceService;
+    private final StatsService statsService;
 
-	public StatsController(ResultService resultService, RaceService raceService, StatsService statsService) {
-		this.resultService = resultService;
-		this.raceService = raceService;
-		this.statsService = statsService;
-	}
+    public StatsController(ResultService resultService, RaceService raceService, StatsService statsService) {
+        this.resultService = resultService;
+        this.raceService = raceService;
+        this.statsService = statsService;
+    }
 
-	@GetMapping("/race/{raceId}")
-	public ResponseEntity<RaceStats> raceStats(@PathVariable("raceId") int raceId) {
-		try {
-			RaceId validRaceId = raceService.getRaceId(raceId);
-			Year year = raceService.getYearFromRaceId(validRaceId);
-			RaceStats res = new RaceStats(validRaceId, year, resultService, raceService, statsService);
-			return new ResponseEntity<>(res, HttpStatus.OK);
-		} catch (InvalidRaceException e) {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
+    @GetMapping("/race/{raceId}")
+    public ResponseEntity<RaceStats> raceStats(@PathVariable("raceId") RaceId raceId) {
+        Optional<Year> year = raceService.getYearFromRaceId(raceId);
+        if (year.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        RaceStats res = new RaceStats(raceId, year.get(), resultService, raceService, statsService);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
 }

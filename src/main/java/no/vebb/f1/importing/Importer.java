@@ -241,8 +241,8 @@ public class Importer {
     private void insertStartingGridData(RaceId raceId, List<List<String>> startingGrid) {
         try {
             for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
-                CompetitorPosition position = new CompetitorPosition(Integer.parseInt(row.get(0)));
-                Driver driver = getDriver(row.get(2), raceId);
+                CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(row.get(0))).orElseThrow(RuntimeException::new);
+                Driver driver = getDriverOrAdd(row.get(2), raceId);
                 resultService.insertDriverStartingGrid(raceId, position, driver);
             }
 
@@ -293,7 +293,7 @@ public class Importer {
     private void insertRaceResultRow(RaceId raceId, List<String> row, CompetitorPosition finishingPosition) {
         String position = row.get(0);
         Driver driver = getDriver(row.get(2), raceId);
-        CompetitorPoints points = new CompetitorPoints((int) Double.parseDouble(row.get(6)));
+        CompetitorPoints points = CompetitorPoints.getCompetitorPoints(Integer.parseInt(row.get(6))).orElseThrow(RuntimeException::new);
         resultService.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
     }
 
@@ -321,8 +321,11 @@ public class Importer {
             return false;
         }
         raceService.insertRace(raceId, raceName);
-        RaceId validRaceId = raceService.getRaceId(raceId);
-        raceService.insertRaceOrder(validRaceId, year, position);
+        Optional<RaceId> validRaceId = raceService.getRaceId(raceId);
+        if (validRaceId.isEmpty()) {
+            throw new RuntimeException("Race id '" + raceId + "' could not be added");
+        }
+        raceService.insertRaceOrder(validRaceId.get(), year, position);
         return true;
     }
 
@@ -359,7 +362,7 @@ public class Importer {
                             new PositionedCompetitor<>(
                                     String.valueOf(Integer.parseInt(row.get(0))),
                                     getDriver(row.get(1), year),
-                                    new CompetitorPoints(Integer.parseInt(row.get(4)))
+                                    CompetitorPoints.getCompetitorPoints(Integer.parseInt(row.get(4))).orElseThrow(RuntimeException::new)
                             ))
                     .toList();
             ResultChangeStatus status = isDriverStandingsNew(currentStandings, year);
@@ -369,7 +372,7 @@ public class Importer {
             }
             for (PositionedCompetitor<Driver> competitor : currentStandings) {
                 Driver driver = competitor.name();
-                CompetitorPosition position = new CompetitorPosition(Integer.parseInt(competitor.position()));
+                CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(competitor.position())).orElseThrow(RuntimeException::new);
                 CompetitorPoints points = competitor.points();
                 resultService.insertDriverIntoStandings(newestRace, driver, position, points);
             }
@@ -402,7 +405,7 @@ public class Importer {
                             new PositionedCompetitor<>(
                                     String.valueOf(Integer.parseInt(row.get(0))),
                                     competitorService.getConstructor(row.get(1)).orElseThrow(RuntimeException::new),
-                                    new CompetitorPoints(Integer.parseInt(row.get(2)))
+                                    CompetitorPoints.getCompetitorPoints(Integer.parseInt(row.get(2))).orElseThrow(RuntimeException::new)
                             ))
                     .toList();
             ResultChangeStatus status = isConstructorStandingsNew(currentStandings, year);
@@ -411,7 +414,7 @@ public class Importer {
                 return ResultChangeStatus.NO_CHANGE;
             }
             for (PositionedCompetitor<Constructor> competitor : currentStandings) {
-                CompetitorPosition position = new CompetitorPosition(Integer.parseInt(competitor.position()));
+                CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(competitor.position())).orElseThrow(RuntimeException::new);
                 CompetitorPoints points = competitor.points();
                 Constructor validConstructor = competitor.name();
                 resultService.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
@@ -450,7 +453,8 @@ public class Importer {
             }
         }
         Diff diff = new Diff(compPoints(standings).value - compPoints(previousStandings).value);
-        status.setPointsChange(new CompetitorPoints(diff.toValue()));
+
+        status.setPointsChange(CompetitorPoints.fromDiff(diff));
         return status;
     }
 
@@ -471,12 +475,28 @@ public class Importer {
         return driverName.substring(0, driverName.length() - 3);
     }
 
+    private Driver getDriverOrAdd(String driverName, RaceId raceId) {
+        Optional<Year> optYear = raceService.getYearFromRaceId(raceId);
+        if (optYear.isEmpty()) {
+            throw new RuntimeException("No year found for race " + raceId);
+        }
+        return competitorService.getDriverNameOrAdd(parseDriverName(driverName), optYear.get());
+    }
+
     private Driver getDriver(String driverName, RaceId raceId) {
-        return competitorService.getAlternativeDriverName(parseDriverName(driverName), raceId);
+        Optional<Year> optYear = raceService.getYearFromRaceId(raceId);
+        if (optYear.isEmpty()) {
+            throw new RuntimeException("No year found for race " + raceId);
+        }
+        return competitorService.getDriverNameOrAdd(parseDriverName(driverName), optYear.get());
     }
 
     private Driver getDriver(String driverName, Year year) {
-        return competitorService.getAlternativeDriverName(parseDriverName(driverName), year);
+        Optional<Driver> optDriver = competitorService.getAltDriverName(parseDriverName(driverName), year);
+        if (optDriver.isEmpty()) {
+            throw new RuntimeException(driverName + " not found as driver in " + year);
+        }
+        return optDriver.get();
     }
 
     private String getTableString(List<List<String>> table) {

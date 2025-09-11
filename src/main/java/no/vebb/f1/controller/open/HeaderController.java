@@ -74,7 +74,8 @@ public class HeaderController {
             RaceId sgId = optSgId.get();
             RaceId rrId = optRrId.get();
             if (!sgId.equals(rrId)) {
-                return raceService.getRaceFromId(optSgId.get());
+                Optional<Race> race = raceService.getRaceFromId(optSgId.get());
+                return race.orElse(null);
             }
         }
         return null;

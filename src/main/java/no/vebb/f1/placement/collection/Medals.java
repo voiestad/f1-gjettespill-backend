@@ -1,6 +1,14 @@
 package no.vebb.f1.placement.collection;
 
-import no.vebb.f1.placement.domain.MedalCount;
+public class Medals {
+    public final int gold;
+    public final int silver;
+    public final int bronze;
 
-public record Medals(MedalCount gold, MedalCount silver, MedalCount bronze) {
+    public Medals(int gold, int silver, int bronze) {
+        this.gold = gold;
+        this.silver = silver;
+        this.bronze = bronze;
+    }
+
 }

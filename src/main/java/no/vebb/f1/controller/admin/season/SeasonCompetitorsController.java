@@ -9,7 +9,6 @@ import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.competitors.constructor.ConstructorYearEntity;
 import no.vebb.f1.competitors.driver.DriverYearEntity;
 import no.vebb.f1.collection.ColoredCompetitor;
-import no.vebb.f1.exception.YearFinishedException;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +46,8 @@ public class SeasonCompetitorsController {
             @RequestParam("driver") String driver,
             @RequestParam("team") String team) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         Optional<Driver> optDriver = competitorService.getDriver(driver, year);
         Optional<Constructor> optConstructor = competitorService.getConstructor(team, year);
@@ -62,7 +62,8 @@ public class SeasonCompetitorsController {
     @Transactional
     public ResponseEntity<?> addDriverToSeason(@RequestParam("year") Year year, @RequestParam("driver") String driver) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         if (competitorService.getDriver(driver, year).isPresent()) {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
@@ -75,7 +76,8 @@ public class SeasonCompetitorsController {
     @Transactional
     public ResponseEntity<?> removeDriverFromSeason(@RequestParam("year") Year year, @RequestParam("driver") String driver) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         Optional<Driver> optDriver = competitorService.getDriver(driver, year);
         if (optDriver.isEmpty()) {
@@ -100,7 +102,8 @@ public class SeasonCompetitorsController {
             @RequestParam("driver") String driver,
             @RequestParam("newPosition") int position) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         Optional<Driver> optDriver = competitorService.getDriver(driver, year);
         if (optDriver.isEmpty()) {
@@ -144,7 +147,8 @@ public class SeasonCompetitorsController {
             @RequestParam("year") Year year,
             @RequestParam("constructor") String constructor) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         if (competitorService.getConstructor(constructor, year).isPresent()) {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
@@ -159,7 +163,8 @@ public class SeasonCompetitorsController {
             @RequestParam("year") Year year,
             @RequestParam("constructor") String constructor) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         Optional<Constructor> validConstructor = competitorService.getConstructor(constructor);
         if (validConstructor.isEmpty()) {
@@ -184,7 +189,8 @@ public class SeasonCompetitorsController {
             @RequestParam("constructor") String constructor,
             @RequestParam("newPosition") int position) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         Optional<Constructor> optConstructor = competitorService.getConstructor(constructor);
         if (optConstructor.isEmpty()) {
@@ -222,7 +228,8 @@ public class SeasonCompetitorsController {
             @RequestParam("constructor") String constructor,
             @RequestParam("inputColor") String inputColor) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         Optional<Color> optColor = Color.getColor(inputColor);
         if (optColor.isEmpty()) {
@@ -249,7 +256,8 @@ public class SeasonCompetitorsController {
             @RequestParam("driver") String driver,
             @RequestParam("alternativeName") String alternativeName) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         Optional<Driver> optDriver = competitorService.getDriver(driver, year);
         if (optDriver.isEmpty()) {
@@ -267,7 +275,8 @@ public class SeasonCompetitorsController {
             @RequestParam("alternativeName") String alternativeName
     ) {
         if (yearService.isFinishedYear(year)) {
-            throw new YearFinishedException("Year '" + year + "' is over and the competitors can't be changed");
+            return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
+                    HttpStatus.FORBIDDEN);
         }
         Optional<Driver> optDriver = competitorService.getDriver(driver, year);
         if (optDriver.isEmpty()) {

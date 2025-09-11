@@ -3,21 +3,32 @@ package no.vebb.f1.placement.domain;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.exception.InvalidPositionException;
 import org.springframework.lang.NonNull;
+
+import java.util.Optional;
 
 @Embeddable
 public class UserPosition implements Comparable<UserPosition> {
     @Column(name = "placement", nullable = false)
     private int value;
 
-    protected UserPosition() {}
+    public UserPosition() {
+        this.value = 1;
+    }
 
-    public UserPosition(int value) {
-        if (value < 1) {
-            throw new InvalidPositionException("Positions can't be non-positive. Was " + value);
-        }
+    private UserPosition(int value) {
         this.value = value;
+    }
+
+    public static Optional<UserPosition> getUserPosition(int value) {
+        if (value < 1) {
+            return Optional.empty();
+        }
+        return Optional.of(new UserPosition(value));
+    }
+
+    public UserPosition next() {
+        return new UserPosition(this.value + 1);
     }
 
     @JsonValue

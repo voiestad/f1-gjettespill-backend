@@ -6,8 +6,6 @@ import no.vebb.f1.competitors.domain.Color;
 import no.vebb.f1.competitors.domain.Constructor;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.competitors.driver.*;
-import no.vebb.f1.race.RaceId;
-import no.vebb.f1.race.RaceService;
 import no.vebb.f1.collection.ColoredCompetitor;
 import no.vebb.f1.collection.ValuedCompetitor;
 import no.vebb.f1.year.Year;
@@ -23,7 +21,6 @@ public class CompetitorService {
 
     private final DriverYearRepository driverYearRepository;
     private final ConstructorYearRepository constructorYearRepository;
-    private final RaceService raceService;
     private final DriverRepository driverRepository;
     private final EntityManager entityManager;
     private final ConstructorRepository constructorRepository;
@@ -34,7 +31,6 @@ public class CompetitorService {
     public CompetitorService(
             DriverYearRepository driverYearRepository,
             ConstructorYearRepository constructorYearRepository,
-            RaceService raceService,
             DriverRepository driverRepository,
             EntityManager entityManager,
             ConstructorRepository constructorRepository,
@@ -43,7 +39,6 @@ public class CompetitorService {
             ConstructorColorRepository constructorColorRepository) {
         this.driverYearRepository = driverYearRepository;
         this.constructorYearRepository = constructorYearRepository;
-        this.raceService = raceService;
         this.driverRepository = driverRepository;
         this.entityManager = entityManager;
         this.constructorRepository = constructorRepository;
@@ -119,15 +114,18 @@ public class CompetitorService {
         }
     }
 
-    public Driver getAlternativeDriverName(String driver, Year year) {
+    public Optional<Driver> getAltDriverName(String driver, Year year) {
         Optional<Driver> optDriverAltName = driverAlternativeNameRepository
                 .findById(new DriverAlternativeNameId(driver, year))
                 .map(DriverAlternativeNameEntity::driverName);
         if (optDriverAltName.isPresent()) {
-            return optDriverAltName.get();
+            return optDriverAltName;
         }
-        Optional<Driver> optDriver = getDriver(driver, year);
-        return optDriver.orElseGet(() -> addDriverYear(driver, year));
+        return getDriver(driver, year);
+    }
+
+    public Driver getDriverNameOrAdd(String driver, Year year) {
+        return getAltDriverName(driver, year).orElseGet(() -> addDriverYear(driver, year));
     }
 
     public Map<String, Driver> getAlternativeDriverNamesYear(Year year) {
@@ -137,11 +135,6 @@ public class CompetitorService {
             linkedMap.put(altName.alternativeName(), altName.driverName());
         }
         return linkedMap;
-    }
-
-    public Driver getAlternativeDriverName(String driver, RaceId raceId) {
-        Year year = raceService.getYearFromRaceId(raceId);
-        return getAlternativeDriverName(driver, year);
     }
 
     public void addAlternativeDriverName(Driver driver, String alternativeName, Year year) {

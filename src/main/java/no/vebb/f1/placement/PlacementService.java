@@ -5,7 +5,6 @@ import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.placement.collection.PlacementGraphResult;
 import no.vebb.f1.placement.collection.PlacementObj;
 import no.vebb.f1.placement.collection.PositionResult;
-import no.vebb.f1.placement.domain.MedalCount;
 import no.vebb.f1.placement.domain.UserPoints;
 import no.vebb.f1.placement.domain.UserPosition;
 import no.vebb.f1.placement.placementCategory.*;
@@ -105,10 +104,11 @@ public class PlacementService {
     }
 
     public Medals getMedals(UUID userId) {
-        MedalCount gold = new MedalCount(placementYearRepository.countByPlacementAndIdUserId(new UserPosition(1), userId));
-        MedalCount silver = new MedalCount(placementYearRepository.countByPlacementAndIdUserId(new UserPosition(2), userId));
-        MedalCount bronze = new MedalCount(placementYearRepository.countByPlacementAndIdUserId(new UserPosition(3), userId));
-        return new Medals(gold, silver, bronze);
+        return new Medals(
+                placementYearRepository.countByPlacementAndIdUserId(UserPosition.getUserPosition(1).orElseThrow(RuntimeException::new), userId),
+                placementYearRepository.countByPlacementAndIdUserId(UserPosition.getUserPosition(2).orElseThrow(RuntimeException::new), userId),
+                placementYearRepository.countByPlacementAndIdUserId(UserPosition.getUserPosition(3).orElseThrow(RuntimeException::new), userId)
+        );
     }
 
     public void addUserScores(List<PlacementObj> placementObjs) {
@@ -151,7 +151,7 @@ public class PlacementService {
         Map<UUID, String> usernames = new HashMap<>();
         for (PlacementGraphResult row : placementRaceRepository.findAllByYear(year.value)) {
             UUID id = row.getUserId();
-            UserPoints points = new UserPoints(row.getPoints());
+            UserPoints points = UserPoints.getUserPoints(row.getPoints()).orElseThrow(RuntimeException::new);
             if (!userPoints.containsKey(id)) {
                 usernames.put(id, row.getUsername());
                 userPoints.put(id, new ArrayList<>());
@@ -174,9 +174,9 @@ public class PlacementService {
                 .map(row -> new RankedGuesser(
                         new Guesser(
                                 row.getUsername(),
-                                new UserPoints(row.getPoints()),
+                                UserPoints.getUserPoints(row.getPoints()).orElseThrow(RuntimeException::new),
                                 row.getUserId()
-                        ), new UserPosition(row.getPlacement())
+                        ), UserPosition.getUserPosition(row.getPlacement()).orElseThrow(RuntimeException::new)
                 ))
                 .filter(RankedGuesser::hasPoints)
                 .toList();

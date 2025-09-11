@@ -3,26 +3,37 @@ package no.vebb.f1.results.domain;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.exception.InvalidPointsException;
+import no.vebb.f1.scoring.domain.Diff;
+
+import java.util.Optional;
 
 @Embeddable
 public class CompetitorPoints implements Comparable<CompetitorPoints> {
 	@Column(name = "points", nullable = false)
 	public final int value;
 
-	public CompetitorPoints(int value) throws InvalidPointsException {
+	private CompetitorPoints(int value) {
 		this.value = value;
-		validate();
 	}
 
 	public CompetitorPoints() {
 		this.value = 0;
 	}
 
-	private void validate() throws InvalidPointsException {
-		if (value < 0) {
-			throw new InvalidPointsException("Points can't be negative");
+	public static Optional<CompetitorPoints> getCompetitorPoints(int value) {
+		CompetitorPoints competitorPoints = new CompetitorPoints(value);
+		if (competitorPoints.isValid()) {
+			return Optional.of(competitorPoints);
 		}
+		return Optional.empty();
+	}
+
+	public static CompetitorPoints fromDiff(Diff diff) {
+		return new CompetitorPoints(diff.toValue());
+	}
+
+	private boolean isValid() {
+		return value >= 0;
 	}
 
 	public CompetitorPoints add(CompetitorPoints other) {
