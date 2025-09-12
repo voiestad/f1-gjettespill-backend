@@ -36,8 +36,9 @@ public class CutoffService {
         return raceCutoffRepository.findById(raceId).map(RaceCutoffEntity::cutoff);
     }
 
-    public boolean isAbleToGuessCurrentYear() {
-        return yearService.getCurrentYear().filter(this::isAbleToGuessYear).isPresent();
+    public Optional<Year> getCurrentYearIfAbleToGuess() {
+        return yearService.getCurrentYear().filter(this::isAbleToGuessYear)
+                .filter(yearService::isChangableYear);
     }
 
     public boolean isAbleToGuessYear(Year year) {

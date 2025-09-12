@@ -40,6 +40,10 @@ public class YearService {
         return yearFinishedRepository.existsById(year);
     }
 
+    public boolean isChangableYear(Year year) {
+        return !isFinishedYear(year);
+    }
+
     public void finalizeYear(Year year) {
         yearFinishedRepository.save(new YearFinishedEntity(year));
     }

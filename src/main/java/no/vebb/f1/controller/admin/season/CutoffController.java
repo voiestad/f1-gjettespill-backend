@@ -5,20 +5,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.race.RaceService;
-import no.vebb.f1.scoring.ScoreCalculator;
-import no.vebb.f1.response.CutoffResponse;
-import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.collection.CutoffRace;
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceId;
+import no.vebb.f1.race.RaceService;
+import no.vebb.f1.response.CutoffResponse;
+import no.vebb.f1.scoring.ScoreCalculator;
+import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.year.Year;
+import no.vebb.f1.year.YearService;
 
 @RestController
 @RequestMapping("/api/admin/season/cutoff")
@@ -29,7 +29,8 @@ public class CutoffController {
     private final RaceService raceService;
     private final CutoffService cutoffService;
 
-    public CutoffController(ScoreCalculator scoreCalculator, YearService yearService, RaceService raceService, CutoffService cutoffService) {
+    public CutoffController(ScoreCalculator scoreCalculator, YearService yearService, RaceService raceService,
+                            CutoffService cutoffService) {
         this.scoreCalculator = scoreCalculator;
         this.yearService = yearService;
         this.raceService = raceService;
@@ -49,14 +50,13 @@ public class CutoffController {
     public ResponseEntity<String> setCutoffRace(
             @RequestParam("id") RaceId raceId,
             @RequestParam("cutoff") LocalDateTime cutoffLocal) {
-        Optional<Year> optYear = raceService.getYearFromRaceId(raceId);
+        Optional<Year> optYear = raceService.getYearFromRaceId(raceId).filter(yearService::isChangableYear);
         if (optYear.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        Year year = optYear.get();
-        if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed",
+            return new ResponseEntity<>("Race is in a year that is over and the cutoff can't be changed.",
                     HttpStatus.FORBIDDEN);
+        }
+        if (cutoffLocal.getYear() != optYear.get().value) {
+            return new ResponseEntity<>("Cutoff can't be outside year of race.", HttpStatus.BAD_REQUEST);
         }
         Instant cutoff = TimeUtil.localTimeToInstant(cutoffLocal);
         cutoffService.setCutoffRace(cutoff, raceId);
@@ -69,8 +69,11 @@ public class CutoffController {
             @RequestParam("year") Year year,
             @RequestParam("cutoff") LocalDateTime cutoffLocal) {
         if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed",
+            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed.",
                     HttpStatus.FORBIDDEN);
+        }
+        if (cutoffLocal.getYear() != year.value) {
+            return new ResponseEntity<>("Cutoff can't be outside year.", HttpStatus.BAD_REQUEST);
         }
         Instant cutoff = TimeUtil.localTimeToInstant(cutoffLocal);
         cutoffService.setCutoffYear(cutoff, year);

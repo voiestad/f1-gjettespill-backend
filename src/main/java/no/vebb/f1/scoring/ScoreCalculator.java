@@ -66,7 +66,7 @@ public class ScoreCalculator {
     }
 
     private boolean calculate() {
-        if (cutoffService.isAbleToGuessCurrentYear()) {
+        if (cutoffService.getCurrentYearIfAbleToGuess().isPresent()) {
             return false;
         }
         Optional<Year> optYear = yearService.getCurrentYear();

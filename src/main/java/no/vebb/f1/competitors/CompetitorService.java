@@ -59,7 +59,7 @@ public class CompetitorService {
                 .toList();
     }
 
-    public void addDriver(String driver) {
+    private void addDriver(String driver) {
         driverRepository.save(new DriverEntity(new Driver(driver)));
     }
 
@@ -87,7 +87,7 @@ public class CompetitorService {
         }
     }
 
-    public void addConstructor(String constructor) {
+    private void addConstructor(String constructor) {
         constructorRepository.save(new ConstructorEntity(new Constructor(constructor)));
     }
 
@@ -114,14 +114,14 @@ public class CompetitorService {
         }
     }
 
-    public Optional<Driver> getAltDriverName(String driver, Year year) {
+    public Optional<Driver> getAltDriverName(String driverName, Year year) {
         Optional<Driver> optDriverAltName = driverAlternativeNameRepository
-                .findById(new DriverAlternativeNameId(driver, year))
+                .findById(new DriverAlternativeNameId(driverName, year))
                 .map(DriverAlternativeNameEntity::driverName);
         if (optDriverAltName.isPresent()) {
             return optDriverAltName;
         }
-        return getDriver(driver, year);
+        return getDriver(driverName).filter(driver -> isDriverInYear(driver, year));
     }
 
     public Driver getDriverNameOrAdd(String driver, Year year) {
@@ -173,16 +173,16 @@ public class CompetitorService {
         return driverRepository.findById(new Driver(driverName)).map(DriverEntity::driverName);
     }
 
-    public Optional<Driver> getDriver(String driverName, Year year) {
-        return driverYearRepository.findById(new DriverId(new Driver(driverName), year)).map(DriverYearEntity::driverName);
+    public boolean isDriverInYear(Driver driver, Year year) {
+        return driverYearRepository.existsById(new DriverId(driver, year));
     }
 
     public Optional<Constructor> getConstructor(String constructorName) {
         return constructorRepository.findById(new Constructor(constructorName)).map(ConstructorEntity::constructorName);
     }
 
-    public Optional<Constructor> getConstructor(String constructorName, Year year) {
-        return constructorYearRepository.findById(new ConstructorId(new Constructor(constructorName), year)).map(ConstructorYearEntity::constructorName);
+    public boolean isConstructorInYear(Constructor constructor, Year year) {
+        return constructorYearRepository.existsById(new ConstructorId(constructor, year));
     }
 
     public void setDriverYearOrder(List<DriverYearEntity> newOrder) {

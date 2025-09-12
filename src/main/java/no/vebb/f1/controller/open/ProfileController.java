@@ -79,7 +79,8 @@ public class ProfileController {
             if (inputYear == null) {
                 return getUpToDate(userEntity);
             }
-            return getGuesserProfileYear(userEntity, inputYear);
+            Optional<Year> optYear = yearService.getYear(inputYear);
+            return getFromYear(userEntity, optYear);
         }
         Optional<RaceId> optRaceId = raceService.getRaceId(inputRaceId);
         if (optRaceId.isEmpty()) {
@@ -91,7 +92,7 @@ public class ProfileController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         Year year = optYear.get();
-        if (!isAbleToSeeGuesses(userEntity, year)) {
+        if (notAvailableToUser(userEntity, year)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, raceService,
@@ -101,32 +102,23 @@ public class ProfileController {
 
     private ResponseEntity<UserScoreResponse> getUpToDate(UserEntity userEntity) {
         Optional<Year> optYear = yearService.getCurrentYear();
+        return getFromYear(userEntity, optYear);
+    }
+
+    private ResponseEntity<UserScoreResponse> getFromYear(UserEntity userEntity, Optional<Year> optYear) {
         if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         Year year = optYear.get();
-        if (isAbleToSeeGuesses(userEntity, year)) {
-            UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
-            return new ResponseEntity<>(res, HttpStatus.OK);
+        if (notAvailableToUser(userEntity, year)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    private ResponseEntity<UserScoreResponse> getGuesserProfileYear(UserEntity userEntity, int inputYear) {
-        Optional<Year> optYear = yearService.getYear(inputYear);
-        if (optYear.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        Year year = optYear.get();
-        if (isAbleToSeeGuesses(userEntity, year)) {
-            UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
-            return new ResponseEntity<>(res, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-    }
-
-    private boolean isAbleToSeeGuesses(UserEntity userEntity, Year year) {
-        return !cutoffService.isAbleToGuessYear(year) || userService.isLoggedInUser(userEntity);
+    private boolean notAvailableToUser(UserEntity userEntity, Year year) {
+        return cutoffService.isAbleToGuessYear(year) && !userService.isLoggedInUser(userEntity);
     }
 
     @GetMapping("/api/public/user/list")

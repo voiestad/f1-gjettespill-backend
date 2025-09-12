@@ -1,8 +1,10 @@
 package no.vebb.f1.controller.admin.season;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.year.YearService;
@@ -73,21 +75,22 @@ public class ManageSeasonController {
         List<RaceId> races = raceService.getRacesFromSeason(year);
         RacePosition currentPos = new RacePosition();
         RacePosition position = RacePosition.getRacePosition(inputPosition).orElseThrow(RuntimeException::new);
-        // TODO: update all at once
+        List<RaceOrderEntity> newOrder = new ArrayList<>();
         for (RaceId id : races) {
             if (id.equals(raceId)) {
                 continue;
             }
             if (currentPos.equals(position)) {
-                raceService.updateRaceOrderPosition(raceId, year, currentPos);
+                newOrder.add(new RaceOrderEntity(raceId, year, currentPos));
                 currentPos = currentPos.next();
             }
-            raceService.updateRaceOrderPosition(id, year, currentPos);
+            newOrder.add(new RaceOrderEntity(id, year, currentPos));
             currentPos = currentPos.next();
         }
-        if (currentPos == position) {
-            raceService.updateRaceOrderPosition(raceId, year, currentPos);
+        if (currentPos.equals(position)) {
+            newOrder.add(new RaceOrderEntity(raceId, year, currentPos));
         }
+        raceService.setRaceOrder(newOrder);
         importer.importData();
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -106,10 +109,12 @@ public class ManageSeasonController {
         raceService.deleteRace(raceId);
         List<RaceId> races = raceService.getRacesFromSeason(year);
         RacePosition currentPos = new RacePosition();
+        List<RaceOrderEntity> newOrder = new ArrayList<>();
         for (RaceId id : races) {
-            raceService.updateRaceOrderPosition(id, year, currentPos);
+            newOrder.add(new RaceOrderEntity(id, year, currentPos));
             currentPos = currentPos.next();
         }
+        raceService.setRaceOrder(newOrder);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

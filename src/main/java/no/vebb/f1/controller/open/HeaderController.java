@@ -44,7 +44,7 @@ public class HeaderController {
         if (res.isAdmin) {
             res.ongoingRace = ongoingRaceId();
         }
-        res.isAbleToGuess = cutoffService.isAbleToGuessCurrentYear() || isRaceToGuess();
+        res.isAbleToGuess = cutoffService.getCurrentYearIfAbleToGuess().isPresent() || isRaceToGuess();
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 

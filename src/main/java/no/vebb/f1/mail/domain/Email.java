@@ -3,7 +3,8 @@ package no.vebb.f1.mail.domain;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import no.vebb.f1.exception.InvalidEmailException;
+
+import java.util.Optional;
 
 @Embeddable
 public class Email {
@@ -12,18 +13,19 @@ public class Email {
 
     protected Email() {}
 
-    public Email(String value) throws InvalidEmailException {
+    private Email(String value) {
         this.value = value;
-        validate();
     }
 
-    private void validate() throws InvalidEmailException {
-        if (!isValidEmail()) {
-            throw new InvalidEmailException();
+    public static Optional<Email> getEmail(String value) {
+        Email email = new Email(value);
+        if (email.isValid()) {
+            return Optional.of(email);
         }
+        return Optional.empty();
     }
 
-    private boolean isValidEmail() {
+    private boolean isValid() {
         return value.matches("^([\\w\\-.])+(\\+?[\\w\\-.]+)?@([\\w\\-]+\\.)+[\\w\\-]{2,4}$");
     }
 

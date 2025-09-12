@@ -488,7 +488,7 @@ public class Importer {
         if (optYear.isEmpty()) {
             throw new RuntimeException("No year found for race " + raceId);
         }
-        return competitorService.getDriverNameOrAdd(parseDriverName(driverName), optYear.get());
+        return getDriver(driverName, optYear.get());
     }
 
     private Driver getDriver(String driverName, Year year) {

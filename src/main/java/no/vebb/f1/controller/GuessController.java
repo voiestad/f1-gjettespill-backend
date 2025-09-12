@@ -1,8 +1,10 @@
 package no.vebb.f1.controller;
 
 import java.util.*;
+import java.util.function.BiFunction;
 
 import no.vebb.f1.competitors.CompetitorService;
+import no.vebb.f1.competitors.domain.Competitor;
 import no.vebb.f1.guessing.*;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.guessing.constructor.ConstructorGuessEntity;
@@ -61,59 +63,45 @@ public class GuessController {
     @GetMapping("/categories")
     public ResponseEntity<List<Category>> guess() {
         List<Category> res = new ArrayList<>();
-        if (cutoffService.isAbleToGuessCurrentYear()) {
+        if (cutoffService.getCurrentYearIfAbleToGuess().isPresent()) {
             res.add(Category.DRIVER);
             res.add(Category.CONSTRUCTOR);
             res.add(Category.FLAG);
         }
-        if (isRaceToGuess()) {
+        if (getRaceIdToGuess().isPresent()) {
             res.add(Category.FIRST);
             res.add(Category.TENTH);
         }
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    /**
-     * Handles GET requests for /guess/drivers. If it is still possible to guess,
-     * gives a list of drivers to rank and the time left to guess.
-     */
-    @GetMapping("/driver")
-    public ResponseEntity<CutoffCompetitors<Driver>> rankDrivers() {
-        if (!cutoffService.isAbleToGuessCurrentYear()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-        Optional<Year> optYear = yearService.getCurrentYear();
+    private <T extends Competitor> ResponseEntity<CutoffCompetitors<T>> getRankCompetitors(BiFunction<UUID, Year, List<ColoredCompetitor<T>>> getCompetitors) {
+        Optional<Year> optYear = cutoffService.getCurrentYearIfAbleToGuess();
         if (optYear.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         Year year = optYear.get();
-        if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
         UUID id = userService.getUser().id();
         long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear(year);
-        List<ColoredCompetitor<Driver>> competitors = guessService.getDriversGuess(id, year);
-        CutoffCompetitors<Driver> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
+        List<ColoredCompetitor<T>> competitors = getCompetitors.apply(id, year);
+        CutoffCompetitors<T> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
         return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("/driver")
+    public ResponseEntity<CutoffCompetitors<Driver>> rankDrivers() {
+        return getRankCompetitors(guessService::getDriversGuess);
     }
 
     @PostMapping("/driver")
     @Transactional
     public ResponseEntity<?> rankDrivers(@RequestParam List<String> rankedCompetitors) {
-        UUID id = userService.getUser().id();
-
-        if (!cutoffService.isAbleToGuessCurrentYear()) {
+        Optional<Year> optYear = cutoffService.getCurrentYearIfAbleToGuess();
+        if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        Optional<Year> optYear = yearService.getCurrentYear();
-        if (optYear.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
         Year year = optYear.get();
-        if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>("Year '" + year + "' is over and not available for guessing",
-                    HttpStatus.FORBIDDEN);
-        }
+        UUID id = userService.getUser().id();
         List<Driver> validationList = competitorService.getDriversYear(year);
         Set<Driver> competitors = new HashSet<>(validationList);
         List<Driver> guessedDrivers = rankedCompetitors.stream()
@@ -133,45 +121,22 @@ public class GuessController {
             position = position.next();
         }
         guessService.addDriversYearGuesses(driverGuesses);
-        logger.info("User '{}' guessed on '{}' on year '{}'", id, "driver", year);
+        logger.info("User guessed on driver");
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/constructor")
     public ResponseEntity<CutoffCompetitors<Constructor>> rankConstructors() {
-        if (!cutoffService.isAbleToGuessCurrentYear()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-        Optional<Year> optYear = yearService.getCurrentYear();
-        if (optYear.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        Year year = optYear.get();
-        if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-        UUID id = userService.getUser().id();
-        long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear(year);
-        List<ColoredCompetitor<Constructor>> competitors = guessService.getConstructorsGuess(id, year);
-        CutoffCompetitors<Constructor> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
-        return new ResponseEntity<>(res, HttpStatus.OK);
+        return getRankCompetitors(guessService::getConstructorsGuess);
     }
-
     @PostMapping("/constructor")
     @Transactional
     public ResponseEntity<?> rankConstructors(@RequestParam List<String> rankedCompetitors) {
-        if (!cutoffService.isAbleToGuessCurrentYear()) {
+        Optional<Year> optYear = cutoffService.getCurrentYearIfAbleToGuess();
+        if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        Optional<Year> optYear = yearService.getCurrentYear();
-        if (optYear.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
         Year year = optYear.get();
-        if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>("Year '" + year + "' is over and not available for guessing",
-                    HttpStatus.FORBIDDEN);
-        }
         List<Constructor> validationList = competitorService.getConstructorsYear(year);
         Set<Constructor> competitors = new HashSet<>(validationList);
         List<Constructor> guessedConstructors = rankedCompetitors.stream()
@@ -192,11 +157,11 @@ public class GuessController {
             position = position.next();
         }
         guessService.addConstructorsYearGuesses(constructorGuesses);
-        logger.info("User '{}' guessed on '{}' on year '{}'", id, "constructor", year);
+        logger.info("User guessed on constructor");
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    private <T> String validateGuessList(List<T> guessed, Set<T> original) {
+    private <T extends Competitor> String validateGuessList(List<T> guessed, Set<T> original) {
         Set<T> guessedSet = new HashSet<>();
         for (T competitor : guessed) {
             if (!original.contains(competitor)) {
@@ -220,7 +185,7 @@ public class GuessController {
 
     @PostMapping("/tenth")
     @Transactional
-    public ResponseEntity<?> guessTenth(@RequestParam String driver) {
+    public ResponseEntity<?> guessTenth(@RequestParam Driver driver) {
         return handlePostChooseDriver(driver, Category.TENTH);
     }
 
@@ -231,7 +196,7 @@ public class GuessController {
 
     @PostMapping("/first")
     @Transactional
-    public ResponseEntity<?> guessWinner(@RequestParam String driver) {
+    public ResponseEntity<?> guessWinner(@RequestParam Driver driver) {
         return handlePostChooseDriver(driver, Category.FIRST);
     }
 
@@ -262,7 +227,7 @@ public class GuessController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    private ResponseEntity<?> handlePostChooseDriver(String driver, Category category) {
+    private ResponseEntity<?> handlePostChooseDriver(Driver driver, Category category) {
         Optional<Year> optYear = yearService.getCurrentYear();
         if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -277,19 +242,14 @@ public class GuessController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         RaceId raceId = optRaceId.get();
-        Optional<Driver> optDriver = competitorService.getDriver(driver);
-        if (optDriver.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        Driver validDriver = optDriver.get();
         Set<Driver> driversCheck = new HashSet<>(resultService.getDriversFromStartingGrid(raceId));
-        if (!driversCheck.contains(validDriver)) {
+        if (!driversCheck.contains(driver)) {
             logger.warn("'{}', invalid winner driver inputted by user.", driver);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         UUID id = userService.getUser().id();
-        guessService.addDriverPlaceGuess(id, raceId, validDriver, category);
-        logger.info("User '{}' guessed on category '{}' on race '{}'", id, category, raceId);
+        guessService.addDriverPlaceGuess(id, raceId, driver, category);
+        logger.info("User guessed on category '{}' on race '{}'", category, raceId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -299,18 +259,12 @@ public class GuessController {
 
     @GetMapping("/flag")
     public ResponseEntity<CutoffFlags> guessFlags() {
-        if (!cutoffService.isAbleToGuessCurrentYear()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-        Optional<Year> optYear = yearService.getCurrentYear();
+        Optional<Year> optYear = cutoffService.getCurrentYearIfAbleToGuess();
         if (optYear.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         Year year = optYear.get();
         long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear(year);
-        if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
         Flags flags = guessService.getFlagGuesses(userService.getUser().id(), year);
         CutoffFlags res = new CutoffFlags(flags, timeLeftToGuess);
         return new ResponseEntity<>(res, HttpStatus.OK);
@@ -320,30 +274,19 @@ public class GuessController {
     @Transactional
     public ResponseEntity<?> guessFlags(@RequestParam int yellow, @RequestParam int red,
                                         @RequestParam int safetyCar) {
-        if (!cutoffService.isAbleToGuessCurrentYear()) {
+        Optional<Year> optYear = cutoffService.getCurrentYearIfAbleToGuess();
+        if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        Optional<Year> optYear = yearService.getCurrentYear();
-        if (optYear.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
         Year year = optYear.get();
-        if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>("Year '" + year + "' is over and not available for guessing",
-                    HttpStatus.FORBIDDEN);
-        }
         Flags flags = new Flags(yellow, red, safetyCar);
         if (!flags.hasValidValues()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         UUID id = userService.getUser().id();
         guessService.addFlagGuesses(id, year, flags);
-        logger.info("User '{}' guessed on flags on year '{}'", id, year);
+        logger.info("User guessed on flags on year");
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    private boolean isRaceToGuess() {
-        return getRaceIdToGuess().isPresent();
     }
 
 }

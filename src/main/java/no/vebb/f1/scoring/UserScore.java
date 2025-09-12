@@ -147,7 +147,7 @@ public class UserScore {
         for (IUserRaceGuessTable row : sqlRes) {
             RacePosition racePosition = row.getRacePosition();
             String raceName = row.getRaceName();
-            String driver = row.getDriverName();
+            Driver driver = row.getDriverName();
             CompetitorPosition startPos = row.getStartPosition();
             CompetitorPosition finishPos = row.getFinishingPosition();
             Diff diff = new Diff(targetPos - finishPos.toValue());

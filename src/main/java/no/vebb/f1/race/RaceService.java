@@ -94,10 +94,6 @@ public class RaceService {
         raceOrderRepository.save(raceOrderEntity);
     }
 
-    public void updateRaceOrderPosition(RaceId raceId, Year year, RacePosition position) {
-        raceOrderRepository.updatePosition(raceId, year, position);
-    }
-
     public void deleteRace(RaceId raceId) {
         raceRepository.deleteById(raceId);
         entityManager.flush();
@@ -142,4 +138,7 @@ public class RaceService {
         return raceRepository.findById(new RaceId(raceId)).map(RaceEntity::raceId);
     }
 
+    public void setRaceOrder(List<RaceOrderEntity> newOrder) {
+        raceOrderRepository.saveAll(newOrder);
+    }
 }

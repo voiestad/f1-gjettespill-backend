@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.mail.mailOption.MailOption;
 import no.vebb.f1.user.domain.Username;
-import no.vebb.f1.exception.InvalidEmailException;
 import no.vebb.f1.exception.InvalidUsernameException;
 import no.vebb.f1.response.MailOptionsResponse;
 
@@ -127,14 +126,14 @@ public class UserSettingsController {
     @PostMapping("/mail/add")
     @Transactional
     public ResponseEntity<?> addMailingList(@RequestParam("email") String email) {
-        try {
-            UserEntity userEntity = userService.getUser();
-            UserMail userMail = new UserMail(userEntity, new Email(email));
-            codeService.sendVerificationCode(userMail);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (InvalidEmailException e) {
+        UserEntity userEntity = userService.getUser();
+        Optional<Email> optEmail = Email.getEmail(email);
+        if (optEmail.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        UserMail userMail = new UserMail(userEntity, optEmail.get());
+        codeService.sendVerificationCode(userMail);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/mail/remove")
@@ -161,7 +160,6 @@ public class UserSettingsController {
             return new ResponseEntity<>(HttpStatus.OK);
         }
         logger.warn("User '{}' put the wrong verification code", userEntity.id());
-
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
