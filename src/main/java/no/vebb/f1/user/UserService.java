@@ -45,12 +45,11 @@ public class UserService {
     }
 
     public boolean isLoggedIn() {
-        Optional<UserEntity> user = loadUser();
-        return user.isPresent();
+        return loadUser().isPresent();
     }
 
     public boolean isAdmin() {
-        return loadUser().map(value -> adminRepository.findById(value.id())).isPresent();
+        return loadUser().map(user -> adminRepository.findById(user.id())).isPresent();
     }
 
     public void adminCheck() throws NotAdminException {

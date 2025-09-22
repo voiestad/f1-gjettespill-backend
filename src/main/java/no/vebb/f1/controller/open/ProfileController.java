@@ -66,11 +66,7 @@ public class ProfileController {
     public ResponseEntity<UserScoreResponse> myProfile(
             @RequestParam(value = "raceId", required = false) Integer raceId,
             @RequestParam(value = "year", required = false) Integer year) {
-        Optional<UserEntity> optUser = userService.loadUser();
-        if (optUser.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-        UserEntity userEntity = optUser.get();
+        UserEntity userEntity = userService.getUser();
         return getGuesserProfile(userEntity, raceId, year);
     }
 
@@ -141,7 +137,7 @@ public class ProfileController {
 
     @GetMapping("/api/user/my-placements")
     public ResponseEntity<UserPlacementStats> myPlacementStats() {
-        return userService.loadUser().map(this::getPlacementStats).orElseGet(() -> new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        return getPlacementStats(userService.getUser());
     }
 
     private ResponseEntity<UserPlacementStats> getPlacementStats(UserEntity userEntity) {

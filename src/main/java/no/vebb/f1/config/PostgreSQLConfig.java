@@ -228,19 +228,6 @@ public class PostgreSQLConfig {
 				);
 			""");
 			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS flags (
-					flag_name TEXT PRIMARY KEY
-				);
-			""");
-			jdbcTemplate.execute("""
-                INSERT INTO flags (flag_name)
-                VALUES
-                    ('YELLOW_FLAG'),
-                    ('RED_FLAG'),
-                    ('SAFETY_CAR')
-                ON CONFLICT(flag_name) DO NOTHING;
-            """);
-			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS flag_guesses (
 					user_id UUID NOT NULL,
 					flag_name TEXT NOT NULL,
@@ -248,7 +235,6 @@ public class PostgreSQLConfig {
 					amount INTEGER NOT NULL,
 					PRIMARY KEY (user_id, flag_name, year),
 					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-					FOREIGN KEY (flag_name) REFERENCES flags(flag_name) ON DELETE CASCADE,
 					FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 				);
 			""");
@@ -304,27 +290,13 @@ public class PostgreSQLConfig {
 				);
 			""");
 			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS session_types (
-					session_type TEXT PRIMARY KEY
-				);
-			""");
-			jdbcTemplate.execute("""
-                INSERT INTO session_types (session_type)
-                VALUES
-                    ('RACE'),
-                    ('SPRINT')
-                ON CONFLICT(session_type) DO NOTHING;
-            """);
-			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS flag_stats (
 					flag_id SERIAL PRIMARY KEY,
 					flag_name TEXT NOT NULL,
 					race_id INTEGER NOT NULL,
 					round INTEGER NOT NULL,
 					session_type TEXT NOT NULL,
-					FOREIGN KEY (flag_name) REFERENCES flags(flag_name) ON DELETE CASCADE,
-					FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
-					FOREIGN KEY (session_type) REFERENCES session_types(session_type) ON DELETE CASCADE
+					FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
 				);
 			""");
 			jdbcTemplate.execute("""

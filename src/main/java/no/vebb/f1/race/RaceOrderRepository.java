@@ -2,7 +2,6 @@ package no.vebb.f1.race;
 
 import no.vebb.f1.year.Year;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -61,13 +60,4 @@ public interface RaceOrderRepository extends JpaRepository<RaceOrderEntity, Race
     boolean existsByRaceIdAndYear(RaceId raceId, Year year);
 
     Optional<RaceOrderEntity> findTopByYearOrderByPositionDesc(Year year);
-
-    @Modifying
-    @Query("""
-       UPDATE RaceOrderEntity ro
-       SET ro.position = :position
-       WHERE ro.raceId = :raceId
-       AND ro.year = :year
-       """)
-    void updatePosition(RaceId raceId, Year year, RacePosition position);
 }
