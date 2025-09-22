@@ -31,7 +31,7 @@ public class StatsService {
     }
 
     public Optional<Year> getYearFromFlagId(int id)  {
-        return flagStatRepository.findYearByFlagId(id).map(Year::new);
+        return flagStatRepository.findYearByFlagId(id);
     }
 
     public List<RegisteredFlag> getRegisteredFlags(RaceId raceId) {

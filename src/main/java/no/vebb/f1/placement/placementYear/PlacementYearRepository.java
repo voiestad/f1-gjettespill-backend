@@ -9,5 +9,5 @@ import java.util.UUID;
 public interface PlacementYearRepository extends JpaRepository<PlacementYearEntity, PlacementYearId> {
     int countByPlacementAndIdUserId(UserPosition placement, UUID userId);
 
-    List<PlacementYearEntity> findByIdUserId(UUID userId);
+    List<PlacementYearEntity> findByIdUserIdOrderByPlacementDesc(UUID userId);
 }

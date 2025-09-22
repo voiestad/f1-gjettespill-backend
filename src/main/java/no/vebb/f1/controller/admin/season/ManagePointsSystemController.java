@@ -1,5 +1,6 @@
 package no.vebb.f1.controller.admin.season;
 
+import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.scoring.ScoreService;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
@@ -20,10 +21,12 @@ public class ManagePointsSystemController {
 
     private final YearService yearService;
     private final ScoreService scoreService;
+    private final CutoffService cutoffService;
 
-    public ManagePointsSystemController(YearService yearService, ScoreService scoreService) {
+    public ManagePointsSystemController(YearService yearService, ScoreService scoreService, CutoffService cutoffService) {
         this.yearService = yearService;
         this.scoreService = scoreService;
+        this.cutoffService = cutoffService;
     }
 
     @PostMapping("/add")
@@ -32,7 +35,11 @@ public class ManagePointsSystemController {
             @RequestParam("year") Year year,
             @RequestParam("category") Category category) {
         if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed",
+            return new ResponseEntity<>("Year '" + year + "' is over and the point system can't be changed",
+                    HttpStatus.FORBIDDEN);
+        }
+        if (!cutoffService.isAbleToGuessYear(year)) {
+            return new ResponseEntity<>("Year '" + year + "' is started and the point system can't be changed",
                     HttpStatus.FORBIDDEN);
         }
         Optional<Diff> optMaxDiff = scoreService.getMaxDiffInPointsMap(year, category);
@@ -52,7 +59,11 @@ public class ManagePointsSystemController {
             @RequestParam("year") Year year,
             @RequestParam("category") Category category) {
         if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed",
+            return new ResponseEntity<>("Year '" + year + "' is over and the point system can't be changed",
+                    HttpStatus.FORBIDDEN);
+        }
+        if (!cutoffService.isAbleToGuessYear(year)) {
+            return new ResponseEntity<>("Year '" + year + "' is started and the point system can't be changed",
                     HttpStatus.FORBIDDEN);
         }
         Optional<Diff> optMaxDiff = scoreService.getMaxDiffInPointsMap(year, category);
@@ -72,7 +83,11 @@ public class ManagePointsSystemController {
             @RequestParam("diff") Diff diff,
             @RequestParam("points") UserPoints points) {
         if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed",
+            return new ResponseEntity<>("Year '" + year + "' is over and the point system can't be changed",
+                    HttpStatus.FORBIDDEN);
+        }
+        if (!cutoffService.isAbleToGuessYear(year)) {
+            return new ResponseEntity<>("Year '" + year + "' is started and the point system can't be changed",
                     HttpStatus.FORBIDDEN);
         }
         boolean isValidDiff = scoreService.isValidDiffInPointsMap(category, diff, year);

@@ -4,6 +4,7 @@ import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import no.vebb.f1.collection.Race;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.mail.domain.Email;
 import no.vebb.f1.mail.mailOption.MailOption;
@@ -16,7 +17,6 @@ import no.vebb.f1.mail.mailingList.MailingListEntity;
 import no.vebb.f1.mail.mailingList.MailingListRepository;
 import no.vebb.f1.mail.notified.NotifiedEntity;
 import no.vebb.f1.mail.notified.NotifiedRepository;
-import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.user.admin.AdminEntity;
@@ -81,12 +81,12 @@ public class MailService {
             return;
         }
         Year year = optYear.get();
-        Optional<RaceOrderEntity> optRace = raceService.getLatestRaceForPlaceGuess(year);
+        Optional<Race> optRace = raceService.getLatestRaceForPlaceGuess(year);
         if (optRace.isEmpty()) {
             return;
         }
-        RaceOrderEntity race = optRace.get();
-        RaceId raceId = race.raceId();
+        Race race = optRace.get();
+        RaceId raceId = race.id();
         long timeLeft = cutoffService.getTimeLeftToGuessRace(raceId);
         if (timeLeft < 0) {
             return;
@@ -126,7 +126,7 @@ public class MailService {
         notifiedRepository.saveAll(notifications);
     }
 
-    private String getMessageContent(UserMail user, RaceOrderEntity race, int timeLeft) {
+    private String getMessageContent(UserMail user, Race race, int timeLeft) {
         String greet = String.format("Hei %s!", user.userEntity().username());
         String reminder = String.format("Dette er en påminnelse om å gjette på %s før tiden går ut.", race.name());
         String hours = timeLeft == 1 ? "time" : "timer";

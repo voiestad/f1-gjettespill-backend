@@ -6,8 +6,6 @@ import no.vebb.f1.competitors.constructor.ConstructorYearRepository;
 import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.competitors.driver.DriverYearRepository;
 import no.vebb.f1.guessing.category.Category;
-import no.vebb.f1.guessing.category.CategoryEntity;
-import no.vebb.f1.guessing.category.CategoryRepository;
 import no.vebb.f1.guessing.collection.IFlagGuessed;
 import no.vebb.f1.guessing.collection.IUserRaceGuessTable;
 import no.vebb.f1.guessing.collection.UserRaceGuess;
@@ -35,7 +33,6 @@ import java.util.*;
 @Service
 public class GuessService {
 
-    private final CategoryRepository categoryRepository;
     private final UserRespository userRespository;
     private final ConstructorGuessRepository constructorGuessRepository;
     private final DriverGuessRepository driverGuessRepository;
@@ -44,8 +41,7 @@ public class GuessService {
     private final DriverYearRepository driverYearRepository;
     private final ConstructorYearRepository constructorYearRepository;
 
-    public GuessService(CategoryRepository categoryRepository, UserRespository userRespository, ConstructorGuessRepository constructorGuessRepository, DriverGuessRepository driverGuessRepository, FlagGuessRepository flagGuessRepository, DriverPlaceGuessRepository driverPlaceGuessRepository, DriverYearRepository driverYearRepository, ConstructorYearRepository constructorYearRepository) {
-        this.categoryRepository = categoryRepository;
+    public GuessService(UserRespository userRespository, ConstructorGuessRepository constructorGuessRepository, DriverGuessRepository driverGuessRepository, FlagGuessRepository flagGuessRepository, DriverPlaceGuessRepository driverPlaceGuessRepository, DriverYearRepository driverYearRepository, ConstructorYearRepository constructorYearRepository) {
         this.userRespository = userRespository;
         this.constructorGuessRepository = constructorGuessRepository;
         this.driverGuessRepository = driverGuessRepository;
@@ -56,9 +52,7 @@ public class GuessService {
     }
 
     public List<Category> getCategories() {
-        return categoryRepository.findAll().stream()
-                .map(CategoryEntity::categoryName)
-                .toList();
+        return Arrays.asList(Category.values());
     }
 
     public List<IFlagGuessed> getDataForFlagTable(RacePosition racePos, Year year, UUID userId) {

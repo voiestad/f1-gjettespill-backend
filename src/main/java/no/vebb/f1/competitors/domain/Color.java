@@ -28,7 +28,7 @@ public class Color {
 	}
 
 	private boolean isValid() {
-		return value != null && !value.matches("^#[0-9A-Fa-f]{6}$");
+		return value != null && value.matches("^#[0-9A-Fa-f]{6}$");
 	}
 
 	@JsonValue

@@ -45,4 +45,8 @@ public class BingoCardEntity {
     public BingoCardEntity toggled() {
         return new BingoCardEntity(id.year(), id.bingoSquareId(), squareText, !marked);
     }
+
+    public BingoCardEntity withText(String text) {
+        return new BingoCardEntity(id.year(), id.bingoSquareId(), text, marked);
+    }
 }

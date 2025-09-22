@@ -1,7 +1,7 @@
 package no.vebb.f1.controller.open;
 
+import no.vebb.f1.collection.Race;
 import no.vebb.f1.guessing.GuessService;
-import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.YearService;
@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import no.vebb.f1.cutoff.CutoffService;
@@ -35,18 +36,31 @@ public class RaceGuessController {
     }
 
     @GetMapping
-    public ResponseEntity<RaceGuessResponse> guessOverview() {
+    public ResponseEntity<RaceGuessResponse> guessOverview(@RequestParam(name = "raceId", required = false) RaceId raceId) {
+        if (raceId == null) {
+            return getCurrentGuessOverview();
+        }
+        Optional<Year> optYear = raceService.getYearFromRaceId(raceId);
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        Year year = optYear.get();
+        Optional<Race> optRace = raceService.getRaceFromId(raceId);
+        return optRace.map(race -> getGuessOverview(race, year)).orElseGet(() -> new ResponseEntity<>(HttpStatus.FORBIDDEN));
+    }
+
+    public ResponseEntity<RaceGuessResponse> getCurrentGuessOverview() {
         Optional<Year> optYear = yearService.getCurrentYear();
         if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         Year year = optYear.get();
-        Optional<RaceOrderEntity> optRace = raceService.getLatestRaceForPlaceGuess(year);
-        if (optRace.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-        RaceOrderEntity race = optRace.get();
-        RaceId raceId = race.raceId();
+        Optional<Race> optRace = raceService.getLatestRaceForPlaceGuess(year);
+        return optRace.map(race -> getGuessOverview(race, year)).orElseGet(() -> new ResponseEntity<>(HttpStatus.FORBIDDEN));
+    }
+
+    private ResponseEntity<RaceGuessResponse> getGuessOverview(Race race, Year year) {
+        RaceId raceId = race.id();
         if (cutoffService.isAbleToGuessRace(raceId)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }

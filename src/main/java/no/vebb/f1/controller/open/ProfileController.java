@@ -131,7 +131,7 @@ public class ProfileController {
         if (optUser.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        UserPlacementStats res = new UserPlacementStats(id, optUser.get().username(), placementService);
+        UserPlacementStats res = placementService.getPlacementsStats(id, optUser.get().username());
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
@@ -141,7 +141,7 @@ public class ProfileController {
     }
 
     private ResponseEntity<UserPlacementStats> getPlacementStats(UserEntity userEntity) {
-        UserPlacementStats res = new UserPlacementStats(userEntity.id(), userEntity.username(), placementService);
+        UserPlacementStats res = placementService.getPlacementsStats(userEntity.id(), userEntity.username());
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }

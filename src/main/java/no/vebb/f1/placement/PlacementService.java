@@ -12,6 +12,7 @@ import no.vebb.f1.placement.placementRace.*;
 import no.vebb.f1.placement.placementYear.PlacementYearEntity;
 import no.vebb.f1.placement.placementYear.PlacementYearRepository;
 import no.vebb.f1.race.RaceId;
+import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.user.PublicUserDto;
 import no.vebb.f1.placement.collection.Guesser;
 import no.vebb.f1.placement.collection.Medals;
@@ -94,7 +95,7 @@ public class PlacementService {
     }
 
     public List<Placement<Year>> getPreviousPlacements(UUID userId) {
-        return placementYearRepository.findByIdUserId(userId).stream()
+        return placementYearRepository.findByIdUserIdOrderByPlacementDesc(userId).stream()
                 .map(row ->
                         new Placement<>(
                                 row.placement(),
@@ -180,5 +181,9 @@ public class PlacementService {
                 ))
                 .filter(RankedGuesser::hasPoints)
                 .toList();
+    }
+
+    public UserPlacementStats getPlacementsStats(UUID userId, String username) {
+        return new UserPlacementStats(username, getPreviousPlacements(userId), getMedals(userId));
     }
 }

@@ -37,10 +37,6 @@ public class CodeService {
         mailService.sendVerificationCodeMail(userMail, code);
     }
 
-    public void removeVerificationCode(UUID userId) {
-        verificationCodeRepository.deleteById(userId);
-    }
-
     public void removeExpiredVerificationCodes() {
         verificationCodeRepository.deleteAll(
                 verificationCodeRepository.findAll().stream().filter(this::isExpired).toList()
@@ -75,7 +71,7 @@ public class CodeService {
         }
         Email email = verificationCodeEntity.email();
         mailService.addToMailingList(userId, email);
-        removeVerificationCode(userId);
+        verificationCodeRepository.deleteById(userId);
         return true;
     }
 
@@ -87,7 +83,6 @@ public class CodeService {
         referralCodeRepository.deleteAll(
                 referralCodeRepository.findAll().stream().filter(this::isExpired).toList()
         );
-
     }
 
     public long addReferralCode(UUID userId) {

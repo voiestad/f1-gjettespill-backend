@@ -90,6 +90,4 @@ public class FlagController {
     private boolean isValidRound(int round) {
         return round >= 1 && round <= 100;
     }
-
-
 }

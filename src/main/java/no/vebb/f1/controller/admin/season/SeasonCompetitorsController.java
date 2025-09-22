@@ -53,9 +53,9 @@ public class SeasonCompetitorsController {
         boolean isConstructorInYear = competitorService.isConstructorInYear(team, year);
         if (isDriverInYear && isConstructorInYear) {
             competitorService.setTeamDriver(driver, team, year);
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/drivers/add")
@@ -222,7 +222,7 @@ public class SeasonCompetitorsController {
     public ResponseEntity<?> addColorConstructor(
             @RequestParam("year") Year year,
             @RequestParam("constructor") Constructor constructor,
-            @RequestParam("inputColor") String inputColor) {
+            @RequestParam("color") String inputColor) {
         if (yearService.isFinishedYear(year)) {
             return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
                     HttpStatus.FORBIDDEN);

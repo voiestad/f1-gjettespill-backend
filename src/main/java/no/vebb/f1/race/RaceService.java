@@ -37,12 +37,12 @@ public class RaceService {
         return raceOrderRepository.findById(raceId).map(RaceOrderEntity::position);
     }
 
-    public Optional<RaceOrderEntity> getLatestRaceForPlaceGuess(Year year) {
+    public Optional<Race> getLatestRaceForPlaceGuess(Year year) {
         List<RaceOrderEntity> races = raceOrderRepository.findAllByYearJoinWithStartingGrid(year);
         if (races.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(races.get(races.size() - 1));
+        return Optional.of(races.get(races.size() - 1)).map(Race::fromEntity);
     }
 
     public List<RaceId> getRaceIdsFinished(Year year) {
@@ -56,7 +56,7 @@ public class RaceService {
     }
 
     public Optional<RaceId> getLatestStartingGridRaceId(Year year) {
-        return getLatestRaceForPlaceGuess(year).map(RaceOrderEntity::raceId);
+        return getLatestRaceForPlaceGuess(year).map(Race::id);
     }
 
     public Optional<RaceId> getUpcomingRaceId(Year year) {
@@ -131,7 +131,7 @@ public class RaceService {
 
     public Optional<Race> getRaceFromId(RaceId raceId) {
         return raceOrderRepository.findById(raceId)
-                .map(race -> new Race(race.position(), race.name(), raceId, race.year()));
+                .map(Race::fromEntity);
     }
 
     public Optional<RaceId> getRaceId(int raceId) {

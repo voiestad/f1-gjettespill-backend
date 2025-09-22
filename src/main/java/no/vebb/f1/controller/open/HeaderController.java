@@ -1,6 +1,5 @@
 package no.vebb.f1.controller.open;
 
-import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.collection.Race;
@@ -54,7 +53,7 @@ public class HeaderController {
             return false;
         }
         Year year = optYear.get();
-        return raceService.getLatestRaceForPlaceGuess(year).map(RaceOrderEntity::raceId)
+        return raceService.getLatestRaceForPlaceGuess(year).map(Race::id)
                 .filter(raceId -> !cutoffService.isAbleToGuessRace(raceId)).isPresent();
     }
 

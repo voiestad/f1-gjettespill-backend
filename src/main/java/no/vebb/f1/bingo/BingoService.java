@@ -58,8 +58,13 @@ public class BingoService {
         return true;
     }
 
-    public void setTextBingoSquare(Year year, int id, String text) {
-        bingoCardRepository.updateText(year, id, text);
+    public boolean setTextBingoSquare(Year year, int id, String text) {
+        Optional<BingoCardEntity> square = bingoCardRepository.findById(new BingoCardId(year, id));
+        if (square.isEmpty()) {
+            return false;
+        }
+        bingoCardRepository.save(square.get().withText(text));
+        return true;
     }
 
     public boolean isBingoCardAdded(Year year) {

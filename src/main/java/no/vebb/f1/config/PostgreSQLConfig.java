@@ -5,9 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-/**
- * Class is responsible for setting up the required tables in the database.
- */
 @Configuration
 public class PostgreSQLConfig {
 
@@ -36,21 +33,6 @@ public class PostgreSQLConfig {
 				);
 			""");
 			jdbcTemplate.execute("""
-				CREATE TABLE IF NOT EXISTS categories (
-					category_name TEXT PRIMARY KEY
-				);
-			""");
-			jdbcTemplate.execute("""
-                INSERT INTO categories (category_name)
-                VALUES
-                    ('DRIVER'),
-                    ('CONSTRUCTOR'),
-                    ('FLAG'),
-                    ('FIRST'),
-                    ('TENTH')
-                ON CONFLICT(category_name) DO NOTHING;
-            """);
-			jdbcTemplate.execute("""
 				CREATE TABLE IF NOT EXISTS years_finished (
 					year INTEGER PRIMARY KEY,
 					FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
@@ -75,8 +57,7 @@ public class PostgreSQLConfig {
 					points INTEGER NOT NULL,
 					PRIMARY KEY (race_id, user_id, category_name),
 					FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
-					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-				    FOREIGN KEY (category_name) REFERENCES categories(category_name) ON DELETE CASCADE
+					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 				);
 			""");
 			jdbcTemplate.execute("""
@@ -88,8 +69,7 @@ public class PostgreSQLConfig {
 					points INTEGER NOT NULL,
 					PRIMARY KEY (year, user_id, category_name),
 					FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE,
-					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-				    FOREIGN KEY (category_name) REFERENCES categories(category_name) ON DELETE CASCADE
+					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 				);
 			""");
 			jdbcTemplate.execute("""
@@ -271,7 +251,6 @@ public class PostgreSQLConfig {
 					PRIMARY KEY (user_id, race_id, category_name),
 					FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
 					FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
-					FOREIGN KEY (category_name) REFERENCES categories(category_name) ON DELETE CASCADE,
 					FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
 				);
 			""");
@@ -285,7 +264,6 @@ public class PostgreSQLConfig {
 					points INTEGER NOT NULL,
 					year INTEGER NOT NULL,
 					PRIMARY KEY (category_name, diff, year),
-					FOREIGN KEY (category_name) REFERENCES categories(category_name) ON DELETE CASCADE,
 					FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 				);
 			""");

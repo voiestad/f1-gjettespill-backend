@@ -82,12 +82,11 @@ public class BingoController {
         if (!bingoService.isBingoCardAdded(year)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        if (id < 0 || id >= 25) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         String validatedText = validate(text);
-        bingoService.setTextBingoSquare(year, id, validatedText);
-        return new ResponseEntity<>(HttpStatus.OK);
+        if (bingoService.setTextBingoSquare(year, id, validatedText)) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
     @PostMapping("/api/bingomaster/mark")
