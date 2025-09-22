@@ -49,7 +49,7 @@ public class UserService {
     }
 
     public boolean isAdmin() {
-        return loadUser().map(user -> adminRepository.findById(user.id())).isPresent();
+        return loadUser().filter(user -> adminRepository.existsById(user.id())).isPresent();
     }
 
     public void adminCheck() throws NotAdminException {
