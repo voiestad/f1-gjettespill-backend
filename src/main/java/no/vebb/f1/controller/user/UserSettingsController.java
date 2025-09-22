@@ -51,7 +51,6 @@ public class UserSettingsController {
         UserEntity userEntity = userService.getUser();
         UserInformation userInfo = new UserInformation(userEntity, mailService, guessService);
         return new ResponseEntity<>(userInfo, HttpStatus.OK);
-
     }
 
     @PostMapping("/username/change")
@@ -109,14 +108,14 @@ public class UserSettingsController {
             MailOptionsResponse res = new MailOptionsResponse(false, null);
             return new ResponseEntity<>(res, HttpStatus.OK);
         }
-        Map<Integer, Boolean> mailOptions = new LinkedHashMap<>();
+        Map<MailOption, Boolean> mailOptions = new LinkedHashMap<>();
         List<MailOption> options = mailService.getMailingOptions();
         for (MailOption option : options) {
-            mailOptions.put(option.value, false);
+            mailOptions.put(option, false);
         }
         List<MailOption> preferences = mailService.getMailingPreference(userEntity.id());
         for (MailOption preference : preferences) {
-            mailOptions.put(preference.value, true);
+            mailOptions.put(preference, true);
         }
         MailOptionsResponse res = new MailOptionsResponse(true, mailOptions);
         return new ResponseEntity<>(res, HttpStatus.OK);

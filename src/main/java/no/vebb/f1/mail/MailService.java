@@ -34,10 +34,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class MailService {
@@ -98,12 +95,13 @@ public class MailService {
             UUID userId = user.userEntity().id();
             int notifiedCount = notifiedRepository.countAllByRaceIdAndUserId(raceId, userId);
             List<MailOption> options = getMailingPreference(userId);
+            Collections.reverse(options);
             for (MailOption option : options) {
                 if (notifiedCount > 0) {
                     notifiedCount--;
                     continue;
                 }
-                if (option.value <= timeLeftHours) {
+                if (option.value() <= timeLeftHours) {
                     break;
                 }
                 try {
@@ -111,14 +109,14 @@ public class MailService {
                     message.setFrom(new InternetAddress(fromEmail, "F1 Gjettespill"));
                     message.addRecipients(Message.RecipientType.TO, user.email().toString());
                     message.setSubject("F1 Gjettespill påminnelse", "UTF-8");
-                    message.setContent(getMessageContent(user, race, option.value), "text/plain; charset=UTF-8");
+                    message.setContent(getMessageContent(user, race, option), "text/plain; charset=UTF-8");
                     mailSender.send(message);
                     notifications.add(new NotifiedEntity(userId, raceId));
                     logger.info("Successfully notified '{}' about '{}'", userId, race.name());
                 } catch (MessagingException e) {
-                    logger.info("Message fail");
+                    logger.warn("Message fail");
                 } catch (UnsupportedEncodingException e) {
-                    logger.info("Encoding fail");
+                    logger.warn("Encoding fail");
                 }
                 break;
             }
@@ -126,11 +124,11 @@ public class MailService {
         notifiedRepository.saveAll(notifications);
     }
 
-    private String getMessageContent(UserMail user, Race race, int timeLeft) {
+    private String getMessageContent(UserMail user, Race race, MailOption timeLeft) {
         String greet = String.format("Hei %s!", user.userEntity().username());
         String reminder = String.format("Dette er en påminnelse om å gjette på %s før tiden går ut.", race.name());
-        String hours = timeLeft == 1 ? "time" : "timer";
-        String time = String.format("Det er mindre enn %d %s igjen.", timeLeft, hours);
+        String hours = timeLeft.value() == 1 ? "time" : "timer";
+        String time = String.format("Det er mindre enn %s %s igjen.", timeLeft, hours);
         return String.format("%s\n\n%s %s", greet, reminder, time);
     }
 
