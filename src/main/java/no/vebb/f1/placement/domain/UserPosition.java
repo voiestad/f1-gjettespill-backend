@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import org.springframework.lang.NonNull;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Embeddable
@@ -40,6 +41,17 @@ public class UserPosition implements Comparable<UserPosition> {
     @NonNull
     public String toString() {
         return String.valueOf(value);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof UserPosition that)) return false;
+        return value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value);
     }
 
     @Override

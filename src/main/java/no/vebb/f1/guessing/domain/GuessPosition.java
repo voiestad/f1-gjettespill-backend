@@ -5,6 +5,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import org.springframework.lang.NonNull;
 
+import java.util.Objects;
+
 @Embeddable
 public class GuessPosition implements Comparable<GuessPosition> {
     @Column(name = "position", nullable = false)
@@ -31,6 +33,17 @@ public class GuessPosition implements Comparable<GuessPosition> {
     @NonNull
     public String toString() {
         return String.valueOf(value);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof GuessPosition that)) return false;
+        return value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value);
     }
 
     @Override
