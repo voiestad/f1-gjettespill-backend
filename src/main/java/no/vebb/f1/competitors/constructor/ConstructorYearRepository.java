@@ -14,7 +14,7 @@ public interface ConstructorYearRepository extends JpaRepository<ConstructorYear
     boolean existsByIdConstructorName(Constructor constructorName);
 
     @Query("""
-            SELECT cy.id.constructorName as constructor, cc.color as color
+            SELECT cy.id.constructorName as competitorName, cc.color as color
             FROM ConstructorYearEntity cy
             LEFT JOIN ConstructorColorEntity cc ON cc.id.constructorName = cy.id.constructorName
             WHERE cy.id.year = :year

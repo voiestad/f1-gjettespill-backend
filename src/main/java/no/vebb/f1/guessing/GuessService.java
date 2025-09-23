@@ -123,7 +123,8 @@ public class GuessService {
 
     public List<ColoredCompetitor<Driver>> getDriversGuess(UUID userId, Year year) {
         List<IColoredCompetitor> guessed = driverGuessRepository.findAllByUserIdOrderByIdPosition(userId, year);
-        List<IColoredCompetitor> result = guessed.isEmpty() ? driverYearRepository.findAllByYearOrderByPositionWithColor(year) : guessed;
+        List<IColoredCompetitor> driversYear = driverYearRepository.findAllByYearOrderByPositionWithColor(year);
+        List<IColoredCompetitor> result = appendNotGuessed(guessed, driversYear);
         return result.stream()
                 .map(ColoredCompetitor::fromIColoredCompetitorToDriver)
                 .toList();
@@ -131,10 +132,22 @@ public class GuessService {
 
     public List<ColoredCompetitor<Constructor>> getConstructorsGuess(UUID userId, Year year) {
         List<IColoredCompetitor> guessed = constructorGuessRepository.findAllByUserIdOrderByIdPosition(userId, year);
-        List<IColoredCompetitor> result = guessed.isEmpty() ? constructorYearRepository.findAllByYearOrderByPosition(year) : guessed;
+        List<IColoredCompetitor> constructorsYear = constructorYearRepository.findAllByYearOrderByPosition(year);
+        List<IColoredCompetitor> result = appendNotGuessed(guessed, constructorsYear);
         return result.stream()
                 .map(ColoredCompetitor::fromIColoredCompetitorToConstructor)
                 .toList();
+    }
+
+    private List<IColoredCompetitor> appendNotGuessed(List<IColoredCompetitor> guessed, List<IColoredCompetitor> competitorsYear) {
+        List<IColoredCompetitor> result = new ArrayList<>(guessed);
+        Set<String> competitorNames = new HashSet<>(guessed.stream().map(IColoredCompetitor::getCompetitorName).toList());
+        for (IColoredCompetitor competitor : competitorsYear) {
+            if (!competitorNames.contains(competitor.getCompetitorName())) {
+                result.add(competitor);
+            }
+        }
+        return result;
     }
 
     public void addDriversYearGuesses(List<DriverGuessEntity> driverGuesses) {

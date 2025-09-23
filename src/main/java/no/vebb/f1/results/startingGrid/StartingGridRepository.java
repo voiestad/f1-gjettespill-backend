@@ -13,7 +13,7 @@ public interface StartingGridRepository extends JpaRepository<StartingGridEntity
     boolean existsByIdRaceId(RaceId raceId);
 
     @Query(value = """
-            SELECT DISTINCT *
+            SELECT *
             FROM starting_grids sg
             WHERE sg.race_id NOT IN (
             	SELECT rr.race_id

@@ -95,9 +95,6 @@ public class ResultService {
         if (startingGridEntities.isEmpty()) {
             return Optional.empty();
         }
-        if (startingGridEntities.size() > 1) {
-            return Optional.empty();
-        }
         return Optional.of(startingGridEntities.get(0).raceId());
     }
 
