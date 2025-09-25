@@ -3,8 +3,8 @@ package no.vebb.f1.controller.open;
 import no.vebb.f1.collection.PositionedCompetitor;
 import no.vebb.f1.collection.Race;
 import no.vebb.f1.collection.RegisteredFlag;
-import no.vebb.f1.competitors.domain.Constructor;
-import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.competitors.constructor.ConstructorEntity;
+import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
@@ -49,10 +49,10 @@ public class StatsController {
     public static class RaceStats {
 
         public final String name;
-        public final List<PositionedCompetitor<Driver>> startingGrid;
-        public final List<PositionedCompetitor<Driver>> raceResult;
-        public final List<PositionedCompetitor<Driver>> driverStandings;
-        public final List<PositionedCompetitor<Constructor>> constructorStandings;
+        public final List<PositionedCompetitor<DriverEntity>> startingGrid;
+        public final List<PositionedCompetitor<DriverEntity>> raceResult;
+        public final List<PositionedCompetitor<DriverEntity>> driverStandings;
+        public final List<PositionedCompetitor<ConstructorEntity>> constructorStandings;
         public final List<RegisteredFlag> flags;
 
         public RaceStats(RaceId raceId, Year year, ResultService resultService, RaceService raceService, StatsService statsService) {

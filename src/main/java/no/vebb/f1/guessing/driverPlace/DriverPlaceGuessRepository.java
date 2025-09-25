@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGuessEntity, DriverPlaceGuessId> {
     @Query("""
-            SELECT dpg.id.categoryName AS category, dpg.driverName AS driver, r.raceName AS raceName, ro.year AS year
+            SELECT dpg.id.categoryName AS category, dpg.driver.driverName AS driver, r.raceName AS raceName, ro.year AS year
             FROM DriverPlaceGuessEntity dpg
             JOIN RaceEntity r ON dpg.id.raceId = r.raceId
             JOIN RaceOrderEntity ro ON dpg.id.raceId = ro.raceId
@@ -25,21 +25,21 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
     List<IPlaceGuess> findAllByUserId(UUID userId);
 
     @Query("""
-            SELECT u.username AS username, dpg.driverName AS driverName, sg.position AS startPosition
+            SELECT u.username AS username, dpg.driver.driverName AS driverName, sg.position AS startPosition
             FROM DriverPlaceGuessEntity dpg
             JOIN UserEntity u ON u.id = dpg.id.userId
-            JOIN StartingGridEntity sg ON sg.id.raceId = dpg.id.raceId AND sg.id.driverName = dpg.driverName
+            JOIN StartingGridEntity sg ON sg.id.raceId = dpg.id.raceId AND sg.id.driverId = dpg.driverId
             WHERE dpg.id.raceId = :raceId AND dpg.id.categoryName = :categoryName
             ORDER BY u.username
             """)
     List<IUserRaceGuess> findAllByRaceIdAndCategoryNameOrderByUsername(Category categoryName, RaceId raceId);
     @Query("""
-            SELECT ro.position as racePosition, r.raceName AS raceName, dpg.driverName AS driverName, sg.position AS startPosition, rr.id.finishingPosition AS finishingPosition
+            SELECT ro.position as racePosition, r.raceName AS raceName, dpg.driver.driverName AS driverName, sg.position AS startPosition, rr.id.finishingPosition AS finishingPosition
             FROM DriverPlaceGuessEntity dpg
             JOIN RaceEntity r ON r.raceId = dpg.id.raceId
             JOIN RaceOrderEntity ro ON r.raceId = ro.raceId
-            JOIN StartingGridEntity sg ON sg.id.raceId = r.raceId AND dpg.driverName = sg.id.driverName
-            JOIN RaceResultEntity rr ON rr.id.raceId = r.raceId AND dpg.driverName = rr.driverName
+            JOIN StartingGridEntity sg ON sg.id.raceId = r.raceId AND dpg.driverId = sg.driver.driverId
+            JOIN RaceResultEntity rr ON rr.id.raceId = r.raceId AND dpg.driverId = rr.driverId
             WHERE dpg.id.categoryName = :categoryName AND dpg.id.userId = :userId AND ro.year = :year AND ro.position <= :position
             ORDER BY ro.position
             """)

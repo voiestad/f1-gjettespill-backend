@@ -1,7 +1,8 @@
 package no.vebb.f1.guessing.constructor;
 
 import jakarta.persistence.*;
-import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.constructor.ConstructorEntity;
+import no.vebb.f1.competitors.constructor.ConstructorId;
 import no.vebb.f1.guessing.domain.GuessPosition;
 import no.vebb.f1.year.Year;
 
@@ -14,13 +15,17 @@ public class ConstructorGuessEntity {
     private CompetitorGuessId id;
 
     @Embedded
-    private Constructor constructorName;
+    private ConstructorId constructorId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "constructor_id", insertable = false, updatable = false)
+    private ConstructorEntity constructor;
 
     protected ConstructorGuessEntity() {}
 
-    public ConstructorGuessEntity(UUID userId, GuessPosition position, Year year, Constructor constructorName) {
+    public ConstructorGuessEntity(UUID userId, GuessPosition position, Year year, ConstructorId constructorId) {
         this.id = new CompetitorGuessId(userId, position, year);
-        this.constructorName = constructorName;
+        this.constructorId = constructorId;
     }
 
 
@@ -36,7 +41,7 @@ public class ConstructorGuessEntity {
         return id.year();
     }
 
-    public Constructor constructorName() {
-        return constructorName;
+    public ConstructorEntity constructor() {
+        return constructor;
     }
 }

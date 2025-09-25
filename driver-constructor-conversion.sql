@@ -4,9 +4,8 @@ insert into constructors (constructor_name, year, position) select * from constr
 alter table drivers_team rename to drivers_team_old;
 
 CREATE TABLE drivers_team (
-    driver_id INTEGER NOT NULL,
+    driver_id INTEGER PRIMARY KEY,
     constructor_id INTEGER NOT NULL,
-    PRIMARY KEY (driver_id, constructor_id),
     FOREIGN KEY (driver_id) REFERENCES drivers(driver_id),
     FOREIGN KEY (constructor_id) REFERENCES constructors(constructor_id) ON DELETE CASCADE
 );

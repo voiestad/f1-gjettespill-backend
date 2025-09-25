@@ -1,12 +1,14 @@
 package no.vebb.f1.competitors.domain;
 
 import no.vebb.f1.competitors.CompetitorService;
+import no.vebb.f1.competitors.constructor.ConstructorEntity;
 import no.vebb.f1.exception.DomainConversionException;
+import no.vebb.f1.exception.NoUsernameException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ConstructorConverter implements Converter<String, Constructor> {
+public class ConstructorConverter implements Converter<String, ConstructorEntity> {
     private final CompetitorService competitorService;
 
     public ConstructorConverter(CompetitorService competitorService) {
@@ -14,7 +16,11 @@ public class ConstructorConverter implements Converter<String, Constructor> {
     }
 
     @Override
-    public Constructor convert(String source) {
-        return competitorService.getConstructor(source).orElseThrow(DomainConversionException::new);
+    public ConstructorEntity convert(String source) {
+        try {
+            return competitorService.getConstructor(Integer.parseInt(source)).orElseThrow(DomainConversionException::new);
+        } catch (NoUsernameException e) {
+            throw new DomainConversionException();
+        }
     }
 }

@@ -1,7 +1,8 @@
 package no.vebb.f1.guessing.driverPlace;
 
 import jakarta.persistence.*;
-import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.competitors.driver.DriverEntity;
+import no.vebb.f1.competitors.driver.DriverId;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.race.RaceId;
 
@@ -14,13 +15,17 @@ public class DriverPlaceGuessEntity {
     private DriverPlaceGuessId id;
 
     @Embedded
-    private Driver driverName;
+    private DriverId driverId;
+
+    @ManyToOne
+    @JoinColumn(name = "driver_id", insertable = false, updatable = false)
+    private DriverEntity driver;
 
     protected DriverPlaceGuessEntity() {}
 
-    public DriverPlaceGuessEntity(UUID userId, RaceId raceId, Category categoryName, Driver driverName) {
+    public DriverPlaceGuessEntity(UUID userId, RaceId raceId, Category categoryName, DriverId driverId) {
         this.id = new DriverPlaceGuessId(userId, raceId, categoryName);
-        this.driverName = driverName;
+        this.driverId = driverId;
     }
 
     public UUID userId() {
@@ -35,7 +40,7 @@ public class DriverPlaceGuessEntity {
         return id.categoryName();
     }
 
-    public Driver driverName() {
-        return driverName;
+    public DriverEntity driver() {
+        return driver;
     }
 }

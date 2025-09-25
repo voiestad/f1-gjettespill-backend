@@ -1,7 +1,8 @@
 package no.vebb.f1.results.constructorStandings;
 
 import jakarta.persistence.*;
-import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.constructor.ConstructorEntity;
+import no.vebb.f1.competitors.constructor.ConstructorId;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.results.domain.CompetitorPoints;
 import no.vebb.f1.results.domain.CompetitorPosition;
@@ -15,13 +16,16 @@ public class ConstructorStandingsEntity {
     private CompetitorPosition position;
     @Embedded
     private CompetitorPoints points;
+    @ManyToOne
+    @JoinColumn(name = "constructor_id", insertable = false, updatable = false)
+    private ConstructorEntity constructor;
 
     protected ConstructorStandingsEntity() {
     }
 
-    public ConstructorStandingsEntity(RaceId raceId, Constructor constructorName, CompetitorPosition position,
+    public ConstructorStandingsEntity(RaceId raceId, ConstructorId constructorId, CompetitorPosition position,
                                       CompetitorPoints points) {
-        this.id = new ConstructorStandingsId(raceId, constructorName);
+        this.id = new ConstructorStandingsId(raceId, constructorId);
         this.position = position;
         this.points = points;
     }
@@ -30,8 +34,8 @@ public class ConstructorStandingsEntity {
         return id.raceId();
     }
 
-    public Constructor constructorName() {
-        return id.constructorName();
+    public ConstructorEntity constructor() {
+        return constructor;
     }
 
     public CompetitorPosition position() {

@@ -1,11 +1,11 @@
 package no.vebb.f1.results;
 
-import no.vebb.f1.competitors.constructor.ConstructorYearEntity;
-import no.vebb.f1.competitors.constructor.ConstructorYearRepository;
-import no.vebb.f1.competitors.domain.Constructor;
-import no.vebb.f1.competitors.domain.Driver;
-import no.vebb.f1.competitors.driver.DriverYearEntity;
-import no.vebb.f1.competitors.driver.DriverYearRepository;
+import no.vebb.f1.competitors.constructor.ConstructorEntity;
+import no.vebb.f1.competitors.constructor.ConstructorId;
+import no.vebb.f1.competitors.constructor.ConstructorRepository;
+import no.vebb.f1.competitors.driver.DriverEntity;
+import no.vebb.f1.competitors.driver.DriverId;
+import no.vebb.f1.competitors.driver.DriverRepository;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.results.constructorStandings.ConstructorStandingsEntity;
 import no.vebb.f1.results.constructorStandings.ConstructorStandingsRepository;
@@ -17,7 +17,6 @@ import no.vebb.f1.results.raceResult.RaceResultEntity;
 import no.vebb.f1.results.raceResult.RaceResultRepository;
 import no.vebb.f1.results.startingGrid.StartingGridEntity;
 import no.vebb.f1.results.startingGrid.StartingGridRepository;
-import no.vebb.f1.collection.ColoredCompetitor;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
 
@@ -31,16 +30,16 @@ public class ResultService {
     private final RaceResultRepository raceResultRepository;
     private final DriverStandingsRepository driverStandingsRepository;
     private final ConstructorStandingsRepository constructorStandingsRepository;
-    private final DriverYearRepository driverYearRepository;
-    private final ConstructorYearRepository constructorYearRepository;
+    private final DriverRepository driverRepository;
+    private final ConstructorRepository constructorRepository;
 
-    public ResultService(StartingGridRepository startingGridRepository, RaceResultRepository raceResultRepository, DriverStandingsRepository driverStandingsRepository, ConstructorStandingsRepository constructorStandingsRepository, DriverYearRepository driverYearRepository, ConstructorYearRepository constructorYearRepository) {
+    public ResultService(StartingGridRepository startingGridRepository, RaceResultRepository raceResultRepository, DriverStandingsRepository driverStandingsRepository, ConstructorStandingsRepository constructorStandingsRepository, DriverRepository driverRepository, ConstructorRepository constructorRepository) {
         this.startingGridRepository = startingGridRepository;
         this.raceResultRepository = raceResultRepository;
         this.driverStandingsRepository = driverStandingsRepository;
         this.constructorStandingsRepository = constructorStandingsRepository;
-        this.driverYearRepository = driverYearRepository;
-        this.constructorYearRepository = constructorYearRepository;
+        this.driverRepository = driverRepository;
+        this.constructorRepository = constructorRepository;
     }
 
     public List<StartingGridEntity> getStartingGrid(RaceId raceId) {
@@ -60,24 +59,24 @@ public class ResultService {
     }
 
 
-    public void insertDriverStartingGrid(RaceId raceId, CompetitorPosition position, Driver driver) {
-        StartingGridEntity startingGridEntity = new StartingGridEntity(raceId, driver, position);
+    public void insertDriverStartingGrid(RaceId raceId, CompetitorPosition position, DriverEntity driver) {
+        StartingGridEntity startingGridEntity = new StartingGridEntity(raceId, driver.driverId(), position);
         startingGridRepository.save(startingGridEntity);
     }
 
-    public void insertDriverRaceResult(RaceId raceId, String position, Driver driver, CompetitorPoints points, CompetitorPosition finishingPosition) {
-        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driver, points);
+    public void insertDriverRaceResult(RaceId raceId, String position, DriverId driverId, CompetitorPoints points, CompetitorPosition finishingPosition) {
+        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driverId, points);
         raceResultRepository.save(raceResultEntity);
     }
 
 
-    public void insertDriverIntoStandings(RaceId raceId, Driver driver, CompetitorPosition position, CompetitorPoints points) {
-        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver, position, points);
+    public void insertDriverIntoStandings(RaceId raceId, DriverId driverId, CompetitorPosition position, CompetitorPoints points) {
+        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driverId, position, points);
         driverStandingsRepository.save(driverStandingsEntity);
     }
 
 
-    public void insertConstructorIntoStandings(RaceId raceId, Constructor constructor, CompetitorPosition position, CompetitorPoints points) {
+    public void insertConstructorIntoStandings(RaceId raceId, ConstructorId constructor, CompetitorPosition position, CompetitorPoints points) {
         ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor, position, points);
         constructorStandingsRepository.save(constructorStandingsEntity);
     }
@@ -98,38 +97,29 @@ public class ResultService {
         return Optional.of(startingGridEntities.get(0).raceId());
     }
 
-    public List<Driver> getDriverStandings(RaceId raceId, Year year) {
+    public List<DriverEntity> getDriverStandings(RaceId raceId, Year year) {
         if (raceId == null) {
-            return driverYearRepository.findAllByIdYearOrderByPosition(year).stream()
-                    .map(DriverYearEntity::driverName)
-                    .toList();
+            return driverRepository.findAllByYearOrderByPosition(year);
         }
         return driverStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId).stream()
-                .map(DriverStandingsEntity::driverName)
+                .map(DriverStandingsEntity::driver)
                 .toList();
 
     }
 
-    public List<Constructor> getConstructorStandings(RaceId raceId, Year year) {
+    public List<ConstructorEntity> getConstructorStandings(RaceId raceId, Year year) {
         if (raceId == null) {
-            return constructorYearRepository.findAllByIdYearOrderByPosition(year).stream()
-                    .map(ConstructorYearEntity::constructorName)
-                    .toList();
+            return constructorRepository.findAllByYearOrderByPosition(year);
         }
         return constructorStandingsRepository.findAllByIdRaceIdOrderByPosition(raceId).stream()
-                .map(ConstructorStandingsEntity::constructorName)
+                .map(ConstructorStandingsEntity::constructor)
                 .toList();
     }
 
-    public List<Driver> getDriversFromStartingGrid(RaceId raceId) {
+    public List<DriverId> getDriversFromStartingGrid(RaceId raceId) {
         return getStartingGrid(raceId).stream()
-                .map(StartingGridEntity::driverName)
-                .toList();
-    }
-
-    public List<ColoredCompetitor<Driver>> getDriversFromStartingGridWithColors(RaceId raceId) {
-        return startingGridRepository.findAllByRaceIdWithColor(raceId).stream()
-                .map(ColoredCompetitor::fromIColoredCompetitorToDriver)
+                .map(StartingGridEntity::driver)
+                .map(DriverEntity::driverId)
                 .toList();
     }
 

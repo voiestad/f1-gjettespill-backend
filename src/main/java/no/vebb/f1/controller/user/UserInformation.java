@@ -4,6 +4,8 @@ import java.util.List;
 
 import no.vebb.f1.collection.CompetitorGuessYear;
 import no.vebb.f1.collection.FlagGuessYear;
+import no.vebb.f1.competitors.constructor.ConstructorEntity;
+import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.guessing.collection.PlaceGuess;
 import no.vebb.f1.collection.UserNotifiedCount;
 import no.vebb.f1.guessing.GuessService;
@@ -12,15 +14,13 @@ import no.vebb.f1.mail.MailService;
 import no.vebb.f1.mail.mailOption.MailOption;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserDto;
-import no.vebb.f1.competitors.domain.Constructor;
-import no.vebb.f1.competitors.domain.Driver;
 
 public class UserInformation {
 
 	public final UserDto user;
 	public final Email email;
-	public final List<CompetitorGuessYear<Driver>> driverGuess;
-	public final List<CompetitorGuessYear<Constructor>> constructorGuess;
+	public final List<CompetitorGuessYear<DriverEntity>> driverGuess;
+	public final List<CompetitorGuessYear<ConstructorEntity>> constructorGuess;
 	public final List<FlagGuessYear> flagGuess;
 	public final List<PlaceGuess> placeGuess;
 	public final List<UserNotifiedCount> notifiedCount;

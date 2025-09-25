@@ -1,42 +1,29 @@
 package no.vebb.f1.competitors.driver;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import no.vebb.f1.competitors.domain.Driver;
-import no.vebb.f1.year.Year;
 
 import java.util.Objects;
 
 @Embeddable
 public class DriverId {
-    @Embedded
-    private Driver driverName;
-    @Embedded
-    private Year year;
+    @Column(name = "driver_id", nullable = false)
+    private int value;
 
     protected DriverId() {}
 
-    public DriverId(Driver driverName, Year year) {
-        this.driverName = driverName;
-        this.year = year;
-    }
-
-    public Driver driverName() {
-        return driverName;
-    }
-
-    public Year year() {
-        return year;
+    public DriverId(int value) {
+        this.value = value;
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof DriverId driverId)) return false;
-        return year == driverId.year && Objects.equals(driverName, driverId.driverName);
+        return value == driverId.value;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(driverName, year);
+        return Objects.hashCode(value);
     }
 }

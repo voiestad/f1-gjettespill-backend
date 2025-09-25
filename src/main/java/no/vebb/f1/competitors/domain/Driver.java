@@ -6,7 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
-public class Driver implements Competitor {
+public class Driver {
 	@Column(name = "driver_name", nullable = false)
 	public String value;
 

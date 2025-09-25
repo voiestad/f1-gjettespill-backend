@@ -1,12 +1,13 @@
 package no.vebb.f1.competitors.domain;
 
 import no.vebb.f1.competitors.CompetitorService;
+import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.exception.DomainConversionException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DriverConverter implements Converter<String, Driver> {
+public class DriverConverter implements Converter<String, DriverEntity> {
     private final CompetitorService competitorService;
 
     public DriverConverter(CompetitorService competitorService) {
@@ -14,7 +15,11 @@ public class DriverConverter implements Converter<String, Driver> {
     }
 
     @Override
-    public Driver convert(String source) {
-        return competitorService.getDriver(source).orElseThrow(DomainConversionException::new);
+    public DriverEntity convert(String source) {
+        try {
+            return competitorService.getDriver(Integer.parseInt(source)).orElseThrow(DomainConversionException::new);
+        } catch (NumberFormatException e) {
+            throw new DomainConversionException();
+        }
     }
 }

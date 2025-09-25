@@ -1,42 +1,29 @@
 package no.vebb.f1.competitors.constructor;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import no.vebb.f1.competitors.domain.Constructor;
-import no.vebb.f1.year.Year;
 
 import java.util.Objects;
 
 @Embeddable
 public class ConstructorId {
-    @Embedded
-    private Constructor constructorName;
-    @Embedded
-    private Year year;
+    @Column(name = "constructor_id", nullable = false)
+    private int value;
 
     protected ConstructorId() {}
 
-    public ConstructorId(Constructor constructorName, Year year) {
-        this.constructorName = constructorName;
-        this.year = year;
-    }
-
-    public Constructor constructorName() {
-        return constructorName;
-    }
-
-    public Year year() {
-        return year;
+    public ConstructorId(int value) {
+        this.value = value;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof ConstructorId that)) return false;
-        return year == that.year && Objects.equals(constructorName, that.constructorName);
+        if (!(o instanceof ConstructorId constructorId)) return false;
+        return value == constructorId.value;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(constructorName, year);
+        return Objects.hashCode(value);
     }
 }

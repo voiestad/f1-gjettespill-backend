@@ -1,7 +1,8 @@
 package no.vebb.f1.results.raceResult;
 
 import jakarta.persistence.*;
-import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.competitors.driver.DriverEntity;
+import no.vebb.f1.competitors.driver.DriverId;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.results.domain.CompetitorPoints;
 import no.vebb.f1.results.domain.CompetitorPosition;
@@ -14,16 +15,19 @@ public class RaceResultEntity {
     @Column(name = "qualified_position", nullable = false)
     private String position;
     @Embedded
-    private Driver driverName;
+    private DriverId driverId;
     @Embedded
     private CompetitorPoints points;
+    @ManyToOne
+    @JoinColumn(name = "driver_id", insertable = false, updatable = false)
+    private DriverEntity driver;
 
     protected RaceResultEntity() {}
 
-    public RaceResultEntity(RaceId raceId, CompetitorPosition finishingPosition, String position, Driver driverName, CompetitorPoints points) {
+    public RaceResultEntity(RaceId raceId, CompetitorPosition finishingPosition, String position, DriverId driverId, CompetitorPoints points) {
         this.id = new RaceResultId(raceId, finishingPosition);
         this.position = position;
-        this.driverName = driverName;
+        this.driverId = driverId;
         this.points = points;
     }
 
@@ -39,8 +43,8 @@ public class RaceResultEntity {
         return position;
     }
 
-    public Driver driverName() {
-        return driverName;
+    public DriverEntity driver() {
+        return driver;
     }
 
     public CompetitorPoints points() {

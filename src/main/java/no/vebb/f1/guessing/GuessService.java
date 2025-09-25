@@ -1,10 +1,12 @@
 package no.vebb.f1.guessing;
 
 import no.vebb.f1.collection.*;
-import no.vebb.f1.competitors.domain.Constructor;
-import no.vebb.f1.competitors.constructor.ConstructorYearRepository;
-import no.vebb.f1.competitors.domain.Driver;
-import no.vebb.f1.competitors.driver.DriverYearRepository;
+import no.vebb.f1.competitors.constructor.ConstructorEntity;
+import no.vebb.f1.competitors.domain.Competitor;
+import no.vebb.f1.competitors.constructor.ConstructorRepository;
+import no.vebb.f1.competitors.driver.DriverEntity;
+import no.vebb.f1.competitors.driver.DriverId;
+import no.vebb.f1.competitors.driver.DriverRepository;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.guessing.collection.IFlagGuessed;
 import no.vebb.f1.guessing.collection.IUserRaceGuessTable;
@@ -21,7 +23,6 @@ import no.vebb.f1.guessing.flag.FlagGuessRepository;
 import no.vebb.f1.guessing.collection.PlaceGuess;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RacePosition;
-import no.vebb.f1.results.collection.IColoredCompetitor;
 import no.vebb.f1.stats.domain.Flag;
 import no.vebb.f1.user.UserEntity;
 import no.vebb.f1.user.UserRespository;
@@ -38,17 +39,17 @@ public class GuessService {
     private final DriverGuessRepository driverGuessRepository;
     private final FlagGuessRepository flagGuessRepository;
     private final DriverPlaceGuessRepository driverPlaceGuessRepository;
-    private final DriverYearRepository driverYearRepository;
-    private final ConstructorYearRepository constructorYearRepository;
+    private final DriverRepository driverRepository;
+    private final ConstructorRepository constructorRepository;
 
-    public GuessService(UserRespository userRespository, ConstructorGuessRepository constructorGuessRepository, DriverGuessRepository driverGuessRepository, FlagGuessRepository flagGuessRepository, DriverPlaceGuessRepository driverPlaceGuessRepository, DriverYearRepository driverYearRepository, ConstructorYearRepository constructorYearRepository) {
+    public GuessService(UserRespository userRespository, ConstructorGuessRepository constructorGuessRepository, DriverGuessRepository driverGuessRepository, FlagGuessRepository flagGuessRepository, DriverPlaceGuessRepository driverPlaceGuessRepository, DriverRepository driverRepository, ConstructorRepository constructorRepository) {
         this.userRespository = userRespository;
         this.constructorGuessRepository = constructorGuessRepository;
         this.driverGuessRepository = driverGuessRepository;
         this.flagGuessRepository = flagGuessRepository;
         this.driverPlaceGuessRepository = driverPlaceGuessRepository;
-        this.driverYearRepository = driverYearRepository;
-        this.constructorYearRepository = constructorYearRepository;
+        this.driverRepository = driverRepository;
+        this.constructorRepository = constructorRepository;
     }
 
     public List<Category> getCategories() {
@@ -66,15 +67,15 @@ public class GuessService {
         );
     }
 
-    public List<Driver> getGuessedYearDriver(Year year, UUID userId) {
+    public List<DriverEntity> getGuessedYearDriver(Year year, UUID userId) {
         return driverGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
-                .map(DriverGuessEntity::driverName)
+                .map(DriverGuessEntity::driver)
                 .toList();
     }
 
-    public List<Constructor> getGuessedYearConstructor(Year year, UUID userId) {
+    public List<ConstructorEntity> getGuessedYearConstructor(Year year, UUID userId) {
         return constructorGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
-                .map(ConstructorGuessEntity::constructorName)
+                .map(ConstructorGuessEntity::constructor)
                 .toList();
     }
 
@@ -111,39 +112,37 @@ public class GuessService {
         return flags;
     }
 
-    public Driver getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
+    public DriverEntity getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
         return driverPlaceGuessRepository.findById(new DriverPlaceGuessId(userId, raceId, category))
-                .map(DriverPlaceGuessEntity::driverName)
+                .map(DriverPlaceGuessEntity::driver)
                 .orElse(null);
     }
 
-    public void addDriverPlaceGuess(UUID userId, RaceId raceId, Driver driver, Category category) {
-        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category, driver));
+    public void addDriverPlaceGuess(UUID userId, RaceId raceId, DriverId driverId, Category category) {
+        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category, driverId));
     }
 
-    public List<ColoredCompetitor<Driver>> getDriversGuess(UUID userId, Year year) {
-        List<IColoredCompetitor> guessed = driverGuessRepository.findAllByUserIdOrderByIdPosition(userId, year);
-        List<IColoredCompetitor> driversYear = driverYearRepository.findAllByYearOrderByPositionWithColor(year);
-        List<IColoredCompetitor> result = appendNotGuessed(guessed, driversYear);
-        return result.stream()
-                .map(ColoredCompetitor::fromIColoredCompetitorToDriver)
+    public List<DriverEntity> getDriversGuess(UUID userId, Year year) {
+        List<DriverEntity> guessed = driverGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
+                .map(DriverGuessEntity::driver)
                 .toList();
+        List<DriverEntity> driversYear = driverRepository.findAllByYearOrderByPosition(year);
+        return appendNotGuessed(guessed, driversYear);
     }
 
-    public List<ColoredCompetitor<Constructor>> getConstructorsGuess(UUID userId, Year year) {
-        List<IColoredCompetitor> guessed = constructorGuessRepository.findAllByUserIdOrderByIdPosition(userId, year);
-        List<IColoredCompetitor> constructorsYear = constructorYearRepository.findAllByYearOrderByPosition(year);
-        List<IColoredCompetitor> result = appendNotGuessed(guessed, constructorsYear);
-        return result.stream()
-                .map(ColoredCompetitor::fromIColoredCompetitorToConstructor)
+    public List<ConstructorEntity> getConstructorsGuess(UUID userId, Year year) {
+        List<ConstructorEntity> guessed = constructorGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
+                .map(ConstructorGuessEntity::constructor)
                 .toList();
+        List<ConstructorEntity> constructorsYear = constructorRepository.findAllByYearOrderByPosition(year);
+        return appendNotGuessed(guessed, constructorsYear);
     }
 
-    private List<IColoredCompetitor> appendNotGuessed(List<IColoredCompetitor> guessed, List<IColoredCompetitor> competitorsYear) {
-        List<IColoredCompetitor> result = new ArrayList<>(guessed);
-        Set<String> competitorNames = new HashSet<>(guessed.stream().map(IColoredCompetitor::getCompetitorName).toList());
-        for (IColoredCompetitor competitor : competitorsYear) {
-            if (!competitorNames.contains(competitor.getCompetitorName())) {
+    private <T extends Competitor> List<T> appendNotGuessed(List<T> guessed, List<T> competitorsYear) {
+        List<T> result = new ArrayList<>(guessed);
+        Set<T> competitorNames = new HashSet<>(guessed);
+        for (T competitor : competitorsYear) {
+            if (!competitorNames.contains(competitor)) {
                 result.add(competitor);
             }
         }
@@ -162,13 +161,13 @@ public class GuessService {
         return userRespository.findAllByGuessedYear(year);
     }
 
-    public List<CompetitorGuessYear<Driver>> userGuessDataDriver(UUID userId) {
+    public List<CompetitorGuessYear<DriverEntity>> userGuessDataDriver(UUID userId) {
         return driverGuessRepository.findAllByIdUserIdOrderByIdYearDescIdPosition(userId).stream()
                 .map(CompetitorGuessYear::fromEntity)
                 .toList();
     }
 
-    public List<CompetitorGuessYear<Constructor>> userGuessDataConstructor(UUID userId) {
+    public List<CompetitorGuessYear<ConstructorEntity>> userGuessDataConstructor(UUID userId) {
         return constructorGuessRepository.findAllByIdUserIdOrderByIdYearDescIdPosition(userId).stream()
                 .map(CompetitorGuessYear::fromEntity)
                 .toList();

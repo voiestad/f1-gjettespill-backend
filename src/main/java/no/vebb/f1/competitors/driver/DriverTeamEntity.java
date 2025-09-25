@@ -1,37 +1,37 @@
 package no.vebb.f1.competitors.driver;
 
 import jakarta.persistence.*;
-import no.vebb.f1.competitors.domain.Constructor;
-import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.competitors.constructor.ConstructorId;
+import no.vebb.f1.competitors.constructor.ConstructorEntity;
 import no.vebb.f1.year.Year;
 
 @Entity
 @Table(name = "drivers_team")
 public class DriverTeamEntity {
     @EmbeddedId
-    private DriverId id;
-
+    private DriverId driverId;
     @Embedded
-    private Constructor team;
+    private ConstructorId constructorId;
+    @OneToOne
+    @JoinColumn(name = "driver_id", insertable = false, updatable = false)
+    private DriverEntity driver;
+    @OneToOne
+    @JoinColumn(name = "constructor_id", insertable = false, updatable = false)
+    private ConstructorEntity constructorYearEntity;
 
     protected DriverTeamEntity() {
     }
 
-    public DriverTeamEntity(Driver driverName, Year year, Constructor team) {
-        this.id = new DriverId(driverName, year);
-        this.team = team;
-    }
-
-    public Driver driverName() {
-        return id.driverName();
+    public DriverTeamEntity(DriverId driverId, ConstructorId constructorId) {
+        this.driverId = driverId;
+        this.constructorId = constructorId;
     }
 
     public Year year() {
-        return id.year();
+        return driver.year();
     }
 
-    public Constructor team() {
-        return team;
+    public ConstructorEntity team() {
+        return constructorYearEntity;
     }
-
 }

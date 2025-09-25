@@ -6,7 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
-public class Constructor implements Competitor {
+public class Constructor {
 	@Column(name = "constructor_name", nullable = false)
 	public String value;
 

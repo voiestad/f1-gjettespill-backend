@@ -1,7 +1,6 @@
 package no.vebb.f1.results.startingGrid;
 
 import no.vebb.f1.race.RaceId;
-import no.vebb.f1.results.collection.IColoredCompetitor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -21,14 +20,4 @@ public interface StartingGridRepository extends JpaRepository<StartingGridEntity
             )
             """, nativeQuery = true)
     List<StartingGridEntity> findAllByNotInRaceResult();
-
-    @Query("""
-            SELECT sg.id.driverName as competitorName, cc.color as color
-            FROM StartingGridEntity sg
-            LEFT JOIN DriverTeamEntity dt ON dt.id.driverName = sg.id.driverName
-            LEFT JOIN ConstructorColorEntity cc ON cc.id.constructorName = dt.team
-            WHERE sg.id.raceId = :raceId
-            ORDER BY sg.position
-            """)
-    List<IColoredCompetitor> findAllByRaceIdWithColor(RaceId raceId);
 }

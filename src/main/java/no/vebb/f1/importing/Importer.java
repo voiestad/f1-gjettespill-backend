@@ -7,7 +7,9 @@ import java.io.StringWriter;
 import java.io.PrintWriter;
 
 import no.vebb.f1.competitors.CompetitorService;
+import no.vebb.f1.competitors.constructor.ConstructorEntity;
 import no.vebb.f1.competitors.domain.Competitor;
+import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RacePosition;
@@ -25,8 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import no.vebb.f1.collection.PositionedCompetitor;
-import no.vebb.f1.competitors.domain.Constructor;
-import no.vebb.f1.competitors.domain.Driver;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
 
@@ -180,9 +180,9 @@ public class Importer {
         if (raceResult.size() <= 1) {
             return ResultChangeStatus.NO_CHANGE;
         }
-        List<PositionedCompetitor<Driver>> preList = resultService.getRaceResult(raceId).stream().map(PositionedCompetitor::fromRaceResult).toList();
+        List<PositionedCompetitor<DriverEntity>> preList = resultService.getRaceResult(raceId).stream().map(PositionedCompetitor::fromRaceResult).toList();
         insertRaceResultData(raceId, raceResult);
-        List<PositionedCompetitor<Driver>> postList = resultService.getRaceResult(raceId).stream().map(PositionedCompetitor::fromRaceResult).toList();
+        List<PositionedCompetitor<DriverEntity>> postList = resultService.getRaceResult(raceId).stream().map(PositionedCompetitor::fromRaceResult).toList();
         if (preList.size() != postList.size()) {
             logger.info("Different size");
             ResultChangeStatus status = ResultChangeStatus.POINTS_CHANGE;
@@ -191,8 +191,8 @@ public class Importer {
             return status;
         }
         for (int i = 0; i < preList.size(); i++) {
-            PositionedCompetitor<Driver> pre = preList.get(i);
-            PositionedCompetitor<Driver> post = postList.get(i);
+            PositionedCompetitor<DriverEntity> pre = preList.get(i);
+            PositionedCompetitor<DriverEntity> post = postList.get(i);
             if (!pre.equals(post)) {
                 if (i < 10) {
                     return ResultChangeStatus.POINTS_CHANGE;
@@ -242,7 +242,7 @@ public class Importer {
         try {
             for (List<String> row : startingGrid.subList(1, startingGrid.size())) {
                 CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(row.get(0))).orElseThrow(RuntimeException::new);
-                Driver driver = getDriverOrAdd(row.get(2), raceId);
+                DriverEntity driver = getDriver(row.get(2), raceId);
                 resultService.insertDriverStartingGrid(raceId, position, driver);
             }
 
@@ -292,9 +292,9 @@ public class Importer {
 
     private void insertRaceResultRow(RaceId raceId, List<String> row, CompetitorPosition finishingPosition) {
         String position = row.get(0);
-        Driver driver = getDriver(row.get(2), raceId);
+        DriverEntity driver = getDriver(row.get(2), raceId);
         CompetitorPoints points = CompetitorPoints.getCompetitorPoints(Integer.parseInt(row.get(6))).orElseThrow(RuntimeException::new);
-        resultService.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
+        resultService.insertDriverRaceResult(raceId, position, driver.driverId(), points, finishingPosition);
     }
 
     public void importRaceNames(List<Integer> racesToImportFrom, Year year) {
@@ -357,7 +357,7 @@ public class Importer {
         }
         standings = standings.subList(1, standings.size());
         try {
-            List<PositionedCompetitor<Driver>> currentStandings = standings.stream()
+            List<PositionedCompetitor<DriverEntity>> currentStandings = standings.stream()
                     .map(row ->
                             new PositionedCompetitor<>(
                                     String.valueOf(Integer.parseInt(row.get(0))),
@@ -370,11 +370,10 @@ public class Importer {
                 logger.info("Driver standings are not new, will not add new");
                 return ResultChangeStatus.NO_CHANGE;
             }
-            for (PositionedCompetitor<Driver> competitor : currentStandings) {
-                Driver driver = competitor.name();
+            for (PositionedCompetitor<DriverEntity> competitor : currentStandings) {
                 CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(competitor.position())).orElseThrow(RuntimeException::new);
                 CompetitorPoints points = competitor.points();
-                resultService.insertDriverIntoStandings(newestRace, driver, position, points);
+                resultService.insertDriverIntoStandings(newestRace, competitor.name().driverId(), position, points);
             }
             logger.info("Driver standings added for race '{}'", newestRace);
             return status;
@@ -383,12 +382,12 @@ public class Importer {
         }
     }
 
-    private ResultChangeStatus isDriverStandingsNew(List<PositionedCompetitor<Driver>> standings, Year year) {
+    private ResultChangeStatus isDriverStandingsNew(List<PositionedCompetitor<DriverEntity>> standings, Year year) {
         Optional<RaceId> optPreviousRaceId = raceService.getLatestStandingsId(year);
         if (optPreviousRaceId.isEmpty()) {
             return changeWithSum(standings);
         }
-        List<PositionedCompetitor<Driver>> previousStandings = resultService.getDriverStandings(optPreviousRaceId.get()).stream().map(PositionedCompetitor::fromDriverStandings).toList();
+        List<PositionedCompetitor<DriverEntity>> previousStandings = resultService.getDriverStandings(optPreviousRaceId.get()).stream().map(PositionedCompetitor::fromDriverStandings).toList();
         return compareStandings(standings, previousStandings);
     }
 
@@ -400,11 +399,11 @@ public class Importer {
         }
         standings = standings.subList(1, standings.size());
         try {
-            List<PositionedCompetitor<Constructor>> currentStandings = standings.stream()
+            List<PositionedCompetitor<ConstructorEntity>> currentStandings = standings.stream()
                     .map(row ->
                             new PositionedCompetitor<>(
                                     String.valueOf(Integer.parseInt(row.get(0))),
-                                    competitorService.getConstructor(row.get(1)).orElseThrow(RuntimeException::new),
+                                    competitorService.getConstructorByNameAndYear(row.get(1), year).orElseThrow(RuntimeException::new),
                                     CompetitorPoints.getCompetitorPoints(Integer.parseInt(row.get(2))).orElseThrow(RuntimeException::new)
                             ))
                     .toList();
@@ -413,11 +412,10 @@ public class Importer {
                 logger.info("Constructor standings are not new, will not add new");
                 return ResultChangeStatus.NO_CHANGE;
             }
-            for (PositionedCompetitor<Constructor> competitor : currentStandings) {
+            for (PositionedCompetitor<ConstructorEntity> competitor : currentStandings) {
                 CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(competitor.position())).orElseThrow(RuntimeException::new);
                 CompetitorPoints points = competitor.points();
-                Constructor validConstructor = competitor.name();
-                resultService.insertConstructorIntoStandings(newestRace, validConstructor, position, points);
+                resultService.insertConstructorIntoStandings(newestRace, competitor.name().constructorId(), position, points);
             }
             logger.info("Constructor standings added for race '{}'", newestRace);
             return status;
@@ -426,12 +424,12 @@ public class Importer {
         }
     }
 
-    private ResultChangeStatus isConstructorStandingsNew(List<PositionedCompetitor<Constructor>> standings, Year year) {
+    private ResultChangeStatus isConstructorStandingsNew(List<PositionedCompetitor<ConstructorEntity>> standings, Year year) {
         Optional<RaceId> optPreviousRaceId = raceService.getLatestStandingsId(year);
         if (optPreviousRaceId.isEmpty()) {
             return changeWithSum(standings);
         }
-        List<PositionedCompetitor<Constructor>> previousStandings = resultService.getConstructorStandings(optPreviousRaceId.get()).stream().map(PositionedCompetitor::fromConstructorStandings).toList();
+        List<PositionedCompetitor<ConstructorEntity>> previousStandings = resultService.getConstructorStandings(optPreviousRaceId.get()).stream().map(PositionedCompetitor::fromConstructorStandings).toList();
         return compareStandings(standings, previousStandings);
     }
 
@@ -475,15 +473,7 @@ public class Importer {
         return driverName.substring(0, driverName.length() - 3);
     }
 
-    private Driver getDriverOrAdd(String driverName, RaceId raceId) {
-        Optional<Year> optYear = raceService.getYearFromRaceId(raceId);
-        if (optYear.isEmpty()) {
-            throw new RuntimeException("No year found for race " + raceId);
-        }
-        return competitorService.getDriverNameOrAdd(parseDriverName(driverName), optYear.get());
-    }
-
-    private Driver getDriver(String driverName, RaceId raceId) {
+    private DriverEntity getDriver(String driverName, RaceId raceId) {
         Optional<Year> optYear = raceService.getYearFromRaceId(raceId);
         if (optYear.isEmpty()) {
             throw new RuntimeException("No year found for race " + raceId);
@@ -491,8 +481,8 @@ public class Importer {
         return getDriver(driverName, optYear.get());
     }
 
-    private Driver getDriver(String driverName, Year year) {
-        Optional<Driver> optDriver = competitorService.getAltDriverName(parseDriverName(driverName), year);
+    private DriverEntity getDriver(String driverName, Year year) {
+        Optional<DriverEntity> optDriver = competitorService.getDriverByNameAndYear(parseDriverName(driverName), year);
         if (optDriver.isEmpty()) {
             throw new RuntimeException(driverName + " not found as driver in " + year);
         }
