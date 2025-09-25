@@ -69,87 +69,66 @@ CREATE TABLE IF NOT EXISTS race_order (
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS drivers (
-    driver_name TEXT PRIMARY KEY
-);
-CREATE TABLE IF NOT EXISTS constructors (
-    constructor_name TEXT PRIMARY KEY
-);
-CREATE TABLE IF NOT EXISTS drivers_year (
+    driver_id SERIAL PRIMARY KEY,
     driver_name TEXT NOT NULL,
     year INTEGER NOT NULL,
     position INTEGER NOT NULL,
-    PRIMARY KEY (driver_name, year),
-    FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS constructors_year (
+CREATE TABLE IF NOT EXISTS constructors (
+    constructor_id SERIAL PRIMARY KEY,
     constructor_name TEXT NOT NULL,
     year INTEGER NOT NULL,
     position INTEGER NOT NULL,
-    PRIMARY KEY (constructor_name, year),
-    FOREIGN KEY (constructor_name) REFERENCES constructors(constructor_name) ON DELETE CASCADE,
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS drivers_team (
-    driver_name TEXT NOT NULL,
-    constructor_name TEXT NOT NULL,
-    year INTEGER NOT NULL,
-    PRIMARY KEY (driver_name, year),
-    FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
-    FOREIGN KEY (constructor_name) REFERENCES constructors(constructor_name) ON DELETE CASCADE,
-    FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
+    driver_id INTEGER NOT NULL,
+    constructor_id INTEGER NOT NULL,
+    PRIMARY KEY (driver_id, constructor_id),
+    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id),
+    FOREIGN KEY (constructor_id) REFERENCES constructors(constructor_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS constructors_color (
-    constructor_name TEXT NOT NULL,
-    year INTEGER NOT NULL,
+    constructor_id INTEGER PRIMARY KEY ,
     color TEXT NOT NULL,
-    PRIMARY KEY (constructor_name, year),
-    FOREIGN KEY (constructor_name) REFERENCES constructors(constructor_name) ON DELETE CASCADE,
-    FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS drivers_alternative_name (
-    alternative_name TEXT NOT NULL,
-    year INTEGER NOT NULL,
-    driver_name TEXT NOT NULL,
-    PRIMARY KEY (alternative_name, year),
-    FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
-    FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
+    FOREIGN KEY (constructor_id) REFERENCES constructors(constructor_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS driver_standings (
     race_id INTEGER NOT NULL,
-    driver_name TEXT NOT NULL,
+    driver_id INTEGER NOT NULL,
     position INTEGER NOT NULL,
     points INTEGER NOT NULL,
-    PRIMARY KEY (race_id, driver_name),
-    FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
-    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
+    PRIMARY KEY (race_id, driver_id),
+    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS constructor_standings (
     race_id INTEGER NOT NULL,
-    constructor_name TEXT NOT NULL,
+    constructor_id INTEGER NOT NULL,
     position INTEGER NOT NULL,
     points INTEGER NOT NULL,
-    PRIMARY KEY (race_id, constructor_name),
-    FOREIGN KEY (constructor_name) REFERENCES constructors(constructor_name) ON DELETE CASCADE,
-    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
+    PRIMARY KEY (race_id, constructor_id),
+    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
+    FOREIGN KEY (constructor_id) REFERENCES constructors(constructor_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS race_results (
     race_id INTEGER NOT NULL,
-    position TEXT NOT NULL,
-    finishing_position INTEGER NOT NULL,
-    driver_name TEXT NOT NULL,
+    qualified_position TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    driver_id INTEGER NOT NULL,
     points INTEGER NOT NULL,
-    PRIMARY KEY (race_id, finishing_position),
-    FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
-    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
+    PRIMARY KEY (race_id, position),
+    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS starting_grids (
     race_id INTEGER NOT NULL,
     position INTEGER NOT NULL,
-    driver_name TEXT NOT NULL,
-    PRIMARY KEY (race_id, driver_name),
-    FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
-    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
+    driver_id INTEGER NOT NULL,
+    PRIMARY KEY (race_id, driver_id),
+    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS flag_guesses (
     user_id UUID NOT NULL,
@@ -162,32 +141,32 @@ CREATE TABLE IF NOT EXISTS flag_guesses (
 );
 CREATE TABLE IF NOT EXISTS constructor_guesses (
     user_id UUID NOT NULL,
-    constructor_name TEXT NOT NULL,
+    constructor_id INTEGER NOT NULL,
     year INTEGER NOT NULL,
     position INTEGER NOT NULL,
     PRIMARY KEY (user_id, position, year),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (constructor_name) REFERENCES constructors(constructor_name) ON DELETE CASCADE,
+    FOREIGN KEY (constructor_id) REFERENCES constructors(constructor_id) ON DELETE CASCADE,
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS driver_guesses (
     user_id UUID NOT NULL,
-    driver_name TEXT NOT NULL,
+    driver_id INTEGER NOT NULL,
     year INTEGER NOT NULL,
     position INTEGER NOT NULL,
     PRIMARY KEY (user_id, position, year),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE,
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS driver_place_guesses (
     user_id UUID NOT NULL,
     race_id INTEGER NOT NULL,
     category_name TEXT NOT NULL,
-    driver_name TEXT NOT NULL,
+    driver_id INTEGER NOT NULL,
     PRIMARY KEY (user_id, race_id, category_name),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (driver_name) REFERENCES drivers(driver_name) ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE,
     FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS user_year_idx ON flag_guesses (user_id, year);
