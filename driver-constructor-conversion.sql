@@ -1,4 +1,8 @@
 start transaction;
+alter table race_cutoffs alter column cutoff type timestamptz using cutoff::timestamptz;
+alter table year_cutoffs alter column cutoff type timestamptz using cutoff::timestamptz;
+alter table referral_codes alter column cutoff type timestamptz using cutoff::timestamptz;
+alter table verification_codes alter column cutoff type timestamptz using cutoff::timestamptz;
 alter table admins drop constraint admins_user_id_fkey;
 alter table bingomasters drop constraint bingomasters_user_id_fkey;
 alter table constructor_guesses drop constraint constructor_guesses_user_id_fkey;
@@ -41,6 +45,13 @@ alter table flag_stats drop constraint flag_stats_flag_name_fkey;
 alter table flag_stats drop constraint flag_stats_session_type_fkey;
 alter table placements_category drop constraint placements_category_category_name_fkey;
 alter table placements_category_year_start drop constraint placements_category_year_start_category_name_fkey;
+
+update flag_guesses set flag_name = 'YELLOW_FLAG' where flag_name = 'Yellow Flag';
+update flag_guesses set flag_name = 'RED_FLAG' where flag_name = 'Red Flag';
+update flag_guesses set flag_name = 'SAFETY_CAR' where flag_name = 'Safety Car';
+update flag_stats set flag_name = 'YELLOW_FLAG' where flag_name = 'Yellow Flag';
+update flag_stats set flag_name = 'RED_FLAG' where flag_name = 'Red Flag';
+update flag_stats set flag_name = 'SAFETY_CAR' where flag_name = 'Safety Car';
 
 drop table categories;
 drop table flags;

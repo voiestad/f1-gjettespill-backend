@@ -9,7 +9,8 @@ import no.vebb.f1.stats.domain.SessionType;
 @Table(name = "flag_stats")
 public class FlagStatEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "flag_stats_gen")
+    @SequenceGenerator(name = "flag_stats_gen", sequenceName = "flag_stats_flag_id_seq", allocationSize = 1)
     @Column(name = "flag_id")
     private int flagId;
 

@@ -12,6 +12,7 @@ import java.util.Objects;
 @Table(name = "constructors")
 public class ConstructorEntity implements Competitor {
     @EmbeddedId
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private ConstructorId constructorId;
     @Embedded
     private Constructor constructorName;

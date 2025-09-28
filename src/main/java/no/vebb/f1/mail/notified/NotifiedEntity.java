@@ -9,7 +9,8 @@ import java.util.UUID;
 @Table(name = "notified")
 public class NotifiedEntity {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "notified_gen")
+    @SequenceGenerator(name = "notified_gen", sequenceName = "notified_id_seq", allocationSize = 1)
     @Column(name = "id")
     private int id;
     @Column(name = "user_id", nullable = false)
