@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS users (
-    google_id TEXT PRIMARY KEY,
-    user_id UUID UNIQUE NOT NULL,
+    user_id UUID PRIMARY KEY,
+    google_id TEXT UNIQUE NOT NULL,
     username CITEXT COLLATE "nb_NO.utf8" UNIQUE NOT NULL
 );
 CREATE SEQUENCE IF NOT EXISTS anonymous_username_seq START 1;
