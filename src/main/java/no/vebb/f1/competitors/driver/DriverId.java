@@ -1,5 +1,6 @@
 package no.vebb.f1.competitors.driver;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
@@ -14,6 +15,11 @@ public class DriverId {
 
     public DriverId(int value) {
         this.value = value;
+    }
+
+    @JsonValue
+    public int toValue() {
+        return value;
     }
 
     @Override

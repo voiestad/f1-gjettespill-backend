@@ -40,7 +40,7 @@ public class CompetitorService {
 
     public void addDriverYear(String driver, Year year) {
         int position = getMaxPosDriverYear(year) + 1;
-        driverRepository.save(new DriverEntity(new Driver(driver), year, position));
+        driverRepository.save(new DriverEntity(new DriverId(driverRepository.getNextId()), new Driver(driver), year, position));
     }
 
     public int getMaxPosDriverYear(Year year) {
@@ -72,33 +72,28 @@ public class CompetitorService {
         constructorRepository.deleteById(constructorId);
     }
 
-    public void setTeamDriver(DriverId driverId, ConstructorId team) {
+    public void setTeamDriver(DriverId driverId, ConstructorEntity team) {
         driverTeamRepository.save(new DriverTeamEntity(driverId, team));
     }
 
-    public List<DriverEntity> getDriversTeam(Year year) {
-        List<DriverEntity> drivers = driverRepository.findAllByYearOrderByPosition(year);
-        drivers.forEach(DriverEntity::team);
-        return drivers;
+    public List<DriverDTO> getDriversTeam(Year year) {
+        return driverRepository.findAllByYearOrderByPosition(year).stream()
+                .map(DriverDTO::fromEntityWithTeam)
+                .toList();
     }
 
     public void addColorConstructor(ConstructorId constructorId, Color color) {
         constructorColorRepository.save(new ConstructorColorEntity(constructorId, color));
     }
 
-    public List<ConstructorEntity> getConstructorsYearWithColors(Year year) {
-        List<ConstructorEntity> constructors = constructorRepository.findAllByYearOrderByPosition(year);
-        constructors.forEach(ConstructorEntity::color);
-        return constructors;
+    public List<ConstructorDTO> getConstructorsYearWithColors(Year year) {
+        return constructorRepository.findAllByYearOrderByPosition(year).stream()
+                .map(ConstructorDTO::fromEntityWithColor)
+                .toList();
     }
 
     public Optional<DriverEntity> getDriver(int driverId) {
         return driverRepository.findById(new DriverId(driverId));
-    }
-
-    public boolean isDriverInYear(DriverId driverId, Year year) {
-        return driverRepository.findById(driverId)
-                .filter(driver -> driver.year().equals(year)).isPresent();
     }
 
     public Optional<ConstructorEntity> getConstructor(int constructorId) {
@@ -125,7 +120,7 @@ public class CompetitorService {
         return driverRepository.findAllById(drivers.stream().map(DriverId::new).toList());
     }
 
-        public List<ConstructorEntity> getAllConstructors(List<Integer> constructors) {
+    public List<ConstructorEntity> getAllConstructors(List<Integer> constructors) {
         return constructorRepository.findAllById(constructors.stream().map(ConstructorId::new).toList());
     }
 }

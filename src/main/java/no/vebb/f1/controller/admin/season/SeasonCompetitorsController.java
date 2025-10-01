@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import no.vebb.f1.competitors.CompetitorService;
+import no.vebb.f1.competitors.constructor.ConstructorDTO;
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
+import no.vebb.f1.competitors.driver.DriverDTO;
 import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
@@ -29,7 +31,7 @@ public class SeasonCompetitorsController {
     }
 
     @GetMapping("/drivers/list/{year}")
-    public ResponseEntity<List<DriverEntity>> listDrivers(@PathVariable("year") Year year) {
+    public ResponseEntity<List<DriverDTO>> listDrivers(@PathVariable("year") Year year) {
         return new ResponseEntity<>(competitorService.getDriversTeam(year), HttpStatus.OK);
     }
 
@@ -46,7 +48,7 @@ public class SeasonCompetitorsController {
         boolean isDriverInYear = driver.year().equals(year);
         boolean isConstructorInYear = team.year().equals(year);
         if (isDriverInYear && isConstructorInYear) {
-            competitorService.setTeamDriver(driver.driverId(), team.constructorId());
+            competitorService.setTeamDriver(driver.driverId(), team);
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -123,8 +125,8 @@ public class SeasonCompetitorsController {
     }
 
     @GetMapping("/constructors/list/{year}")
-    public ResponseEntity<List<ConstructorEntity>> listConstructors(@PathVariable("year") Year year) {
-        List<ConstructorEntity> constructors = competitorService.getConstructorsYearWithColors(year);
+    public ResponseEntity<List<ConstructorDTO>> listConstructors(@PathVariable("year") Year year) {
+        List<ConstructorDTO> constructors = competitorService.getConstructorsYearWithColors(year);
         return new ResponseEntity<>(constructors, HttpStatus.OK);
     }
 

@@ -1,7 +1,6 @@
 package no.vebb.f1.competitors.driver;
 
 import jakarta.persistence.*;
-import no.vebb.f1.competitors.constructor.ConstructorColorEntity;
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
 import no.vebb.f1.competitors.domain.Color;
 import no.vebb.f1.competitors.domain.Competitor;
@@ -14,7 +13,6 @@ import java.util.Objects;
 @Table(name = "drivers")
 public class DriverEntity implements Competitor {
     @EmbeddedId
-    @Column(name = "driver_id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private DriverId driverId;
     @Embedded
@@ -24,7 +22,7 @@ public class DriverEntity implements Competitor {
     @Column(name =  "position", nullable = false)
     private int position;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "driver_id", insertable = false, updatable = false)
     private DriverTeamEntity driverTeam;
 
@@ -33,12 +31,8 @@ public class DriverEntity implements Competitor {
 
     protected DriverEntity() {}
 
-    private DriverEntity(DriverId driverId, Driver driverName, Year year, int position){
-        this(driverName, year, position);
+    public DriverEntity(DriverId driverId, Driver driverName, Year year, int position){
         this.driverId = driverId;
-    }
-
-    public DriverEntity(Driver driverName, Year year, int position) {
         this.driverName = driverName;
         this.year = year;
         this.position = position;
