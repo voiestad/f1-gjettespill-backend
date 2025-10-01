@@ -38,20 +38,18 @@ public class SeasonCompetitorsController {
     @PostMapping("/drivers/set-team")
     @Transactional
     public ResponseEntity<?> setTeamDriver(
-            @RequestParam("year") Year year,
             @RequestParam("driver") DriverEntity driver,
             @RequestParam("team") ConstructorEntity team) {
+        if (!driver.year().equals(team.year())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        Year year = driver.year();
         if (yearService.isFinishedYear(year)) {
             return new ResponseEntity<>("Year '" + year + "' is over and the competitors can't be changed",
                     HttpStatus.FORBIDDEN);
         }
-        boolean isDriverInYear = driver.year().equals(year);
-        boolean isConstructorInYear = team.year().equals(year);
-        if (isDriverInYear && isConstructorInYear) {
-            competitorService.setTeamDriver(driver.driverId(), team);
-            return new ResponseEntity<>(HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        competitorService.setTeamDriver(driver.driverId(), team);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/drivers/add")

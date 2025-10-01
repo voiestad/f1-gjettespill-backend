@@ -27,12 +27,8 @@ public class ConstructorEntity implements Competitor {
 
     protected ConstructorEntity() {}
 
-    private ConstructorEntity(ConstructorId constructorId, Constructor constructorName, Year year, int position){
-        this(constructorName, year, position);
+    public ConstructorEntity(ConstructorId constructorId, Constructor constructorName, Year year, int position){
         this.constructorId = constructorId;
-    }
-
-    public ConstructorEntity(Constructor constructorName, Year year, int position) {
         this.constructorName = constructorName;
         this.year = year;
         this.position = position;

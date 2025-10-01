@@ -57,7 +57,8 @@ public class CompetitorService {
 
     public void addConstructorYear(String constructor, Year year) {
         int position = getMaxPosConstructorYear(year) + 1;
-        constructorRepository.save(new ConstructorEntity(new Constructor(constructor), year, position));
+        constructorRepository.save(new ConstructorEntity(
+                new ConstructorId(constructorRepository.getNextId()), new Constructor(constructor), year, position));
     }
 
     public int getMaxPosConstructorYear(Year year) {
