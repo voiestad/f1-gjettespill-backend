@@ -8,7 +8,6 @@ import java.io.PrintWriter;
 
 import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
-import no.vebb.f1.competitors.domain.Competitor;
 import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.mail.MailService;
 import no.vebb.f1.race.RaceOrderEntity;
@@ -373,7 +372,7 @@ public class Importer {
             for (PositionedCompetitor<DriverEntity> competitor : currentStandings) {
                 CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(competitor.position())).orElseThrow(RuntimeException::new);
                 CompetitorPoints points = competitor.points();
-                resultService.insertDriverIntoStandings(newestRace, competitor.name().driverId(), position, points);
+                resultService.insertDriverIntoStandings(newestRace, competitor.entity().driverId(), position, points);
             }
             logger.info("Driver standings added for race '{}'", newestRace);
             return status;
@@ -415,7 +414,7 @@ public class Importer {
             for (PositionedCompetitor<ConstructorEntity> competitor : currentStandings) {
                 CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(competitor.position())).orElseThrow(RuntimeException::new);
                 CompetitorPoints points = competitor.points();
-                resultService.insertConstructorIntoStandings(newestRace, competitor.name().constructorId(), position, points);
+                resultService.insertConstructorIntoStandings(newestRace, competitor.entity().constructorId(), position, points);
             }
             logger.info("Constructor standings added for race '{}'", newestRace);
             return status;
@@ -433,7 +432,7 @@ public class Importer {
         return compareStandings(standings, previousStandings);
     }
 
-    private <T extends Competitor> ResultChangeStatus compareStandings(List<PositionedCompetitor<T>> standings, List<PositionedCompetitor<T>> previousStandings) {
+    private <T> ResultChangeStatus compareStandings(List<PositionedCompetitor<T>> standings, List<PositionedCompetitor<T>> previousStandings) {
         ResultChangeStatus status = null;
         if (standings.size() != previousStandings.size()) {
             status = ResultChangeStatus.POINTS_CHANGE;
@@ -456,14 +455,14 @@ public class Importer {
         return status;
     }
 
-    private <T extends Competitor> ResultChangeStatus changeWithSum(List<PositionedCompetitor<T>> competitors) {
+    private <T> ResultChangeStatus changeWithSum(List<PositionedCompetitor<T>> competitors) {
         ResultChangeStatus status = ResultChangeStatus.POINTS_CHANGE;
         CompetitorPoints change = compPoints(competitors);
         status.setPointsChange(change);
         return status;
     }
 
-    private <T extends Competitor> CompetitorPoints compPoints(List<PositionedCompetitor<T>> competitors) {
+    private <T> CompetitorPoints compPoints(List<PositionedCompetitor<T>> competitors) {
         return competitors.stream()
                 .map(PositionedCompetitor::points)
                 .reduce(new CompetitorPoints(), CompetitorPoints::add);

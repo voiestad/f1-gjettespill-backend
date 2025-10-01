@@ -1,8 +1,8 @@
 package no.vebb.f1.collection;
 
-import no.vebb.f1.competitors.domain.Competitor;
+import no.vebb.f1.competitors.domain.CompetitorDTO;
 
 import java.util.List;
 
-public record CutoffCompetitors<T extends Competitor>(List<T> competitors, long timeLeft) {
+public record CutoffCompetitors(List<CompetitorDTO> competitors, long timeLeft) {
 }

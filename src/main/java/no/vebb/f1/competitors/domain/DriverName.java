@@ -6,16 +6,16 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
-public class Constructor {
-	@Column(name = "constructor_name", nullable = false)
+public class DriverName implements CompetitorName {
+	@Column(name = "driver_name", nullable = false)
 	public String value;
 
-	protected Constructor() {}
+	protected DriverName() {}
 
-	public Constructor(String value) {
+	public DriverName(String value) {
 		this.value = value;
 	}
-
+	
 	@JsonValue
     public String toValue() {
         return value;
@@ -42,9 +42,11 @@ public class Constructor {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Constructor other = (Constructor) obj;
+		DriverName other = (DriverName) obj;
 		if (value == null) {
             return other.value == null;
 		} else return value.equals(other.value);
     }
+
+	
 }

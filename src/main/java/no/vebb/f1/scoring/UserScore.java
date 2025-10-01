@@ -1,8 +1,8 @@
 package no.vebb.f1.scoring;
 
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
-import no.vebb.f1.competitors.domain.Competitor;
-import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.competitors.domain.ConstructorName;
+import no.vebb.f1.competitors.domain.DriverName;
 import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.guessing.GuessService;
@@ -35,8 +35,8 @@ public class UserScore {
     public final Year year;
     public final RaceId raceId;
     public final RacePosition racePos;
-    public final List<StandingsGuess<DriverEntity>> driversGuesses = new ArrayList<>();
-    public final List<StandingsGuess<ConstructorEntity>> constructorsGuesses = new ArrayList<>();
+    public final List<StandingsGuess<DriverName>> driversGuesses = new ArrayList<>();
+    public final List<StandingsGuess<ConstructorName>> constructorsGuesses = new ArrayList<>();
     public final List<FlagGuess> flagGuesses = new ArrayList<>();
     public final List<PlaceGuess> winnerGuesses = new ArrayList<>();
     public final List<PlaceGuess> tenthGuesses = new ArrayList<>();
@@ -85,18 +85,18 @@ public class UserScore {
     }
 
     private void initializeDriversGuesses() {
-        List<DriverEntity> guessedDriver = guessService.getGuessedYearDriver(year, user.id());
-        List<DriverEntity> drivers = resultService.getDriverStandings(raceId, year);
+        List<DriverName> guessedDriver = guessService.getGuessedYearDriver(year, user.id()).stream().map(DriverEntity::driverName).toList();
+        List<DriverName> drivers = resultService.getDriverStandings(raceId, year).stream().map(DriverEntity::driverName).toList();
         getGuessedToPos(Category.DRIVER, guessedDriver, drivers, driversGuesses);
     }
 
     private void initializeConstructorsGuesses() {
-        List<ConstructorEntity> guessedConstructor = guessService.getGuessedYearConstructor(year, user.id());
-        List<ConstructorEntity> constructors = resultService.getConstructorStandings(raceId, year);
+        List<ConstructorName> guessedConstructor = guessService.getGuessedYearConstructor(year, user.id()).stream().map(ConstructorEntity::constructorName).toList();
+        List<ConstructorName> constructors = resultService.getConstructorStandings(raceId, year).stream().map(ConstructorEntity::constructorName).toList();
         getGuessedToPos(Category.CONSTRUCTOR, guessedConstructor, constructors, constructorsGuesses);
     }
 
-    private <T extends Competitor> void getGuessedToPos(Category category, List<T> guessed,
+    private <T> void getGuessedToPos(Category category, List<T> guessed,
                                                         List<T> competitors, List<StandingsGuess<T>> result) {
         DiffPointsMap map = new DiffPointsMap(category, year, scoreService);
         Map<T, Integer> guessedToPos = new HashMap<>();
@@ -149,7 +149,7 @@ public class UserScore {
         for (IUserRaceGuessTable row : sqlRes) {
             RacePosition racePosition = row.getRacePosition();
             String raceName = row.getRaceName();
-            Driver driver = row.getDriverName();
+            DriverName driver = row.getDriverName();
             CompetitorPosition startPos = row.getStartPosition();
             CompetitorPosition finishPos = row.getFinishingPosition();
             Diff diff = new Diff(targetPos - finishPos.toValue());

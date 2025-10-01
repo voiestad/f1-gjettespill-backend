@@ -3,20 +3,18 @@ package no.vebb.f1.competitors.driver;
 import jakarta.persistence.*;
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
 import no.vebb.f1.competitors.domain.Color;
-import no.vebb.f1.competitors.domain.Competitor;
-import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.competitors.domain.DriverName;
 import no.vebb.f1.year.Year;
 
 import java.util.Objects;
 
 @Entity
 @Table(name = "drivers")
-public class DriverEntity implements Competitor {
+public class DriverEntity {
     @EmbeddedId
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private DriverId driverId;
     @Embedded
-    private Driver driverName;
+    private DriverName driverName;
     @Embedded
     private Year year;
     @Column(name =  "position", nullable = false)
@@ -31,14 +29,14 @@ public class DriverEntity implements Competitor {
 
     protected DriverEntity() {}
 
-    public DriverEntity(DriverId driverId, Driver driverName, Year year, int position){
+    public DriverEntity(DriverId driverId, DriverName driverName, Year year, int position){
         this.driverId = driverId;
         this.driverName = driverName;
         this.year = year;
         this.position = position;
     }
 
-    public Driver driverName() {
+    public DriverName driverName() {
         return driverName;
     }
 

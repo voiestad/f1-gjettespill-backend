@@ -15,7 +15,7 @@ public class StartingGridEntity {
     @Embedded
     private CompetitorPosition position;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "driver_id", insertable = false, updatable = false)
     private DriverEntity driver;
 

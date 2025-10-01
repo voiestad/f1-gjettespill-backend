@@ -1,9 +1,9 @@
 package no.vebb.f1.competitors.constructor;
 
 import no.vebb.f1.competitors.domain.Color;
-import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.domain.ConstructorName;
 
-public record ConstructorDTO(ConstructorId id, Constructor name, Color color) {
+public record ConstructorDTO(ConstructorId id, ConstructorName name, Color color) {
     public static ConstructorDTO fromEntity(ConstructorEntity constructorEntity) {
         if (constructorEntity == null) {
             return null;

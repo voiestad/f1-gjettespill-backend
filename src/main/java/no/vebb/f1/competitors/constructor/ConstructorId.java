@@ -3,11 +3,12 @@ package no.vebb.f1.competitors.constructor;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import no.vebb.f1.competitors.domain.CompetitorId;
 
 import java.util.Objects;
 
 @Embeddable
-public class ConstructorId {
+public class ConstructorId implements CompetitorId {
     @Column(name = "constructor_id", nullable = false)
     private int value;
 

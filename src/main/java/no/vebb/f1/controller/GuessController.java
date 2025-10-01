@@ -5,8 +5,7 @@ import java.util.function.BiFunction;
 
 import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
-import no.vebb.f1.competitors.constructor.ConstructorId;
-import no.vebb.f1.competitors.domain.Competitor;
+import no.vebb.f1.competitors.domain.*;
 import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.competitors.driver.DriverId;
 import no.vebb.f1.guessing.*;
@@ -77,7 +76,7 @@ public class GuessController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    private <T extends Competitor> ResponseEntity<CutoffCompetitors<T>> getRankCompetitors(BiFunction<UUID, Year, List<T>> getCompetitors) {
+    private ResponseEntity<CutoffCompetitors> getRankCompetitors(BiFunction<UUID, Year, List<CompetitorDTO>> getCompetitors) {
         Optional<Year> optYear = cutoffService.getCurrentYearIfAbleToGuess();
         if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -85,13 +84,13 @@ public class GuessController {
         Year year = optYear.get();
         UUID id = userService.getUser().id();
         long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear(year);
-        List<T> competitors = getCompetitors.apply(id, year);
-        CutoffCompetitors<T> res = new CutoffCompetitors<>(competitors, timeLeftToGuess);
+        List<CompetitorDTO> competitors = getCompetitors.apply(id, year);
+        CutoffCompetitors res = new CutoffCompetitors(competitors, timeLeftToGuess);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     @GetMapping("/driver")
-    public ResponseEntity<CutoffCompetitors<DriverEntity>> rankDrivers() {
+    public ResponseEntity<CutoffCompetitors> rankDrivers() {
         return getRankCompetitors(guessService::getDriversGuess);
     }
 
@@ -104,13 +103,9 @@ public class GuessController {
         }
         Year year = optYear.get();
         UUID userId = userService.getUser().id();
-        List<DriverId> validationList = competitorService.getDriversYear(year).stream()
-                .map(DriverEntity::driverId)
-                .toList();
-        Set<DriverId> competitors = new HashSet<>(validationList);
-        List<DriverId> guessedDrivers = competitorService.getAllDrivers(rankedCompetitors).stream()
-                .map(DriverEntity::driverId)
-                .toList();
+        List<DriverEntity> validationList = competitorService.getDriversYear(year);
+        Set<DriverEntity> competitors = new HashSet<>(validationList);
+        List<DriverEntity> guessedDrivers = competitorService.getAllDrivers(rankedCompetitors);
         String error = validateGuessList(guessedDrivers, competitors);
         if (error != null) {
             logger.warn(error);
@@ -118,8 +113,8 @@ public class GuessController {
         }
         GuessPosition position = new GuessPosition();
         List<DriverGuessEntity> driverGuesses = new ArrayList<>();
-        for (DriverId driverId : guessedDrivers) {
-            driverGuesses.add(new DriverGuessEntity(userId, position, year, driverId));
+        for (DriverEntity driverEntity : guessedDrivers) {
+            driverGuesses.add(new DriverGuessEntity(userId, position, year, driverEntity));
             position = position.next();
         }
         guessService.addDriversYearGuesses(driverGuesses);
@@ -128,7 +123,7 @@ public class GuessController {
     }
 
     @GetMapping("/constructor")
-    public ResponseEntity<CutoffCompetitors<ConstructorEntity>> rankConstructors() {
+    public ResponseEntity<CutoffCompetitors> rankConstructors() {
         return getRankCompetitors(guessService::getConstructorsGuess);
     }
     @PostMapping("/constructor")
@@ -139,13 +134,9 @@ public class GuessController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         Year year = optYear.get();
-        List<ConstructorId> validationList = competitorService.getConstructorsYear(year).stream()
-                .map(ConstructorEntity::constructorId)
-                .toList();
-        Set<ConstructorId> competitors = new HashSet<>(validationList);
-        List<ConstructorId> guessedConstructors = competitorService.getAllConstructors(rankedCompetitors).stream()
-                .map(ConstructorEntity::constructorId)
-                .toList();
+        List<ConstructorEntity> validationList = competitorService.getConstructorsYear(year);
+        Set<ConstructorEntity> competitors = new HashSet<>(validationList);
+        List<ConstructorEntity> guessedConstructors = competitorService.getAllConstructors(rankedCompetitors);
         String error = validateGuessList(guessedConstructors, competitors);
         if (error != null) {
             logger.warn(error);
@@ -154,8 +145,8 @@ public class GuessController {
         GuessPosition position = new GuessPosition();
         UUID id = userService.getUser().id();
         List<ConstructorGuessEntity> constructorGuesses = new ArrayList<>();
-        for (ConstructorId constructorId : guessedConstructors) {
-            constructorGuesses.add(new ConstructorGuessEntity(id, position, year, constructorId));
+        for (ConstructorEntity constructorEntity : guessedConstructors) {
+            constructorGuesses.add(new ConstructorGuessEntity(id, position, year, constructorEntity));
             position = position.next();
         }
         guessService.addConstructorsYearGuesses(constructorGuesses);
@@ -181,7 +172,7 @@ public class GuessController {
     }
 
     @GetMapping("/tenth")
-    public ResponseEntity<CutoffCompetitorsSelected<DriverEntity>> guessTenth() {
+    public ResponseEntity<CutoffCompetitorsSelected> guessTenth() {
         return handleGetChooseDriver(Category.TENTH);
     }
 
@@ -192,7 +183,7 @@ public class GuessController {
     }
 
     @GetMapping("/first")
-    public ResponseEntity<CutoffCompetitorsSelected<DriverEntity>> guessWinner() {
+    public ResponseEntity<CutoffCompetitorsSelected> guessWinner() {
         return handleGetChooseDriver(Category.FIRST);
     }
 
@@ -202,7 +193,7 @@ public class GuessController {
         return handlePostChooseDriver(driver, Category.FIRST);
     }
 
-    private ResponseEntity<CutoffCompetitorsSelected<DriverEntity>> handleGetChooseDriver(Category category) {
+    private ResponseEntity<CutoffCompetitorsSelected> handleGetChooseDriver(Category category) {
         Optional<Year> optYear = yearService.getCurrentYear();
         if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -222,12 +213,13 @@ public class GuessController {
         }
         Race race = optRace.get();
         long timeLeftToGuess = cutoffService.getTimeLeftToGuessRace(raceId);
-        List<DriverEntity> drivers = resultService.getStartingGrid(raceId).stream()
+        List<CompetitorDTO> drivers = resultService.getStartingGrid(raceId).stream()
                 .map(StartingGridEntity::driver)
+                .map(CompetitorDTO::fromEntity)
                 .toList();
         UUID id = userService.getUser().id();
-        DriverEntity driver = guessService.getGuessedDriverPlace(raceId, category, id);
-        CutoffCompetitorsSelected<DriverEntity> res = new CutoffCompetitorsSelected<>(drivers, driver, timeLeftToGuess, race);
+        CompetitorId driver = guessService.getGuessedDriverPlace(raceId, category, id).driverId();
+        CutoffCompetitorsSelected res = new CutoffCompetitorsSelected(drivers, driver, timeLeftToGuess, race);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 

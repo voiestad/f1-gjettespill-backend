@@ -2,8 +2,8 @@ package no.vebb.f1.competitors;
 
 import no.vebb.f1.competitors.constructor.*;
 import no.vebb.f1.competitors.domain.Color;
-import no.vebb.f1.competitors.domain.Constructor;
-import no.vebb.f1.competitors.domain.Driver;
+import no.vebb.f1.competitors.domain.ConstructorName;
+import no.vebb.f1.competitors.domain.DriverName;
 import no.vebb.f1.competitors.driver.*;
 import no.vebb.f1.year.Year;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class CompetitorService {
 
     public void addDriverYear(String driver, Year year) {
         int position = getMaxPosDriverYear(year) + 1;
-        driverRepository.save(new DriverEntity(new DriverId(driverRepository.getNextId()), new Driver(driver), year, position));
+        driverRepository.save(new DriverEntity(new DriverId(driverRepository.getNextId()), new DriverName(driver), year, position));
     }
 
     public int getMaxPosDriverYear(Year year) {
@@ -58,7 +58,7 @@ public class CompetitorService {
     public void addConstructorYear(String constructor, Year year) {
         int position = getMaxPosConstructorYear(year) + 1;
         constructorRepository.save(new ConstructorEntity(
-                new ConstructorId(constructorRepository.getNextId()), new Constructor(constructor), year, position));
+                new ConstructorId(constructorRepository.getNextId()), new ConstructorName(constructor), year, position));
     }
 
     public int getMaxPosConstructorYear(Year year) {
@@ -110,11 +110,11 @@ public class CompetitorService {
     }
 
     public Optional<DriverEntity> getDriverByNameAndYear(String name, Year year) {
-        return driverRepository.findByDriverNameAndYear(new Driver(name), year);
+        return driverRepository.findByDriverNameAndYear(new DriverName(name), year);
     }
 
     public Optional<ConstructorEntity> getConstructorByNameAndYear(String name, Year year) {
-        return constructorRepository.findByConstructorNameAndYear(new Constructor(name), year);
+        return constructorRepository.findByConstructorNameAndYear(new ConstructorName(name), year);
     }
 
     public List<DriverEntity> getAllDrivers(List<Integer> drivers) {

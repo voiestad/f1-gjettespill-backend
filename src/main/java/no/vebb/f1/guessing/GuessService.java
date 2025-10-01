@@ -2,8 +2,10 @@ package no.vebb.f1.guessing;
 
 import no.vebb.f1.collection.*;
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
-import no.vebb.f1.competitors.domain.Competitor;
 import no.vebb.f1.competitors.constructor.ConstructorRepository;
+import no.vebb.f1.competitors.domain.CompetitorDTO;
+import no.vebb.f1.competitors.domain.ConstructorName;
+import no.vebb.f1.competitors.domain.DriverName;
 import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.competitors.driver.DriverId;
 import no.vebb.f1.competitors.driver.DriverRepository;
@@ -122,27 +124,33 @@ public class GuessService {
         driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category, driverId));
     }
 
-    public List<DriverEntity> getDriversGuess(UUID userId, Year year) {
-        List<DriverEntity> guessed = driverGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
+    public List<CompetitorDTO> getDriversGuess(UUID userId, Year year) {
+        List<CompetitorDTO> guessed = driverGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
                 .map(DriverGuessEntity::driver)
+                .map(CompetitorDTO::fromEntity)
                 .toList();
-        List<DriverEntity> driversYear = driverRepository.findAllByYearOrderByPosition(year);
+        List<CompetitorDTO> driversYear = driverRepository.findAllByYearOrderByPosition(year).stream()
+                .map(CompetitorDTO::fromEntity)
+                .toList();
         return appendNotGuessed(guessed, driversYear);
     }
 
-    public List<ConstructorEntity> getConstructorsGuess(UUID userId, Year year) {
-        List<ConstructorEntity> guessed = constructorGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
+    public List<CompetitorDTO> getConstructorsGuess(UUID userId, Year year) {
+        List<CompetitorDTO> guessed = constructorGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
                 .map(ConstructorGuessEntity::constructor)
+                .map(CompetitorDTO::fromEntity)
                 .toList();
-        List<ConstructorEntity> constructorsYear = constructorRepository.findAllByYearOrderByPosition(year);
+        List<CompetitorDTO> constructorsYear = constructorRepository.findAllByYearOrderByPosition(year).stream()
+                .map(CompetitorDTO::fromEntity)
+                .toList();
         return appendNotGuessed(guessed, constructorsYear);
     }
 
-    private <T extends Competitor> List<T> appendNotGuessed(List<T> guessed, List<T> competitorsYear) {
-        List<T> result = new ArrayList<>(guessed);
-        Set<T> competitorNames = new HashSet<>(guessed);
-        for (T competitor : competitorsYear) {
-            if (!competitorNames.contains(competitor)) {
+    private List<CompetitorDTO> appendNotGuessed(List<CompetitorDTO> guessed, List<CompetitorDTO> competitorsYear) {
+        List<CompetitorDTO> result = new ArrayList<>(guessed);
+        Set<CompetitorDTO> competitors = new HashSet<>(guessed);
+        for (CompetitorDTO competitor : competitorsYear) {
+            if (!competitors.contains(competitor)) {
                 result.add(competitor);
             }
         }
@@ -161,13 +169,13 @@ public class GuessService {
         return userRespository.findAllByGuessedYear(year);
     }
 
-    public List<CompetitorGuessYear<DriverEntity>> userGuessDataDriver(UUID userId) {
+    public List<CompetitorGuessYear<DriverName>> userGuessDataDriver(UUID userId) {
         return driverGuessRepository.findAllByIdUserIdOrderByIdYearDescIdPosition(userId).stream()
                 .map(CompetitorGuessYear::fromEntity)
                 .toList();
     }
 
-    public List<CompetitorGuessYear<ConstructorEntity>> userGuessDataConstructor(UUID userId) {
+    public List<CompetitorGuessYear<ConstructorName>> userGuessDataConstructor(UUID userId) {
         return constructorGuessRepository.findAllByIdUserIdOrderByIdYearDescIdPosition(userId).stream()
                 .map(CompetitorGuessYear::fromEntity)
                 .toList();

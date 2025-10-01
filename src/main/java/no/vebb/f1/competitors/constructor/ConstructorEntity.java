@@ -2,20 +2,18 @@ package no.vebb.f1.competitors.constructor;
 
 import jakarta.persistence.*;
 import no.vebb.f1.competitors.domain.Color;
-import no.vebb.f1.competitors.domain.Competitor;
-import no.vebb.f1.competitors.domain.Constructor;
+import no.vebb.f1.competitors.domain.ConstructorName;
 import no.vebb.f1.year.Year;
 
 import java.util.Objects;
 
 @Entity
 @Table(name = "constructors")
-public class ConstructorEntity implements Competitor {
+public class ConstructorEntity {
     @EmbeddedId
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private ConstructorId constructorId;
     @Embedded
-    private Constructor constructorName;
+    private ConstructorName constructorName;
     @Embedded
     private Year year;
     @Column(name = "position", nullable = false)
@@ -27,7 +25,7 @@ public class ConstructorEntity implements Competitor {
 
     protected ConstructorEntity() {}
 
-    public ConstructorEntity(ConstructorId constructorId, Constructor constructorName, Year year, int position){
+    public ConstructorEntity(ConstructorId constructorId, ConstructorName constructorName, Year year, int position){
         this.constructorId = constructorId;
         this.constructorName = constructorName;
         this.year = year;
@@ -38,7 +36,7 @@ public class ConstructorEntity implements Competitor {
         return constructorId;
     }
 
-    public Constructor constructorName() {
+    public ConstructorName constructorName() {
         return constructorName;
     }
 
