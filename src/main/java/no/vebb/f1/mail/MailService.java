@@ -17,6 +17,9 @@ import no.vebb.f1.mail.mailingList.MailingListEntity;
 import no.vebb.f1.mail.mailingList.MailingListRepository;
 import no.vebb.f1.mail.notified.NotifiedEntity;
 import no.vebb.f1.mail.notified.NotifiedRepository;
+import no.vebb.f1.mail.ntfy.NtfySender;
+import no.vebb.f1.mail.ntfy.message.NtfyMessage;
+import no.vebb.f1.mail.ntfy.message.NtfyMessageBuilder;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.user.admin.AdminEntity;
@@ -50,11 +53,12 @@ public class MailService {
     private final YearService yearService;
     private final RaceService raceService;
     private final CutoffService cutoffService;
+    private final NtfySender ntfySender;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository, YearService yearService, RaceService raceService, CutoffService cutoffService) {
+    public MailService(MailingListRepository mailingListRepository, JavaMailSender mailSender, NotifiedRepository notifiedRepository, UserRespository userRespository, AdminRepository adminRepository, MailOptionRepository mailOptionRepository, MailPreferenceRepository mailPreferenceRepository, YearService yearService, RaceService raceService, CutoffService cutoffService, NtfySender ntfySender) {
         this.mailingListRepository = mailingListRepository;
         this.mailSender = mailSender;
         this.notifiedRepository = notifiedRepository;
@@ -65,6 +69,7 @@ public class MailService {
         this.yearService = yearService;
         this.raceService = raceService;
         this.cutoffService = cutoffService;
+        this.ntfySender = ntfySender;
     }
 
     public void addToMailingList(UUID userId, Email email) {

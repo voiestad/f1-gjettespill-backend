@@ -24,10 +24,10 @@ Dette repoet er koden for backenden til nettsiden. Koden for frontenden ligger [
 ```
 spring.security.oauth2.client.registration.google.client-id={id}
 spring.security.oauth2.client.registration.google.client-secret={secret}
-spring.mail.username={email}
-spring.mail.password={app password}
 spring.datasource.username={database username}
 spring.datasource.password={database password}
+ntfy.user={ntfy username}
+ntfy.password={ntfy password}
 ```
 
 ## Kjøre Applikasjonen
