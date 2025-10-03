@@ -120,12 +120,7 @@ public class RaceService {
 
     private List<Race> mapToRace(List<RaceOrderEntity> raceOrderEntities) {
         return raceOrderEntities.stream()
-                .map(ro -> new Race(
-                        ro.position(),
-                        ro.name(),
-                        ro.raceId(),
-                        ro.year()
-                ))
+                .map(Race::fromEntity)
                 .toList();
     }
 

@@ -163,7 +163,7 @@ public class Importer {
                 }
             }
         }
-        scoreCalculator.calculateScores();
+        new Thread(scoreCalculator::calculateScores).start();
     }
 
     private void importStartingGridData(RaceId raceId) {

@@ -15,8 +15,8 @@ public class RaceOrderEntity {
     @Embedded
     private RacePosition position;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "race_id", referencedColumnName = "race_id")
+    @OneToOne
+    @JoinColumn(name = "race_id")
     private RaceEntity race;
 
     protected RaceOrderEntity() {}

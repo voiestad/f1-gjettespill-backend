@@ -7,6 +7,9 @@ alter table guess_reminder_options rename column mail_option to guess_reminder_o
 
 drop table mailing_list;
 
+alter table race_order drop constraint race_order_pkey;
+alter table race_order drop constraint race_order_race_id_key;
+alter table race_order add primary key (race_id);
 alter table race_cutoffs alter column cutoff type timestamptz using cutoff::timestamptz;
 alter table year_cutoffs alter column cutoff type timestamptz using cutoff::timestamptz;
 alter table referral_codes alter column cutoff type timestamptz using cutoff::timestamptz;
@@ -16,8 +19,7 @@ alter table constructor_guesses drop constraint constructor_guesses_user_id_fkey
 alter table driver_guesses drop constraint driver_guesses_user_id_fkey;
 alter table driver_place_guesses drop constraint driver_place_guesses_user_id_fkey;
 alter table flag_guesses drop constraint flag_guesses_user_id_fkey;
-alter table mail_preferences drop constraint mail_preferences_user_id_fkey;
-alter table mailing_list drop constraint mailing_list_user_id_fkey;
+alter table guess_reminder_preferences drop constraint mail_preferences_user_id_fkey;
 alter table notified drop constraint notified_user_id_fkey;
 alter table placements_category drop constraint placements_category_user_id_fkey;
 alter table placements_category_year_start drop constraint placements_category_year_start_user_id_fkey;
@@ -33,8 +35,7 @@ alter table users add unique (google_id);
 alter table admins add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
 alter table bingomasters add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
 alter table flag_guesses add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
-alter table mail_preferences add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
-alter table mailing_list add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
+alter table guess_reminder_preferences add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
 alter table placements_category add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
 alter table placements_category_year_start add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
 delete from placements_race where user_id = 'a8abc030-a4f5-44c8-8b27-fcee946ae510';

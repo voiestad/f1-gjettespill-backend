@@ -91,7 +91,7 @@ public class ManageSeasonController {
             newOrder.add(new RaceOrderEntity(raceId, year, currentPos));
         }
         raceService.setRaceOrder(newOrder);
-        importer.importData();
+        new Thread(importer::importData).start();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
