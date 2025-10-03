@@ -74,8 +74,7 @@ CREATE TABLE IF NOT EXISTS drivers (
     year INTEGER NOT NULL,
     position INTEGER NOT NULL,
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE,
-    UNIQUE (driver_name, position),
-    UNIQUE (year, position)
+    UNIQUE (driver_name, year)
 );
 CREATE TABLE IF NOT EXISTS constructors (
     constructor_id SERIAL PRIMARY KEY,
@@ -83,8 +82,7 @@ CREATE TABLE IF NOT EXISTS constructors (
     year INTEGER NOT NULL,
     position INTEGER NOT NULL,
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE,
-    UNIQUE (constructor_name, year),
-    UNIQUE (year, position)
+    UNIQUE (constructor_name, year)
 );
 CREATE TABLE IF NOT EXISTS drivers_team (
     driver_id INTEGER PRIMARY KEY,
