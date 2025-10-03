@@ -205,11 +205,6 @@ CREATE TABLE IF NOT EXISTS year_cutoffs (
     cutoff TIMESTAMPTZ NOT NULL,
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS mailing_list (
-    user_id UUID PRIMARY KEY,
-    email TEXT NOT NULL UNIQUE,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
 CREATE TABLE IF NOT EXISTS notified (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL,
@@ -217,23 +212,16 @@ CREATE TABLE IF NOT EXISTS notified (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS verification_codes (
-    user_id UUID PRIMARY KEY,
-    verification_code INTEGER NOT NULL,
-    email TEXT NOT NULL,
-    cutoff TIMESTAMPTZ NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
 CREATE TABLE IF NOT EXISTS referral_codes (
     user_id UUID PRIMARY KEY,
     referral_code BIGINT NOT NULL,
     cutoff TIMESTAMPTZ NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS mail_options (
-    mail_option INTEGER PRIMARY KEY
+CREATE TABLE IF NOT EXISTS guess_reminder_options (
+    guess_reminder_option INTEGER PRIMARY KEY
 );
-INSERT INTO mail_options (mail_option)
+INSERT INTO guess_reminder_options (guess_reminder_option)
 VALUES
     (1),
     (2),
@@ -241,13 +229,13 @@ VALUES
     (6),
     (12),
     (24)
-ON CONFLICT(mail_option) DO NOTHING;
-CREATE TABLE IF NOT EXISTS mail_preferences (
+ON CONFLICT(guess_reminder_option) DO NOTHING;
+CREATE TABLE IF NOT EXISTS guess_reminder_preferences (
     user_id UUID NOT NULL,
-    mail_option INTEGER NOT NULL,
-    PRIMARY KEY (user_id, mail_option),
+    guess_reminder_option INTEGER NOT NULL,
+    PRIMARY KEY (user_id, guess_reminder_option),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (mail_option) REFERENCES mail_options(mail_option) ON DELETE CASCADE
+    FOREIGN KEY (guess_reminder_option) REFERENCES guess_reminder_options(guess_reminder_option) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS bingomasters (
     user_id UUID PRIMARY KEY,
@@ -260,6 +248,11 @@ CREATE TABLE IF NOT EXISTS bingo_cards (
     marked BOOLEAN NOT NULL,
     PRIMARY KEY (year, bingo_square_id),
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS ntfy_topics (
+    user_id UUID PRIMARY KEY,
+    topic UUID UNIQUE NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS SPRING_SESSION (
     PRIMARY_ID CHAR(36) NOT NULL,

@@ -4,8 +4,7 @@ import java.util.*;
 
 import no.vebb.f1.codes.CodeService;
 import no.vebb.f1.guessing.GuessService;
-import no.vebb.f1.mail.domain.Email;
-import no.vebb.f1.mail.MailService;
+import no.vebb.f1.notification.NotificationService;
 import no.vebb.f1.user.*;
 import no.vebb.f1.response.ReferralCodeResponse;
 import org.slf4j.Logger;
@@ -22,10 +21,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import no.vebb.f1.mail.mailOption.MailOption;
+import no.vebb.f1.notification.guessReminderOption.GuessReminderOption;
 import no.vebb.f1.user.domain.Username;
 import no.vebb.f1.exception.InvalidUsernameException;
-import no.vebb.f1.response.MailOptionsResponse;
+import no.vebb.f1.response.GuessReminderOptionsResponse;
 
 @RestController
 @RequestMapping("/api/settings")
@@ -35,21 +34,21 @@ public class UserSettingsController {
     private final UserService userService;
     private final UserRespository userRespository;
     private final CodeService codeService;
-    private final MailService mailService;
+    private final NotificationService notificationService;
     private final GuessService guessService;
 
-    public UserSettingsController(UserService userService, UserRespository userRespository, CodeService codeService, MailService mailService, GuessService guessService) {
+    public UserSettingsController(UserService userService, UserRespository userRespository, CodeService codeService, NotificationService notificationService, GuessService guessService) {
         this.userService = userService;
         this.userRespository = userRespository;
         this.codeService = codeService;
-        this.mailService = mailService;
+        this.notificationService = notificationService;
         this.guessService = guessService;
     }
 
     @GetMapping("/info")
     public ResponseEntity<UserInformation> userInformation() {
         UserEntity userEntity = userService.getUser();
-        UserInformation userInfo = new UserInformation(userEntity, mailService, guessService);
+        UserInformation userInfo = new UserInformation(userEntity, notificationService, guessService);
         return new ResponseEntity<>(userInfo, HttpStatus.OK);
     }
 
@@ -100,90 +99,74 @@ public class UserSettingsController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/mail")
-    public ResponseEntity<MailOptionsResponse> mailingList() {
+    @GetMapping("/ntfy")
+    public ResponseEntity<GuessReminderOptionsResponse> ntfyOverview() {
         UserEntity userEntity = userService.getUser();
-        boolean hasMail = mailService.userHasEmail(userEntity.id());
-        if (!hasMail) {
-            MailOptionsResponse res = new MailOptionsResponse(false, null);
+        Optional<UUID> optTopic = notificationService.getNtfyTopic(userEntity.id());
+        if (optTopic.isEmpty()) {
+            GuessReminderOptionsResponse res = new GuessReminderOptionsResponse(null, null);
             return new ResponseEntity<>(res, HttpStatus.OK);
         }
-        Map<MailOption, Boolean> mailOptions = new LinkedHashMap<>();
-        List<MailOption> options = mailService.getMailingOptions();
-        for (MailOption option : options) {
-            mailOptions.put(option, false);
+        Map<GuessReminderOption, Boolean> guessReminderOptions = new LinkedHashMap<>();
+        List<GuessReminderOption> options = notificationService.getGuessReminderOptions();
+        for (GuessReminderOption option : options) {
+            guessReminderOptions.put(option, false);
         }
-        List<MailOption> preferences = mailService.getMailingPreference(userEntity.id());
-        for (MailOption preference : preferences) {
-            mailOptions.put(preference, true);
+        List<GuessReminderOption> preferences = notificationService.getGuessReminderPreference(userEntity.id());
+        for (GuessReminderOption preference : preferences) {
+            guessReminderOptions.put(preference, true);
         }
-        MailOptionsResponse res = new MailOptionsResponse(true, mailOptions);
+        GuessReminderOptionsResponse res = new GuessReminderOptionsResponse(optTopic.get(), guessReminderOptions);
         return new ResponseEntity<>(res, HttpStatus.OK);
 
     }
 
-    @PostMapping("/mail/add")
+    @PostMapping("/ntfy/add")
     @Transactional
-    public ResponseEntity<?> addMailingList(@RequestParam("email") String email) {
+    public ResponseEntity<UUID> addNtfy() {
         UserEntity userEntity = userService.getUser();
-        Optional<Email> optEmail = Email.getEmail(email);
-        if (optEmail.isEmpty()) {
+        return new ResponseEntity<>(notificationService.addNtfyTopic(userEntity.id()), HttpStatus.OK);
+    }
+
+    @PostMapping("/ntfy/remove")
+    @Transactional
+    public ResponseEntity<?> removeNtfy() {
+        UserEntity userEntity = userService.getUser();
+        notificationService.clearUserFromNtfy(userEntity.id());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/ntfy/option/add")
+    @Transactional
+    public ResponseEntity<?> addGuessReminderOption(@RequestParam("option") int option) {
+        UserEntity userEntity = userService.getUser();
+        Optional<GuessReminderOption> guessReminderOption = notificationService.getGuessReminderOption(option);
+        if (guessReminderOption.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        UserMail userMail = new UserMail(userEntity, optEmail.get());
-        codeService.sendVerificationCode(userMail);
+        notificationService.addGuessReminderOption(userEntity.id(), guessReminderOption.get());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PostMapping("/mail/remove")
+    @PostMapping("/ntfy/option/remove")
     @Transactional
-    public ResponseEntity<?> removeMailingList() {
+    public ResponseEntity<?> removeGuessReminderOption(@RequestParam("option") int option) {
         UserEntity userEntity = userService.getUser();
-        mailService.clearUserFromMailing(userEntity.id());
+        Optional<GuessReminderOption> guessReminderOption = notificationService.getGuessReminderOption(option);
+        if (guessReminderOption.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        notificationService.removeGuessReminderOption(userEntity.id(), guessReminderOption.get());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/mail/verification")
-    public ResponseEntity<Boolean> hasVerificationCode() {
-        UserEntity userEntity = userService.getUser();
-        return new ResponseEntity<>(codeService.hasVerificationCode(userEntity.id()), HttpStatus.OK);
-    }
-
-    @PostMapping("/mail/verification")
-    @Transactional
-    public ResponseEntity<?> verificationCode(@RequestParam("code") int code) {
-        UserEntity userEntity = userService.getUser();
-        boolean isValidVerificationCode = codeService.validateVerificationCode(userEntity.id(), code);
-        if (isValidVerificationCode) {
-            logger.info("Successfully verified email of user '{}'", userEntity.id());
+    @PostMapping("/ntfy/test")
+    public ResponseEntity<?> testNotification() {
+        UserEntity user = userService.getUser();
+        if (notificationService.testNotification(user.id())) {
             return new ResponseEntity<>(HttpStatus.OK);
         }
-        logger.warn("User '{}' put the wrong verification code", userEntity.id());
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
-
-    @PostMapping("/mail/option/add")
-    @Transactional
-    public ResponseEntity<?> addMailingOption(@RequestParam("option") int option) {
-        UserEntity userEntity = userService.getUser();
-        Optional<MailOption> mailOption = mailService.getMailOption(option);
-        if (mailOption.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        mailService.addMailOption(userEntity.id(), mailOption.get());
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("/mail/option/remove")
-    @Transactional
-    public ResponseEntity<?> removeMailingOption(@RequestParam("option") int option) {
-        UserEntity userEntity = userService.getUser();
-        Optional<MailOption> mailOption = mailService.getMailOption(option);
-        if (mailOption.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        mailService.removeMailOption(userEntity.id(), mailOption.get());
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/referral")

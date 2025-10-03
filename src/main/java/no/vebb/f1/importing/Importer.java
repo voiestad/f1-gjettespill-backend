@@ -9,7 +9,7 @@ import java.io.PrintWriter;
 import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
 import no.vebb.f1.competitors.driver.DriverEntity;
-import no.vebb.f1.mail.MailService;
+import no.vebb.f1.notification.NotificationService;
 import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
@@ -34,15 +34,15 @@ public class Importer {
 
     private static final Logger logger = LoggerFactory.getLogger(Importer.class);
 
-    private final MailService mailService;
+    private final NotificationService notificationService;
     private final ScoreCalculator scoreCalculator;
     private final ResultService resultService;
     private final YearService yearService;
     private final RaceService raceService;
     private final CompetitorService competitorService;
 
-    public Importer(MailService mailService, ScoreCalculator scoreCalculator, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService) {
-        this.mailService = mailService;
+    public Importer(NotificationService notificationService, ScoreCalculator scoreCalculator, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService) {
+        this.notificationService = notificationService;
         this.scoreCalculator = scoreCalculator;
         this.resultService = resultService;
         this.yearService = yearService;
@@ -96,7 +96,7 @@ public class Importer {
                     } else {
                         scoreCalculator.calculateScores();
                         logger.info("Race result changed outside points without standings changing. Sending message to admins.");
-                        mailService.sendServerMessageToAdmins(
+                        notificationService.sendServerMessageToAdmins(
                                 "Endringer i resultat av løp utenfor poengene uten at mesterskapet endret seg. Vennligst verifiser at mesterskapet er korrekt.");
                     }
                 } else {

@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import no.vebb.f1.bingo.BingoService;
-import no.vebb.f1.mail.MailService;
+import no.vebb.f1.notification.NotificationService;
 import no.vebb.f1.user.admin.AdminRepository;
 import no.vebb.f1.user.domain.Username;
 import org.springframework.security.core.Authentication;
@@ -21,13 +21,13 @@ public class UserService {
 
     private final UserRespository userRespository;
     private final AdminRepository adminRepository;
-    private final MailService mailService;
+    private final NotificationService notificationService;
     private final BingoService bingoService;
 
-    public UserService(UserRespository userRespository, AdminRepository adminRepository, MailService mailService, BingoService bingoService) {
+    public UserService(UserRespository userRespository, AdminRepository adminRepository, NotificationService notificationService, BingoService bingoService) {
         this.userRespository = userRespository;
         this.adminRepository = adminRepository;
-        this.mailService = mailService;
+        this.notificationService = notificationService;
         this.bingoService = bingoService;
     }
 
@@ -100,7 +100,7 @@ public class UserService {
     public void deleteUser() {
         UserEntity userEntity = getUser();
         userRespository.anonymizeUser(userEntity.id());
-        mailService.clearUserFromMailing(userEntity.id());
+        notificationService.clearUserFromNtfy(userEntity.id());
         bingoService.removeBingomaster(userEntity.id());
     }
 

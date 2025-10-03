@@ -1,46 +1,21 @@
 package no.vebb.f1.codes;
 
-import no.vebb.f1.mail.domain.Email;
-import no.vebb.f1.mail.MailService;
-import no.vebb.f1.user.UserMail;
+import no.vebb.f1.util.TimeUtil;
 import org.springframework.lang.Nullable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class CodeService {
 
-    private final VerificationCodeRepository verificationCodeRepository;
     private final ReferralCodeRepository referralCodeRepository;
-    private final MailService mailService;
 
-    public CodeService(VerificationCodeRepository verificationCodeRepository,
-                       ReferralCodeRepository referralCodeRepository, MailService mailService) {
-        this.verificationCodeRepository = verificationCodeRepository;
+    public CodeService(ReferralCodeRepository referralCodeRepository) {
         this.referralCodeRepository = referralCodeRepository;
-        this.mailService = mailService;
-    }
-
-    public void sendVerificationCode(UserMail userMail) {
-        final int code = CodeGenerator.getVerificationCode();
-        VerificationCodeEntity verificationCodeEntity = new VerificationCodeEntity(
-                userMail.userEntity().id(),
-                code,
-                userMail.email(),
-                Instant.now().plus(Duration.ofMinutes(10))
-        );
-        verificationCodeRepository.save(verificationCodeEntity);
-        mailService.sendVerificationCodeMail(userMail, code);
-    }
-
-    public void removeExpiredVerificationCodes() {
-        verificationCodeRepository.deleteAll(
-                verificationCodeRepository.findAll().stream().filter(this::isExpired).toList()
-        );
     }
 
     private boolean isExpired(Code code) {
@@ -49,30 +24,6 @@ public class CodeService {
 
     private boolean isValid(Code code) {
         return !isExpired(code);
-    }
-
-    public boolean hasVerificationCode(UUID userId) {
-        return verificationCodeRepository.existsById(userId);
-    }
-
-    public boolean validateVerificationCode(UUID userId, int code) {
-        Optional<VerificationCodeEntity> optVerificationCode = verificationCodeRepository.findById(userId);
-        if (optVerificationCode.isEmpty()) {
-            return false;
-        }
-        VerificationCodeEntity verificationCodeEntity = optVerificationCode.get();
-        boolean isValidCode = code == verificationCodeEntity.code();
-        if (!isValidCode) {
-            return false;
-        }
-        boolean isValidCutoff = isValid(verificationCodeEntity);
-        if (!isValidCutoff) {
-            return false;
-        }
-        Email email = verificationCodeEntity.email();
-        mailService.addToMailingList(userId, email);
-        verificationCodeRepository.deleteById(userId);
-        return true;
     }
 
     public boolean isValidReferralCode(long code) {
@@ -100,5 +51,10 @@ public class CodeService {
 
     public void removeReferralCode(UUID userId) {
         referralCodeRepository.deleteById(userId);
+    }
+
+    @Scheduled(fixedDelay = TimeUtil.FIVE_MINUTES, initialDelay = TimeUtil.HALF_MINUTE)
+    public void removeExpiredCodes() {
+        removeExpiredReferralCodes();
     }
 }

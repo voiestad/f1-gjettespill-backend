@@ -1,8 +1,15 @@
 start transaction;
+drop table verification_codes;
+alter table mail_preferences rename to guess_reminder_preferences;
+alter table guess_reminder_preferences rename column mail_option to guess_reminder_option;
+alter table mail_options rename to guess_reminder_options;
+alter table guess_reminder_options rename column mail_option to guess_reminder_option;
+
+drop table mailing_list;
+
 alter table race_cutoffs alter column cutoff type timestamptz using cutoff::timestamptz;
 alter table year_cutoffs alter column cutoff type timestamptz using cutoff::timestamptz;
 alter table referral_codes alter column cutoff type timestamptz using cutoff::timestamptz;
-alter table verification_codes alter column cutoff type timestamptz using cutoff::timestamptz;
 alter table admins drop constraint admins_user_id_fkey;
 alter table bingomasters drop constraint bingomasters_user_id_fkey;
 alter table constructor_guesses drop constraint constructor_guesses_user_id_fkey;
@@ -17,7 +24,6 @@ alter table placements_category_year_start drop constraint placements_category_y
 alter table placements_race_year_start drop constraint placements_race_year_start_user_id_fkey;
 alter table placements_year drop constraint placements_year_user_id_fkey;
 alter table referral_codes drop constraint referral_codes_user_id_fkey;
-alter table verification_codes drop constraint verification_codes_user_id_fkey;
 
 alter table users drop constraint users_pkey;
 alter table users drop constraint users_user_id_key;
@@ -36,7 +42,6 @@ alter table placements_race add foreign key (user_id) references users(user_id) 
 alter table placements_race_year_start add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
 alter table placements_year add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
 alter table referral_codes add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
-alter table verification_codes add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
 
 alter table diff_points_mappings drop constraint diff_points_mappings_category_name_fkey;
 alter table driver_place_guesses drop constraint driver_place_guesses_category_name_fkey;
@@ -72,6 +77,8 @@ CREATE TABLE notified (
 insert into notified (user_id, race_id) select user_id, race_id from notified;
 
 drop table notified_old;
+
+alter table ntfy_topics add foreign key (user_id) references users(user_id);
 
 alter table constructor_guesses drop constraint constructor_guesses_constructor_name_fkey;
 alter table constructor_standings drop constraint constructor_standings_constructor_name_fkey;

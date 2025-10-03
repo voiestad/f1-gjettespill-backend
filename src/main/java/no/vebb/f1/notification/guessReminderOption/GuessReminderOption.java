@@ -1,4 +1,4 @@
-package no.vebb.f1.mail.mailOption;
+package no.vebb.f1.notification.guessReminderOption;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
@@ -7,12 +7,12 @@ import jakarta.persistence.Embeddable;
 import java.util.Objects;
 
 @Embeddable
-public class MailOption {
-	@Column(name = "mail_option")
+public class GuessReminderOption {
+	@Column(name = "guess_reminder_option")
 	private int value;
 
-	protected MailOption() {}
-	public MailOption(int value) {
+	protected GuessReminderOption() {}
+	public GuessReminderOption(int value) {
 		this.value = value;
 	}
 
@@ -28,7 +28,7 @@ public class MailOption {
 
 	@Override
 	public boolean equals(Object o) {
-		if (!(o instanceof MailOption that)) return false;
+		if (!(o instanceof GuessReminderOption that)) return false;
         return value == that.value;
 	}
 

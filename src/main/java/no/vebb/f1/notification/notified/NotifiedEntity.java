@@ -1,4 +1,4 @@
-package no.vebb.f1.mail.notified;
+package no.vebb.f1.notification.notified;
 
 import jakarta.persistence.*;
 import no.vebb.f1.race.RaceId;

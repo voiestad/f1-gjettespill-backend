@@ -1,4 +1,4 @@
-package no.vebb.f1.mail.ntfy;
+package no.vebb.f1.notification.ntfy;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import no.vebb.f1.mail.ntfy.message.NtfyMessage;
+import no.vebb.f1.notification.ntfy.message.NtfyMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +31,7 @@ public class NtfySender {
             HttpClient client = HttpClient.newHttpClient();
             String json = new ObjectMapper().writeValueAsString(message);
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI("https://ntfy.voiestad.no"))
+                    .uri(new URI("https://ntfy.f1gjettespill.no"))
                     .header("Content-Type", "application/json; charset=utf-8")
                     .header("Authorization", basicAuth)
                     .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))

@@ -1,4 +1,4 @@
-package no.vebb.f1.mail.ntfy.message;
+package no.vebb.f1.notification.ntfy.message;
 
 import java.util.Arrays;
 import java.util.List;
