@@ -34,7 +34,7 @@ public class PlacementRaceId {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof PlacementRaceId that)) return false;
-        return raceId == that.raceId && Objects.equals(userId, that.userId);
+        return Objects.equals(raceId, that.raceId) && Objects.equals(userId, that.userId);
     }
 
     @Override

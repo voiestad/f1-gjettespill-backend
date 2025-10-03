@@ -42,7 +42,7 @@ public class FlagGuessId {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof FlagGuessId that)) return false;
-        return year == that.year && Objects.equals(userId, that.userId) && Objects.equals(flagName, that.flagName);
+        return Objects.equals(year, that.year) && Objects.equals(userId, that.userId) && Objects.equals(flagName, that.flagName);
     }
 
     @Override

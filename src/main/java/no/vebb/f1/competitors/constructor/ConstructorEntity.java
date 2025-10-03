@@ -59,7 +59,7 @@ public class ConstructorEntity {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ConstructorEntity that)) return false;
-        return position == that.position && Objects.equals(constructorId, that.constructorId) && Objects.equals(constructorName, that.constructorName) && Objects.equals(year, that.year);
+        return Objects.equals(position, that.position) && Objects.equals(constructorId, that.constructorId) && Objects.equals(constructorName, that.constructorName) && Objects.equals(year, that.year);
     }
 
     @Override

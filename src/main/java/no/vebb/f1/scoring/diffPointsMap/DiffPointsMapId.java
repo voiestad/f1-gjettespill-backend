@@ -40,7 +40,7 @@ public class DiffPointsMapId {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof DiffPointsMapId that)) return false;
-        return diff == that.diff && year == that.year && Objects.equals(categoryName, that.categoryName);
+        return Objects.equals(diff, that.diff) && Objects.equals(year, that.year) && Objects.equals(categoryName, that.categoryName);
     }
 
     @Override

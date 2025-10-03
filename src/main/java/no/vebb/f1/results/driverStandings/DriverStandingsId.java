@@ -33,7 +33,7 @@ public class DriverStandingsId {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof DriverStandingsId that)) return false;
-        return raceId == that.raceId && Objects.equals(driverId, that.driverId);
+        return Objects.equals(raceId, that.raceId) && Objects.equals(driverId, that.driverId);
     }
 
     @Override

@@ -43,7 +43,7 @@ public class CompetitorGuessId {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof CompetitorGuessId that)) return false;
-        return position == that.position && year == that.year && Objects.equals(userId, that.userId);
+        return Objects.equals(position, that.position) && Objects.equals(year, that.year) && Objects.equals(userId, that.userId);
     }
 
     @Override

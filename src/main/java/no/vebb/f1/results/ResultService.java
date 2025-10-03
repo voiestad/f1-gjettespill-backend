@@ -60,7 +60,7 @@ public class ResultService {
 
 
     public void insertDriverStartingGrid(RaceId raceId, CompetitorPosition position, DriverEntity driver) {
-        StartingGridEntity startingGridEntity = new StartingGridEntity(raceId, driver.driverId(), position);
+        StartingGridEntity startingGridEntity = new StartingGridEntity(raceId, driver, position);
         startingGridRepository.save(startingGridEntity);
     }
 

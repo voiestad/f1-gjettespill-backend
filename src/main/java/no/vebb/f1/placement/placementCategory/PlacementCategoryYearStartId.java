@@ -42,7 +42,7 @@ public class PlacementCategoryYearStartId {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof PlacementCategoryYearStartId that)) return false;
-        return year == that.year && Objects.equals(userId, that.userId) && Objects.equals(categoryName, that.categoryName);
+        return Objects.equals(year, that.year) && Objects.equals(userId, that.userId) && Objects.equals(categoryName, that.categoryName);
     }
 
     @Override

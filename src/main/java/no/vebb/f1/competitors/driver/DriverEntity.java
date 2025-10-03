@@ -2,7 +2,6 @@ package no.vebb.f1.competitors.driver;
 
 import jakarta.persistence.*;
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
-import no.vebb.f1.competitors.domain.Color;
 import no.vebb.f1.competitors.domain.DriverName;
 import no.vebb.f1.year.Year;
 
@@ -23,9 +22,6 @@ public class DriverEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "driver_id", insertable = false, updatable = false)
     private DriverTeamEntity driverTeam;
-
-//    @OneToOne()
-//    private ConstructorColorEntity constructorColor;
 
     protected DriverEntity() {}
 
@@ -60,15 +56,10 @@ public class DriverEntity {
         return new DriverEntity(driverId, driverName, year, newPosition);
     }
 
-    public Color color() {
-//        return constructorColor == null ? null : constructorColor.color();
-        return null;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof DriverEntity that)) return false;
-        return position == that.position && Objects.equals(driverId, that.driverId) && Objects.equals(driverName, that.driverName) && Objects.equals(year, that.year);
+        return Objects.equals(position, that.position) && Objects.equals(driverId, that.driverId) && Objects.equals(driverName, that.driverName) && Objects.equals(year, that.year);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class BingoCardId {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof BingoCardId that)) return false;
-        return year == that.year && bingoSquareId == that.bingoSquareId;
+        return Objects.equals(year, that.year) && bingoSquareId == that.bingoSquareId;
     }
 
     @Override

@@ -2,7 +2,6 @@ package no.vebb.f1.results.startingGrid;
 
 import jakarta.persistence.*;
 import no.vebb.f1.competitors.driver.DriverEntity;
-import no.vebb.f1.competitors.driver.DriverId;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.results.domain.CompetitorPosition;
 
@@ -15,15 +14,11 @@ public class StartingGridEntity {
     @Embedded
     private CompetitorPosition position;
 
-    @ManyToOne
-    @JoinColumn(name = "driver_id", insertable = false, updatable = false)
-    private DriverEntity driver;
-
     protected StartingGridEntity() {
     }
 
-    public StartingGridEntity(RaceId raceId, DriverId driverId, CompetitorPosition position) {
-        this.id = new StartingGridId(raceId, driverId);
+    public StartingGridEntity(RaceId raceId, DriverEntity driver, CompetitorPosition position) {
+        this.id = new StartingGridId(raceId, driver);
         this.position = position;
     }
 
@@ -36,6 +31,6 @@ public class StartingGridEntity {
     }
 
     public DriverEntity driver() {
-        return driver;
+        return id.driver();
     }
 }

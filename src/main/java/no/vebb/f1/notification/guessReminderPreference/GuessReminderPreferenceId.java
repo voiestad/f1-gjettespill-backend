@@ -32,7 +32,7 @@ public class GuessReminderPreferenceId implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof GuessReminderPreferenceId that)) return false;
-        return option == that.option && Objects.equals(userId, that.userId);
+        return Objects.equals(option, that.option) && Objects.equals(userId, that.userId);
     }
 
     @Override

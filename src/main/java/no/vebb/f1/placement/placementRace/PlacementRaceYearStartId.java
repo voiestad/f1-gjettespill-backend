@@ -30,7 +30,7 @@ public class PlacementRaceYearStartId {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof PlacementRaceYearStartId that)) return false;
-        return year == that.year && Objects.equals(userId, that.userId);
+        return Objects.equals(year, that.year) && Objects.equals(userId, that.userId);
     }
 
     @Override

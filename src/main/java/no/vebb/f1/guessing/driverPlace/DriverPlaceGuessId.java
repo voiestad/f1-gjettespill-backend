@@ -42,7 +42,7 @@ public class DriverPlaceGuessId {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof DriverPlaceGuessId that)) return false;
-        return raceId == that.raceId && Objects.equals(userId, that.userId) && Objects.equals(categoryName, that.categoryName);
+        return Objects.equals(raceId, that.raceId) && Objects.equals(userId, that.userId) && Objects.equals(categoryName, that.categoryName);
     }
 
     @Override
