@@ -293,7 +293,7 @@ public class Importer {
         String position = row.get(0);
         DriverEntity driver = getDriver(row.get(2), raceId);
         CompetitorPoints points = CompetitorPoints.getCompetitorPoints(Integer.parseInt(row.get(6))).orElseThrow(RuntimeException::new);
-        resultService.insertDriverRaceResult(raceId, position, driver.driverId(), points, finishingPosition);
+        resultService.insertDriverRaceResult(raceId, position, driver, points, finishingPosition);
     }
 
     public void importRaceNames(List<Integer> racesToImportFrom, Year year) {
@@ -372,7 +372,7 @@ public class Importer {
             for (PositionedCompetitor<DriverEntity> competitor : currentStandings) {
                 CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(competitor.position())).orElseThrow(RuntimeException::new);
                 CompetitorPoints points = competitor.points();
-                resultService.insertDriverIntoStandings(newestRace, competitor.entity().driverId(), position, points);
+                resultService.insertDriverIntoStandings(newestRace, competitor.entity(), position, points);
             }
             logger.info("Driver standings added for race '{}'", newestRace);
             return status;
@@ -414,7 +414,7 @@ public class Importer {
             for (PositionedCompetitor<ConstructorEntity> competitor : currentStandings) {
                 CompetitorPosition position = CompetitorPosition.getCompetitorPosition(Integer.parseInt(competitor.position())).orElseThrow(RuntimeException::new);
                 CompetitorPoints points = competitor.points();
-                resultService.insertConstructorIntoStandings(newestRace, competitor.entity().constructorId(), position, points);
+                resultService.insertConstructorIntoStandings(newestRace, competitor.entity(), position, points);
             }
             logger.info("Constructor standings added for race '{}'", newestRace);
             return status;

@@ -7,7 +7,6 @@ import no.vebb.f1.competitors.domain.CompetitorDTO;
 import no.vebb.f1.competitors.domain.ConstructorName;
 import no.vebb.f1.competitors.domain.DriverName;
 import no.vebb.f1.competitors.driver.DriverEntity;
-import no.vebb.f1.competitors.driver.DriverId;
 import no.vebb.f1.competitors.driver.DriverRepository;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.guessing.collection.IFlagGuessed;
@@ -120,8 +119,8 @@ public class GuessService {
                 .orElse(null);
     }
 
-    public void addDriverPlaceGuess(UUID userId, RaceId raceId, DriverId driverId, Category category) {
-        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category, driverId));
+    public void addDriverPlaceGuess(UUID userId, RaceId raceId, DriverEntity driver, Category category) {
+        driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category, driver));
     }
 
     public List<CompetitorDTO> getDriversGuess(UUID userId, Year year) {

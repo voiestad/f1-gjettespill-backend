@@ -28,7 +28,7 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
             SELECT u.username AS username, dpg.driver.driverName AS driverName, sg.position AS startPosition
             FROM DriverPlaceGuessEntity dpg
             JOIN UserEntity u ON u.id = dpg.id.userId
-            JOIN StartingGridEntity sg ON sg.id.raceId = dpg.id.raceId AND sg.id.driverId = dpg.driverId
+            JOIN StartingGridEntity sg ON sg.id.raceId = dpg.id.raceId AND sg.id.driver.driverId = dpg.driver.driverId
             WHERE dpg.id.raceId = :raceId AND dpg.id.categoryName = :categoryName
             ORDER BY u.username
             """)
@@ -38,8 +38,8 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
             FROM DriverPlaceGuessEntity dpg
             JOIN RaceEntity r ON r.raceId = dpg.id.raceId
             JOIN RaceOrderEntity ro ON r.raceId = ro.raceId
-            JOIN StartingGridEntity sg ON sg.id.raceId = r.raceId AND dpg.driverId = sg.driver.driverId
-            JOIN RaceResultEntity rr ON rr.id.raceId = r.raceId AND dpg.driverId = rr.driverId
+            JOIN StartingGridEntity sg ON sg.id.raceId = r.raceId AND dpg.driver.driverId = sg.id.driver.driverId
+            JOIN RaceResultEntity rr ON rr.id.raceId = r.raceId AND dpg.driver.driverId = rr.driver.driverId
             WHERE dpg.id.categoryName = :categoryName AND dpg.id.userId = :userId AND ro.year = :year AND ro.position <= :position
             ORDER BY ro.position
             """)

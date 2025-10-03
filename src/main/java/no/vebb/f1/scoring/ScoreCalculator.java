@@ -55,7 +55,7 @@ public class ScoreCalculator {
     }
 
     @Transactional
-    @Scheduled(initialDelay = TimeUtil.SECOND * 10)
+    @Scheduled(initialDelay = TimeUtil.MINUTE)
     public void calculateScores() {
         logger.info("Calculating scores");
         if (calculate()) {

@@ -244,7 +244,7 @@ public class GuessController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         UUID id = userService.getUser().id();
-        guessService.addDriverPlaceGuess(id, raceId, driver.driverId(), category);
+        guessService.addDriverPlaceGuess(id, raceId, driver, category);
         logger.info("User guessed on category '{}' on race '{}'", category, raceId);
         return new ResponseEntity<>(HttpStatus.OK);
     }

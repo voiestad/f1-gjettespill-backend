@@ -14,7 +14,7 @@ public class ConstructorGuessEntity {
     private CompetitorGuessId id;
 
     @ManyToOne
-    @JoinColumn(name = "constructor_id", insertable = false, updatable = false)
+    @JoinColumn(name = "constructor_id")
     private ConstructorEntity constructor;
 
     protected ConstructorGuessEntity() {}

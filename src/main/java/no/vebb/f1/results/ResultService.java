@@ -1,7 +1,6 @@
 package no.vebb.f1.results;
 
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
-import no.vebb.f1.competitors.constructor.ConstructorId;
 import no.vebb.f1.competitors.constructor.ConstructorRepository;
 import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.competitors.driver.DriverId;
@@ -64,19 +63,18 @@ public class ResultService {
         startingGridRepository.save(startingGridEntity);
     }
 
-    public void insertDriverRaceResult(RaceId raceId, String position, DriverId driverId, CompetitorPoints points, CompetitorPosition finishingPosition) {
-        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driverId, points);
+    public void insertDriverRaceResult(RaceId raceId, String position, DriverEntity driver, CompetitorPoints points, CompetitorPosition finishingPosition) {
+        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driver, points);
         raceResultRepository.save(raceResultEntity);
     }
 
 
-    public void insertDriverIntoStandings(RaceId raceId, DriverId driverId, CompetitorPosition position, CompetitorPoints points) {
-        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driverId, position, points);
+    public void insertDriverIntoStandings(RaceId raceId, DriverEntity driver, CompetitorPosition position, CompetitorPoints points) {
+        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver, position, points);
         driverStandingsRepository.save(driverStandingsEntity);
     }
 
-
-    public void insertConstructorIntoStandings(RaceId raceId, ConstructorId constructor, CompetitorPosition position, CompetitorPoints points) {
+    public void insertConstructorIntoStandings(RaceId raceId, ConstructorEntity constructor, CompetitorPosition position, CompetitorPoints points) {
         ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor, position, points);
         constructorStandingsRepository.save(constructorStandingsEntity);
     }
