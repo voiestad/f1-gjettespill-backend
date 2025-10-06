@@ -122,6 +122,16 @@ public class SeasonCompetitorsController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PostMapping("/drivers/rename")
+    @Transactional
+    public ResponseEntity<?> renameDriver(@RequestParam("driver") DriverEntity driver,
+                                          @RequestParam("name") String name) {
+        if (competitorService.renameDriver(driver, name)){
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.CONFLICT);
+    }
+
     @GetMapping("/constructors/list/{year}")
     public ResponseEntity<List<ConstructorDTO>> listConstructors(@PathVariable("year") Year year) {
         List<ConstructorDTO> constructors = competitorService.getConstructorsYearWithColors(year);
@@ -216,5 +226,15 @@ public class SeasonCompetitorsController {
         }
         competitorService.addColorConstructor(constructor.constructorId(), optColor.get());
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/constructors/rename")
+    @Transactional
+    public ResponseEntity<?> renameConstructor(@RequestParam("constructor") ConstructorEntity constructor,
+                                               @RequestParam("name") String name) {
+        if (competitorService.renameConstructor(constructor, name)) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
 }

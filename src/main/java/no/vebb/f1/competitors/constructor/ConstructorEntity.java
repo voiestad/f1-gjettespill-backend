@@ -56,6 +56,10 @@ public class ConstructorEntity {
         return new ConstructorEntity(constructorId, constructorName, year, newPosition);
     }
 
+    public ConstructorEntity withName(ConstructorName newName) {
+        return new ConstructorEntity(constructorId, newName, year, position);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ConstructorEntity that)) return false;

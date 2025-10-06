@@ -124,4 +124,22 @@ public class CompetitorService {
     public List<ConstructorEntity> getAllConstructors(List<Integer> constructors) {
         return constructorRepository.findAllById(constructors.stream().map(ConstructorId::new).toList());
     }
+
+    public boolean renameDriver(DriverEntity driver, String name) {
+        DriverName newName = new DriverName(name);
+        if (driverRepository.findByDriverNameAndYear(newName, driver.year()).isPresent()) {
+            return false;
+        }
+        driverRepository.save(driver.withName(newName));
+        return true;
+    }
+
+    public boolean renameConstructor(ConstructorEntity constructor, String name) {
+        ConstructorName newName = new ConstructorName(name);
+        if (constructorRepository.findByConstructorNameAndYear(newName, constructor.year()).isPresent()) {
+            return false;
+        }
+        constructorRepository.save(constructor.withName(newName));
+        return true;
+    }
 }

@@ -56,6 +56,10 @@ public class DriverEntity {
         return new DriverEntity(driverId, driverName, year, newPosition);
     }
 
+    public DriverEntity withName(DriverName newName) {
+        return new DriverEntity(driverId, newName, year, position);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof DriverEntity that)) return false;
