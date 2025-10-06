@@ -15,11 +15,11 @@ import java.util.UUID;
 public interface PlacementRaceRepository extends JpaRepository<PlacementRaceEntity, PlacementRaceId> {
     Optional<PlacementRaceEntity> findAllByIdRaceIdAndIdUserId(RaceId raceId, UUID userId);
     @Query(value = """
-                SELECT ro.position as position
+                SELECT r.position as position
                 FROM PlacementRaceEntity pr
-                JOIN RaceOrderEntity ro ON ro.raceId = pr.id.raceId
-                WHERE ro.year = :year
-                GROUP BY ro.position
+                JOIN RaceEntity r ON r.raceId = pr.id.raceId
+                WHERE r.year = :year
+                GROUP BY r.position
                 ORDER BY position
             """)
     List<PositionResult> findAllByYearOrderByPosition(Year year);
@@ -30,9 +30,9 @@ public interface PlacementRaceRepository extends JpaRepository<PlacementRaceEnti
                 JOIN users u ON u.user_id = prys.user_id
                 WHERE year = :year
                 UNION
-                (SELECT pr.user_id AS user_id, u.username :: text as username, pr.points AS points, ro.position AS position, pr.placement as placement
+                (SELECT pr.user_id AS user_id, u.username :: text as username, pr.points AS points, r.position AS position, pr.placement as placement
                 FROM placements_race pr
-                JOIN race_order ro ON ro.race_id = pr.race_id
+                JOIN races r ON r.race_id = pr.race_id
                 JOIN users u ON u.user_id = pr.user_id
                 WHERE year = :year)) as placements_race
                 WHERE position = :position
@@ -45,9 +45,9 @@ public interface PlacementRaceRepository extends JpaRepository<PlacementRaceEnti
                     JOIN users u ON u.user_id = prys.user_id
                     WHERE year = :year
                     UNION
-                    (SELECT pr.user_id AS user_id, u.username :: text as username, pr.points AS points, ro.position AS position
+                    (SELECT pr.user_id AS user_id, u.username :: text as username, pr.points AS points, r.position AS position
                     FROM placements_race pr
-                    JOIN race_order ro ON ro.race_id = pr.race_id
+                    JOIN races r ON r.race_id = pr.race_id
                     JOIN users u ON u.user_id = pr.user_id
                     WHERE year = :year)
                     ORDER BY position, username;

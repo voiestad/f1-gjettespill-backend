@@ -93,7 +93,7 @@ public class CutoffService {
     }
 
     public List<CutoffRace> getCutoffRaces(Year year) {
-        return raceCutoffRepository.findAllByRaceOrderYearOrderByRaceOrderPosition(year).stream()
+        return raceCutoffRepository.findAllByRaceYearOrderByRacePosition(year).stream()
                 .map(row -> new CutoffRace(
                         row.position(),
                         row.raceName(),

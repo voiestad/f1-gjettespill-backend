@@ -4,12 +4,15 @@ CREATE TABLE IF NOT EXISTS users (
     username CITEXT COLLATE "nb_NO.utf8" UNIQUE NOT NULL
 );
 CREATE SEQUENCE IF NOT EXISTS anonymous_username_seq START 1;
-CREATE TABLE IF NOT EXISTS races (
-    race_id INTEGER PRIMARY KEY,
-    race_name TEXT NOT NULL
-);
 CREATE TABLE IF NOT EXISTS years (
     year INTEGER PRIMARY KEY
+);
+CREATE TABLE IF NOT EXISTS races (
+    race_id INTEGER PRIMARY KEY,
+    race_name TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS years_finished (
     year INTEGER PRIMARY KEY,
@@ -60,13 +63,6 @@ CREATE TABLE IF NOT EXISTS placements_race_year_start (
     PRIMARY KEY (year, user_id),
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS race_order (
-    race_id INTEGER PRIMARY KEY,
-    year INTEGER NOT NULL,
-    position INTEGER NOT NULL,
-    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
-    FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS drivers (
     driver_id SERIAL PRIMARY KEY,

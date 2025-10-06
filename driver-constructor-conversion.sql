@@ -7,9 +7,19 @@ alter table guess_reminder_options rename column mail_option to guess_reminder_o
 
 drop table mailing_list;
 
-alter table race_order drop constraint race_order_pkey;
-alter table race_order drop constraint race_order_race_id_key;
-alter table race_order add primary key (race_id);
+alter table races add column year INTEGER;
+alter table races add column position INTEGER;
+
+insert into races (race_id, race_name, year, position)
+    select r.race_id, r.race_name, ro.year, ro.position
+    from races r
+    join race_order ro on ro.race_id = r. race_id
+    on conflict (race_id) do update set year = excluded.year, position = excluded.position;
+alter table races add FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE;
+alter table races alter column year set not null;
+alter table races alter column position set not null;
+drop table race_order;
+
 alter table race_cutoffs alter column cutoff type timestamptz using cutoff::timestamptz;
 alter table year_cutoffs alter column cutoff type timestamptz using cutoff::timestamptz;
 alter table referral_codes alter column cutoff type timestamptz using cutoff::timestamptz;
@@ -177,13 +187,13 @@ CREATE TABLE driver_standings (
 
 insert into driver_standings (race_id, driver_id, position, points)
     select dso.race_id, d.driver_id, dso.position, dso.points from driver_standings_old dso
-        join race_order ro on dso.race_id = ro.race_id
-        join drivers d on d.driver_name = dso.driver_name and ro.year = d.year;
+        join races r on dso.race_id = r.race_id
+        join drivers d on d.driver_name = dso.driver_name and r.year = d.year;
 
-select ro.position, ds.position, d.driver_name, ds.points from driver_standings ds
+select r.position, ds.position, d.driver_name, ds.points from driver_standings ds
     join drivers d on ds.driver_id = d.driver_id
-    join race_order ro on ro.race_id = ds.race_id
-    order by ro.position, ds.position;
+    join races r on r.race_id = ds.race_id
+    order by r.position, ds.position;
 
 drop table driver_standings_old;
 
@@ -203,13 +213,13 @@ CREATE TABLE constructor_standings (
 
 insert into constructor_standings (race_id, constructor_id, position, points)
 select cso.race_id, c.constructor_id, cso.position, cso.points from constructor_standings_old cso
-    join race_order ro on cso.race_id = ro.race_id
-    join constructors c on c.constructor_name = cso.constructor_name and ro.year = c.year;
+    join races r on cso.race_id = r.race_id
+    join constructors c on c.constructor_name = cso.constructor_name and r.year = c.year;
 
-select ro.position, ds.position, c.constructor_name, ds.points from constructor_standings ds
+select r.position, ds.position, c.constructor_name, ds.points from constructor_standings ds
     join constructors c on ds.constructor_id = c.constructor_id
-    join race_order ro on ro.race_id = ds.race_id
-    order by ro.position, ds.position;
+    join races r on r.race_id = ds.race_id
+    order by r.position, ds.position;
 
 drop table constructor_standings_old;
 
@@ -230,13 +240,13 @@ CREATE TABLE race_results (
 
 insert into race_results (race_id, qualified_position, position, driver_id, points)
     select rro.race_id, rro.position, rro.finishing_position, d.driver_id, rro.points from race_results_old rro
-    join race_order ro on ro.race_id = rro.race_id
-    join drivers d on d.driver_name = rro.driver_name and ro.year = d.year;
+    join races r on r.race_id = rro.race_id
+    join drivers d on d.driver_name = rro.driver_name and r.year = d.year;
 
-select ro.position, rr.position, d.driver_name from race_results rr
-    join race_order ro on ro.race_id = rr.race_id
+select r.position, rr.position, d.driver_name from race_results rr
+    join races r on r.race_id = rr.race_id
     join drivers d on d.driver_id = rr.driver_id
-    order by ro.position, rr.position;
+    order by r.position, rr.position;
 
 drop table race_results_old;
 
@@ -255,13 +265,13 @@ CREATE TABLE starting_grids (
 
 insert into starting_grids (race_id, position, driver_id)
     select sgo.race_id, sgo.position, d.driver_id from starting_grids_old sgo
-    join race_order ro on ro.race_id = sgo.race_id
-    join drivers d on d.driver_name = sgo.driver_name and ro.year = d.year;
+    join races r on r.race_id = sgo.race_id
+    join drivers d on d.driver_name = sgo.driver_name and r.year = d.year;
 
-select ro.position, sg.position, d.driver_name from starting_grids sg
-    join race_order ro on sg.race_id = ro.race_id
-    join drivers d on d.driver_id = sg.driver_id and d.year = ro.year
-    order by ro.position, sg.position;
+select r.position, sg.position, d.driver_name from starting_grids sg
+    join races r on sg.race_id = r.race_id
+    join drivers d on d.driver_id = sg.driver_id and d.year = r.year
+    order by r.position, sg.position;
 
 drop table starting_grids_old;
 
@@ -332,13 +342,13 @@ CREATE TABLE driver_place_guesses (
 
 insert into driver_place_guesses (user_id, race_id, category_name, driver_id)
     select dpgo.user_id, dpgo.race_id, dpgo.category_name, d.driver_id from driver_place_guesses_old dpgo
-    join race_order ro on ro.race_id = dpgo.race_id
-    join drivers d on d.driver_name = dpgo.driver_name and d.year = ro.year;
+    join races r on r.race_id = dpgo.race_id
+    join drivers d on d.driver_name = dpgo.driver_name and d.year = r.year;
 
-select ro.position, dpg.user_id, dpg.category_name, d.driver_name from driver_place_guesses dpg
-    join race_order ro on dpg.race_id = ro.race_id
+select r.position, dpg.user_id, dpg.category_name, d.driver_name from driver_place_guesses dpg
+    join races r on dpg.race_id = r.race_id
     join drivers d on dpg.driver_id = d.driver_id
-    order by ro.position;
+    order by r.position;
 
 drop table driver_place_guesses_old;
 

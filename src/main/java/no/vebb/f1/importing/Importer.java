@@ -10,7 +10,7 @@ import no.vebb.f1.competitors.CompetitorService;
 import no.vebb.f1.competitors.constructor.ConstructorEntity;
 import no.vebb.f1.competitors.driver.DriverEntity;
 import no.vebb.f1.notification.NotificationService;
-import no.vebb.f1.race.RaceOrderEntity;
+import no.vebb.f1.race.RaceEntity;
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.domain.CompetitorPoints;
@@ -131,8 +131,8 @@ public class Importer {
 
     private Map<Year, List<RaceId>> getActiveRaces() {
         Map<Year, List<RaceId>> activeRaces = new LinkedHashMap<>();
-        List<RaceOrderEntity> sqlRes = raceService.getActiveRaces();
-        for (RaceOrderEntity race : sqlRes) {
+        List<RaceEntity> sqlRes = raceService.getActiveRaces();
+        for (RaceEntity race : sqlRes) {
             Year year = race.year();
             if (!activeRaces.containsKey(year)) {
                 activeRaces.put(year, new ArrayList<>());
@@ -319,12 +319,7 @@ public class Importer {
         if (raceName.isEmpty()) {
             return false;
         }
-        raceService.insertRace(raceId, raceName);
-        Optional<RaceId> validRaceId = raceService.getRaceId(raceId);
-        if (validRaceId.isEmpty()) {
-            throw new RuntimeException("Race id '" + raceId + "' could not be added");
-        }
-        raceService.insertRaceOrder(validRaceId.get(), year, position);
+        raceService.insertRace(raceId, raceName,  year, position);
         return true;
     }
 

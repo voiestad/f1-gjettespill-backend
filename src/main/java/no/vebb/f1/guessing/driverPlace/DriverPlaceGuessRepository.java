@@ -15,12 +15,11 @@ import java.util.UUID;
 
 public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGuessEntity, DriverPlaceGuessId> {
     @Query("""
-            SELECT dpg.id.categoryName AS category, dpg.driver.driverName AS driver, r.raceName AS raceName, ro.year AS year
+            SELECT dpg.id.categoryName AS category, dpg.driver.driverName AS driver, r.raceName AS raceName, r.year AS year
             FROM DriverPlaceGuessEntity dpg
             JOIN RaceEntity r ON dpg.id.raceId = r.raceId
-            JOIN RaceOrderEntity ro ON dpg.id.raceId = ro.raceId
             WHERE dpg.id.userId = :userId
-            ORDER BY ro.year DESC, ro.position, dpg.id.categoryName
+            ORDER BY r.year DESC, r.position, dpg.id.categoryName
             """)
     List<IPlaceGuess> findAllByUserId(UUID userId);
 
@@ -34,14 +33,13 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
             """)
     List<IUserRaceGuess> findAllByRaceIdAndCategoryNameOrderByUsername(Category categoryName, RaceId raceId);
     @Query("""
-            SELECT ro.position as racePosition, r.raceName AS raceName, dpg.driver.driverName AS driverName, sg.position AS startPosition, rr.id.finishingPosition AS finishingPosition
+            SELECT r.position as racePosition, r.raceName AS raceName, dpg.driver.driverName AS driverName, sg.position AS startPosition, rr.id.finishingPosition AS finishingPosition
             FROM DriverPlaceGuessEntity dpg
             JOIN RaceEntity r ON r.raceId = dpg.id.raceId
-            JOIN RaceOrderEntity ro ON r.raceId = ro.raceId
             JOIN StartingGridEntity sg ON sg.id.raceId = r.raceId AND dpg.driver.driverId = sg.id.driver.driverId
             JOIN RaceResultEntity rr ON rr.id.raceId = r.raceId AND dpg.driver.driverId = rr.driver.driverId
-            WHERE dpg.id.categoryName = :categoryName AND dpg.id.userId = :userId AND ro.year = :year AND ro.position <= :position
-            ORDER BY ro.position
+            WHERE dpg.id.categoryName = :categoryName AND dpg.id.userId = :userId AND r.year = :year AND r.position <= :position
+            ORDER BY r.position
             """)
     List<IUserRaceGuessTable> findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPosition(Category categoryName, Year year, RacePosition position, UUID userId);
 }

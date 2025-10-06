@@ -11,9 +11,9 @@ import java.util.Optional;
 public interface FlagStatRepository extends JpaRepository<FlagStatEntity, Integer> {
     List<FlagStatEntity> findAllByRaceIdOrderBySessionTypeAscRoundAsc(RaceId raceId);
     @Query("""
-            SELECT ro.year
-            FROM RaceOrderEntity ro
-            JOIN FlagStatEntity fs ON ro.raceId = fs.raceId
+            SELECT r.year
+            FROM RaceEntity r
+            JOIN FlagStatEntity fs ON r.raceId = fs.raceId
             WHERE fs.flagId = :flagId
             """)
     Optional<Year> findYearByFlagId(int flagId);

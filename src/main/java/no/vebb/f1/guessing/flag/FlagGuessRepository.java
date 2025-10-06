@@ -24,9 +24,9 @@ public interface FlagGuessRepository extends JpaRepository<FlagGuessEntity, Flag
     @Query("""
             SELECT fg.id.flagName AS flagName, fg.amount AS guessed, COALESCE(COUNT(fs.flagName), 0) AS actual
             FROM FlagGuessEntity fg
-            JOIN RaceOrderEntity ro ON fg.id.year = ro.year
-            LEFT JOIN FlagStatEntity fs ON fs.flagName = fg.id.flagName AND fs.raceId = ro.raceId
-            WHERE ro.year = :year AND fg.id.userId = :userId AND ro.position <= :position
+            JOIN RaceEntity r ON fg.id.year = r.year
+            LEFT JOIN FlagStatEntity fs ON fs.flagName = fg.id.flagName AND fs.raceId = r.raceId
+            WHERE r.year = :year AND fg.id.userId = :userId AND r.position <= :position
             GROUP BY fg.id.flagName, fg.amount
             """)
     List<IFlagGuessed> findAllByUserIdAndYearAndPosition(UUID userId, Year year, RacePosition position);

@@ -14,13 +14,12 @@ public interface NotifiedRepository extends JpaRepository<NotifiedEntity, Intege
     void deleteByUserId(UUID userId);
 
     @Query("""
-        SELECT r.raceName AS raceName, count(*) as timesNotified, ro.year AS year
+        SELECT r.raceName AS raceName, count(*) as timesNotified, r.year AS year
         FROM NotifiedEntity n
         JOIN RaceEntity r ON r.raceId = n.raceId
-        JOIN RaceOrderEntity ro ON ro.raceId = n.raceId
         WHERE n.userId = :userId
-        GROUP BY n.userId, ro.position, ro.year, r.raceName
-        ORDER BY ro.year DESC, ro.position
+        GROUP BY n.userId, r.position, r.year, r.raceName
+        ORDER BY r.year DESC, r.position
     """)
     List<IUserNotifiedCount> findAllByUserId(UUID userId);
 }

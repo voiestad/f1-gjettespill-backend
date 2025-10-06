@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import no.vebb.f1.race.RaceEntity;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.year.YearService;
 import org.springframework.http.HttpStatus;
@@ -74,7 +75,7 @@ public class SeasonController {
     }
 
     private void setDefaultCutoffRaces(Year year, Instant time) {
-        List<RaceId> races = raceService.getRacesFromSeason(year);
+        List<RaceId> races = raceService.getRacesFromSeason(year).stream().map(RaceEntity::raceId).toList();
         for (RaceId id : races) {
             cutoffService.setCutoffRace(time, id);
         }

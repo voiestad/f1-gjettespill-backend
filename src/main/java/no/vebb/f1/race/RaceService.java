@@ -12,21 +12,19 @@ import java.util.Optional;
 public class RaceService {
 
     private final RaceRepository raceRepository;
-    private final RaceOrderRepository raceOrderRepository;
     private final EntityManager entityManager;
 
-    public RaceService(RaceRepository raceRepository, RaceOrderRepository raceOrderRepository, EntityManager entityManager) {
+    public RaceService(RaceRepository raceRepository, EntityManager entityManager) {
         this.raceRepository = raceRepository;
-        this.raceOrderRepository = raceOrderRepository;
         this.entityManager = entityManager;
     }
 
     public Optional<Year> getYearFromRaceId(RaceId raceId) {
-        return raceOrderRepository.findById(raceId).map(RaceOrderEntity::year);
+        return raceRepository.findById(raceId).map(RaceEntity::year);
     }
 
     public Optional<RaceId> getLatestRaceId(Year year) {
-        List<RaceOrderEntity> races = raceOrderRepository.findAllByYearJoinWithRaceResults(year);
+        List<RaceEntity> races = raceRepository.findAllByYearJoinWithRaceResults(year);
         if (races.isEmpty()) {
             return Optional.empty();
         }
@@ -34,11 +32,11 @@ public class RaceService {
     }
 
     public Optional<RacePosition> getPositionOfRace(RaceId raceId) {
-        return raceOrderRepository.findById(raceId).map(RaceOrderEntity::position);
+        return raceRepository.findById(raceId).map(RaceEntity::position);
     }
 
     public Optional<Race> getLatestRaceForPlaceGuess(Year year) {
-        List<RaceOrderEntity> races = raceOrderRepository.findAllByYearJoinWithStartingGrid(year);
+        List<RaceEntity> races = raceRepository.findAllByYearJoinWithStartingGrid(year);
         if (races.isEmpty()) {
             return Optional.empty();
         }
@@ -46,13 +44,13 @@ public class RaceService {
     }
 
     public List<RaceId> getRaceIdsFinished(Year year) {
-        return raceOrderRepository.findAllByYearJoinWithRaceResults(year).stream()
-                .map(RaceOrderEntity::raceId)
+        return raceRepository.findAllByYearJoinWithRaceResults(year).stream()
+                .map(RaceEntity::raceId)
                 .toList();
     }
 
-    public List<RaceOrderEntity> getActiveRaces() {
-        return raceOrderRepository.findAllByNotFinished();
+    public List<RaceEntity> getActiveRaces() {
+        return raceRepository.findAllByNotFinished();
     }
 
     public Optional<RaceId> getLatestStartingGridRaceId(Year year) {
@@ -60,7 +58,7 @@ public class RaceService {
     }
 
     public Optional<RaceId> getUpcomingRaceId(Year year) {
-        List<RaceOrderEntity> races = raceOrderRepository.findAllByYearNotInRaceResult(year);
+        List<RaceEntity> races = raceRepository.findAllByYearNotInRaceResult(year);
         if (races.isEmpty()) {
             return Optional.empty();
         }
@@ -68,7 +66,7 @@ public class RaceService {
     }
 
     public Optional<RaceId> getLatestStandingsId(Year year) {
-        List<RaceOrderEntity> races = raceOrderRepository.findAllByYearJoinWithStandings(year);
+        List<RaceEntity> races = raceRepository.findAllByYearJoinWithStandings(year);
         if (races.isEmpty()) {
             return Optional.empty();
         }
@@ -79,61 +77,54 @@ public class RaceService {
         return raceRepository.existsById(new RaceId(raceId));
     }
 
-    public void insertRace(int raceId, String raceName) {
-        RaceEntity newRace = new RaceEntity(raceId, raceName);
+    public void insertRace(int raceId, String raceName, Year year, RacePosition position) {
+        RaceEntity newRace = new RaceEntity(new RaceId(raceId), raceName, year, position);
         raceRepository.save(newRace);
     }
 
     public RacePosition getNewMaxRaceOrderPosition(Year year) {
-        return raceOrderRepository.findTopByYearOrderByPositionDesc(year).map(RaceOrderEntity::position)
+        return raceRepository.findTopByYearOrderByPositionDesc(year).map(RaceEntity::position)
                 .map(RacePosition::next).orElse(new RacePosition());
     }
 
-    public void insertRaceOrder(RaceId raceId, Year year, RacePosition position) {
-        RaceOrderEntity raceOrderEntity = new RaceOrderEntity(raceId, year, position);
-        raceOrderRepository.save(raceOrderEntity);
-    }
-
-    public void deleteRace(RaceId raceId) {
-        raceRepository.deleteById(raceId);
+    public void deleteRace(RaceEntity race) {
+        raceRepository.delete(race);
         entityManager.flush();
         entityManager.clear();
     }
 
-    public boolean isRaceInSeason(RaceId raceId, Year year) {
-        return raceOrderRepository.existsByRaceIdAndYear(raceId, year);
-    }
-
-    public List<RaceId> getRacesFromSeason(Year year) {
-        return raceOrderRepository.findAllByYearOrderByPosition(year).stream()
-                .map(RaceOrderEntity::raceId)
-                .toList();
+    public List<RaceEntity> getRacesFromSeason(Year year) {
+        return raceRepository.findAllByYearOrderByPosition(year);
     }
 
     public List<Race> getRacesYear(Year year) {
-        return mapToRace(raceOrderRepository.findAllByYearOrderByPosition(year));
+        return mapToRace(raceRepository.findAllByYearOrderByPosition(year));
     }
 
     public List<Race> getRacesYearFinished(Year year) {
-        return mapToRace(raceOrderRepository.findAllByYearJoinWithRaceResults(year));
+        return mapToRace(raceRepository.findAllByYearJoinWithRaceResults(year));
     }
 
-    private List<Race> mapToRace(List<RaceOrderEntity> raceOrderEntities) {
+    private List<Race> mapToRace(List<RaceEntity> raceOrderEntities) {
         return raceOrderEntities.stream()
                 .map(Race::fromEntity)
                 .toList();
     }
 
     public Optional<Race> getRaceFromId(RaceId raceId) {
-        return raceOrderRepository.findById(raceId)
+        return raceRepository.findById(raceId)
                 .map(Race::fromEntity);
+    }
+
+    public Optional<RaceEntity> getRaceEntityFromId(int raceId) {
+        return raceRepository.findById(new RaceId(raceId));
     }
 
     public Optional<RaceId> getRaceId(int raceId) {
         return raceRepository.findById(new RaceId(raceId)).map(RaceEntity::raceId);
     }
 
-    public void setRaceOrder(List<RaceOrderEntity> newOrder) {
-        raceOrderRepository.saveAll(newOrder);
+    public void setRaceOrder(List<RaceEntity> newOrder) {
+        raceRepository.saveAll(newOrder);
     }
 }

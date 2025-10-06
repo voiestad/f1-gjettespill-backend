@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface RaceCutoffRepository extends JpaRepository<RaceCutoffEntity, RaceId> {
-    List<RaceCutoffEntity> findAllByRaceOrderYearOrderByRaceOrderPosition(Year year);
+    List<RaceCutoffEntity> findAllByRaceYearOrderByRacePosition(Year year);
 }

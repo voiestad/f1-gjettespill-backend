@@ -2,7 +2,6 @@ package no.vebb.f1.cutoff;
 
 import jakarta.persistence.*;
 import no.vebb.f1.race.RaceEntity;
-import no.vebb.f1.race.RaceOrderEntity;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.race.RacePosition;
 import no.vebb.f1.year.Year;
@@ -21,10 +20,6 @@ public class RaceCutoffEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "race_id", referencedColumnName = "race_id")
     private RaceEntity race;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "race_id", referencedColumnName = "race_id")
-    private RaceOrderEntity raceOrder;
 
     protected RaceCutoffEntity() {}
 
@@ -46,10 +41,10 @@ public class RaceCutoffEntity {
     }
 
     public RacePosition position() {
-        return raceOrder.position();
+        return race.position();
     }
 
     public Year year() {
-        return raceOrder.year();
+        return race.year();
     }
 }
