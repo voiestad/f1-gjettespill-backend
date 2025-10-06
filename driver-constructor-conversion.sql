@@ -79,7 +79,7 @@ insert into notified (user_id, race_id) select user_id, race_id from notified;
 
 drop table notified_old;
 
-alter table ntfy_topics add foreign key (user_id) references users(user_id);
+alter table ntfy_topics add foreign key (user_id) references users(user_id) ON DELETE CASCADE;
 
 alter table constructor_guesses drop constraint constructor_guesses_constructor_name_fkey;
 alter table constructor_standings drop constraint constructor_standings_constructor_name_fkey;
@@ -127,7 +127,7 @@ alter table drivers_team rename to drivers_team_old;
 CREATE TABLE drivers_team (
     driver_id INTEGER PRIMARY KEY,
     constructor_id INTEGER NOT NULL,
-    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id),
+    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE,
     FOREIGN KEY (constructor_id) REFERENCES constructors(constructor_id) ON DELETE CASCADE
 );
 

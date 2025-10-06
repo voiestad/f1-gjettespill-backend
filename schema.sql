@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS constructors (
 CREATE TABLE IF NOT EXISTS drivers_team (
     driver_id INTEGER PRIMARY KEY,
     constructor_id INTEGER NOT NULL,
-    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id),
+    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE,
     FOREIGN KEY (constructor_id) REFERENCES constructors(constructor_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS constructors_color (
