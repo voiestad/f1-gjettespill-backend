@@ -393,7 +393,7 @@ public class Importer {
 				.map(row -> 
 				new PositionedCompetitor(
 					String.valueOf(Integer.parseInt(row.get(0))),
-					row.get(1),
+					row.get(1).equals("Haas F1 Team") ? "Haas" : row.get(1),
 					(int) Double.parseDouble(row.get(2))
 					))
 				.toList();
