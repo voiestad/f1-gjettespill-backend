@@ -118,11 +118,11 @@ public class CompetitorService {
     }
 
     public List<DriverEntity> getAllDrivers(List<Integer> drivers) {
-        return driverRepository.findAllById(drivers.stream().map(DriverId::new).toList());
+        return drivers.stream().map(this::getDriver).filter(Optional::isPresent).map(Optional::get).toList();
     }
 
     public List<ConstructorEntity> getAllConstructors(List<Integer> constructors) {
-        return constructorRepository.findAllById(constructors.stream().map(ConstructorId::new).toList());
+        return constructors.stream().map(this::getConstructor).filter(Optional::isPresent).map(Optional::get).toList();
     }
 
     public boolean renameDriver(DriverEntity driver, String name) {
