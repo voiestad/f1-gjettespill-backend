@@ -35,10 +35,14 @@ public class BingoService {
         return bingoMasterRepository.existsById(userId);
     }
 
-    public List<BingoSquare> getBingoCard(Year year) {
-        return bingoCardRepository.findAllByIdYearOrderByIdBingoSquareId(year).stream()
+    public Optional<List<BingoSquare>> getBingoCard(Year year) {
+        List<BingoSquare> bingoCard = bingoCardRepository.findAllByIdYearOrderByIdBingoSquareId(year).stream()
                 .map(BingoSquare::fromBingoCardEntity)
                 .toList();
+        if (bingoCard.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(bingoCard);
     }
 
     public void addBingoCard(Year year) {
