@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import org.springframework.lang.NonNull;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Embeddable
@@ -42,4 +43,14 @@ public class Color {
 		return value;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof Color color)) return false;
+        return Objects.equals(value, color.value);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(value);
+	}
 }
