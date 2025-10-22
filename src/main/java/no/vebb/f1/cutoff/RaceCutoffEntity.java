@@ -47,4 +47,8 @@ public class RaceCutoffEntity {
     public Year year() {
         return race.year();
     }
+
+    public RaceEntity race() {
+        return race;
+    }
 }

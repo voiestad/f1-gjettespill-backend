@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
+import no.vebb.f1.collection.Race;
 import no.vebb.f1.util.TimeUtil;
 import no.vebb.f1.collection.CutoffRace;
 import no.vebb.f1.year.YearService;
@@ -95,12 +96,8 @@ public class CutoffService {
     public List<CutoffRace> getCutoffRaces(Year year) {
         return raceCutoffRepository.findAllByRaceYearOrderByRacePosition(year).stream()
                 .map(row -> new CutoffRace(
-                        row.position(),
-                        row.raceName(),
-                        row.raceId(),
-                        TimeUtil.instantToLocalTime(row.cutoff()),
-                        year
-                ))
+                        Race.fromEntity(row.race()),
+                        TimeUtil.instantToLocalTime(row.cutoff())))
                 .toList();
     }
 
