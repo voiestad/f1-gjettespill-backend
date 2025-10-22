@@ -218,7 +218,7 @@ public class GuessController {
                 .map(CompetitorDTO::fromEntity)
                 .toList();
         UUID id = userService.getUser().id();
-        CompetitorId driver = guessService.getGuessedDriverPlace(raceId, category, id).driverId();
+        CompetitorId driver = guessService.getGuessedDriverPlace(raceId, category, id);
         CutoffCompetitorsSelected res = new CutoffCompetitorsSelected(drivers, driver, timeLeftToGuess, race);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }

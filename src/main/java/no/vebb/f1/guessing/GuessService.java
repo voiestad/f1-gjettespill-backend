@@ -7,6 +7,7 @@ import no.vebb.f1.competitors.domain.CompetitorDTO;
 import no.vebb.f1.competitors.domain.ConstructorName;
 import no.vebb.f1.competitors.domain.DriverName;
 import no.vebb.f1.competitors.driver.DriverEntity;
+import no.vebb.f1.competitors.driver.DriverId;
 import no.vebb.f1.competitors.driver.DriverRepository;
 import no.vebb.f1.guessing.category.Category;
 import no.vebb.f1.guessing.collection.IFlagGuessed;
@@ -113,9 +114,10 @@ public class GuessService {
         return flags;
     }
 
-    public DriverEntity getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
+    public DriverId getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
         return driverPlaceGuessRepository.findById(new DriverPlaceGuessId(userId, raceId, category))
                 .map(DriverPlaceGuessEntity::driver)
+                .map(DriverEntity::driverId)
                 .orElse(null);
     }
 
