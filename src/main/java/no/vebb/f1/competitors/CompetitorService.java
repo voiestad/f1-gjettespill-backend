@@ -44,11 +44,7 @@ public class CompetitorService {
     }
 
     public int getMaxPosDriverYear(Year year) {
-        List<DriverEntity> drivers = driverRepository.findAllByYearOrderByPosition(year);
-        if (drivers.isEmpty()) {
-            return 0;
-        }
-        return drivers.get(drivers.size() - 1).position();
+        return getDriversYear(year).size();
     }
 
     public void deleteDriver(DriverId driverId) {
@@ -62,11 +58,7 @@ public class CompetitorService {
     }
 
     public int getMaxPosConstructorYear(Year year) {
-        List<ConstructorEntity> constructors = constructorRepository.findAllByYearOrderByPosition(year);
-        if (constructors.isEmpty()) {
-            return 0;
-        }
-        return constructors.get(constructors.size() - 1).position();
+        return getConstructorsYear(year).size();
     }
 
     public void deleteConstructor(ConstructorId constructorId) {
