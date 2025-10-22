@@ -24,7 +24,7 @@ public class UserInformation {
 	public final List<FlagGuessYear> flagGuess;
 	public final List<PlaceGuess> placeGuess;
 	public final List<UserNotifiedCount> notifiedCount;
-	public final List<GuessReminderOption> guessReminderpreferences;
+	public final List<GuessReminderOption> guessReminderPreferences;
 
 	public UserInformation(UserEntity userEntity, NotificationService notificationService, GuessService guessService) {
 		this.user = UserDto.fromEntity(userEntity);
@@ -34,6 +34,6 @@ public class UserInformation {
 		this.flagGuess = guessService.userGuessDataFlag(userEntity.id());
 		this.placeGuess = guessService.userGuessDataDriverPlace(userEntity.id());
 		this.notifiedCount = notificationService.userDataNotified(userEntity.id());
-		this.guessReminderpreferences = notificationService.getGuessReminderPreference(userEntity.id());
+		this.guessReminderPreferences = notificationService.getGuessReminderPreference(userEntity.id());
 	}
 }
