@@ -86,7 +86,7 @@ public class NotificationService {
         for (NtfyTopicEntity user : usersLeftToGuess) {
             UUID userId = user.userId();
             int notifiedCount = notifiedRepository.countAllByRaceIdAndUserId(raceId, userId);
-            List<GuessReminderOption> options = getGuessReminderPreference(userId);
+            List<GuessReminderOption> options = new ArrayList<>(getGuessReminderPreference(userId));
             Collections.reverse(options);
             for (GuessReminderOption option : options) {
                 if (notifiedCount > 0) {
@@ -97,7 +97,7 @@ public class NotificationService {
                     break;
                 }
                 String hours = option.value() == 1 ? "time" : "timer";
-                String messageBody = String.format("Det er mindre enn %s %s igjen på å gjette på %s", timeLeft, hours, race.name());
+                String messageBody = String.format("Det er mindre enn %s %s igjen på å gjette på %s", option.value(), hours, race.name());
                 Optional<NtfyMessage> message = new NtfyMessageBuilder()
                         .setTopic(user.topic().toString())
                         .setTitle("Husk å gjette!")
@@ -154,7 +154,7 @@ public class NotificationService {
         for (UUID admin : adminsWithNtfy) {
             Optional<NtfyMessage> message = new NtfyMessageBuilder()
                     .setTopic(admin.toString())
-                    .setTitle("Server melding F1 Gjettespill")
+                    .setTitle("Servermelding F1 Gjettespill")
                     .setMessage(messageForAdmin)
                     .build();
             if (message.isPresent()) {
