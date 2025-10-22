@@ -17,6 +17,16 @@ import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.results.startingGrid.StartingGridEntity;
 import no.vebb.f1.year.YearService;
+import no.vebb.f1.user.UserService;
+import no.vebb.f1.cutoff.CutoffService;
+import no.vebb.f1.collection.Flags;
+import no.vebb.f1.collection.Race;
+import no.vebb.f1.collection.CutoffCompetitors;
+import no.vebb.f1.collection.CutoffCompetitorsSelected;
+import no.vebb.f1.collection.CutoffFlags;
+import no.vebb.f1.race.RaceId;
+import no.vebb.f1.year.Year;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -27,16 +37,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import no.vebb.f1.user.UserService;
-import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.collection.Flags;
-import no.vebb.f1.collection.Race;
-import no.vebb.f1.collection.CutoffCompetitors;
-import no.vebb.f1.collection.CutoffCompetitorsSelected;
-import no.vebb.f1.collection.CutoffFlags;
-import no.vebb.f1.race.RaceId;
-import no.vebb.f1.year.Year;
 
 @RestController
 @RequestMapping("/api/guess")
@@ -51,7 +51,14 @@ public class GuessController {
     private final CompetitorService competitorService;
     private final GuessService guessService;
 
-    public GuessController(UserService userService, CutoffService cutoffService, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService, GuessService guessService) {
+    public GuessController(
+            UserService userService,
+            CutoffService cutoffService,
+            ResultService resultService,
+            YearService yearService,
+            RaceService raceService,
+            CompetitorService competitorService,
+            GuessService guessService) {
         this.userService = userService;
         this.cutoffService = cutoffService;
         this.resultService = resultService;
@@ -126,6 +133,7 @@ public class GuessController {
     public ResponseEntity<CutoffCompetitors> rankConstructors() {
         return getRankCompetitors(guessService::getConstructorsGuess);
     }
+
     @PostMapping("/constructor")
     @Transactional
     public ResponseEntity<?> rankConstructors(@RequestParam List<Integer> rankedCompetitors) {
