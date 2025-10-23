@@ -268,8 +268,11 @@ public class GuessController {
         }
         Year year = optYear.get();
         long timeLeftToGuess = cutoffService.getTimeLeftToGuessYear(year);
-        Flags flags = guessService.getFlagGuesses(userService.getUser().id(), year);
-        CutoffFlags res = new CutoffFlags(flags, timeLeftToGuess);
+        Optional<Flags> flags = guessService.getFlagGuesses(userService.getUser().id(), year);
+        if (flags.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        CutoffFlags res = new CutoffFlags(flags.get(), timeLeftToGuess);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
@@ -282,12 +285,12 @@ public class GuessController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         Year year = optYear.get();
-        Flags flags = new Flags(yellow, red, safetyCar);
-        if (!flags.hasValidValues()) {
+        Optional<Flags> optFlags = Flags.getFlags(yellow, red, safetyCar);
+        if (optFlags.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         UUID id = userService.getUser().id();
-        guessService.addFlagGuesses(id, year, flags);
+        guessService.addFlagGuesses(id, year, optFlags.get());
         logger.info("User guessed on flags on year");
         return new ResponseEntity<>(HttpStatus.OK);
     }

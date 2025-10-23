@@ -44,7 +44,14 @@ public class GuessService {
     private final DriverRepository driverRepository;
     private final ConstructorRepository constructorRepository;
 
-    public GuessService(UserRespository userRespository, ConstructorGuessRepository constructorGuessRepository, DriverGuessRepository driverGuessRepository, FlagGuessRepository flagGuessRepository, DriverPlaceGuessRepository driverPlaceGuessRepository, DriverRepository driverRepository, ConstructorRepository constructorRepository) {
+    public GuessService(
+            UserRespository userRespository,
+            ConstructorGuessRepository constructorGuessRepository,
+            DriverGuessRepository driverGuessRepository,
+            FlagGuessRepository flagGuessRepository,
+            DriverPlaceGuessRepository driverPlaceGuessRepository,
+            DriverRepository driverRepository,
+            ConstructorRepository constructorRepository) {
         this.userRespository = userRespository;
         this.constructorGuessRepository = constructorGuessRepository;
         this.driverGuessRepository = driverGuessRepository;
@@ -63,7 +70,8 @@ public class GuessService {
                 flagGuessRepository.findAllByUserIdAndYearAndPosition(userId, year, racePos));
     }
 
-    public List<IUserRaceGuessTable> getDataForPlaceGuessTable(Category category, UUID userId, Year year, RacePosition racePos) {
+    public List<IUserRaceGuessTable> getDataForPlaceGuessTable(
+            Category category, UUID userId, Year year, RacePosition racePos) {
         return driverPlaceGuessRepository.findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPosition(
                 category, year, racePos, userId
         );
@@ -95,23 +103,16 @@ public class GuessService {
         ));
     }
 
-    public Flags getFlagGuesses(UUID userId, Year year) {
-        Flags flags = new Flags();
+    public Optional<Flags> getFlagGuesses(UUID userId, Year year) {
         List<FlagGuessEntity> flagGuesses = flagGuessRepository.findAllByIdUserIdAndIdYear(userId, year);
+        Map<Flag, Integer> map = new HashMap<>();
         for (FlagGuessEntity flagGuess : flagGuesses) {
-            switch (flagGuess.flagName()) {
-                case YELLOW_FLAG:
-                    flags.yellow = flagGuess.amount();
-                    break;
-                case RED_FLAG:
-                    flags.red = flagGuess.amount();
-                    break;
-                case SAFETY_CAR:
-                    flags.safetyCar = flagGuess.amount();
-                    break;
-            }
+            map.put(flagGuess.flagName(), flagGuess.amount());
         }
-        return flags;
+        return Flags.getFlags(
+                map.getOrDefault(Flag.YELLOW_FLAG, 0),
+                map.getOrDefault(Flag.RED_FLAG, 0),
+                map.getOrDefault(Flag.SAFETY_CAR, 0));
     }
 
     public DriverId getGuessedDriverPlace(RaceId raceId, Category category, UUID userId) {
@@ -126,7 +127,8 @@ public class GuessService {
     }
 
     public List<CompetitorDTO> getDriversGuess(UUID userId, Year year) {
-        List<CompetitorDTO> guessed = driverGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
+        List<CompetitorDTO> guessed = driverGuessRepository
+                .findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
                 .map(DriverGuessEntity::driver)
                 .map(CompetitorDTO::fromEntity)
                 .toList();
@@ -137,7 +139,8 @@ public class GuessService {
     }
 
     public List<CompetitorDTO> getConstructorsGuess(UUID userId, Year year) {
-        List<CompetitorDTO> guessed = constructorGuessRepository.findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
+        List<CompetitorDTO> guessed = constructorGuessRepository
+                .findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
                 .map(ConstructorGuessEntity::constructor)
                 .map(CompetitorDTO::fromEntity)
                 .toList();
