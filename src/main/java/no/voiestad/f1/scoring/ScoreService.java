@@ -1,0 +1,66 @@
+package no.voiestad.f1.scoring;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import no.voiestad.f1.guessing.category.Category;
+import no.voiestad.f1.scoring.diffPointsMap.DiffPointsMapEntity;
+import no.voiestad.f1.scoring.diffPointsMap.DiffPointsMapId;
+import no.voiestad.f1.scoring.diffPointsMap.DiffPointsMapRepository;
+import no.voiestad.f1.scoring.domain.Diff;
+import no.voiestad.f1.placement.domain.UserPoints;
+import no.voiestad.f1.year.Year;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class ScoreService {
+    private final DiffPointsMapRepository diffPointsMapRepository;
+
+    public ScoreService(DiffPointsMapRepository diffPointsMapRepository) {
+        this.diffPointsMapRepository = diffPointsMapRepository;
+    }
+
+    public Map<Diff, UserPoints> getDiffPointsMap(Year year, Category category) {
+        List<DiffPointsMapEntity> res = diffPointsMapRepository.findAllByIdYearAndIdCategoryNameOrderByIdDiff(year, category);
+
+        Map<Diff, UserPoints> map = new LinkedHashMap<>();
+        for (DiffPointsMapEntity entry : res) {
+            Diff diff = entry.diff();
+            UserPoints points = entry.points();
+            map.put(diff, points);
+        }
+        return map;
+    }
+
+    public Optional<Diff> getMaxDiffInPointsMap(Year year, Category category) {
+        List<DiffPointsMapEntity> diffs = diffPointsMapRepository.findAllByIdYearAndIdCategoryNameOrderByIdDiff(year, category);
+        if (diffs.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(diffs.get(diffs.size() - 1).diff());
+    }
+
+    public void addDiffToPointsMap(Category category, Diff diff, Year year) {
+        DiffPointsMapEntity diffPointsMapEntity = new DiffPointsMapEntity(category, diff, year, new UserPoints());
+        diffPointsMapRepository.save(diffPointsMapEntity);
+    }
+
+    public void removeDiffToPointsMap(Category category, Diff diff, Year year) {
+        DiffPointsMapId diffPointsMapId = new DiffPointsMapId(category, diff, year);
+        diffPointsMapRepository.deleteById(diffPointsMapId);
+    }
+
+    public void setNewDiffToPointsInPointsMap(Category category, Diff diff, Year year, UserPoints points) {
+        DiffPointsMapEntity diffPointsMapEntity = new DiffPointsMapEntity(category, diff, year, points);
+        diffPointsMapRepository.save(diffPointsMapEntity);
+    }
+
+    public boolean isValidDiffInPointsMap(Category category, Diff diff, Year year) {
+        DiffPointsMapId diffPointsMapId = new DiffPointsMapId(category, diff, year);
+        return diffPointsMapRepository.existsById(diffPointsMapId);
+    }
+
+}
