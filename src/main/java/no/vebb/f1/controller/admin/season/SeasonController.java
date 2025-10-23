@@ -46,10 +46,10 @@ public class SeasonController {
             String error = String.format("Sesongen %d er allerede lagt til", inputYear);
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
-        Year year = yearService.addYear(inputYear);
-        Instant time = cutoffService.getDefaultInstant(year);
-        cutoffService.setCutoffYear(time, year);
         if (start == null || end == null) {
+            Year year = yearService.addYear(inputYear);
+            Instant time = cutoffService.getDefaultInstant(year);
+            cutoffService.setCutoffYear(time, year);
             return new ResponseEntity<>("OK", HttpStatus.OK);
         }
         if (start > end) {
@@ -60,7 +60,9 @@ public class SeasonController {
             String error = "Verdiene kan ikke være negative";
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
-
+        Year year = yearService.addYear(inputYear);
+        Instant time = cutoffService.getDefaultInstant(year);
+        cutoffService.setCutoffYear(time, year);
         List<Integer> races = new ArrayList<>();
         for (int i = start; i <= end; i++) {
             races.add(i);
