@@ -110,10 +110,9 @@ public class GuessController {
         }
         Year year = optYear.get();
         UUID userId = userService.getUser().id();
-        List<DriverEntity> validationList = competitorService.getDriversYear(year);
-        Set<DriverEntity> competitors = new HashSet<>(validationList);
+        Set<DriverEntity> validationSet = new HashSet<>(competitorService.getDriversYear(year));
         List<DriverEntity> guessedDrivers = competitorService.getAllDrivers(rankedCompetitors);
-        String error = validateGuessList(guessedDrivers, competitors);
+        String error = validateGuessList(guessedDrivers, validationSet);
         if (error != null) {
             logger.warn(error);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -142,10 +141,9 @@ public class GuessController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         Year year = optYear.get();
-        List<ConstructorEntity> validationList = competitorService.getConstructorsYear(year);
-        Set<ConstructorEntity> competitors = new HashSet<>(validationList);
+        Set<ConstructorEntity> validationSet = new HashSet<>(competitorService.getConstructorsYear(year));
         List<ConstructorEntity> guessedConstructors = competitorService.getAllConstructors(rankedCompetitors);
-        String error = validateGuessList(guessedConstructors, competitors);
+        String error = validateGuessList(guessedConstructors, validationSet);
         if (error != null) {
             logger.warn(error);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -162,18 +160,18 @@ public class GuessController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    private <T> String validateGuessList(List<T> guessed, Set<T> original) {
+    private <T> String validateGuessList(List<T> guessed, Set<T> validationSet) {
         Set<T> guessedSet = new HashSet<>();
         for (T competitor : guessed) {
-            if (!original.contains(competitor)) {
+            if (!validationSet.contains(competitor)) {
                 return String.format("%s is not a valid competitor.", competitor);
             }
             if (!guessedSet.add(competitor)) {
                 return String.format("Competitor %s is guessed twice in the ranking.", competitor);
             }
         }
-        if (original.size() != guessedSet.size()) {
-            return String.format("Not all competitors are guessed. Expected %d, was %d.", original.size(),
+        if (validationSet.size() != guessedSet.size()) {
+            return String.format("Not all competitors are guessed. Expected %d, was %d.", validationSet.size(),
                     guessedSet.size());
         }
         return null;
@@ -217,6 +215,7 @@ public class GuessController {
         RaceId raceId = optRaceId.get();
         Optional<Race> optRace = raceService.getRaceFromId(raceId);
         if (optRace.isEmpty()) {
+            logger.error("Could not find Race from RaceId: {}", optRaceId.get());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         Race race = optRace.get();
