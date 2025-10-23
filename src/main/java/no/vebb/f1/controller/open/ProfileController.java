@@ -13,18 +13,18 @@ import no.vebb.f1.scoring.UserPlacementStats;
 import no.vebb.f1.scoring.UserScoreResponse;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.YearService;
+import no.vebb.f1.user.PublicUserDto;
+import no.vebb.f1.user.UserEntity;
+import no.vebb.f1.user.UserService;
+import no.vebb.f1.cutoff.CutoffService;
+import no.vebb.f1.year.Year;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import no.vebb.f1.user.PublicUserDto;
-import no.vebb.f1.user.UserEntity;
-import no.vebb.f1.user.UserService;
-import no.vebb.f1.cutoff.CutoffService;
-import no.vebb.f1.year.Year;
 
 @RestController
 public class ProfileController {
@@ -38,7 +38,15 @@ public class ProfileController {
     private final ScoreService scoreService;
     private final ResultService resultService;
 
-    public ProfileController(UserService userService, CutoffService cutoffService, YearService yearService, RaceService raceService, PlacementService placementService, GuessService guessService, ScoreService scoreService, ResultService resultService) {
+    public ProfileController(
+            UserService userService,
+            CutoffService cutoffService,
+            YearService yearService,
+            RaceService raceService,
+            PlacementService placementService,
+            GuessService guessService,
+            ScoreService scoreService,
+            ResultService resultService) {
         this.userService = userService;
         this.cutoffService = cutoffService;
         this.yearService = yearService;
@@ -70,7 +78,8 @@ public class ProfileController {
         return getGuesserProfile(userEntity, raceId, year);
     }
 
-    private ResponseEntity<UserScoreResponse> getGuesserProfile(UserEntity userEntity, Integer inputRaceId, Integer inputYear) {
+    private ResponseEntity<UserScoreResponse> getGuesserProfile(
+            UserEntity userEntity, Integer inputRaceId, Integer inputYear) {
         if (inputRaceId == null) {
             if (inputYear == null) {
                 return getUpToDate(userEntity);
@@ -91,8 +100,8 @@ public class ProfileController {
         if (notAvailableToUser(userEntity, year)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceId, raceService,
-                placementService, guessService, scoreService, resultService);
+        UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity),
+                year, raceId, raceService, placementService, guessService, scoreService, resultService);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
@@ -101,7 +110,8 @@ public class ProfileController {
         return getFromYear(userEntity, optYear);
     }
 
-    private ResponseEntity<UserScoreResponse> getFromYear(UserEntity userEntity, Optional<Year> optYear) {
+    private ResponseEntity<UserScoreResponse> getFromYear(
+            UserEntity userEntity, Optional<Year> optYear) {
         if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -109,7 +119,9 @@ public class ProfileController {
         if (notAvailableToUser(userEntity, year)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity), year, raceService, placementService, guessService, scoreService, resultService);
+        UserScoreResponse res = new UserScoreResponse(
+                PublicUserDto.fromEntity(userEntity), year, raceService,
+                placementService, guessService, scoreService, resultService);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
