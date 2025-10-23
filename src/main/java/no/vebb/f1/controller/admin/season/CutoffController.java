@@ -69,7 +69,7 @@ public class CutoffController {
             @RequestParam("year") Year year,
             @RequestParam("cutoff") LocalDateTime cutoffLocal) {
         if (yearService.isFinishedYear(year)) {
-            return new ResponseEntity<>("Year '" + year + "' is over and the race can't be changed.",
+            return new ResponseEntity<>("Year '" + year + "' is over and the cutoff for year can't be changed.",
                     HttpStatus.FORBIDDEN);
         }
         if (cutoffLocal.getYear() != year.value) {
