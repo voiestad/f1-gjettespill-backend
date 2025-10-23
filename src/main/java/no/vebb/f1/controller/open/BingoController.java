@@ -1,10 +1,13 @@
 package no.vebb.f1.controller.open;
 
 import java.util.List;
-import java.util.Optional;
 
 import no.vebb.f1.bingo.BingoService;
 import no.vebb.f1.year.YearService;
+import no.vebb.f1.user.UserService;
+import no.vebb.f1.bingo.BingoSquare;
+import no.vebb.f1.year.Year;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,10 +16,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import no.vebb.f1.user.UserService;
-import no.vebb.f1.bingo.BingoSquare;
-import no.vebb.f1.year.Year;
 
 @RestController
 public class BingoController {
@@ -33,20 +32,16 @@ public class BingoController {
 
     @GetMapping("/api/public/bingo")
     public ResponseEntity<List<BingoSquare>> getCurrentBingoCard() {
-        Optional<Year> optYear = yearService.getCurrentYear();
-        if (optYear.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        Year year = optYear.get();
-        return bingoService.getBingoCard(year).map(
-                bingoSquares -> new ResponseEntity<>(bingoSquares, HttpStatus.OK))
+        return yearService.getCurrentYear()
+                .flatMap(bingoService::getBingoCard)
+                .map(bingoSquares -> new ResponseEntity<>(bingoSquares, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/api/public/bingo/{year}")
     public ResponseEntity<List<BingoSquare>> getBingoCardYear(@PathVariable("year") Year year) {
-        return bingoService.getBingoCard(year).map(
-                        bingoSquares -> new ResponseEntity<>(bingoSquares, HttpStatus.OK))
+        return bingoService.getBingoCard(year)
+                .map(bingoSquares -> new ResponseEntity<>(bingoSquares, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
@@ -74,8 +69,10 @@ public class BingoController {
 
     @PostMapping("/api/bingomaster/set")
     @Transactional
-    public ResponseEntity<?> updateBingoSquareText(@RequestParam("year") Year year,
-                                                   @RequestParam("id") int id, @RequestParam("text") String text) {
+    public ResponseEntity<?> updateBingoSquareText(
+            @RequestParam("year") Year year,
+            @RequestParam("id") int id,
+            @RequestParam("text") String text) {
         if (!userService.isBingomaster()) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -95,8 +92,9 @@ public class BingoController {
 
     @PostMapping("/api/bingomaster/mark")
     @Transactional
-    public ResponseEntity<?> markBingoSquare(@RequestParam("year") Year year,
-                                             @RequestParam("id") int id) {
+    public ResponseEntity<?> markBingoSquare(
+            @RequestParam("year") Year year,
+            @RequestParam("id") int id) {
         if (!userService.isBingomaster()) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
