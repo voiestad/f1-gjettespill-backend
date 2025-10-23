@@ -1,8 +1,8 @@
 package no.vebb.f1.race;
 
-import jakarta.persistence.EntityManager;
 import no.vebb.f1.collection.Race;
 import no.vebb.f1.year.Year;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,11 +12,9 @@ import java.util.Optional;
 public class RaceService {
 
     private final RaceRepository raceRepository;
-    private final EntityManager entityManager;
 
-    public RaceService(RaceRepository raceRepository, EntityManager entityManager) {
+    public RaceService(RaceRepository raceRepository) {
         this.raceRepository = raceRepository;
-        this.entityManager = entityManager;
     }
 
     public Optional<Year> getYearFromRaceId(RaceId raceId) {
@@ -89,16 +87,14 @@ public class RaceService {
 
     public void deleteRace(RaceEntity race) {
         raceRepository.delete(race);
-        entityManager.flush();
-        entityManager.clear();
     }
 
-    public List<RaceEntity> getRacesFromSeason(Year year) {
+    public List<RaceEntity> raceEntitiesFromSeason(Year year) {
         return raceRepository.findAllByYearOrderByPosition(year);
     }
 
     public List<Race> getRacesYear(Year year) {
-        return mapToRace(raceRepository.findAllByYearOrderByPosition(year));
+        return mapToRace(raceEntitiesFromSeason(year));
     }
 
     public List<Race> getRacesYearFinished(Year year) {

@@ -77,7 +77,7 @@ public class SeasonController {
     }
 
     private void setDefaultCutoffRaces(Year year, Instant time) {
-        List<RaceId> races = raceService.getRacesFromSeason(year).stream().map(RaceEntity::raceId).toList();
+        List<RaceId> races = raceService.raceEntitiesFromSeason(year).stream().map(RaceEntity::raceId).toList();
         for (RaceId id : races) {
             cutoffService.setCutoffRace(time, id);
         }

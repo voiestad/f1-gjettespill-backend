@@ -64,7 +64,7 @@ public class ManageSeasonController {
         if (isPosOutOfBounds) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        List<RaceEntity> races = raceService.getRacesFromSeason(year);
+        List<RaceEntity> races = raceService.raceEntitiesFromSeason(year);
         RacePosition currentPos = new RacePosition();
         RacePosition position = RacePosition.getRacePosition(inputPosition).orElseThrow(RuntimeException::new);
         List<RaceEntity> newOrder = new ArrayList<>();
@@ -96,7 +96,7 @@ public class ManageSeasonController {
                     HttpStatus.FORBIDDEN);
         }
         raceService.deleteRace(raceToDelete);
-        List<RaceEntity> races = raceService.getRacesFromSeason(year);
+        List<RaceEntity> races = raceService.raceEntitiesFromSeason(year);
         RacePosition currentPos = new RacePosition();
         List<RaceEntity> newOrder = new ArrayList<>();
         for (RaceEntity race : races) {
