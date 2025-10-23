@@ -42,13 +42,9 @@ public class ManagePointsSystemController {
             return new ResponseEntity<>("Year '" + year + "' is started and the point system can't be changed",
                     HttpStatus.FORBIDDEN);
         }
-        Optional<Diff> optMaxDiff = scoreService.getMaxDiffInPointsMap(year, category);
-        Diff newDiff;
-        if (optMaxDiff.isPresent()) {
-            newDiff = optMaxDiff.get().add(new Diff(1));
-        } else {
-            newDiff = new Diff();
-        }
+        Diff newDiff = scoreService.getMaxDiffInPointsMap(year, category)
+                .map(diff -> diff.add(new Diff(1)))
+                .orElse(new Diff());
         scoreService.addDiffToPointsMap(category, newDiff, year);
         return new ResponseEntity<>(HttpStatus.OK);
     }
