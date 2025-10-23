@@ -62,6 +62,7 @@ public class Importer {
             Year year = optYear.get();
             Map<Year, List<RaceId>> racesToImportFromList = getActiveRaces();
             boolean shouldImportStandings = false;
+            boolean hasAddedNewRaceResult = false;
 
             for (Entry<Year, List<RaceId>> racesToImportFrom : racesToImportFromList.entrySet()) {
                 Year raceYear = racesToImportFrom.getKey();
@@ -69,14 +70,10 @@ public class Importer {
                 logger.info("Year '{}' has '{}' races to import", raceYear, races.size());
                 int startingGridCount = importStartingGrids(races);
                 logger.info("Imported '{}' starting grid", startingGridCount);
-                boolean hasAddedNewRaceResult = importRaceResults(races);
+                hasAddedNewRaceResult = importRaceResults(races);
                 if (year.equals(raceYear)) {
                     if (hasAddedNewRaceResult) {
-                        notificationService.clearNotified();
                         logger.info("New race result imported, will import standings");
-                        shouldImportStandings = true;
-                    } else if (!areStandingsUpToDate(year)) {
-                        logger.info("Standings not up to date, will import standings");
                         shouldImportStandings = true;
                     } else {
                         logger.info("Standings and race results are up to date");
@@ -101,6 +98,9 @@ public class Importer {
                                 "Endringer i resultat av løp utenfor poengene uten at mesterskapet endret seg. Vennligst verifiser at mesterskapet er korrekt.");
                     }
                 } else {
+                    if (hasAddedNewRaceResult) {
+                        notificationService.clearNotified();
+                    }
                     scoreCalculator.calculateScores();
                     logger.info("Imported standings");
                 }
@@ -114,20 +114,6 @@ public class Importer {
             String errorMessage = stringWriter.toString();
             logger.error("Exception while importing. Rolling back.\n{}", errorMessage);
         }
-    }
-
-    private boolean areStandingsUpToDate(Year year) {
-        Optional<RaceId> optLatestRaceId = raceService.getLatestRaceId(year);
-        if (optLatestRaceId.isEmpty()) {
-            return true;
-        }
-        RaceId latestRaceId = optLatestRaceId.get();
-        Optional<RaceId> optStandingsRaceId = raceService.getLatestStandingsId(year);
-        if (optStandingsRaceId.isEmpty()) {
-            return true;
-        }
-        RaceId standingsRaceId = optStandingsRaceId.get();
-        return latestRaceId.equals(standingsRaceId);
     }
 
     private Map<Year, List<RaceId>> getActiveRaces() {
@@ -148,20 +134,18 @@ public class Importer {
         logger.info("Race data from '{}' manually reloaded by admin", raceId);
         importStartingGridData(raceId);
         ResultChangeStatus changeStatus = importRaceResultData(raceId);
-        if (!changeStatus.equals(ResultChangeStatus.NO_CHANGE)) {
-            logger.info("Changes to the race result");
-        } else {
+        if (changeStatus.equals(ResultChangeStatus.NO_CHANGE)) {
             logger.info("No change in race result");
+        } else {
+            logger.info("Changes to the race result");
         }
         Optional<Year> optYear = yearService.getCurrentYear();
         if (optYear.isPresent()) {
             Year year = optYear.get();
             Optional<RaceId> optNewestRaceId = raceService.getLatestRaceId(year);
-            if (optNewestRaceId.isPresent()) {
-                if (raceId.equals(optNewestRaceId.get())) {
-                    logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
-                    importStandings(year, new CompetitorPoints());
-                }
+            if (optNewestRaceId.isPresent() && raceId.equals(optNewestRaceId.get())) {
+                logger.info("Race that was manually reloaded is the newest race. Will import standings as well");
+                importStandings(year, new CompetitorPoints());
             }
         }
         new Thread(scoreCalculator::calculateScores).start();
@@ -184,10 +168,8 @@ public class Importer {
         insertRaceResultData(raceId, raceResult);
         List<PositionedCompetitor<DriverEntity>> postList = resultService.getRaceResult(raceId).stream().map(PositionedCompetitor::fromRaceResult).toList();
         if (preList.size() != postList.size()) {
-            logger.info("Different size");
             ResultChangeStatus status = ResultChangeStatus.POINTS_CHANGE;
-            CompetitorPoints change = compPoints(postList);
-            status.setPointsChange(change);
+            status.setPointsChange(compPoints(postList));
             return status;
         }
         for (int i = 0; i < preList.size(); i++) {
@@ -320,7 +302,7 @@ public class Importer {
         if (raceName.isEmpty()) {
             return false;
         }
-        raceService.insertRace(raceId, raceName,  year, position);
+        raceService.insertRace(raceId, raceName, year, position);
         return true;
     }
 
