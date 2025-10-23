@@ -37,7 +37,12 @@ public class UserSettingsController {
     private final NotificationService notificationService;
     private final GuessService guessService;
 
-    public UserSettingsController(UserService userService, UserRespository userRespository, CodeService codeService, NotificationService notificationService, GuessService guessService) {
+    public UserSettingsController(
+            UserService userService,
+            UserRespository userRespository,
+            CodeService codeService,
+            NotificationService notificationService,
+            GuessService guessService) {
         this.userService = userService;
         this.userRespository = userRespository;
         this.codeService = codeService;
@@ -47,8 +52,7 @@ public class UserSettingsController {
 
     @GetMapping("/info")
     public ResponseEntity<UserInformation> userInformation() {
-        UserEntity userEntity = userService.getUser();
-        UserInformation userInfo = new UserInformation(userEntity, notificationService, guessService);
+        UserInformation userInfo = new UserInformation(userService.getUser(), notificationService, guessService);
         return new ResponseEntity<>(userInfo, HttpStatus.OK);
     }
 
@@ -71,13 +75,13 @@ public class UserSettingsController {
     }
 
     private ResponseEntity<String> registerUsername(OAuth2User principal, Username username, Long referralCode) {
-        if (referralCode != null && !codeService.isValidReferralCode(referralCode)) {
-            logger.warn("Someone tried to use an invalid referral code.");
-            logger.warn("{}", referralCode);
-            return new ResponseEntity<>("Ikke gyldig invitasjonskode.", HttpStatus.BAD_REQUEST);
+        if (referralCode != null && codeService.isValidReferralCode(referralCode)) {
+            userService.addUser(username, principal);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        userService.addUser(username, principal);
-        return new ResponseEntity<>(HttpStatus.OK);
+        logger.warn("Someone tried to use an invalid referral code.");
+        logger.warn("{}", referralCode);
+        return new ResponseEntity<>("Ikke gyldig invitasjonskode.", HttpStatus.BAD_REQUEST);
     }
 
     @GetMapping("/username")
@@ -89,20 +93,19 @@ public class UserSettingsController {
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deleteAccount(@RequestParam("username") String username) {
-        UserEntity userEntity = userService.getUser();
-        String actualUsername = userEntity.username();
-        if (!username.equals(actualUsername)) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        String actualUsername = userService.getUser().username();
+        if (username.equals(actualUsername)) {
+            userService.deleteUser();
+            SecurityContextHolder.clearContext();
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        userService.deleteUser();
-        SecurityContextHolder.clearContext();
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @GetMapping("/ntfy")
     public ResponseEntity<GuessReminderOptionsResponse> ntfyOverview() {
-        UserEntity userEntity = userService.getUser();
-        Optional<UUID> optTopic = notificationService.getNtfyTopic(userEntity.id());
+        UUID userID = userService.getUser().id();
+        Optional<UUID> optTopic = notificationService.getNtfyTopic(userID);
         if (optTopic.isEmpty()) {
             GuessReminderOptionsResponse res = new GuessReminderOptionsResponse(null, null);
             return new ResponseEntity<>(res, HttpStatus.OK);
@@ -112,7 +115,7 @@ public class UserSettingsController {
         for (GuessReminderOption option : options) {
             guessReminderOptions.put(option, false);
         }
-        List<GuessReminderOption> preferences = notificationService.getGuessReminderPreference(userEntity.id());
+        List<GuessReminderOption> preferences = notificationService.getGuessReminderPreference(userID);
         for (GuessReminderOption preference : preferences) {
             guessReminderOptions.put(preference, true);
         }
@@ -124,46 +127,41 @@ public class UserSettingsController {
     @PostMapping("/ntfy/add")
     @Transactional
     public ResponseEntity<UUID> addNtfy() {
-        UserEntity userEntity = userService.getUser();
-        return new ResponseEntity<>(notificationService.addNtfyTopic(userEntity.id()), HttpStatus.OK);
+        return new ResponseEntity<>(notificationService.addNtfyTopic(userService.getUser().id()), HttpStatus.OK);
     }
 
     @PostMapping("/ntfy/remove")
     @Transactional
     public ResponseEntity<?> removeNtfy() {
-        UserEntity userEntity = userService.getUser();
-        notificationService.clearUserFromNtfy(userEntity.id());
+        notificationService.clearUserFromNtfy(userService.getUser().id());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/ntfy/option/add")
     @Transactional
     public ResponseEntity<?> addGuessReminderOption(@RequestParam("option") int option) {
-        UserEntity userEntity = userService.getUser();
         Optional<GuessReminderOption> guessReminderOption = notificationService.getGuessReminderOption(option);
         if (guessReminderOption.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        notificationService.addGuessReminderOption(userEntity.id(), guessReminderOption.get());
+        notificationService.addGuessReminderOption(userService.getUser().id(), guessReminderOption.get());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/ntfy/option/remove")
     @Transactional
     public ResponseEntity<?> removeGuessReminderOption(@RequestParam("option") int option) {
-        UserEntity userEntity = userService.getUser();
         Optional<GuessReminderOption> guessReminderOption = notificationService.getGuessReminderOption(option);
         if (guessReminderOption.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        notificationService.removeGuessReminderOption(userEntity.id(), guessReminderOption.get());
+        notificationService.removeGuessReminderOption(userService.getUser().id(), guessReminderOption.get());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/ntfy/test")
     public ResponseEntity<?> testNotification() {
-        UserEntity user = userService.getUser();
-        if (notificationService.testNotification(user.id())) {
+        if (notificationService.testNotification(userService.getUser().id())) {
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -171,8 +169,7 @@ public class UserSettingsController {
 
     @GetMapping("/referral")
     public ResponseEntity<ReferralCodeResponse> getReferralCode() {
-        UUID userId = userService.getUser().id();
-        Long referralCode = codeService.getReferralCode(userId);
+        Long referralCode = codeService.getReferralCode(userService.getUser().id());
         ReferralCodeResponse code = new ReferralCodeResponse(referralCode);
         return new ResponseEntity<>(code, HttpStatus.OK);
     }
@@ -180,16 +177,14 @@ public class UserSettingsController {
     @PostMapping("/referral/add")
     @Transactional
     public ResponseEntity<ReferralCodeResponse> generateReferralCode() {
-        UUID userId = userService.getUser().id();
-        ReferralCodeResponse code = new ReferralCodeResponse(codeService.addReferralCode(userId));
+        ReferralCodeResponse code = new ReferralCodeResponse(codeService.addReferralCode(userService.getUser().id()));
         return new ResponseEntity<>(code, HttpStatus.OK);
     }
 
     @PostMapping("/referral/delete")
     @Transactional
     public ResponseEntity<?> removeReferralCode() {
-        UUID userId = userService.getUser().id();
-        codeService.removeReferralCode(userId);
+        codeService.removeReferralCode(userService.getUser().id());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
