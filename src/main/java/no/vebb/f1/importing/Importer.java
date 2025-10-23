@@ -72,6 +72,7 @@ public class Importer {
                 boolean hasAddedNewRaceResult = importRaceResults(races);
                 if (year.equals(raceYear)) {
                     if (hasAddedNewRaceResult) {
+                        notificationService.clearNotified();
                         logger.info("New race result imported, will import standings");
                         shouldImportStandings = true;
                     } else if (!areStandingsUpToDate(year)) {

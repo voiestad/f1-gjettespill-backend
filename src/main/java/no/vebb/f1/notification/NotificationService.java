@@ -136,6 +136,10 @@ public class NotificationService {
         ntfyTopicRepository.deleteById(userId);
     }
 
+    public void clearNotified() {
+        notifiedRepository.deleteAll();
+    }
+
     private void clearNotified(UUID userId) {
         notifiedRepository.deleteByUserId(userId);
     }
