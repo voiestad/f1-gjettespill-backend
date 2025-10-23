@@ -37,3 +37,19 @@ For å starte applikasjonen, kjør følgende kommando:
 ```
 mvn spring-boot:run
 ```
+
+## Docker
+Legg til linje i `secret.properties`:
+```
+spring.datasource.url=jdbc:postgresql://host.docker.internal:5432/f1
+```
+Bygge og kjøre:
+```
+docker build -t voiestad/f1 .
+docker run -p 8080:8080 \
+  --add-host=host.docker.internal:host-gateway \
+  --env-file=src/main/resources/secret.properties \
+  -v $(pwd)/backup:/backup \
+  -v $(pwd)/logs:/logs \
+  voiestad/f1
+```
