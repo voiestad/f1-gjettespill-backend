@@ -4,16 +4,16 @@ import no.vebb.f1.race.RaceService;
 import no.vebb.f1.results.ResultService;
 import no.vebb.f1.collection.Race;
 import no.vebb.f1.year.YearService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import no.vebb.f1.user.UserService;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceId;
 import no.vebb.f1.year.Year;
 import no.vebb.f1.response.HeaderResponse;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
@@ -26,7 +26,12 @@ public class HeaderController {
     private final YearService yearService;
     private final RaceService raceService;
 
-    public HeaderController(CutoffService cutoffService, UserService userService, ResultService resultService, YearService yearService, RaceService raceService) {
+    public HeaderController(
+            CutoffService cutoffService,
+            UserService userService,
+            ResultService resultService,
+            YearService yearService,
+            RaceService raceService) {
         this.cutoffService = cutoffService;
         this.userService = userService;
         this.resultService = resultService;
@@ -48,12 +53,9 @@ public class HeaderController {
     }
 
     private boolean isRaceGuess() {
-        Optional<Year> optYear = yearService.getCurrentYear();
-        if (optYear.isEmpty()) {
-            return false;
-        }
-        Year year = optYear.get();
-        return raceService.getLatestRaceForPlaceGuess(year).map(Race::id)
+        return yearService.getCurrentYear()
+                .flatMap(raceService::getLatestRaceForPlaceGuess)
+                .map(Race::id)
                 .filter(raceId -> !cutoffService.isAbleToGuessRace(raceId)).isPresent();
     }
 
