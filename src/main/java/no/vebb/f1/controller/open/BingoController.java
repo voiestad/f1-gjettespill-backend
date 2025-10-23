@@ -35,14 +35,14 @@ public class BingoController {
         return yearService.getCurrentYear()
                 .flatMap(bingoService::getBingoCard)
                 .map(bingoSquares -> new ResponseEntity<>(bingoSquares, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/api/public/bingo/{year}")
     public ResponseEntity<List<BingoSquare>> getBingoCardYear(@PathVariable("year") Year year) {
         return bingoService.getBingoCard(year)
                 .map(bingoSquares -> new ResponseEntity<>(bingoSquares, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/api/public/bingomaster")

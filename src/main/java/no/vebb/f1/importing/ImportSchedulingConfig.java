@@ -8,15 +8,15 @@ import java.util.concurrent.Executors;
 import no.vebb.f1.cutoff.CutoffService;
 import no.vebb.f1.race.RaceService;
 import no.vebb.f1.year.YearService;
+import no.vebb.f1.util.TimeUtil;
+import no.vebb.f1.race.RaceId;
+import no.vebb.f1.year.Year;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
-
-import no.vebb.f1.util.TimeUtil;
-import no.vebb.f1.race.RaceId;
-import no.vebb.f1.year.Year;
 
 @Configuration
 public class ImportSchedulingConfig implements SchedulingConfigurer {
@@ -46,7 +46,7 @@ public class ImportSchedulingConfig implements SchedulingConfigurer {
         }
         Year year = optYear.get();
         Optional<Duration> delay = getDelayCurrentRace(year);
-        return delay.orElseGet(() -> getDelayUpcomingRace(year));
+        return delay.orElse(getDelayUpcomingRace(year));
     }
 
     private Optional<Duration> getDelayCurrentRace(Year year) {

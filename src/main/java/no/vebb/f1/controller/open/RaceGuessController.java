@@ -41,7 +41,7 @@ public class RaceGuessController {
             return getCurrentGuessOverview();
         }
         return raceService.getRaceFromId(raceId).map(this::getGuessOverview)
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     public ResponseEntity<RaceGuessResponse> getCurrentGuessOverview() {
@@ -52,7 +52,7 @@ public class RaceGuessController {
         Year year = optYear.get();
         Optional<Race> optRace = raceService.getLatestRaceForPlaceGuess(year);
         return optRace.map(this::getGuessOverview)
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.FORBIDDEN));
+                .orElse(new ResponseEntity<>(HttpStatus.FORBIDDEN));
     }
 
     private ResponseEntity<RaceGuessResponse> getGuessOverview(Race race) {
