@@ -1,0 +1,45 @@
+package no.voiestad.f1.placement.placementYear;
+
+import java.util.Objects;
+import java.util.UUID;
+
+import no.voiestad.f1.year.Year;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+
+@Embeddable
+public class PlacementYearId {
+    @Embedded
+    private Year year;
+
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
+    protected PlacementYearId() {}
+
+    public PlacementYearId(Year year, UUID userId) {
+        this.year = year;
+        this.userId = userId;
+    }
+
+    public Year year() {
+        return year;
+    }
+
+    public UUID userId() {
+        return userId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PlacementYearId that)) return false;
+        return Objects.equals(year, that.year) && Objects.equals(userId, that.userId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(year, userId);
+    }
+}
