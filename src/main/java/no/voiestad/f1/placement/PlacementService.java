@@ -89,7 +89,7 @@ public class PlacementService {
     }
 
     public List<Placement<Year>> getPreviousPlacements(UUID userId) {
-        return placementYearRepository.findByIdUserIdOrderByPlacementDesc(userId).stream()
+        return placementYearRepository.findByIdUserIdOrderByIdYearDesc(userId).stream()
                 .map(row ->
                         new Placement<>(
                                 row.placement(),

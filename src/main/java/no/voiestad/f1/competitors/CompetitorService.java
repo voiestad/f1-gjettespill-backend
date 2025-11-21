@@ -1,7 +1,9 @@
 package no.voiestad.f1.competitors;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import no.voiestad.f1.competitors.constructor.*;
 import no.voiestad.f1.competitors.domain.Color;
@@ -135,5 +137,42 @@ public class CompetitorService {
         }
         constructorRepository.save(constructor.withName(newName));
         return true;
+    }
+
+
+    public <T> Optional<List<DriverEntity>> extractDrivers(
+            List<T> values,
+            Function<T, Integer> extractor,
+            Year year) {
+        int expectedLength = values.size();
+        List<DriverEntity> drivers = values.stream()
+                .map(extractor)
+                .map(this::getDriver)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(driver -> driver.year().equals(year))
+                .toList();
+        if (drivers.size() != expectedLength || new HashSet<>(drivers).size() != expectedLength) {
+            return Optional.empty();
+        }
+        return Optional.of(drivers);
+    }
+
+    public <T> Optional<List<ConstructorEntity>> extractConstructors(
+            List<T> values,
+            Function<T, Integer> extractor,
+            Year year) {
+        int expectedLength = values.size();
+        List<ConstructorEntity> constructors = values.stream()
+                .map(extractor)
+                .map(this::getConstructor)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(constructor -> constructor.year().equals(year))
+                .toList();
+        if (constructors.size() != expectedLength || new HashSet<>(constructors).size() != expectedLength) {
+            return Optional.empty();
+        }
+        return Optional.of(constructors);
     }
 }

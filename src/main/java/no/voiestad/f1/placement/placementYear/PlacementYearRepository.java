@@ -10,5 +10,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface PlacementYearRepository extends JpaRepository<PlacementYearEntity, PlacementYearId> {
     int countByPlacementAndIdUserId(UserPosition placement, UUID userId);
 
-    List<PlacementYearEntity> findByIdUserIdOrderByPlacementDesc(UUID userId);
+    List<PlacementYearEntity> findByIdUserIdOrderByIdYearDesc(UUID userId);
 }
