@@ -4,9 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import no.voiestad.f1.competitors.CompetitorService;
+import no.voiestad.f1.competitors.constructor.ConstructorEntity;
+import no.voiestad.f1.competitors.driver.DriverEntity;
+import no.voiestad.f1.results.ResultService;
+import no.voiestad.f1.results.domain.CompetitorPoints;
+import no.voiestad.f1.results.domain.CompetitorPosition;
+import no.voiestad.f1.results.request.ConstructorStandingsRequest;
+import no.voiestad.f1.results.request.DriverStandingsRequest;
+import no.voiestad.f1.results.request.RaceResultRequest;
+import no.voiestad.f1.results.request.RaceResultRequestBody;
 import no.voiestad.f1.race.RaceEntity;
 import no.voiestad.f1.race.RacePosition;
 import no.voiestad.f1.race.RaceService;
+import no.voiestad.f1.scoring.ScoreCalculator;
 import no.voiestad.f1.year.YearService;
 import no.voiestad.f1.importing.Importer;
 import no.voiestad.f1.cutoff.CutoffService;
@@ -16,10 +27,8 @@ import no.voiestad.f1.year.Year;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/season/manage")
@@ -29,12 +38,25 @@ public class ManageSeasonController {
     private final CutoffService cutoffService;
     private final YearService yearService;
     private final RaceService raceService;
+    private final ResultService resultService;
+    private final ScoreCalculator scoreCalculator;
+    private final CompetitorService competitorService;
 
-    public ManageSeasonController(Importer importer, CutoffService cutoffService, YearService yearService, RaceService raceService) {
+    public ManageSeasonController(
+            Importer importer,
+            CutoffService cutoffService,
+            YearService yearService,
+            RaceService raceService,
+            ResultService resultService,
+            ScoreCalculator scoreCalculator,
+            CompetitorService competitorService) {
         this.importer = importer;
         this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
+        this.resultService = resultService;
+        this.scoreCalculator = scoreCalculator;
+        this.competitorService = competitorService;
     }
 
     @PostMapping("/reload")
@@ -126,5 +148,88 @@ public class ManageSeasonController {
         }
         cutoffService.setCutoffRace(cutoffService.getDefaultInstant(year), raceId.get());
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PutMapping("/addRaceResult")
+    @Transactional
+    public ResponseEntity<?> addRaceResult(@RequestBody RaceResultRequestBody requestBody) {
+        Optional<RaceEntity> optRace = raceService.getRaceEntityFromId(requestBody.raceId());
+        if (optRace.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        RaceEntity race = optRace.get();
+        RaceId raceId = race.raceId();
+        Year year = race.year();
+        if (yearService.isFinishedYear(year)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        if (!addRaceResult(requestBody.raceResult(), raceId, year)
+                || !addDriverStandings(requestBody.driverStandings(), raceId, year)
+                || !addConstructorStandings(requestBody.constructorStandings(), raceId, year)) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        new Thread(scoreCalculator::calculateScores).start();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private boolean addRaceResult(List<RaceResultRequest> raceResult, RaceId raceId, Year year) {
+        List<String> positions = raceResult.stream().map(RaceResultRequest::position).toList();
+        Optional<List<DriverEntity>> optDrivers = competitorService.extractDrivers(
+                raceResult, RaceResultRequest::driver, year);
+        Optional<List<CompetitorPoints>> optPoints = CompetitorPoints.extractCompetitorPoints(
+                raceResult, RaceResultRequest::points);
+        Optional<List<CompetitorPosition>> optFinishingPositions = CompetitorPosition.extractCompetitorPositions(
+                raceResult, RaceResultRequest::finishingPosition);
+        if (optDrivers.isEmpty() || optPoints.isEmpty() || optFinishingPositions.isEmpty()) {
+            return false;
+        }
+        List<DriverEntity> drivers = optDrivers.get();
+        List<CompetitorPoints> points = optPoints.get();
+        List<CompetitorPosition> finishingPositions = optFinishingPositions.get();
+        for (int i = 0; i < raceResult.size(); i++) {
+            resultService.insertDriverRaceResult(
+                    raceId, positions.get(i), drivers.get(i), points.get(i), finishingPositions.get(i));
+        }
+        return true;
+    }
+
+    private boolean addDriverStandings(List<DriverStandingsRequest> driverStandings, RaceId raceId, Year year) {
+        Optional<List<DriverEntity>> optDrivers = competitorService.extractDrivers(
+                driverStandings, DriverStandingsRequest::driver, year);
+        Optional<List<CompetitorPoints>> optPoints = CompetitorPoints.extractCompetitorPoints(
+                driverStandings, DriverStandingsRequest::points);
+        Optional<List<CompetitorPosition>> optPositions = CompetitorPosition.extractCompetitorPositions(
+                driverStandings, DriverStandingsRequest::position);
+        if (optDrivers.isEmpty() || optPoints.isEmpty() || optPositions.isEmpty()) {
+            return false;
+        }
+        List<DriverEntity> drivers = optDrivers.get();
+        List<CompetitorPoints> points = optPoints.get();
+        List<CompetitorPosition> positions = optPositions.get();
+        for (int i = 0; i < driverStandings.size(); i++) {
+            resultService.insertDriverIntoStandings(
+                    raceId, drivers.get(i), positions.get(i), points.get(i));
+        }
+        return true;
+    }
+
+    private boolean addConstructorStandings(List<ConstructorStandingsRequest> constructorStandings, RaceId raceId, Year year) {
+        Optional<List<ConstructorEntity>> optConstructors = competitorService.extractConstructors(
+                constructorStandings, ConstructorStandingsRequest::constructor, year);
+        Optional<List<CompetitorPoints>> optPoints = CompetitorPoints.extractCompetitorPoints(
+                constructorStandings, ConstructorStandingsRequest::points);
+        Optional<List<CompetitorPosition>> optPositions = CompetitorPosition.extractCompetitorPositions(
+                constructorStandings, ConstructorStandingsRequest::position);
+        if (optConstructors.isEmpty() || optPoints.isEmpty() || optPositions.isEmpty()) {
+            return false;
+        }
+        List<ConstructorEntity> constructors = optConstructors.get();
+        List<CompetitorPoints> points = optPoints.get();
+        List<CompetitorPosition> positions = optPositions.get();
+        for (int i = 0; i < constructorStandings.size(); i++) {
+            resultService.insertConstructorIntoStandings(raceId, constructors.get(i), positions.get(i), points.get(i));
+        }
+        return true;
     }
 }
