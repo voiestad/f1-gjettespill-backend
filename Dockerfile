@@ -12,7 +12,7 @@ COPY --from=dependencies /app/ /app
 COPY /src /app/src
 RUN mvn -B -e clean install -DskipTests
 
-FROM openjdk:17
+FROM eclipse-temurin:17-jdk
 
 COPY --from=builder /app/target/f1.jar /f1.jar
 EXPOSE 8080
