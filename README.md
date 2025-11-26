@@ -17,10 +17,8 @@ Dette repoet er koden for backenden til nettsiden. Koden for frontenden ligger [
 * Maven
 
 ## Oppsett for Første Gang
-
 1. Lag en ny fil i **`/src/main/resources`** med navnet **`secret.properties`**.
 2. Fyll inn følgende informasjon:
-
 ```
 spring.security.oauth2.client.registration.google.client-id={id}
 spring.security.oauth2.client.registration.google.client-secret={secret}
@@ -31,25 +29,23 @@ ntfy.password={ntfy password}
 ```
 
 ## Kjøre Applikasjonen
-
 For å starte applikasjonen, kjør følgende kommando:
-
 ```
 mvn spring-boot:run
 ```
 
-## Docker
+## Docker Compose
 Legg til linje i `secret.properties`:
 ```
-spring.datasource.url=jdbc:postgresql://host.docker.internal:5432/f1
+spring.datasource.url=jdbc:postgresql://database:5432/f1
 ```
-Bygge og kjøre:
+Legg til linjer i `.env`:
 ```
-docker build -t voiestad/f1 .
-docker run -p 8080:8080 \
-  --add-host=host.docker.internal:host-gateway \
-  --env-file=src/main/resources/secret.properties \
-  -v $(pwd)/backup:/backup \
-  -v $(pwd)/logs:/logs \
-  voiestad/f1
+POSTGRES_USER={database username}
+POSTGRES_PASSWORD={database password}
+POSTGRES_DB=f1
+```
+Kjøre:
+```
+docker compose up
 ```

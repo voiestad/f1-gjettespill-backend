@@ -1,1 +1,3 @@
 src/main/resources/secret.properties
+postgresql
+.env

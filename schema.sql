@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS citext;
 CREATE TABLE IF NOT EXISTS users (
     user_id UUID PRIMARY KEY,
     google_id TEXT UNIQUE NOT NULL,
@@ -166,9 +167,9 @@ CREATE TABLE IF NOT EXISTS driver_place_guesses (
     FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE,
     FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
 );
-CREATE INDEX IF NOT EXISTS user_year_idx ON flag_guesses (user_id, year);
-CREATE INDEX IF NOT EXISTS user_year_idx ON driver_guesses (user_id, year);
-CREATE INDEX IF NOT EXISTS user_year_idx ON constructor_guesses (user_id, year);
+CREATE INDEX IF NOT EXISTS user_year_flag_guesses_idx ON flag_guesses (user_id, year);
+CREATE INDEX IF NOT EXISTS user_year_driver_guesses_idx ON driver_guesses (user_id, year);
+CREATE INDEX IF NOT EXISTS user_year_constructor_guesses_idx ON constructor_guesses (user_id, year);
 CREATE TABLE IF NOT EXISTS diff_points_mappings (
     category_name TEXT NOT NULL,
     diff INTEGER NOT NULL,

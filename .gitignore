@@ -35,3 +35,5 @@ build/
 secret.properties
 /backup
 /logs
+/postgresql
+.env
