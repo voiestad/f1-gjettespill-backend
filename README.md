@@ -1,24 +1,32 @@
 # F1 Gjettespill - Backend
-F1 Gjettespill går ut på at deltakerne gjetter på sluttresultatene av Formel 1 sesongen. I tillegg gjettes det på hvem som kommer på første- og tiendeplass i hvert løp gjennom året. Deretter blir det beregnet poeng utfra hvor nærme gjetningen var det faktiske resultatet. Vinneren for året er den som har flest poeng når sesongen er over.
+F1 Gjettespill (F1 Guessing Game) is a game where the participants guess the end results of the Formula 1 season. 
+In addition, the participants also guess on who gets pole, first place and tenth place in each grand prix. 
+Participants can create leagues so that friends can compete against each other.
+Points are calculated based on how close the guess was to the actual result.
+The winner for the year is the one that has the most points when the season is over.
+There is both a global leaderboard and a leaderboard for each league.
 
-Dette repoet er koden for backenden til nettsiden. Koden for frontenden ligger [her](https://github.com/voiestad/f1-gjettespill-frontend).
+This is the repository for the backend code to the website. The code for the frontend is [here](https://github.com/voiestad/f1-gjettespill-frontend).
 
-## Oversikt
-1. [Utvikler](#utvikler)
-2. [Krav](#krav)
-3. [Oppsett](#oppsett-for-første-gang)
-4. [Kjøre Applikasjonen](#kjøre-applikasjonen)
+## Overview
+1. [Developer](#developer)
+2. [Requirements](#requirements)
+3. [Setting up](#first-time-set-up)
+4. [Running Application](#running-application)
 
-## Utvikler
+## Developer
 **Vebjørn Øiestad**
 
-## Krav
-* Java JDK 17 eller nyere
+## Requirements
+* Java JDK 17
 * Maven
+* PostgreSQL
 
-## Oppsett for Første Gang
-1. Lag en ny fil i **`/src/main/resources`** med navnet **`secret.properties`**.
-2. Fyll inn følgende informasjon:
+Can also be ran fully in Docker.
+
+## First Time Set Up
+1. Create a file in `/src/main/resources` named `secret.properties`.
+2. Add the following information:
 ```
 spring.security.oauth2.client.registration.google.client-id={id}
 spring.security.oauth2.client.registration.google.client-secret={secret}
@@ -28,24 +36,30 @@ ntfy.user={ntfy username}
 ntfy.password={ntfy password}
 ```
 
-## Kjøre Applikasjonen
-For å starte applikasjonen, kjør følgende kommando:
+You also need to set up a PostgreSQL database named f1 at port 5432. The schema is available in 
+[schema.sql](schema.sql).
+
+## Running Application
+To start the application, run the following command:
 ```
 mvn spring-boot:run
 ```
 
 ## Docker Compose
-Legg til linje i `secret.properties`:
+Add line in `secret.properties`:
 ```
 spring.datasource.url=jdbc:postgresql://database:5432/f1
 ```
-Legg til linjer i `.env`:
+Add lines in `.env`:
 ```
 POSTGRES_USER={database username}
 POSTGRES_PASSWORD={database password}
 POSTGRES_DB=f1
 ```
-Kjøre:
+Run:
 ```
 docker compose up
 ```
+
+## Disclaimer
+F1 Gjettespill is in no way affiliated with Formula 1 and the trademark F1 belongs to Formula One Group.
