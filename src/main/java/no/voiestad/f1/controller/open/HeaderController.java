@@ -1,11 +1,9 @@
 package no.voiestad.f1.controller.open;
 
 import no.voiestad.f1.race.RaceService;
-import no.voiestad.f1.results.ResultService;
 import no.voiestad.f1.collection.Race;
 import no.voiestad.f1.year.YearService;
 import no.voiestad.f1.user.UserService;
-import no.voiestad.f1.cutoff.CutoffService;
 import no.voiestad.f1.race.RaceId;
 import no.voiestad.f1.year.Year;
 import no.voiestad.f1.response.HeaderResponse;
@@ -20,21 +18,12 @@ import java.util.Optional;
 @RestController
 public class HeaderController {
 
-    private final CutoffService cutoffService;
     private final UserService userService;
-    private final ResultService resultService;
     private final YearService yearService;
     private final RaceService raceService;
 
-    public HeaderController(
-            CutoffService cutoffService,
-            UserService userService,
-            ResultService resultService,
-            YearService yearService,
-            RaceService raceService) {
-        this.cutoffService = cutoffService;
+    public HeaderController(UserService userService, YearService yearService, RaceService raceService) {
         this.userService = userService;
-        this.resultService = resultService;
         this.yearService = yearService;
         this.raceService = raceService;
     }
@@ -43,24 +32,11 @@ public class HeaderController {
     public ResponseEntity<HeaderResponse> preHandle() {
         HeaderResponse res = new HeaderResponse();
         res.isLoggedIn = userService.isLoggedIn();
-        res.isRaceGuess = isRaceGuess();
         res.isAdmin = userService.isAdmin();
         if (res.isAdmin) {
             res.ongoingRace = ongoingRaceId();
         }
-        res.isAbleToGuess = cutoffService.getCurrentYearIfAbleToGuess().isPresent() || isRaceToGuess();
         return new ResponseEntity<>(res, HttpStatus.OK);
-    }
-
-    private boolean isRaceGuess() {
-        return yearService.getCurrentYear()
-                .flatMap(raceService::getLatestRaceForPlaceGuess)
-                .map(Race::id)
-                .filter(raceId -> !cutoffService.isAbleToGuessRace(raceId)).isPresent();
-    }
-
-    private boolean isRaceToGuess() {
-        return resultService.getCurrentRaceIdToGuess().filter(cutoffService::isAbleToGuessRace).isPresent();
     }
 
     private Race ongoingRaceId() {

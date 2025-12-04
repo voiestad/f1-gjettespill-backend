@@ -4,10 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import no.voiestad.f1.guessing.category.Category;
+import no.voiestad.f1.guessing.collection.*;
 import no.voiestad.f1.race.RacePosition;
-import no.voiestad.f1.guessing.collection.IPlaceGuessData;
-import no.voiestad.f1.guessing.collection.IUserRaceGuess;
-import no.voiestad.f1.guessing.collection.IUserRaceGuessTable;
 import no.voiestad.f1.race.RaceId;
 import no.voiestad.f1.year.Year;
 
@@ -33,6 +31,16 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
             ORDER BY u.username
             """)
     List<IUserRaceGuess> findAllByRaceIdAndCategoryNameOrderByUsername(Category categoryName, RaceId raceId);
+
+    @Query("""
+            SELECT u.username AS username, dpg.driver.driverName AS driverName
+            FROM DriverPlaceGuessEntity dpg
+            JOIN UserEntity u ON u.id = dpg.id.userId
+            WHERE dpg.id.raceId = :raceId AND dpg.id.categoryName = :categoryName
+            ORDER BY u.username
+            """)
+    List<IUserQualifyingGuess> findAllByRaceIdAndCategoryNameOrderByUsernameWithoutStartingPosition(Category categoryName, RaceId raceId);
+
     @Query("""
             SELECT r.position as racePosition, r.raceName AS raceName, dpg.driver.driverName AS driverName, sg.position AS startPosition, rr.id.finishingPosition AS finishingPosition
             FROM DriverPlaceGuessEntity dpg
@@ -43,4 +51,14 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
             ORDER BY r.position
             """)
     List<IUserRaceGuessTable> findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPosition(Category categoryName, Year year, RacePosition position, UUID userId);
+
+    @Query("""
+            SELECT r.position as racePosition, r.raceName AS raceName, dpg.driver.driverName AS driverName, sg.position AS startPosition
+            FROM DriverPlaceGuessEntity dpg
+            JOIN RaceEntity r ON r.raceId = dpg.id.raceId
+            JOIN StartingGridEntity sg ON sg.id.raceId = r.raceId AND dpg.driver.driverId = sg.id.driver.driverId
+            WHERE dpg.id.categoryName = :categoryName AND dpg.id.userId = :userId AND r.year = :year AND r.position <= :position
+            ORDER BY r.position
+            """)
+    List<IUserQualifyingGuessTable> findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPositionWithoutRaceResult(Category categoryName, Year year, RacePosition position, UUID userId);
 }

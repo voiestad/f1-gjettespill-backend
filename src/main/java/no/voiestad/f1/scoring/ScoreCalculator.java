@@ -83,8 +83,9 @@ public class ScoreCalculator {
             Map<UUID, Placement<UserPoints>> driversPoints = getPlacementMap(userScores, UserScore::getDriversScore);
             Map<UUID, Placement<UserPoints>> constructorsPoints = getPlacementMap(userScores, UserScore::getConstructorsScore);
             Map<UUID, Placement<UserPoints>> flagPoints = getPlacementMap(userScores, UserScore::getFlagScore);
-            Map<UUID, Placement<UserPoints>> winnerPoints = getPlacementMap(userScores, UserScore::getWinnerScore);
+            Map<UUID, Placement<UserPoints>> firstPoints = getPlacementMap(userScores, UserScore::getFirstScore);
             Map<UUID, Placement<UserPoints>> tenthPoints = getPlacementMap(userScores, UserScore::getTenthScore);
+            Map<UUID, Placement<UserPoints>> polePoints = getPlacementMap(userScores, UserScore::getPoleScore);
             Map<UUID, Placement<UserPoints>> totalPoints = getPlacementMap(userScores, UserScore::getScore);
 
             for (UserEntity guesser : guessers) {
@@ -93,8 +94,9 @@ public class ScoreCalculator {
                         driversPoints.get(id),
                         constructorsPoints.get(id),
                         flagPoints.get(id),
-                        winnerPoints.get(id),
+                        firstPoints.get(id),
                         tenthPoints.get(id),
+                        polePoints.get(id),
                         totalPoints.get(id)
                 );
                 rankedGuessers.put(id, summary);

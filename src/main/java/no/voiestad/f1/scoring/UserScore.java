@@ -32,8 +32,9 @@ public class UserScore {
     public final List<StandingsGuess<DriverName>> driversGuesses = new ArrayList<>();
     public final List<StandingsGuess<ConstructorName>> constructorsGuesses = new ArrayList<>();
     public final List<FlagGuess> flagGuesses = new ArrayList<>();
-    public final List<PlaceGuess> winnerGuesses = new ArrayList<>();
+    public final List<PlaceGuess> firstGuesses = new ArrayList<>();
     public final List<PlaceGuess> tenthGuesses = new ArrayList<>();
+    public final List<QualifyingGuess> poleGuesses = new ArrayList<>();
 
     public UserScore(
             PublicUserDto user,
@@ -55,8 +56,9 @@ public class UserScore {
         initializeDriversGuesses();
         initializeConstructorsGuesses();
         initializeFlagsGuesses();
-        initializeWinnerGuesses();
+        initializeFirstGuesses();
         initializeTenthGuesses();
+        initializePoleGuesses();
     }
 
     public UserScore(
@@ -91,7 +93,7 @@ public class UserScore {
     }
 
     private <T> void getGuessedToPos(Category category, List<T> guessed,
-                                                        List<T> competitors, List<StandingsGuess<T>> result) {
+                                     List<T> competitors, List<StandingsGuess<T>> result) {
         DiffPointsMap map = new DiffPointsMap(category, year, scoreService);
         Map<T, Integer> guessedToPos = new HashMap<>();
         for (int i = 0; i < guessed.size(); i++) {
@@ -125,8 +127,8 @@ public class UserScore {
         }
     }
 
-    private void initializeWinnerGuesses() {
-        getDriverPlaceGuessTable(Category.FIRST, 1, winnerGuesses);
+    private void initializeFirstGuesses() {
+        getDriverPlaceGuessTable(Category.FIRST, 1, firstGuesses);
     }
 
     private void initializeTenthGuesses() {
@@ -152,13 +154,36 @@ public class UserScore {
         }
     }
 
+    private void initializePoleGuesses() {
+        getQualifyingGuessTable(Category.POLE, 1, poleGuesses);
+    }
+
+    private void getQualifyingGuessTable(Category category, int targetPos, List<QualifyingGuess> result) {
+        if (raceId == null) {
+            return;
+        }
+        DiffPointsMap map = new DiffPointsMap(category, year, scoreService);
+        List<IUserQualifyingGuessTable> sqlRes = guessService.getDataForQualifyingGuessTable(category, user.id(), year, racePos);
+
+        for (IUserQualifyingGuessTable row : sqlRes) {
+            RacePosition racePosition = row.getRacePosition();
+            String raceName = row.getRaceName();
+            DriverName driver = row.getDriverName();
+            CompetitorPosition startPos = row.getStartPosition();
+            Diff diff = new Diff(targetPos - startPos.toValue());
+            UserPoints points = map.getPoints(diff);
+            result.add(new QualifyingGuess(racePosition, raceName, driver, startPos, diff, points));
+        }
+    }
+
     public UserPoints getScore() {
         UserPoints score = new UserPoints();
         score = score.add(getDriversScore());
         score = score.add(getConstructorsScore());
         score = score.add(getFlagScore());
-        score = score.add(getWinnerScore());
+        score = score.add(getFirstScore());
         score = score.add(getTenthScore());
+        score = score.add(getPoleScore());
         return score;
     }
 
@@ -174,11 +199,15 @@ public class UserScore {
         return flagGuesses.stream().map(FlagGuess::points).reduce(new UserPoints(), UserPoints::add);
     }
 
-    public UserPoints getWinnerScore() {
-        return winnerGuesses.stream().map(PlaceGuess::points).reduce(new UserPoints(), UserPoints::add);
+    public UserPoints getFirstScore() {
+        return firstGuesses.stream().map(PlaceGuess::points).reduce(new UserPoints(), UserPoints::add);
     }
 
     public UserPoints getTenthScore() {
         return tenthGuesses.stream().map(PlaceGuess::points).reduce(new UserPoints(), UserPoints::add);
+    }
+
+    public UserPoints getPoleScore() {
+        return poleGuesses.stream().map(QualifyingGuess::points).reduce(new UserPoints(), UserPoints::add);
     }
 }

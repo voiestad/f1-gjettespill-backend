@@ -6,7 +6,8 @@ import no.voiestad.f1.placement.domain.UserPoints;
 public record Summary(Placement<UserPoints> drivers,
                       Placement<UserPoints> constructors,
                       Placement<UserPoints> flag,
-                      Placement<UserPoints> winner,
+                      Placement<UserPoints> first,
                       Placement<UserPoints> tenth,
+                      Placement<UserPoints> pole,
                       Placement<UserPoints> total) {
 }

@@ -55,12 +55,16 @@ public class RaceService {
         return getLatestRaceForPlaceGuess(year).map(Race::id);
     }
 
-    public Optional<RaceId> getUpcomingRaceId(Year year) {
+    public Optional<Race> getUpcomingRace(Year year) {
         List<RaceEntity> races = raceRepository.findAllByYearNotInRaceResult(year);
         if (races.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(races.get(0).raceId());
+        return Optional.of(races.get(0)).map(Race::fromEntity);
+    }
+
+    public Optional<RaceId> getUpcomingRaceId(Year year) {
+        return getUpcomingRace(year).map(Race::id);
     }
 
     public Optional<RaceId> getLatestStandingsId(Year year) {

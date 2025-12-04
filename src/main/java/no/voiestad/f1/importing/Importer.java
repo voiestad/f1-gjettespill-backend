@@ -71,6 +71,9 @@ public class Importer {
                 logger.info("Imported '{}' starting grid", startingGridCount);
                 hasAddedNewRaceResult = importRaceResults(races);
                 if (year.equals(raceYear)) {
+                    if (startingGridCount > 0) {
+                        notificationService.clearNotified();
+                    }
                     if (hasAddedNewRaceResult) {
                         logger.info("New race result imported, will import standings");
                         shouldImportStandings = true;

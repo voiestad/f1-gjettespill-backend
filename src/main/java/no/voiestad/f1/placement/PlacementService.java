@@ -80,12 +80,13 @@ public class PlacementService {
         Placement<UserPoints> drivers = categories.get(Category.DRIVER);
         Placement<UserPoints> constructors = categories.get(Category.CONSTRUCTOR);
         Placement<UserPoints> flag = categories.get(Category.FLAG);
-        Placement<UserPoints> winner = categories.get(Category.FIRST);
+        Placement<UserPoints> first = categories.get(Category.FIRST);
         Placement<UserPoints> tenth = categories.get(Category.TENTH);
+        Placement<UserPoints> pole = categories.get(Category.POLE);
         Placement<UserPoints> total =
                 new Placement<>(totalRes.placement(),
                         totalRes.points());
-        return new Summary(drivers, constructors, flag, winner, tenth, total);
+        return new Summary(drivers, constructors, flag, first, tenth, pole, total);
     }
 
     public List<Placement<Year>> getPreviousPlacements(UUID userId) {
@@ -121,15 +122,17 @@ public class PlacementService {
                 placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.DRIVER, summary.drivers().pos(), summary.drivers().value()));
                 placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.CONSTRUCTOR, summary.constructors().pos(), summary.constructors().value()));
                 placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.FLAG, summary.flag().pos(), summary.flag().value()));
-                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.FIRST, summary.winner().pos(), summary.winner().value()));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.FIRST, summary.first().pos(), summary.first().value()));
                 placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.TENTH, summary.tenth().pos(), summary.tenth().value()));
+                placementCategoryEntities.add(new PlacementCategoryEntity(raceId, userId, Category.POLE, summary.pole().pos(), summary.pole().value()));
             } else {
                 placementRaceYearStartEntities.add(new PlacementRaceYearStartEntity(year, userId, summary.total().pos(), summary.total().value()));
                 placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.DRIVER, summary.drivers().pos(), summary.drivers().value()));
                 placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.CONSTRUCTOR, summary.constructors().pos(), summary.constructors().value()));
                 placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.FLAG, summary.flag().pos(), summary.flag().value()));
-                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.FIRST, summary.winner().pos(), summary.winner().value()));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.FIRST, summary.first().pos(), summary.first().value()));
                 placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.TENTH, summary.tenth().pos(), summary.tenth().value()));
+                placementCategoryYearStartEntities.add(new PlacementCategoryYearStartEntity(year, userId, Category.POLE, summary.pole().pos(), summary.pole().value()));
             }
         }
         placementRaceRepository.saveAll(placementRaceEntities);

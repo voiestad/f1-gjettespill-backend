@@ -71,7 +71,7 @@ public class NotificationService {
             return;
         }
         Year year = optYear.get();
-        Optional<Race> optRace = raceService.getLatestRaceForPlaceGuess(year);
+        Optional<Race> optRace = raceService.getUpcomingRace(year);
         if (optRace.isEmpty()) {
             return;
         }
@@ -81,8 +81,19 @@ public class NotificationService {
         if (timeLeft < 0) {
             return;
         }
-        int timeLeftHours = (int) (timeLeft / 3600);
-        List<NtfyTopicEntity> usersLeftToGuess = getUsersLeftToGuess(raceId);
+        long timeLeftPreRace = cutoffService.getTimeLeftToGuessPreRace(raceId);
+        boolean isPreRace = timeLeftPreRace > 0;
+        Optional<Race> optNewestStartingGridRace = raceService.getLatestRaceForPlaceGuess(year);
+        if (!isPreRace) {
+            if (optNewestStartingGridRace.isEmpty()) {
+                return;
+            }
+            if (!optNewestStartingGridRace.get().id().equals(raceId)) {
+                return;
+            }
+        }
+        int timeLeftHours = isPreRace ? (int) (timeLeftPreRace / 3600) : (int) (timeLeft / 3600);
+        List<NtfyTopicEntity> usersLeftToGuess = getUsersLeftToGuess(raceId, isPreRace);
         List<NotifiedEntity> notifications = new ArrayList<>();
         for (NtfyTopicEntity user : usersLeftToGuess) {
             UUID userId = user.userId();
@@ -98,7 +109,8 @@ public class NotificationService {
                     break;
                 }
                 String hours = option.value() == 1 ? "time" : "timer";
-                String messageBody = String.format("Det er mindre enn %s %s igjen på å gjette på %s", option.value(), hours, race.name());
+                String messageBody = String.format("Det er mindre enn %s %s igjen på å gjette på %s i %s",
+                        option.value(), hours, isPreRace ? "pole og 1. plass" : "10. plass", race.name());
                 Optional<NtfyMessage> message = new NtfyMessageBuilder()
                         .setTopic(user.topic().toString())
                         .setTitle("Husk å gjette!")
@@ -201,8 +213,9 @@ public class NotificationService {
                 .toList();
     }
 
-    public List<NtfyTopicEntity> getUsersLeftToGuess(RaceId raceId) {
-        return ntfyTopicRepository.findAllByRaceId(raceId);
+    public List<NtfyTopicEntity> getUsersLeftToGuess(RaceId raceId, boolean isPreRace) {
+        return isPreRace ? ntfyTopicRepository.findAllByRaceIdPreRace(raceId) :
+                ntfyTopicRepository.findAllByRaceIdRace(raceId);
     }
 
     public Optional<GuessReminderOption> getGuessReminderOption(int option) {
