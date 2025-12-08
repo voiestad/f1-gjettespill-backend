@@ -15,6 +15,7 @@ import no.voiestad.f1.year.Year;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -31,8 +32,8 @@ public class HomeController {
     }
 
     @GetMapping("/api/public/home")
-    public ResponseEntity<HomePageResponse> home() {
-        Optional<Year> optYear = yearService.getCurrentYear();
+    public ResponseEntity<HomePageResponse> home(@RequestParam(name = "year", required = false) Integer inputYear) {
+        Optional<Year> optYear = inputYear == null ? yearService.getCurrentYear() : yearService.getYear(inputYear);
         List<String> guessers = null;
         List<GuesserPointsSeason> graph = null;
         List<RankedGuesser> leaderboard = null;
