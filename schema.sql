@@ -249,6 +249,37 @@ CREATE TABLE IF NOT EXISTS ntfy_topics (
     topic UUID UNIQUE NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS leagues (
+    league_id UUID PRIMARY KEY,
+    league_name TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE,
+    UNIQUE (league_name, year)
+);
+CREATE TABLE IF NOT EXISTS league_memberships (
+    user_id UUID NOT NULL,
+    league_id UUID NOT NULL,
+    PRIMARY KEY (user_id, league_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (league_id) REFERENCES leagues(league_id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS league_roles (
+    user_id UUID NOT NULL,
+    league_id UUID NOT NULL,
+    league_role TEXT NOT NULL,
+    PRIMARY KEY (user_id, league_id, league_role),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (league_id) REFERENCES leagues(league_id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS league_invitations (
+    user_id UUID NOT NULL,
+    league_id UUID NOT NULL,
+    inviter UUID NOT NULL,
+    PRIMARY KEY (user_id, league_id, inviter),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (inviter) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (league_id) REFERENCES leagues(league_id) ON DELETE CASCADE
+);
 CREATE TABLE IF NOT EXISTS SPRING_SESSION (
     PRIMARY_ID CHAR(36) NOT NULL,
     SESSION_ID CHAR(36) NOT NULL,
