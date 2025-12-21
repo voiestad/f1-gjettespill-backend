@@ -13,7 +13,7 @@ public class LeagueEntity {
     @Column(name = "league_id", nullable = false)
     private UUID leagueId;
 
-    @Column(name = "league_name", nullable = false)
+    @Column(name = "league_name", nullable = false, columnDefinition = "citext")
     private String leagueName;
 
     @Embedded

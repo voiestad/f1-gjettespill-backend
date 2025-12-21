@@ -251,7 +251,7 @@ CREATE TABLE IF NOT EXISTS ntfy_topics (
 );
 CREATE TABLE IF NOT EXISTS leagues (
     league_id UUID PRIMARY KEY,
-    league_name TEXT NOT NULL,
+    league_name CITEXT COLLATE "nb_NO.utf8" NOT NULL,
     year INTEGER NOT NULL,
     FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE,
     UNIQUE (league_name, year)
