@@ -19,4 +19,6 @@ public interface LeagueRepository extends JpaRepository<LeagueEntity, UUID> {
         ORDER BY l.leagueName
     """)
     List<LeagueEntity> findAllByUserIdAndYearOrderByLeagueName(UUID userId, Year year);
+
+    boolean existsByLeagueNameAndYear(String leagueName, Year year);
 }

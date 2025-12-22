@@ -16,6 +16,7 @@ import no.voiestad.f1.year.YearService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.transaction.Transactional;
 
 @RestController
 public class LeagueController {
@@ -36,7 +37,7 @@ public class LeagueController {
     public ResponseEntity<List<LeagueDTO>> getLeagues(@RequestParam(name = "year", required = false) Integer inputYear) {
         Optional<Year> optYear = yearService.getOrCurrentYear(inputYear);
         if (optYear.isEmpty()) {
-            return new ResponseEntity<>(List.of(),HttpStatus.OK);
+            return new ResponseEntity<>(List.of(), HttpStatus.OK);
         }
         List<LeagueDTO> leagues = leagueService.getLeagues(optYear.get()).stream()
                 .map(LeagueDTO::fromEntity)
@@ -54,7 +55,7 @@ public class LeagueController {
         }
         Optional<Year> optYear = yearService.getOrCurrentYear(inputYear);
         if (optYear.isEmpty()) {
-            return new ResponseEntity<>(List.of(),HttpStatus.OK);
+            return new ResponseEntity<>(List.of(), HttpStatus.OK);
         }
         List<LeagueDTO> leagues = leagueService.getMemberships(optUser.get().id(), optYear.get()).stream()
                 .map(LeagueDTO::fromEntity)
@@ -73,16 +74,42 @@ public class LeagueController {
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
+    @Transactional
     @PutMapping("/api/league")
-    public ResponseEntity<?> createLeague(@RequestParam("leagueName") String leagueName) {
+    public ResponseEntity<String> createLeague(@RequestParam("leagueName") String inputLeagueName) {
+        UserEntity user = userService.getUser();
+        String leagueName = inputLeagueName.strip();
+        Optional<Year> optYear = yearService.getCurrentYear();
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>("Året har ikke startet enda, vennligst prøv igjen senere",
+                    HttpStatus.NOT_FOUND);
+        }
+        Year year = optYear.get();
+        if (yearService.isFinishedYear(year)) {
+            return new ResponseEntity<>("Året er over, vennligst prøv igjen når neste år begynner.",
+                    HttpStatus.FORBIDDEN);
+        }
+        if (!leagueService.isAllowedToOwnMoreLeagues(user.id(), year)) {
+            return new ResponseEntity<>("Du har nådd maksimalt antall ligaeierskap på ett år.",
+                    HttpStatus.FORBIDDEN);
+        }
+        if (!leagueService.isLeagueNameAvailable(leagueName, year)) {
+            return new ResponseEntity<>("Det gitte liganavnet er allerede i bruk.", HttpStatus.CONFLICT);
+        }
+        if (!leagueService.hasValidLeagueNameFormat(leagueName)) {
+            return new ResponseEntity<>("Det gitte liganavnet inneholder ugyldige tegn.", HttpStatus.BAD_REQUEST);
+        }
+        leagueService.addLeague(leagueName, year, user.id());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @Transactional
     @DeleteMapping("/api/league/delete")
     public ResponseEntity<?> deleteLeague(@RequestParam("leagueId") UUID leagueId) {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @Transactional
     @PostMapping("/api/league/rename")
     public ResponseEntity<?> updateLeague(
             @RequestParam("leagueName") String leagueName,
@@ -90,11 +117,13 @@ public class LeagueController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @Transactional
     @PostMapping("/api/league/leave")
     public ResponseEntity<?> leaveLeague(@RequestParam("leagueId") UUID leagueId) {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @Transactional
     @PostMapping("/api/league/transferOwnership")
     public ResponseEntity<?> transferOwnership(
             @RequestParam("leagueId") UUID leagueId,
@@ -116,6 +145,7 @@ public class LeagueController {
         return new ResponseEntity<>(invitations, HttpStatus.OK);
     }
 
+    @Transactional
     @PutMapping("/api/league/invite")
     public ResponseEntity<?> inviteToLeague(
             @RequestParam("leagueId") UUID leagueId,
@@ -123,6 +153,7 @@ public class LeagueController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @Transactional
     @DeleteMapping("/api/league/invite")
     public ResponseEntity<?> uninviteToLeague(
             @RequestParam("leagueId") UUID leagueId,
@@ -130,11 +161,13 @@ public class LeagueController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @Transactional
     @PostMapping("/api/league/join")
     public ResponseEntity<?> joinLeague(@RequestParam("leagueId") UUID leagueId) {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @Transactional
     @DeleteMapping("/api/league/reject")
     public ResponseEntity<?> rejectLeagueInvitation(@RequestParam("leagueId") UUID leagueId) {
         return new ResponseEntity<>(HttpStatus.OK);

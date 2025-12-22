@@ -1,6 +1,7 @@
 package no.voiestad.f1.league;
 
 import no.voiestad.f1.league.domain.LeagueInvitationDTO;
+import no.voiestad.f1.league.domain.LeagueRole;
 import no.voiestad.f1.league.leagues.*;
 import no.voiestad.f1.user.UserEntity;
 import no.voiestad.f1.year.Year;
@@ -54,5 +55,26 @@ public class LeagueService {
         return leagueInvitationRepository.findAllByInviter(userId).stream()
                 .map(LeagueInvitationDTO::fromILeagueInvitation)
                 .toList();
+    }
+
+    public boolean isAllowedToOwnMoreLeagues(UUID userId, Year year) {
+        return leagueRoleRepository.countByLeagueRoleAndYear(userId, year) < 10;
+    }
+
+    public boolean isLeagueNameAvailable(String leagueName, Year year) {
+        return !leagueRepository.existsByLeagueNameAndYear(leagueName, year);
+    }
+
+    public boolean hasValidLeagueNameFormat(String leagueName) {
+        return leagueName.length() <= 50 && leagueName.matches("^[a-zA-ZÆØÅæøå0-9 ]+$");
+    }
+
+    public void addLeague(String leagueName, Year year, UUID userId) {
+        LeagueEntity league = new LeagueEntity(UUID.randomUUID(), leagueName, year);
+        leagueRepository.save(league);
+        LeagueRoleEntity leagueRole = new LeagueRoleEntity(userId, league.leagueId(), LeagueRole.OWNER);
+        leagueRoleRepository.save(leagueRole);
+        LeagueMembershipEntity leagueMembership = new LeagueMembershipEntity(userId, league.leagueId());
+        leagueMembershipRepository.save(leagueMembership);
     }
 }
