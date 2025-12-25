@@ -207,12 +207,6 @@ CREATE TABLE IF NOT EXISTS notified (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS referral_codes (
-    user_id UUID PRIMARY KEY,
-    referral_code BIGINT NOT NULL,
-    cutoff TIMESTAMPTZ NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
 CREATE TABLE IF NOT EXISTS guess_reminder_options (
     guess_reminder_option INTEGER PRIMARY KEY
 );
