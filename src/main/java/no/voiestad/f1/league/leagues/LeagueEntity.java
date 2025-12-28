@@ -38,4 +38,8 @@ public class LeagueEntity {
     public Year year() {
         return year;
     }
+
+    public LeagueEntity withLeagueName(String leagueName) {
+        return new LeagueEntity(leagueId, leagueName, year);
+    }
 }

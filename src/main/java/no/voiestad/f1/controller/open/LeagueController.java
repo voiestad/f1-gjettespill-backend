@@ -7,6 +7,7 @@ import java.util.UUID;
 import no.voiestad.f1.league.LeagueService;
 import no.voiestad.f1.league.domain.LeagueDTO;
 import no.voiestad.f1.league.domain.LeagueInvitationDTO;
+import no.voiestad.f1.league.domain.LeagueRole;
 import no.voiestad.f1.user.PublicUserDto;
 import no.voiestad.f1.user.UserEntity;
 import no.voiestad.f1.user.UserService;
@@ -47,9 +48,9 @@ public class LeagueController {
 
     @GetMapping("/api/public/league/memberships")
     public ResponseEntity<List<LeagueDTO>> getLeagueMemberships(
-            @RequestParam("userId") UUID userId,
+            @RequestParam(value = "userId", required = false) UUID userId,
             @RequestParam(name = "year", required = false) Integer inputYear) {
-        Optional<UserEntity> optUser = userService.loadUser(userId);
+        Optional<UserEntity> optUser = userService.loadOrCurrentUser(userId);
         if (optUser.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -106,20 +107,80 @@ public class LeagueController {
     @Transactional
     @DeleteMapping("/api/league/delete")
     public ResponseEntity<?> deleteLeague(@RequestParam("leagueId") UUID leagueId) {
+        if (!leagueService.isValidLeagueId(leagueId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        UUID userId = userService.getUser().id();
+        if (!leagueService.canChangeLeague(userId, leagueId)) {
+            return new ResponseEntity<>("Du har ikke tillatelse til å slette ligaen.", HttpStatus.FORBIDDEN);
+        }
+        Optional<Year> optYear = leagueService.getYearIfChangeable(leagueId);
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>("Året er ferdig og det er ikke lenger mulig å slette ligaen.", HttpStatus.FORBIDDEN);
+        }
+        leagueService.deleteLeague(leagueId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Transactional
     @PostMapping("/api/league/rename")
-    public ResponseEntity<?> updateLeague(
-            @RequestParam("leagueName") String leagueName,
+    public ResponseEntity<?> renameLeague(
+            @RequestParam("leagueName") String inputLeagueName,
             @RequestParam("leagueId") UUID leagueId) {
+        if (!leagueService.isValidLeagueId(leagueId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        UUID userId = userService.getUser().id();
+        if (!leagueService.canChangeLeague(userId, leagueId)) {
+            return new ResponseEntity<>("Du har ikke tillatelse til å endre navn på ligaen.", HttpStatus.FORBIDDEN);
+        }
+        Optional<Year> optYear = leagueService.getYearIfChangeable(leagueId);
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>("Året er ferdig og det er ikke lenger mulig å endre navn på ligaen.", HttpStatus.FORBIDDEN);
+        }
+        String leagueName = inputLeagueName.strip();
+        if (!leagueService.isLeagueNameAvailable(leagueName, optYear.get())) {
+            return new ResponseEntity<>("Det gitte liganavnet er allerede i bruk.", HttpStatus.CONFLICT);
+        }
+        if (!leagueService.hasValidLeagueNameFormat(leagueName)) {
+            return new ResponseEntity<>("Det gitte liganavnet inneholder ugyldige tegn.", HttpStatus.BAD_REQUEST);
+        }
+        if (!leagueService.renameLeague(leagueId, leagueName)) {
+            return new ResponseEntity<>("Noe gikk galt.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Transactional
     @PostMapping("/api/league/leave")
     public ResponseEntity<?> leaveLeague(@RequestParam("leagueId") UUID leagueId) {
+        if (!leagueService.isValidLeagueId(leagueId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        UUID userId = userService.getUser().id();
+        if (!leagueService.isMember(userId, leagueId)) {
+            return new ResponseEntity<>("Du er ikke medlem av denne ligaen.", HttpStatus.FORBIDDEN);
+        }
+        Optional<Year> optYear = leagueService.getYearIfChangeable(leagueId);
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>("Året er ferdig og det er ikke lenger mulig å forlate ligaen.", HttpStatus.FORBIDDEN);
+        }
+        List<UserEntity> members = leagueService.getMembers(leagueId);
+        if (members.size() == 1) {
+            leagueService.deleteLeague(leagueId);
+            return new ResponseEntity<>("Liga slettet.", HttpStatus.OK);
+        }
+        if (leagueService.hasRole(userId, LeagueRole.OWNER, leagueId)) {
+            for (UserEntity member : members) {
+                UUID newOwner = member.id();
+                if (!newOwner.equals(userId)) {
+                    leagueService.transferOwnership(newOwner, leagueId);
+                    break;
+                }
+            }
+        }
+        leagueService.clearInvitationsByInviterAndLeague(userId, leagueId);
+        leagueService.deleteUserFromLeague(userId, leagueId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -127,7 +188,22 @@ public class LeagueController {
     @PostMapping("/api/league/transferOwnership")
     public ResponseEntity<?> transferOwnership(
             @RequestParam("leagueId") UUID leagueId,
-            @RequestParam("userId") UUID userId) {
+            @RequestParam("userId") UUID newOwner) {
+        if (!leagueService.isValidLeagueId(leagueId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        UUID userId = userService.getUser().id();
+        if (!leagueService.hasRole(userId, LeagueRole.OWNER, leagueId)) {
+            return new ResponseEntity<>("Du er ikke eier av ligaen.", HttpStatus.FORBIDDEN);
+        }
+        Optional<Year> optYear = leagueService.getYearIfChangeable(leagueId);
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>("Året er over og du kan ikke overføre eierskap av ligaen lenger.", HttpStatus.FORBIDDEN);
+        }
+        if (!leagueService.isMember(newOwner, leagueId)) {
+            return new ResponseEntity<>("Du kan ikke overføre eierskap til noen som ikke er medlem av ligaen.", HttpStatus.FORBIDDEN);
+        }
+        leagueService.transferOwnership(newOwner, leagueId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -150,6 +226,28 @@ public class LeagueController {
     public ResponseEntity<?> inviteToLeague(
             @RequestParam("leagueId") UUID leagueId,
             @RequestParam("userId") UUID userId) {
+        if (!leagueService.isValidLeagueId(leagueId)) {
+            return new ResponseEntity<>("Den gitte ligaen er ikke gyldig.", HttpStatus.NOT_FOUND);
+        }
+        Optional<UserEntity> optUser = userService.loadUser(userId);
+        if (optUser.isEmpty()) {
+            return new ResponseEntity<>("Den gitte brukeren er ikke gyldig.", HttpStatus.NOT_FOUND);
+        }
+        Optional<Year> optYear = leagueService.getYearIfChangeable(leagueId);
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>("Året er over og du kan ikke invitere noen lenger.", HttpStatus.FORBIDDEN);
+        }
+        UUID inviter = userService.getUser().id();
+        if (!leagueService.isMember(inviter, leagueId)) {
+            return new ResponseEntity<>("Du kan ikke invitere noen til ligaer du ikke selv er medlem av.", HttpStatus.FORBIDDEN);
+        }
+        if (leagueService.isMember(userId, leagueId)) {
+            return new ResponseEntity<>("Du kan ikke invitere noen som allerede er medlem.", HttpStatus.FORBIDDEN);
+        }
+        boolean gotInvite = leagueService.inviteToLeague(userId, leagueId, inviter);
+        if (!gotInvite) {
+            return new ResponseEntity<>("Du kan ikke invitere noen flere ganger.", HttpStatus.FORBIDDEN);
+        }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -158,18 +256,52 @@ public class LeagueController {
     public ResponseEntity<?> uninviteToLeague(
             @RequestParam("leagueId") UUID leagueId,
             @RequestParam("userId") UUID userId) {
+        if (!leagueService.isValidLeagueId(leagueId)) {
+            return new ResponseEntity<>("Den gitte ligaen er ikke gyldig.", HttpStatus.NOT_FOUND);
+        }
+        Optional<UserEntity> optUser = userService.loadUser(userId);
+        if (optUser.isEmpty()) {
+            return new ResponseEntity<>("Den gitte brukeren er ikke gyldig.", HttpStatus.NOT_FOUND);
+        }
+        UUID inviter = userService.getUser().id();
+        boolean gotUninvited = leagueService.uninviteToLeague(userId, leagueId, inviter);
+        if (!gotUninvited) {
+            return new ResponseEntity<>("Du kan ikke slette en invitasjon som ikke eksisterer.", HttpStatus.FORBIDDEN);
+        }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Transactional
     @PostMapping("/api/league/join")
     public ResponseEntity<?> joinLeague(@RequestParam("leagueId") UUID leagueId) {
+        if (!leagueService.isValidLeagueId(leagueId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        Optional<Year> optYear = leagueService.getYearIfChangeable(leagueId);
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>("Året er over og du kan ikke bli med i ligaer lengre.", HttpStatus.FORBIDDEN);
+        }
+        UUID userId = userService.getUser().id();
+        if (!leagueService.isInvitedToLeague(userId, leagueId)) {
+            return new ResponseEntity<>("Du har ingen invitasjoner fra denne ligaen.", HttpStatus.FORBIDDEN);
+        }
+        leagueService.addUserToLeague(userId, leagueId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Transactional
     @DeleteMapping("/api/league/reject")
-    public ResponseEntity<?> rejectLeagueInvitation(@RequestParam("leagueId") UUID leagueId) {
+    public ResponseEntity<?> rejectLeagueInvitation(
+            @RequestParam("leagueId") UUID leagueId,
+            @RequestParam("inviter") UUID inviter) {
+        if (!leagueService.isValidLeagueId(leagueId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        UUID userId = userService.getUser().id();
+        boolean gotUninvited = leagueService.uninviteToLeague(userId, leagueId, inviter);
+        if (!gotUninvited) {
+            return new ResponseEntity<>("Du kan ikke slette en invitasjon som ikke eksiterer.", HttpStatus.FORBIDDEN);
+        }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

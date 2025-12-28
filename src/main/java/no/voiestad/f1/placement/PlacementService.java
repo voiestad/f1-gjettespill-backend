@@ -4,6 +4,7 @@ import java.util.*;
 
 import no.voiestad.f1.cutoff.CutoffService;
 import no.voiestad.f1.guessing.category.Category;
+import no.voiestad.f1.league.LeagueService;
 import no.voiestad.f1.placement.collection.*;
 import no.voiestad.f1.placement.domain.*;
 import no.voiestad.f1.placement.placementCategory.*;
@@ -29,6 +30,7 @@ public class PlacementService {
     private final PlacementRaceYearStartRepository placementRaceYearStartRepository;
     private final PlacementCategoryYearStartRepository placementCategoryYearStartRepository;
     private final CutoffService cutoffService;
+    private final LeagueService leagueService;
 
     public PlacementService(
             YearService yearService,
@@ -37,7 +39,7 @@ public class PlacementService {
             PlacementCategoryRepository placementCategoryRepository,
             PlacementRaceYearStartRepository placementRaceYearStartRepository,
             PlacementCategoryYearStartRepository placementCategoryYearStartRepository,
-            CutoffService cutoffService) {
+            CutoffService cutoffService, LeagueService leagueService) {
         this.yearService = yearService;
         this.placementYearRepository = placementYearRepository;
         this.placementRaceRepository = placementRaceRepository;
@@ -45,6 +47,7 @@ public class PlacementService {
         this.placementRaceYearStartRepository = placementRaceYearStartRepository;
         this.placementCategoryYearStartRepository = placementCategoryYearStartRepository;
         this.cutoffService = cutoffService;
+        this.leagueService = leagueService;
     }
 
     public void finalizeYear(Year year) {
@@ -52,6 +55,7 @@ public class PlacementService {
             return;
         }
         yearService.finalizeYear(year);
+        leagueService.clearInvitationsByYear(year);
         List<PlacementYearEntity> placements = getLeaderboard(year).stream()
                 .map(guesser -> new PlacementYearEntity(year, guesser.guesser().id(), guesser.rank()))
                 .toList();

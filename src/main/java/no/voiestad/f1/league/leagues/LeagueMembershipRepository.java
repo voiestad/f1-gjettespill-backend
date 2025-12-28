@@ -18,4 +18,8 @@ public interface LeagueMembershipRepository extends JpaRepository<LeagueMembersh
         ORDER BY u.username
     """)
     List<UserEntity> findUsersByLeagueId(UUID leagueId);
+
+
+    boolean existsByIdUserIdAndIdLeagueId(UUID userId, UUID leagueId);
+
 }
