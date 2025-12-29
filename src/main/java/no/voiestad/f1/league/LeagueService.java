@@ -42,8 +42,18 @@ public class LeagueService {
         return leagueMembershipRepository.findUsersByLeagueId(leagueId);
     }
 
+    public List<UserEntity> getPotentialOwners(UUID leagueId, Year year) {
+        return getMembers(leagueId).stream()
+                .filter(userEntity -> isAllowedToOwnMoreLeagues(userEntity.id(), year))
+                .toList();
+    }
+
     public boolean isValidLeagueId(UUID leagueId) {
         return leagueRepository.existsById(leagueId);
+    }
+
+    public Optional<LeagueEntity> getLeagueFromId(UUID leagueId) {
+        return leagueRepository.findById(leagueId);
     }
 
     public List<LeagueInvitationDTO> getPendingInvitations(UUID userId) {

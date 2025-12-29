@@ -5,6 +5,7 @@ import java.util.*;
 import no.voiestad.f1.cutoff.CutoffService;
 import no.voiestad.f1.guessing.category.Category;
 import no.voiestad.f1.league.LeagueService;
+import no.voiestad.f1.league.leagues.LeagueEntity;
 import no.voiestad.f1.placement.collection.*;
 import no.voiestad.f1.placement.domain.*;
 import no.voiestad.f1.placement.placementCategory.*;
@@ -186,5 +187,23 @@ public class PlacementService {
 
     public UserPlacementStats getPlacementsStats(UUID userId, String username) {
         return new UserPlacementStats(username, getPreviousPlacements(userId), getMedals(userId));
+    }
+
+    public List<GuesserPointsSeason> getLeagueGraph(LeagueEntity leagueEntity) {
+        UUID leagueId = leagueEntity.leagueId();
+        Year year = leagueEntity.year();
+        if (cutoffService.isAbleToGuessYear(year)) {
+            return null;
+        }
+        return null;
+    }
+
+    public List<RankedGuesser> getLeagueLeaderboard(LeagueEntity leagueEntity) {
+        UUID leagueId = leagueEntity.leagueId();
+        Year year = leagueEntity.year();
+        if (cutoffService.isAbleToGuessYear(year)) {
+            return null;
+        }
+        return null;
     }
 }

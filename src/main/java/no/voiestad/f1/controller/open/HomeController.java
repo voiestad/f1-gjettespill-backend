@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import no.voiestad.f1.guessing.GuessService;
 import no.voiestad.f1.placement.PlacementService;
-import no.voiestad.f1.user.UserEntity;
+import no.voiestad.f1.user.PublicUserDto;
 import no.voiestad.f1.response.HomePageResponse;
 import no.voiestad.f1.year.YearService;
 import no.voiestad.f1.placement.GuesserPointsSeason;
@@ -34,7 +34,7 @@ public class HomeController {
     @GetMapping("/api/public/home")
     public ResponseEntity<HomePageResponse> home(@RequestParam(name = "year", required = false) Integer inputYear) {
         Optional<Year> optYear = inputYear == null ? yearService.getCurrentYear() : yearService.getYear(inputYear);
-        List<String> guessers = null;
+        List<PublicUserDto> guessers = null;
         List<GuesserPointsSeason> graph = null;
         List<RankedGuesser> leaderboard = null;
         if (optYear.isPresent()) {
@@ -42,7 +42,7 @@ public class HomeController {
             leaderboard = placementService.getLeaderboard(year);
             if (leaderboard == null) {
                 guessers = guessService.getSeasonGuessers(year).stream()
-                        .map(UserEntity::username)
+                        .map(PublicUserDto::fromEntity)
                         .toList();
             } else {
                 graph = placementService.getGraph(year);

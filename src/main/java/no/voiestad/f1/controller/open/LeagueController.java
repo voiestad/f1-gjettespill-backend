@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.voiestad.f1.collection.RankedGuesser;
 import no.voiestad.f1.league.LeagueService;
-import no.voiestad.f1.league.domain.LeagueDTO;
-import no.voiestad.f1.league.domain.LeagueInvitationDTO;
-import no.voiestad.f1.league.domain.LeagueRole;
+import no.voiestad.f1.league.domain.*;
+import no.voiestad.f1.league.leagues.LeagueEntity;
+import no.voiestad.f1.placement.GuesserPointsSeason;
+import no.voiestad.f1.placement.PlacementService;
 import no.voiestad.f1.user.PublicUserDto;
 import no.voiestad.f1.user.UserEntity;
 import no.voiestad.f1.user.UserService;
@@ -24,14 +26,16 @@ public class LeagueController {
     private final LeagueService leagueService;
     private final YearService yearService;
     private final UserService userService;
+    private final PlacementService placementService;
 
     public LeagueController(
             LeagueService leagueService,
             YearService yearService,
-            UserService userService) {
+            UserService userService, PlacementService placementService) {
         this.leagueService = leagueService;
         this.yearService = yearService;
         this.userService = userService;
+        this.placementService = placementService;
     }
 
     @GetMapping("/api/public/leagues")
@@ -44,6 +48,37 @@ public class LeagueController {
                 .map(LeagueDTO::fromEntity)
                 .toList();
         return new ResponseEntity<>(leagues, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/public/league/{leagueId}")
+    public ResponseEntity<LeaguePageDTO> getLeaguePage(@PathVariable UUID leagueId) {
+        Optional<LeagueEntity> optLeague = leagueService.getLeagueFromId(leagueId);
+        if (optLeague.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        LeagueEntity league = optLeague.get();
+        LeagueDTO leagueDTO = LeagueDTO.fromEntity(league);
+        List<GuesserPointsSeason> graph = placementService.getLeagueGraph(league);
+        List<RankedGuesser> leaderboard = placementService.getLeagueLeaderboard(league);
+        List<PublicUserDto> members = leagueService.getMembers(leagueId).stream().map(PublicUserDto::fromEntity).toList();
+        LeagueMembershipStatus membershipStatus = getMembershipStatus(leagueId);
+        LeaguePageDTO res = new LeaguePageDTO(graph, leaderboard, members, membershipStatus, leagueDTO);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    private LeagueMembershipStatus getMembershipStatus(UUID leagueId) {
+        Optional<UserEntity> optUser = userService.loadUser();
+        if (optUser.isEmpty()) {
+            return LeagueMembershipStatus.NOT_MEMBER;
+        }
+        UUID userId = optUser.get().id();
+        if (!leagueService.isMember(userId, leagueId)) {
+            return LeagueMembershipStatus.NOT_MEMBER;
+        }
+        if (!leagueService.hasRole(userId, LeagueRole.OWNER, leagueId)) {
+            return LeagueMembershipStatus.MEMBER;
+        }
+        return LeagueMembershipStatus.OWNER;
     }
 
     @GetMapping("/api/public/league/memberships")
@@ -62,6 +97,14 @@ public class LeagueController {
                 .map(LeagueDTO::fromEntity)
                 .toList();
         return new ResponseEntity<>(leagues, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/public/league/membership/{leagueId}")
+    public ResponseEntity<LeagueMembershipStatus> getLeagueMembershipStatus(@PathVariable UUID leagueId) {
+        if (!leagueService.isValidLeagueId(leagueId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(getMembershipStatus(leagueId), HttpStatus.OK);
     }
 
     @GetMapping("/api/public/league/members")
@@ -165,13 +208,15 @@ public class LeagueController {
         if (optYear.isEmpty()) {
             return new ResponseEntity<>("Året er ferdig og det er ikke lenger mulig å forlate ligaen.", HttpStatus.FORBIDDEN);
         }
-        List<UserEntity> members = leagueService.getMembers(leagueId);
-        if (members.size() == 1) {
+        boolean isOwner = leagueService.hasRole(userId, LeagueRole.OWNER, leagueId);
+        leagueService.deleteUserFromLeague(userId, leagueId);
+        List<UserEntity> potentialOwners = leagueService.getPotentialOwners(leagueId, optYear.get());
+        if (potentialOwners.isEmpty()) {
             leagueService.deleteLeague(leagueId);
             return new ResponseEntity<>("Liga slettet.", HttpStatus.OK);
         }
-        if (leagueService.hasRole(userId, LeagueRole.OWNER, leagueId)) {
-            for (UserEntity member : members) {
+        if (isOwner) {
+            for (UserEntity member : potentialOwners) {
                 UUID newOwner = member.id();
                 if (!newOwner.equals(userId)) {
                     leagueService.transferOwnership(newOwner, leagueId);
@@ -180,7 +225,6 @@ public class LeagueController {
             }
         }
         leagueService.clearInvitationsByInviterAndLeague(userId, leagueId);
-        leagueService.deleteUserFromLeague(userId, leagueId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
