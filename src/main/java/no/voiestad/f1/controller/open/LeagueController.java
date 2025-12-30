@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import no.voiestad.f1.collection.RankedGuesser;
+import no.voiestad.f1.event.LeagueChangedEvent;
 import no.voiestad.f1.league.LeagueService;
 import no.voiestad.f1.league.domain.*;
 import no.voiestad.f1.league.leagues.LeagueEntity;
@@ -16,6 +17,7 @@ import no.voiestad.f1.user.UserService;
 import no.voiestad.f1.year.Year;
 import no.voiestad.f1.year.YearService;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,15 +29,19 @@ public class LeagueController {
     private final YearService yearService;
     private final UserService userService;
     private final PlacementService placementService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public LeagueController(
             LeagueService leagueService,
             YearService yearService,
-            UserService userService, PlacementService placementService) {
+            UserService userService,
+            PlacementService placementService,
+            ApplicationEventPublisher applicationEventPublisher) {
         this.leagueService = leagueService;
         this.yearService = yearService;
         this.userService = userService;
         this.placementService = placementService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @GetMapping("/api/public/leagues")
@@ -143,7 +149,8 @@ public class LeagueController {
         if (!leagueService.hasValidLeagueNameFormat(leagueName)) {
             return new ResponseEntity<>("Det gitte liganavnet inneholder ugyldige tegn.", HttpStatus.BAD_REQUEST);
         }
-        leagueService.addLeague(leagueName, year, user.id());
+        UUID leagueId = leagueService.addLeague(leagueName, year, user.id());
+        applicationEventPublisher.publishEvent(new LeagueChangedEvent(leagueId, year));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -162,6 +169,7 @@ public class LeagueController {
             return new ResponseEntity<>("Året er ferdig og det er ikke lenger mulig å slette ligaen.", HttpStatus.FORBIDDEN);
         }
         leagueService.deleteLeague(leagueId);
+        placementService.clearLeague(leagueId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -213,6 +221,7 @@ public class LeagueController {
         List<UserEntity> potentialOwners = leagueService.getPotentialOwners(leagueId, optYear.get());
         if (potentialOwners.isEmpty()) {
             leagueService.deleteLeague(leagueId);
+            placementService.clearLeague(leagueId);
             return new ResponseEntity<>("Liga slettet.", HttpStatus.OK);
         }
         if (isOwner) {
@@ -225,6 +234,8 @@ public class LeagueController {
             }
         }
         leagueService.clearInvitationsByInviterAndLeague(userId, leagueId);
+        placementService.removeUserFromLeague(userId, leagueId);
+        applicationEventPublisher.publishEvent(new LeagueChangedEvent(leagueId, optYear.get()));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -330,6 +341,7 @@ public class LeagueController {
             return new ResponseEntity<>("Du har ingen invitasjoner fra denne ligaen.", HttpStatus.FORBIDDEN);
         }
         leagueService.addUserToLeague(userId, leagueId);
+        applicationEventPublisher.publishEvent(new LeagueChangedEvent(leagueId, optYear.get()));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

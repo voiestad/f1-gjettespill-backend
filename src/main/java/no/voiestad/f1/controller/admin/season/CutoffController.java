@@ -7,14 +7,15 @@ import java.util.Optional;
 
 import no.voiestad.f1.collection.CutoffRace;
 import no.voiestad.f1.cutoff.CutoffService;
+import no.voiestad.f1.event.CalculateScoreEvent;
 import no.voiestad.f1.race.RaceId;
 import no.voiestad.f1.race.RaceService;
 import no.voiestad.f1.response.CutoffResponse;
-import no.voiestad.f1.scoring.ScoreCalculator;
 import no.voiestad.f1.util.TimeUtil;
 import no.voiestad.f1.year.Year;
 import no.voiestad.f1.year.YearService;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,17 +25,17 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin/season/cutoff")
 public class CutoffController {
 
-    private final ScoreCalculator scoreCalculator;
     private final YearService yearService;
     private final RaceService raceService;
     private final CutoffService cutoffService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public CutoffController(ScoreCalculator scoreCalculator, YearService yearService, RaceService raceService,
-                            CutoffService cutoffService) {
-        this.scoreCalculator = scoreCalculator;
+    public CutoffController(YearService yearService, RaceService raceService,
+                            CutoffService cutoffService, ApplicationEventPublisher applicationEventPublisher) {
         this.yearService = yearService;
         this.raceService = raceService;
         this.cutoffService = cutoffService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @GetMapping("/list/{year}")
@@ -77,7 +78,7 @@ public class CutoffController {
         }
         Instant cutoff = TimeUtil.localTimeToInstant(cutoffLocal);
         cutoffService.setCutoffYear(cutoff, year);
-        new Thread(scoreCalculator::calculateScores).start();
+        applicationEventPublisher.publishEvent(new CalculateScoreEvent());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

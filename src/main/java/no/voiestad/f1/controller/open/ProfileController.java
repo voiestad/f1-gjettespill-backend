@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.voiestad.f1.collection.ResultView;
 import no.voiestad.f1.guessing.GuessService;
 import no.voiestad.f1.placement.PlacementService;
 import no.voiestad.f1.race.RaceService;
@@ -97,11 +98,12 @@ public class ProfileController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         Year year = optYear.get();
-        if (notAvailableToUser(userEntity, year)) {
+        ResultView resultView = userResultView(userEntity, year);
+        if (resultView.equals(ResultView.NOTHING)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         UserScoreResponse res = new UserScoreResponse(PublicUserDto.fromEntity(userEntity),
-                year, raceId, raceService, placementService, guessService, scoreService, resultService);
+                year, raceId, raceService, placementService, guessService, scoreService, resultService, resultView);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
@@ -116,17 +118,24 @@ public class ProfileController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         Year year = optYear.get();
-        if (notAvailableToUser(userEntity, year)) {
+        ResultView resultView = userResultView(userEntity, year);
+        if (resultView.equals(ResultView.NOTHING)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         UserScoreResponse res = new UserScoreResponse(
                 PublicUserDto.fromEntity(userEntity), year, raceService,
-                placementService, guessService, scoreService, resultService);
+                placementService, guessService, scoreService, resultService, resultView);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    private boolean notAvailableToUser(UserEntity userEntity, Year year) {
-        return cutoffService.isAbleToGuessYear(year) && !userService.isLoggedInUser(userEntity);
+    private ResultView userResultView(UserEntity userEntity, Year year) {
+        if (!cutoffService.isAbleToGuessYear(year)) {
+            return ResultView.FULL;
+        }
+        if (userService.isLoggedInUser(userEntity)) {
+            return ResultView.NO_PLACEMENTS;
+        }
+        return ResultView.NOTHING;
     }
 
     @GetMapping("/api/public/user/list")

@@ -80,13 +80,14 @@ public class LeagueService {
         return leagueName.length() <= 50 && leagueName.matches("^[a-zA-ZÆØÅæøå0-9 ]+$");
     }
 
-    public void addLeague(String leagueName, Year year, UUID userId) {
+    public UUID addLeague(String leagueName, Year year, UUID userId) {
         LeagueEntity league = new LeagueEntity(UUID.randomUUID(), leagueName, year);
         leagueRepository.save(league);
         LeagueRoleEntity leagueRole = new LeagueRoleEntity(userId, league.leagueId(), LeagueRole.OWNER);
         leagueRoleRepository.save(leagueRole);
         LeagueMembershipEntity leagueMembership = new LeagueMembershipEntity(userId, league.leagueId());
         leagueMembershipRepository.save(leagueMembership);
+        return league.leagueId();
     }
 
     public Optional<Year> getYearIfChangeable(UUID leagueId) {

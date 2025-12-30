@@ -9,6 +9,7 @@ import no.voiestad.f1.competitors.domain.CompetitorDTO;
 import no.voiestad.f1.competitors.domain.CompetitorId;
 import no.voiestad.f1.competitors.driver.DriverEntity;
 import no.voiestad.f1.competitors.driver.DriverId;
+import no.voiestad.f1.event.CalculateScoreEvent;
 import no.voiestad.f1.guessing.GuessService;
 import no.voiestad.f1.guessing.category.Category;
 import no.voiestad.f1.guessing.constructor.ConstructorGuessEntity;
@@ -26,6 +27,7 @@ import no.voiestad.f1.year.Year;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +49,7 @@ public class GuessController {
     private final RaceService raceService;
     private final CompetitorService competitorService;
     private final GuessService guessService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public GuessController(
             UserService userService,
@@ -55,7 +58,8 @@ public class GuessController {
             YearService yearService,
             RaceService raceService,
             CompetitorService competitorService,
-            GuessService guessService) {
+            GuessService guessService,
+            ApplicationEventPublisher applicationEventPublisher) {
         this.userService = userService;
         this.cutoffService = cutoffService;
         this.resultService = resultService;
@@ -63,6 +67,7 @@ public class GuessController {
         this.raceService = raceService;
         this.competitorService = competitorService;
         this.guessService = guessService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @GetMapping("/categories")
@@ -125,6 +130,7 @@ public class GuessController {
         }
         guessService.addDriversYearGuesses(driverGuesses);
         logger.info("User guessed on driver");
+        applicationEventPublisher.publishEvent(new CalculateScoreEvent());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -157,6 +163,7 @@ public class GuessController {
         }
         guessService.addConstructorsYearGuesses(constructorGuesses);
         logger.info("User guessed on constructor");
+        applicationEventPublisher.publishEvent(new CalculateScoreEvent());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -356,6 +363,7 @@ public class GuessController {
         UUID id = userService.getUser().id();
         guessService.addFlagGuesses(id, year, optFlags.get());
         logger.info("User guessed on flags on year");
+        applicationEventPublisher.publishEvent(new CalculateScoreEvent());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
