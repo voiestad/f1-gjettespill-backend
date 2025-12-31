@@ -9,6 +9,7 @@ import no.voiestad.f1.competitors.driver.DriverEntity;
 import no.voiestad.f1.competitors.driver.DriverId;
 import no.voiestad.f1.competitors.driver.DriverRepository;
 import no.voiestad.f1.race.RaceId;
+import no.voiestad.f1.race.RaceService;
 import no.voiestad.f1.results.constructorStandings.ConstructorStandingsEntity;
 import no.voiestad.f1.results.constructorStandings.ConstructorStandingsRepository;
 import no.voiestad.f1.results.domain.CompetitorPoints;
@@ -32,14 +33,22 @@ public class ResultService {
     private final ConstructorStandingsRepository constructorStandingsRepository;
     private final DriverRepository driverRepository;
     private final ConstructorRepository constructorRepository;
+    private final RaceService raceService;
 
-    public ResultService(StartingGridRepository startingGridRepository, RaceResultRepository raceResultRepository, DriverStandingsRepository driverStandingsRepository, ConstructorStandingsRepository constructorStandingsRepository, DriverRepository driverRepository, ConstructorRepository constructorRepository) {
+    public ResultService(
+            StartingGridRepository startingGridRepository,
+            RaceResultRepository raceResultRepository,
+            DriverStandingsRepository driverStandingsRepository,
+            ConstructorStandingsRepository constructorStandingsRepository,
+            DriverRepository driverRepository,
+            ConstructorRepository constructorRepository, RaceService raceService) {
         this.startingGridRepository = startingGridRepository;
         this.raceResultRepository = raceResultRepository;
         this.driverStandingsRepository = driverStandingsRepository;
         this.constructorStandingsRepository = constructorStandingsRepository;
         this.driverRepository = driverRepository;
         this.constructorRepository = constructorRepository;
+        this.raceService = raceService;
     }
 
     public List<StartingGridEntity> getStartingGrid(RaceId raceId) {
@@ -94,6 +103,12 @@ public class ResultService {
             return Optional.empty();
         }
         return Optional.of(startingGridEntities.get(0).raceId());
+    }
+    public Optional<RaceId> getCurrentRaceIdToGuessBeforeWeekend(Year year) {
+        if (getCurrentRaceIdToGuess().isPresent()) {
+            return Optional.empty();
+        }
+        return raceService.getUpcomingRaceId(year);
     }
 
     public List<DriverEntity> getDriverStandings(RaceId raceId, Year year) {

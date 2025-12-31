@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import no.voiestad.f1.competitors.CompetitorService;
 import no.voiestad.f1.competitors.constructor.ConstructorEntity;
 import no.voiestad.f1.competitors.driver.DriverEntity;
+import no.voiestad.f1.event.CalculateScoreEvent;
 import no.voiestad.f1.notification.NotificationService;
 import no.voiestad.f1.race.RaceEntity;
 import no.voiestad.f1.race.RacePosition;
@@ -24,6 +25,7 @@ import no.voiestad.f1.year.Year;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
@@ -39,14 +41,16 @@ public class Importer {
     private final YearService yearService;
     private final RaceService raceService;
     private final CompetitorService competitorService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public Importer(NotificationService notificationService, ScoreCalculator scoreCalculator, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService) {
+    public Importer(NotificationService notificationService, ScoreCalculator scoreCalculator, ResultService resultService, YearService yearService, RaceService raceService, CompetitorService competitorService, ApplicationEventPublisher applicationEventPublisher) {
         this.notificationService = notificationService;
         this.scoreCalculator = scoreCalculator;
         this.resultService = resultService;
         this.yearService = yearService;
         this.raceService = raceService;
         this.competitorService = competitorService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Transactional
@@ -71,6 +75,9 @@ public class Importer {
                 logger.info("Imported '{}' starting grid", startingGridCount);
                 hasAddedNewRaceResult = importRaceResults(races);
                 if (year.equals(raceYear)) {
+                    if (startingGridCount > 0) {
+                        notificationService.clearNotified();
+                    }
                     if (hasAddedNewRaceResult) {
                         logger.info("New race result imported, will import standings");
                         shouldImportStandings = true;
@@ -147,7 +154,7 @@ public class Importer {
                 importStandings(year, new CompetitorPoints());
             }
         }
-        new Thread(scoreCalculator::calculateScores).start();
+        applicationEventPublisher.publishEvent(new CalculateScoreEvent());
     }
 
     private void importStartingGridData(RaceId raceId) {

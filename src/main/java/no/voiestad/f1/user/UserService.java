@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import no.voiestad.f1.bingo.BingoService;
+import no.voiestad.f1.league.LeagueService;
 import no.voiestad.f1.notification.NotificationService;
 import no.voiestad.f1.user.admin.AdminRepository;
 import no.voiestad.f1.user.domain.Username;
@@ -25,12 +26,14 @@ public class UserService {
     private final AdminRepository adminRepository;
     private final NotificationService notificationService;
     private final BingoService bingoService;
+    private final LeagueService leagueService;
 
-    public UserService(UserRespository userRespository, AdminRepository adminRepository, NotificationService notificationService, BingoService bingoService) {
+    public UserService(UserRespository userRespository, AdminRepository adminRepository, NotificationService notificationService, BingoService bingoService, LeagueService leagueService) {
         this.userRespository = userRespository;
         this.adminRepository = adminRepository;
         this.notificationService = notificationService;
         this.bingoService = bingoService;
+        this.leagueService = leagueService;
     }
 
     public Optional<UserEntity> loadUser() {
@@ -44,6 +47,13 @@ public class UserService {
 
     public Optional<UserEntity> loadUser(UUID id) {
         return userRespository.findById(id);
+    }
+
+    public Optional<UserEntity> loadOrCurrentUser(UUID id) {
+        if (id == null) {
+            return loadUser();
+        }
+        return loadUser(id);
     }
 
     public boolean isLoggedIn() {
@@ -100,10 +110,11 @@ public class UserService {
     }
 
     public void deleteUser() {
-        UserEntity userEntity = getUser();
-        userRespository.anonymizeUser(userEntity.id());
-        notificationService.clearUserFromNtfy(userEntity.id());
-        bingoService.removeBingomaster(userEntity.id());
+        UUID userId = getUser().id();
+        userRespository.anonymizeUser(userId);
+        notificationService.clearUserFromNtfy(userId);
+        bingoService.removeBingomaster(userId);
+        leagueService.clearSentInvitations(userId);
     }
 
 }

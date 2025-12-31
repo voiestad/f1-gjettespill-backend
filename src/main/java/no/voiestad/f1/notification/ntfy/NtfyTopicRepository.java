@@ -9,10 +9,29 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface NtfyTopicRepository extends JpaRepository<NtfyTopicEntity, UUID> {
     @Query("""
-        SELECT nt
-        FROM NtfyTopicEntity nt
-        WHERE nt.userId NOT IN
-            (SELECT dpg.id.userId FROM DriverPlaceGuessEntity dpg WHERE dpg.id.raceId = :raceId GROUP BY dpg.id.userId HAVING COUNT(*) = 2)
-    """)
-    List<NtfyTopicEntity> findAllByRaceId(RaceId raceId);
+                SELECT nt
+                FROM NtfyTopicEntity nt
+                WHERE nt.userId NOT IN
+                    (SELECT dpg.id.userId
+                     FROM DriverPlaceGuessEntity dpg
+                     WHERE dpg.id.raceId = :raceId
+                     AND dpg.id.categoryName = 'POLE')
+                OR nt.userId NOT IN
+                    (SELECT dpg.id.userId
+                     FROM DriverPlaceGuessEntity dpg
+                     WHERE dpg.id.raceId = :raceId
+                     AND dpg.id.categoryName = 'FIRST')
+            """)
+    List<NtfyTopicEntity> findAllByRaceIdPreRace(RaceId raceId);
+
+    @Query("""
+                SELECT nt
+                FROM NtfyTopicEntity nt
+                WHERE nt.userId NOT IN
+                    (SELECT dpg.id.userId
+                    FROM DriverPlaceGuessEntity dpg
+                    WHERE dpg.id.raceId = :raceId
+                    AND dpg.id.categoryName = 'TENTH')
+            """)
+    List<NtfyTopicEntity> findAllByRaceIdRace(RaceId raceId);
 }

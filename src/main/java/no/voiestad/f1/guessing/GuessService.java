@@ -14,6 +14,8 @@ import no.voiestad.f1.guessing.driverPlace.*;
 import no.voiestad.f1.guessing.flag.*;
 import no.voiestad.f1.guessing.collection.PlaceGuessData;
 import no.voiestad.f1.race.*;
+import no.voiestad.f1.results.ResultService;
+import no.voiestad.f1.results.driverStandings.DriverStandingsEntity;
 import no.voiestad.f1.stats.domain.Flag;
 import no.voiestad.f1.user.*;
 import no.voiestad.f1.year.Year;
@@ -30,6 +32,8 @@ public class GuessService {
     private final DriverPlaceGuessRepository driverPlaceGuessRepository;
     private final DriverRepository driverRepository;
     private final ConstructorRepository constructorRepository;
+    private final ResultService resultService;
+    private final RaceService raceService;
 
     public GuessService(
             UserRespository userRespository,
@@ -38,7 +42,8 @@ public class GuessService {
             FlagGuessRepository flagGuessRepository,
             DriverPlaceGuessRepository driverPlaceGuessRepository,
             DriverRepository driverRepository,
-            ConstructorRepository constructorRepository) {
+            ConstructorRepository constructorRepository,
+            ResultService resultService, RaceService raceService) {
         this.userRespository = userRespository;
         this.constructorGuessRepository = constructorGuessRepository;
         this.driverGuessRepository = driverGuessRepository;
@@ -46,6 +51,8 @@ public class GuessService {
         this.driverPlaceGuessRepository = driverPlaceGuessRepository;
         this.driverRepository = driverRepository;
         this.constructorRepository = constructorRepository;
+        this.resultService = resultService;
+        this.raceService = raceService;
     }
 
     public List<Category> getCategories() {
@@ -60,6 +67,14 @@ public class GuessService {
     public List<IUserRaceGuessTable> getDataForPlaceGuessTable(
             Category category, UUID userId, Year year, RacePosition racePos) {
         return driverPlaceGuessRepository.findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPosition(
+                category, year, racePos, userId
+        );
+    }
+
+    public List<IUserQualifyingGuessTable> getDataForQualifyingGuessTable(
+            Category category, UUID userId, Year year, RacePosition racePos) {
+        return driverPlaceGuessRepository.
+                findAllByCategoryNameAndYearAndPositionAndUserIdOrderByPositionWithoutRaceResult(
                 category, year, racePos, userId
         );
     }
@@ -79,6 +94,13 @@ public class GuessService {
     public List<UserRaceGuess> getUserGuessesDriverPlace(RaceId raceId, Category category) {
         return driverPlaceGuessRepository.findAllByRaceIdAndCategoryNameOrderByUsername(category, raceId).stream()
                 .map(UserRaceGuess::fromIUserRaceGuess)
+                .toList();
+    }
+
+    public List<UserQualifyingGuess> getUserGuessesQualifying(RaceId raceId, Category category) {
+        return driverPlaceGuessRepository
+                .findAllByRaceIdAndCategoryNameOrderByUsernameWithoutStartingPosition(category, raceId).stream()
+                .map(UserQualifyingGuess::fromIUserQualifyingGuess)
                 .toList();
     }
 
@@ -113,6 +135,18 @@ public class GuessService {
         driverPlaceGuessRepository.save(new DriverPlaceGuessEntity(userId, raceId, category, driver));
     }
 
+    public List<CompetitorDTO> getDriversPreRaceGuess(Year year) {
+        List<CompetitorDTO> standings = raceService.getLatestStandingsId(year)
+                .map(raceId -> resultService.getDriverStandings(raceId).stream()
+                .map(DriverStandingsEntity::driver)
+                .map(CompetitorDTO::fromEntity)
+                .toList()).orElse(new ArrayList<>());
+        List<CompetitorDTO> driversYear = driverRepository.findAllByYearOrderByPosition(year).stream()
+                .map(CompetitorDTO::fromEntity)
+                .toList();
+        return appendNotIncluded(standings, driversYear);
+    }
+
     public List<CompetitorDTO> getDriversGuess(UUID userId, Year year) {
         List<CompetitorDTO> guessed = driverGuessRepository
                 .findAllByIdYearAndIdUserIdOrderByIdPosition(year, userId).stream()
@@ -122,7 +156,7 @@ public class GuessService {
         List<CompetitorDTO> driversYear = driverRepository.findAllByYearOrderByPosition(year).stream()
                 .map(CompetitorDTO::fromEntity)
                 .toList();
-        return appendNotGuessed(guessed, driversYear);
+        return appendNotIncluded(guessed, driversYear);
     }
 
     public List<CompetitorDTO> getConstructorsGuess(UUID userId, Year year) {
@@ -134,10 +168,10 @@ public class GuessService {
         List<CompetitorDTO> constructorsYear = constructorRepository.findAllByYearOrderByPosition(year).stream()
                 .map(CompetitorDTO::fromEntity)
                 .toList();
-        return appendNotGuessed(guessed, constructorsYear);
+        return appendNotIncluded(guessed, constructorsYear);
     }
 
-    private List<CompetitorDTO> appendNotGuessed(List<CompetitorDTO> guessed, List<CompetitorDTO> competitorsYear) {
+    private List<CompetitorDTO> appendNotIncluded(List<CompetitorDTO> guessed, List<CompetitorDTO> competitorsYear) {
         List<CompetitorDTO> result = new ArrayList<>(guessed);
         Set<CompetitorDTO> competitors = new HashSet<>(guessed);
         for (CompetitorDTO competitor : competitorsYear) {

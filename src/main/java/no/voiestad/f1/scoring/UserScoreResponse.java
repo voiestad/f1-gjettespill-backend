@@ -1,5 +1,6 @@
 package no.voiestad.f1.scoring;
 
+import no.voiestad.f1.collection.ResultView;
 import no.voiestad.f1.guessing.GuessService;
 import no.voiestad.f1.placement.PlacementService;
 import no.voiestad.f1.race.RaceId;
@@ -22,10 +23,11 @@ public class UserScoreResponse {
 			PlacementService placementService,
 			GuessService guessService,
 			ScoreService scoreService,
-			ResultService resultService
+			ResultService resultService,
+			ResultView resultView
 	) {
 		this.userScores = new UserScore(user, year, raceId, raceService, guessService, scoreService, resultService);
-		this.summary = placementService.getSummary(raceId, year, user);
+		this.summary = placementService.getSummary(raceId, year, user, resultView.equals(ResultView.FULL));
 	}
 
 	public UserScoreResponse(
@@ -35,10 +37,11 @@ public class UserScoreResponse {
 			PlacementService placementService,
 			GuessService guessService,
 			ScoreService scoreService,
-			ResultService resultService
+			ResultService resultService,
+			ResultView resultView
 	) {
 		this.userScores = new UserScore(user, year, raceService, guessService, scoreService, resultService);
-		this.summary = placementService.getSummary(this.userScores.raceId, year, user);
+		this.summary = placementService.getSummary(this.userScores.raceId, year, user, resultView.equals(ResultView.FULL));
 	}
 
 }

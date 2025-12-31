@@ -18,6 +18,10 @@ public class YearService {
         this.yearFinishedRepository = yearFinishedRepository;
     }
 
+    public Optional<Year> getOrCurrentYear(Integer inputYear) {
+        return inputYear == null ? getCurrentYear() : getYear(inputYear);
+    }
+
     public Optional<Year> getCurrentYear() {
         return yearRepository.findById(new Year(TimeUtil.getCurrentYear())).map(YearEntity::year);
     }

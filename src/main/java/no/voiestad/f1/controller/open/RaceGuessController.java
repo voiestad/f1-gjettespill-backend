@@ -50,21 +50,33 @@ public class RaceGuessController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         Year year = optYear.get();
-        Optional<Race> optRace = raceService.getLatestRaceForPlaceGuess(year);
-        return optRace.map(this::getGuessOverview)
+        Optional<Race> optOngoingRace = raceService.getLatestRaceForPlaceGuess(year);
+        Optional<Race> upcomingRace = raceService.getUpcomingRace(year);
+        if (upcomingRace.isPresent()) {
+            Race race = upcomingRace.get();
+            if (!cutoffService.isAbleToGuessPreRace(race.id())) {
+                return getGuessOverview(race);
+            }
+        }
+        return optOngoingRace.map(this::getGuessOverview)
                 .orElse(new ResponseEntity<>(HttpStatus.FORBIDDEN));
     }
 
     private ResponseEntity<RaceGuessResponse> getGuessOverview(Race race) {
         RaceId raceId = race.id();
-        if (cutoffService.isAbleToGuessRace(raceId)) {
+        if (cutoffService.isAbleToGuessPreRace(raceId)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        String raceName = String.format("%s. %s %s", race.position(), race.name(), race.year());
+        if (cutoffService.isAbleToGuessRace(raceId)) {
+            var pole = guessService.getUserGuessesQualifying(raceId, Category.POLE);
+            RaceGuessResponse res = new RaceGuessResponse(raceName, null, null, pole);
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
         var first = guessService.getUserGuessesDriverPlace(raceId, Category.FIRST);
         var tenth = guessService.getUserGuessesDriverPlace(raceId, Category.TENTH);
-        String raceName = String.format("%s. %s %s", race.position(), race.name(), race.year());
-        RaceGuessResponse res = new RaceGuessResponse(raceName, first, tenth);
-
+        var pole = guessService.getUserGuessesQualifying(raceId, Category.POLE);
+        RaceGuessResponse res = new RaceGuessResponse(raceName, first, tenth, pole);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }

@@ -37,6 +37,12 @@ public class CutoffService {
         return raceCutoffRepository.findById(raceId).map(RaceCutoffEntity::cutoff);
     }
 
+    public Optional<Instant> getCutoffPreRace(RaceId raceId) {
+        return raceCutoffRepository.findById(raceId)
+                .map(RaceCutoffEntity::cutoff)
+                .map(cutoff -> cutoff.minus(Duration.ofDays(3)));
+    }
+
     public Optional<Year> getCurrentYearIfAbleToGuess() {
         return yearService.getCurrentYear().filter(this::isAbleToGuessYear)
                 .filter(yearService::isChangableYear);
@@ -48,6 +54,10 @@ public class CutoffService {
 
     public boolean isAbleToGuessRace(RaceId raceId) {
         return getCutoffRace(raceId).filter(this::isAbleToGuess).isPresent();
+    }
+
+    public boolean isAbleToGuessPreRace(RaceId raceId) {
+        return getCutoffPreRace(raceId).filter(this::isAbleToGuess).isPresent();
     }
 
     private boolean isAbleToGuess(Instant cutoff) {
@@ -81,7 +91,15 @@ public class CutoffService {
     }
 
     public long getTimeLeftToGuessRace(RaceId raceId) {
-        return getCutoffRace(raceId).map(instant -> Duration.between(Instant.now(), instant).toSeconds()).orElse(0L);
+        return getCutoffRace(raceId).map(this::getTimeLeft).orElse(0L);
+    }
+
+    public long getTimeLeftToGuessPreRace(RaceId raceId) {
+        return getCutoffPreRace(raceId).map(this::getTimeLeft).orElse(0L);
+    }
+
+    public long getTimeLeft(Instant cutoff) {
+         return Duration.between(Instant.now(), cutoff).toSeconds();
     }
 
     public int getTimeLeftToGuessRaceHours(RaceId raceId) {

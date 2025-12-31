@@ -7,6 +7,8 @@ import java.util.Optional;
 import no.voiestad.f1.competitors.CompetitorService;
 import no.voiestad.f1.competitors.constructor.ConstructorEntity;
 import no.voiestad.f1.competitors.driver.DriverEntity;
+import no.voiestad.f1.event.CalculateScoreEvent;
+import no.voiestad.f1.event.ImportDataEvent;
 import no.voiestad.f1.results.ResultService;
 import no.voiestad.f1.results.domain.CompetitorPoints;
 import no.voiestad.f1.results.domain.CompetitorPosition;
@@ -17,13 +19,13 @@ import no.voiestad.f1.results.request.RaceResultRequestBody;
 import no.voiestad.f1.race.RaceEntity;
 import no.voiestad.f1.race.RacePosition;
 import no.voiestad.f1.race.RaceService;
-import no.voiestad.f1.scoring.ScoreCalculator;
 import no.voiestad.f1.year.YearService;
 import no.voiestad.f1.importing.Importer;
 import no.voiestad.f1.cutoff.CutoffService;
 import no.voiestad.f1.race.RaceId;
 import no.voiestad.f1.year.Year;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,8 +41,8 @@ public class ManageSeasonController {
     private final YearService yearService;
     private final RaceService raceService;
     private final ResultService resultService;
-    private final ScoreCalculator scoreCalculator;
     private final CompetitorService competitorService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public ManageSeasonController(
             Importer importer,
@@ -48,15 +50,14 @@ public class ManageSeasonController {
             YearService yearService,
             RaceService raceService,
             ResultService resultService,
-            ScoreCalculator scoreCalculator,
-            CompetitorService competitorService) {
+            CompetitorService competitorService, ApplicationEventPublisher applicationEventPublisher) {
         this.importer = importer;
         this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
         this.resultService = resultService;
-        this.scoreCalculator = scoreCalculator;
         this.competitorService = competitorService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @PostMapping("/reload")
@@ -105,8 +106,8 @@ public class ManageSeasonController {
             newOrder.add(raceToMove.withPosition(currentPos));
         }
         raceService.setRaceOrder(newOrder);
-        new Thread(importer::importData).start();
-        return new ResponseEntity<>(HttpStatus.OK);
+        applicationEventPublisher.publishEvent(new ImportDataEvent());
+    return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/delete")
@@ -169,7 +170,7 @@ public class ManageSeasonController {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        new Thread(scoreCalculator::calculateScores).start();
+        applicationEventPublisher.publishEvent(new CalculateScoreEvent());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

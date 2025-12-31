@@ -9,6 +9,7 @@ import no.voiestad.f1.competitors.domain.CompetitorDTO;
 import no.voiestad.f1.competitors.domain.CompetitorId;
 import no.voiestad.f1.competitors.driver.DriverEntity;
 import no.voiestad.f1.competitors.driver.DriverId;
+import no.voiestad.f1.event.CalculateScoreEvent;
 import no.voiestad.f1.guessing.GuessService;
 import no.voiestad.f1.guessing.category.Category;
 import no.voiestad.f1.guessing.constructor.ConstructorGuessEntity;
@@ -26,6 +27,7 @@ import no.voiestad.f1.year.Year;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +49,7 @@ public class GuessController {
     private final RaceService raceService;
     private final CompetitorService competitorService;
     private final GuessService guessService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public GuessController(
             UserService userService,
@@ -55,7 +58,8 @@ public class GuessController {
             YearService yearService,
             RaceService raceService,
             CompetitorService competitorService,
-            GuessService guessService) {
+            GuessService guessService,
+            ApplicationEventPublisher applicationEventPublisher) {
         this.userService = userService;
         this.cutoffService = cutoffService;
         this.resultService = resultService;
@@ -63,6 +67,7 @@ public class GuessController {
         this.raceService = raceService;
         this.competitorService = competitorService;
         this.guessService = guessService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @GetMapping("/categories")
@@ -73,8 +78,11 @@ public class GuessController {
             res.add(Category.CONSTRUCTOR);
             res.add(Category.FLAG);
         }
-        if (getRaceIdToGuess().isPresent()) {
+        if (getRaceIdToGuessBeforeWeekend().isPresent()) {
+            res.add(Category.POLE);
             res.add(Category.FIRST);
+        }
+        if (getRaceIdToGuess().isPresent()) {
             res.add(Category.TENTH);
         }
         return new ResponseEntity<>(res, HttpStatus.OK);
@@ -122,6 +130,7 @@ public class GuessController {
         }
         guessService.addDriversYearGuesses(driverGuesses);
         logger.info("User guessed on driver");
+        applicationEventPublisher.publishEvent(new CalculateScoreEvent());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -154,6 +163,7 @@ public class GuessController {
         }
         guessService.addConstructorsYearGuesses(constructorGuesses);
         logger.info("User guessed on constructor");
+        applicationEventPublisher.publishEvent(new CalculateScoreEvent());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -176,27 +186,6 @@ public class GuessController {
 
     @GetMapping("/tenth")
     public ResponseEntity<CutoffCompetitorsSelected> guessTenth() {
-        return handleGetChooseDriver(Category.TENTH);
-    }
-
-    @PostMapping("/tenth")
-    @Transactional
-    public ResponseEntity<?> guessTenth(@RequestParam DriverEntity driver) {
-        return handlePostChooseDriver(driver, Category.TENTH);
-    }
-
-    @GetMapping("/first")
-    public ResponseEntity<CutoffCompetitorsSelected> guessWinner() {
-        return handleGetChooseDriver(Category.FIRST);
-    }
-
-    @PostMapping("/first")
-    @Transactional
-    public ResponseEntity<?> guessWinner(@RequestParam DriverEntity driver) {
-        return handlePostChooseDriver(driver, Category.FIRST);
-    }
-
-    private ResponseEntity<CutoffCompetitorsSelected> handleGetChooseDriver(Category category) {
         Optional<Year> optYear = yearService.getCurrentYear();
         if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -222,12 +211,14 @@ public class GuessController {
                 .map(CompetitorDTO::fromEntity)
                 .toList();
         UUID id = userService.getUser().id();
-        CompetitorId driver = guessService.getGuessedDriverPlace(raceId, category, id);
+        CompetitorId driver = guessService.getGuessedDriverPlace(raceId, Category.TENTH, id);
         CutoffCompetitorsSelected res = new CutoffCompetitorsSelected(drivers, driver, timeLeftToGuess, race);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    private ResponseEntity<?> handlePostChooseDriver(DriverEntity driver, Category category) {
+    @PostMapping("/tenth")
+    @Transactional
+    public ResponseEntity<?> guessTenth(@RequestParam DriverEntity driver) {
         Optional<Year> optYear = yearService.getCurrentYear();
         if (optYear.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -244,7 +235,84 @@ public class GuessController {
         RaceId raceId = optRaceId.get();
         Set<DriverId> driversCheck = new HashSet<>(resultService.getDriversFromStartingGrid(raceId));
         if (!driversCheck.contains(driver.driverId())) {
-            logger.warn("'{}', invalid winner driver inputted by user.", driver.driverName());
+            logger.warn("'{}', invalid first driver inputted by user.", driver.driverName());
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        UUID id = userService.getUser().id();
+        guessService.addDriverPlaceGuess(id, raceId, driver, Category.TENTH);
+        logger.info("User guessed on category '{}' on race '{}'", Category.TENTH, raceId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("/first")
+    public ResponseEntity<CutoffCompetitorsSelected> guessFirst() {
+        return handleGetChooseDriver(Category.FIRST);
+    }
+
+    @PostMapping("/first")
+    @Transactional
+    public ResponseEntity<?> guessFirst(@RequestParam DriverEntity driver) {
+        return handlePostChooseDriver(driver, Category.FIRST);
+    }
+
+    @GetMapping("/pole")
+    public ResponseEntity<CutoffCompetitorsSelected> guessPole() {
+        return handleGetChooseDriver(Category.POLE);
+    }
+
+    @PostMapping("/pole")
+    @Transactional
+    public ResponseEntity<?> guessPole(@RequestParam DriverEntity driver) {
+        return handlePostChooseDriver(driver, Category.POLE);
+    }
+
+    private ResponseEntity<CutoffCompetitorsSelected> handleGetChooseDriver(Category category) {
+        Optional<Year> optYear = yearService.getCurrentYear();
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        Year year = optYear.get();
+        if (yearService.isFinishedYear(year)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        Optional<RaceId> optRaceId = getRaceIdToGuessBeforeWeekend();
+        if (optRaceId.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        RaceId raceId = optRaceId.get();
+        Optional<Race> optRace = raceService.getRaceFromId(raceId);
+        if (optRace.isEmpty()) {
+            logger.error("Could not find Race from RaceId: {}", optRaceId.get());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        Race race = optRace.get();
+        long timeLeftToGuess = cutoffService.getTimeLeftToGuessPreRace(raceId);
+        List<CompetitorDTO> drivers = guessService.getDriversPreRaceGuess(year);
+        UUID id = userService.getUser().id();
+        CompetitorId driver = guessService.getGuessedDriverPlace(raceId, category, id);
+        CutoffCompetitorsSelected res = new CutoffCompetitorsSelected(drivers, driver, timeLeftToGuess, race);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    private ResponseEntity<?> handlePostChooseDriver(DriverEntity driver, Category category) {
+        Optional<Year> optYear = yearService.getCurrentYear();
+        if (optYear.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        Year year = optYear.get();
+        if (yearService.isFinishedYear(year)) {
+            return new ResponseEntity<>("Year '" + year + "' is over and not available for guessing",
+                    HttpStatus.FORBIDDEN);
+        }
+        Optional<RaceId> optRaceId = getRaceIdToGuessBeforeWeekend();
+        if (optRaceId.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        RaceId raceId = optRaceId.get();
+        Set<DriverId> driversCheck = new HashSet<>(competitorService.getDriversYear(year).stream()
+                .map(DriverEntity::driverId).toList());
+        if (!driversCheck.contains(driver.driverId())) {
+            logger.warn("'{}', invalid first driver inputted by user.", driver.driverName());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         UUID id = userService.getUser().id();
@@ -255,6 +323,12 @@ public class GuessController {
 
     private Optional<RaceId> getRaceIdToGuess() {
         return resultService.getCurrentRaceIdToGuess().filter(cutoffService::isAbleToGuessRace);
+    }
+
+    private Optional<RaceId> getRaceIdToGuessBeforeWeekend() {
+        return yearService.getCurrentYear()
+                .flatMap(year -> resultService.getCurrentRaceIdToGuessBeforeWeekend(year)
+                        .filter(cutoffService::isAbleToGuessPreRace));
     }
 
     @GetMapping("/flag")
@@ -289,6 +363,7 @@ public class GuessController {
         UUID id = userService.getUser().id();
         guessService.addFlagGuesses(id, year, optFlags.get());
         logger.info("User guessed on flags on year");
+        applicationEventPublisher.publishEvent(new CalculateScoreEvent());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
