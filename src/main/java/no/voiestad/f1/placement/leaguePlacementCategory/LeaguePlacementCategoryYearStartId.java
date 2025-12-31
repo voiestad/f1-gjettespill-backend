@@ -49,12 +49,13 @@ public class LeaguePlacementCategoryYearStartId {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof LeaguePlacementCategoryYearStartId that)) return false;
-        return Objects.equals(year, that.year) && Objects.equals(userId, that.userId) && Objects.equals(categoryName, that.categoryName);
+        if (o == null || getClass() != o.getClass()) return false;
+        LeaguePlacementCategoryYearStartId that = (LeaguePlacementCategoryYearStartId) o;
+        return Objects.equals(year, that.year) && Objects.equals(userId, that.userId) && categoryName == that.categoryName && Objects.equals(leagueId, that.leagueId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(year, userId, categoryName);
+        return Objects.hash(year, userId, categoryName, leagueId);
     }
 }

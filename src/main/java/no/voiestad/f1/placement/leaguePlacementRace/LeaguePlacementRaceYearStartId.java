@@ -42,13 +42,13 @@ public class LeaguePlacementRaceYearStartId {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof LeaguePlacementRaceYearStartId that)) return false;
-        return Objects.equals(year, that.year) && Objects.equals(userId, that.userId);
+        if (o == null || getClass() != o.getClass()) return false;
+        LeaguePlacementRaceYearStartId that = (LeaguePlacementRaceYearStartId) o;
+        return Objects.equals(year, that.year) && Objects.equals(userId, that.userId) && Objects.equals(leagueId, that.leagueId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(year, userId);
+        return Objects.hash(year, userId, leagueId);
     }
-
 }

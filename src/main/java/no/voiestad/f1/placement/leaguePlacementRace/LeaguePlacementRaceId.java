@@ -42,12 +42,13 @@ public class LeaguePlacementRaceId {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof LeaguePlacementRaceId that)) return false;
-        return Objects.equals(raceId, that.raceId) && Objects.equals(userId, that.userId);
+        if (o == null || getClass() != o.getClass()) return false;
+        LeaguePlacementRaceId that = (LeaguePlacementRaceId) o;
+        return Objects.equals(raceId, that.raceId) && Objects.equals(userId, that.userId) && Objects.equals(leagueId, that.leagueId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(raceId, userId);
+        return Objects.hash(raceId, userId, leagueId);
     }
 }
