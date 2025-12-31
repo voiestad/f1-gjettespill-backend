@@ -274,6 +274,48 @@ CREATE TABLE IF NOT EXISTS league_invitations (
     FOREIGN KEY (inviter) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (league_id) REFERENCES leagues(league_id) ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS league_placements_category (
+    race_id INTEGER NOT NULL,
+    user_id UUID NOT NULL,
+    category_name TEXT NOT NULL,
+    placement INTEGER NOT NULL,
+    league_id UUID NOT NULL,
+    PRIMARY KEY (race_id, user_id, category_name, league_id),
+    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (league_id) REFERENCES leagues(league_id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS league_placements_category_year_start (
+    year INTEGER NOT NULL,
+    user_id UUID NOT NULL,
+    category_name TEXT NOT NULL,
+    placement INTEGER NOT NULL,
+    league_id UUID NOT NULL,
+    PRIMARY KEY (year, user_id, category_name, league_id),
+    FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (league_id) REFERENCES leagues(league_id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS league_placements_race (
+    race_id INTEGER NOT NULL,
+    user_id UUID NOT NULL,
+    placement INTEGER NOT NULL,
+    league_id UUID NOT NULL,
+    PRIMARY KEY (race_id, user_id, league_id),
+    FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (league_id) REFERENCES leagues(league_id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS league_placements_race_year_start (
+    year INTEGER NOT NULL,
+    user_id UUID NOT NULL,
+    placement INTEGER NOT NULL,
+    league_id UUID NOT NULL,
+    PRIMARY KEY (year, user_id, league_id),
+    FOREIGN KEY (year) REFERENCES years(year) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (league_id) REFERENCES leagues(league_id) ON DELETE CASCADE
+);
 CREATE TABLE IF NOT EXISTS SPRING_SESSION (
     PRIMARY_ID CHAR(36) NOT NULL,
     SESSION_ID CHAR(36) NOT NULL,
