@@ -54,7 +54,7 @@ public class HomeController {
                 graph = placementService.getGraph(year);
             }
         }
-        HomePageResponse res = new HomePageResponse(graph, leaderboard, guessers, cutoff);
+        HomePageResponse res = new HomePageResponse(graph, leaderboard, guessers, cutoff, optYear.orElse(null));
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
