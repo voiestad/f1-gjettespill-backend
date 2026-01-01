@@ -34,6 +34,7 @@ spring.datasource.username={database username}
 spring.datasource.password={database password}
 ntfy.user={ntfy username}
 ntfy.password={ntfy password}
+frontend.baseurl=http://localhost:5173 # Change as needed for frontend
 ```
 
 You also need to set up a PostgreSQL database named f1 at port 5432. The schema is available in 

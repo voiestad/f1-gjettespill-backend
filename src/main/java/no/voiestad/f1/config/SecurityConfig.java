@@ -2,6 +2,7 @@ package no.voiestad.f1.config;
 
 import no.voiestad.f1.components.F1OAuth2AuthorizationRequestResolver;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,9 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 @EnableAsync
 public class SecurityConfig {
 
+    @Value("${frontend.baseurl:}")
+    private String frontendBaseUrl;
+
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -40,11 +44,11 @@ public class SecurityConfig {
                 authorizationEndpoint.authorizationRequestResolver(
                     new F1OAuth2AuthorizationRequestResolver(
                         clientRegistrationRepository,
-                        OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI
+                        "/api" + OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI
                     )
                 )
             );
-            o.defaultSuccessUrl("/logged-in", true);
+            o.defaultSuccessUrl(frontendBaseUrl + "/logged-in", true);
         }
         )
         .logout(logout ->
