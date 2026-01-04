@@ -322,11 +322,17 @@ public class GuessController {
     }
 
     private Optional<RaceId> getRaceIdToGuess() {
+        Optional<Year> optYear = yearService.getCurrentYear()
+                .filter(year -> !cutoffService.isAbleToGuessYear(year));
+        if (optYear.isEmpty()) {
+            return Optional.empty();
+        }
         return resultService.getCurrentRaceIdToGuess().filter(cutoffService::isAbleToGuessRace);
     }
 
     private Optional<RaceId> getRaceIdToGuessBeforeWeekend() {
         return yearService.getCurrentYear()
+                .filter(year -> !cutoffService.isAbleToGuessYear(year))
                 .flatMap(year -> resultService.getCurrentRaceIdToGuessBeforeWeekend(year)
                         .filter(cutoffService::isAbleToGuessPreRace));
     }
