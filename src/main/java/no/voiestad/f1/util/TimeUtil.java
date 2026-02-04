@@ -18,19 +18,19 @@ public class TimeUtil {
 	public static final long HALF_HOUR = HOUR / 2;
 	public static final long DAY = HOUR * 24;
 
+	private static final ZoneId TIMEZONE = ZoneId.of("Europe/Paris");
+
 	public static int getCurrentYear() {
-		return Year.now().getValue();
+		return Year.now(TIMEZONE).getValue();
 	}
 
 	public static Instant localTimeToInstant(LocalDateTime inputTime) throws DateTimeParseException {
-		ZoneId zoneId = ZoneId.of("Europe/Paris");
-		ZonedDateTime zonedDateTime = inputTime.atZone(zoneId);
+		ZonedDateTime zonedDateTime = inputTime.atZone(TIMEZONE);
 		return zonedDateTime.toInstant();
 	}
 
 	public static LocalDateTime instantToLocalTime(Instant inputTime) {
-		ZoneId zoneId = ZoneId.of("Europe/Paris");
-		ZonedDateTime zonedDateTime = inputTime.atZone(zoneId);
+		ZonedDateTime zonedDateTime = inputTime.atZone(TIMEZONE);
 		return zonedDateTime.toLocalDateTime();
 	}
 }
