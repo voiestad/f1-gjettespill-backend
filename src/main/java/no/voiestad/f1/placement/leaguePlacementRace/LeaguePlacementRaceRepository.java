@@ -31,7 +31,7 @@ public interface LeaguePlacementRaceRepository extends JpaRepository<LeaguePlace
                 FROM league_placements_race_year_start prys
                 JOIN users u ON u.user_id = prys.user_id
                 JOIN placements_race_year_start prys2 ON prys2.user_id = prys.user_id
-                WHERE prys.year = :year AND prys.league_id = :leagueId
+                WHERE prys.year = :year AND prys2.year = :year AND prys.league_id = :leagueId
                 UNION
                 (SELECT pr.user_id AS user_id, u.username :: text AS username, pr2.points AS points, r.position AS position, pr.placement as placement
                 FROM league_placements_race pr
@@ -48,7 +48,7 @@ public interface LeaguePlacementRaceRepository extends JpaRepository<LeaguePlace
                     FROM league_placements_race_year_start prys
                     JOIN users u ON u.user_id = prys.user_id
                     JOIN placements_race_year_start prys2 ON prys2.user_id = prys.user_id
-                    WHERE prys.year = :year AND prys.league_id = :leagueId
+                    WHERE prys.year = :year AND prys2.year = :year AND prys.league_id = :leagueId
                     UNION
                     (SELECT pr.user_id AS user_id, u.username :: text as username, pr2.points AS points, r.position AS position
                     FROM league_placements_race pr
