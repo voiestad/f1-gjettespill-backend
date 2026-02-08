@@ -42,7 +42,7 @@ public interface DriverPlaceGuessRepository extends JpaRepository<DriverPlaceGue
     List<IUserQualifyingGuess> findAllByRaceIdAndCategoryNameOrderByUsernameWithoutStartingPosition(Category categoryName, RaceId raceId);
 
     @Query("""
-            SELECT r.position as racePosition, r.raceName AS raceName, dpg.driver.driverName AS driverName, sg.position AS startPosition, rr.id.finishingPosition AS finishingPosition
+            SELECT r.position as racePosition, r.raceName AS raceName, dpg.driver.driverName AS driverName, sg.position AS startPosition, rr.id.position AS finishingPosition
             FROM DriverPlaceGuessEntity dpg
             JOIN RaceEntity r ON r.raceId = dpg.id.raceId
             JOIN StartingGridEntity sg ON sg.id.raceId = r.raceId AND dpg.driver.driverId = sg.id.driver.driverId

@@ -5,12 +5,13 @@ import java.util.List;
 import no.voiestad.f1.race.RaceId;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface StartingGridRepository extends JpaRepository<StartingGridEntity, StartingGridId> {
     List<StartingGridEntity> findAllByIdRaceIdOrderByPosition(RaceId raceId);
-
-    boolean existsByIdRaceId(RaceId raceId);
+    @Modifying
+    void deleteAllByIdRaceId(RaceId raceId);
 
     @Query(value = """
             SELECT *

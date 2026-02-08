@@ -112,7 +112,7 @@ public class LogController {
         }
 
         private boolean isValidLogType() {
-            return type.matches("error|info|importer");
+            return type.matches("error|info");
         }
 
         public String type() {

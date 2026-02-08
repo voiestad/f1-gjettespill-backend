@@ -47,10 +47,6 @@ public class RaceService {
                 .toList();
     }
 
-    public List<RaceEntity> getActiveRaces() {
-        return raceRepository.findAllByNotFinished();
-    }
-
     public Optional<RaceId> getLatestStartingGridRaceId(Year year) {
         return getLatestRaceForPlaceGuess(year).map(Race::id);
     }
@@ -75,13 +71,10 @@ public class RaceService {
         return Optional.of(races.get(races.size() - 1).raceId());
     }
 
-    public boolean isRaceAdded(int raceId) {
-        return raceRepository.existsById(new RaceId(raceId));
-    }
-
-    public void insertRace(int raceId, String raceName, Year year, RacePosition position) {
-        RaceEntity newRace = new RaceEntity(new RaceId(raceId), raceName, year, position);
-        raceRepository.save(newRace);
+    public RaceId insertRace(String raceName, Year year, RacePosition position) {
+        RaceEntity newRace = new RaceEntity(new RaceId(raceRepository.getNextId()), raceName, year, position);
+        RaceEntity res = raceRepository.save(newRace);
+        return res.raceId();
     }
 
     public RacePosition getNewMaxRaceOrderPosition(Year year) {

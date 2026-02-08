@@ -5,9 +5,10 @@ import java.util.List;
 import no.voiestad.f1.race.RaceId;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 
 public interface RaceResultRepository extends JpaRepository<RaceResultEntity, RaceResultId> {
-    List<RaceResultEntity> findAllByIdRaceIdOrderByIdFinishingPosition(RaceId raceId);
-
-    boolean existsByIdRaceId(RaceId raceId);
+    List<RaceResultEntity> findAllByIdRaceIdOrderByIdPosition(RaceId raceId);
+    @Modifying
+    void deleteAllByIdRaceId(RaceId raceId);
 }
