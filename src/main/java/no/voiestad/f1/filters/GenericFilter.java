@@ -8,12 +8,6 @@ public class GenericFilter extends Filter<ILoggingEvent> {
 
 	@Override
 	public FilterReply decide(ILoggingEvent event) {
-		if (event.getLoggerName().equals("no.voiestad.f1.importing.Importer")) {
-			return FilterReply.DENY;
-		}
-		if (event.getLoggerName().equals("no.voiestad.f1.importing.TableImporter")) {
-			return FilterReply.DENY;
-		}
 		return FilterReply.NEUTRAL;
 	}
 	

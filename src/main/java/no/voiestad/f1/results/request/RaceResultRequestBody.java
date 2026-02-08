@@ -4,7 +4,7 @@ import java.util.List;
 
 public record RaceResultRequestBody(
         Integer raceId,
-        List<RaceResultRequest> raceResult,
-        List<DriverStandingsRequest> driverStandings,
-        List<ConstructorStandingsRequest> constructorStandings) {
+        List<Integer> raceResult,
+        List<Integer> driverStandings,
+        List<Integer> constructorStandings) {
 }

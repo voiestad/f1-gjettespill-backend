@@ -46,17 +46,10 @@ public interface RaceRepository extends JpaRepository<RaceEntity, RaceId> {
             """)
     List<RaceEntity> findAllByYearNotInRaceResult(Year year);
 
-    @Query("""
-            SELECT r
-            FROM RaceEntity r
-            WHERE r.raceId NOT IN (SELECT rr.id.raceId FROM RaceResultEntity rr)
-            AND r.year NOT IN (SELECT yf.year FROM YearFinishedEntity yf)
-            ORDER BY r.year, r.position
-            """)
-    List<RaceEntity> findAllByNotFinished();
-
     List<RaceEntity> findAllByYearOrderByPosition(Year year);
 
     Optional<RaceEntity> findTopByYearOrderByPositionDesc(Year year);
 
+    @Query(value = "SELECT NEXTVAL('races_race_id_seq')", nativeQuery = true)
+    int getNextId();
 }

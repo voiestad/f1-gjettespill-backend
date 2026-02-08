@@ -45,23 +45,9 @@
 		</encoder>
   	</appender>
 
-	<appender name="IMPORTING" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<filter class="no.voiestad.f1.filters.ImporterFilter" />
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>logs/importer/%d{yyyy-MM-dd}.log</fileNamePattern>
-			<maxHistory>90</maxHistory> 
-			<totalSizeCap>1GB</totalSizeCap>
-		</rollingPolicy>
-		<immediateFlush>true</immediateFlush>
-		<encoder>
-	  		<pattern>${FILE_LOG_PATTERN}</pattern>
-		</encoder>
-  	</appender>
-
   	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="INFO" />
 		<appender-ref ref="ERROR" />
-		<appender-ref ref="IMPORTING" />
   	</root>
 </configuration>

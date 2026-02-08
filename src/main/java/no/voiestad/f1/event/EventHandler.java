@@ -1,6 +1,5 @@
 package no.voiestad.f1.event;
 
-import no.voiestad.f1.importing.Importer;
 import no.voiestad.f1.scoring.ScoreCalculator;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -11,11 +10,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class EventHandler {
 
     private final ScoreCalculator scoreCalculator;
-    private final Importer importer;
 
-    public EventHandler(ScoreCalculator scoreCalculator, Importer importer) {
+    public EventHandler(ScoreCalculator scoreCalculator) {
         this.scoreCalculator = scoreCalculator;
-        this.importer = importer;
     }
 
     @Async
@@ -30,9 +27,4 @@ public class EventHandler {
         scoreCalculator.calculateScores();
     }
 
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onImportData(ImportDataEvent event) {
-        importer.importData();
-    }
 }

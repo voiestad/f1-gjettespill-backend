@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS years (
     year INTEGER PRIMARY KEY
 );
 CREATE TABLE IF NOT EXISTS races (
-    race_id INTEGER PRIMARY KEY,
+    race_id SERIAL PRIMARY KEY,
     race_name TEXT NOT NULL,
     year INTEGER NOT NULL,
     position INTEGER NOT NULL,
@@ -96,7 +96,6 @@ CREATE TABLE IF NOT EXISTS driver_standings (
     race_id INTEGER NOT NULL,
     driver_id INTEGER NOT NULL,
     position INTEGER NOT NULL,
-    points INTEGER NOT NULL,
     PRIMARY KEY (race_id, driver_id),
     FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
     FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE
@@ -105,17 +104,14 @@ CREATE TABLE IF NOT EXISTS constructor_standings (
     race_id INTEGER NOT NULL,
     constructor_id INTEGER NOT NULL,
     position INTEGER NOT NULL,
-    points INTEGER NOT NULL,
     PRIMARY KEY (race_id, constructor_id),
     FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
     FOREIGN KEY (constructor_id) REFERENCES constructors(constructor_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS race_results (
     race_id INTEGER NOT NULL,
-    qualified_position TEXT NOT NULL,
     position INTEGER NOT NULL,
     driver_id INTEGER NOT NULL,
-    points INTEGER NOT NULL,
     PRIMARY KEY (race_id, position),
     FOREIGN KEY (race_id) REFERENCES races(race_id) ON DELETE CASCADE,
     FOREIGN KEY (driver_id) REFERENCES drivers(driver_id) ON DELETE CASCADE

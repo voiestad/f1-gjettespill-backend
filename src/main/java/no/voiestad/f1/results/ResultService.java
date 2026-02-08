@@ -12,7 +12,6 @@ import no.voiestad.f1.race.RaceId;
 import no.voiestad.f1.race.RaceService;
 import no.voiestad.f1.results.constructorStandings.ConstructorStandingsEntity;
 import no.voiestad.f1.results.constructorStandings.ConstructorStandingsRepository;
-import no.voiestad.f1.results.domain.CompetitorPoints;
 import no.voiestad.f1.results.domain.CompetitorPosition;
 import no.voiestad.f1.results.driverStandings.DriverStandingsEntity;
 import no.voiestad.f1.results.driverStandings.DriverStandingsRepository;
@@ -56,7 +55,7 @@ public class ResultService {
     }
 
     public List<RaceResultEntity> getRaceResult(RaceId raceId) {
-        return raceResultRepository.findAllByIdRaceIdOrderByIdFinishingPosition(raceId);
+        return raceResultRepository.findAllByIdRaceIdOrderByIdPosition(raceId);
     }
 
     public List<DriverStandingsEntity> getDriverStandings(RaceId raceId) {
@@ -68,33 +67,25 @@ public class ResultService {
     }
 
 
-    public void insertDriverStartingGrid(RaceId raceId, CompetitorPosition position, DriverEntity driver) {
+    public void insertDriverStartingGrid(RaceId raceId, DriverEntity driver, CompetitorPosition position) {
         StartingGridEntity startingGridEntity = new StartingGridEntity(raceId, driver, position);
         startingGridRepository.save(startingGridEntity);
     }
 
-    public void insertDriverRaceResult(RaceId raceId, String position, DriverEntity driver, CompetitorPoints points, CompetitorPosition finishingPosition) {
-        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, finishingPosition, position, driver, points);
+    public void insertDriverRaceResult(RaceId raceId, DriverEntity driver, CompetitorPosition position) {
+        RaceResultEntity raceResultEntity = new RaceResultEntity(raceId, position, driver);
         raceResultRepository.save(raceResultEntity);
     }
 
 
-    public void insertDriverIntoStandings(RaceId raceId, DriverEntity driver, CompetitorPosition position, CompetitorPoints points) {
-        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver, position, points);
+    public void insertDriverIntoStandings(RaceId raceId, DriverEntity driver, CompetitorPosition position) {
+        DriverStandingsEntity driverStandingsEntity = new DriverStandingsEntity(raceId, driver, position);
         driverStandingsRepository.save(driverStandingsEntity);
     }
 
-    public void insertConstructorIntoStandings(RaceId raceId, ConstructorEntity constructor, CompetitorPosition position, CompetitorPoints points) {
-        ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor, position, points);
+    public void insertConstructorIntoStandings(RaceId raceId, ConstructorEntity constructor, CompetitorPosition position) {
+        ConstructorStandingsEntity constructorStandingsEntity = new ConstructorStandingsEntity(raceId, constructor, position);
         constructorStandingsRepository.save(constructorStandingsEntity);
-    }
-
-    public boolean isStartingGridAdded(RaceId raceId) {
-        return startingGridRepository.existsByIdRaceId(raceId);
-    }
-
-    public boolean isRaceResultAdded(RaceId raceId) {
-        return raceResultRepository.existsByIdRaceId(raceId);
     }
 
     public Optional<RaceId> getCurrentRaceIdToGuess() {
@@ -104,6 +95,7 @@ public class ResultService {
         }
         return Optional.of(startingGridEntities.get(0).raceId());
     }
+
     public Optional<RaceId> getCurrentRaceIdToGuessBeforeWeekend(Year year) {
         if (getCurrentRaceIdToGuess().isPresent()) {
             return Optional.empty();
@@ -137,4 +129,13 @@ public class ResultService {
                 .toList();
     }
 
+    public void clearStartingGridFromRace(RaceId raceId) {
+        startingGridRepository.deleteAllByIdRaceId(raceId);
+    }
+
+    public void clearResultsFromRace(RaceId raceId) {
+        raceResultRepository.deleteAllByIdRaceId(raceId);
+        driverStandingsRepository.deleteAllByIdRaceId(raceId);
+        constructorStandingsRepository.deleteAllByIdRaceId(raceId);
+    }
 }
