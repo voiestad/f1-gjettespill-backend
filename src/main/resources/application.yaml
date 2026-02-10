@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: f1
+  datasource:
+    url: jdbc:postgresql://database:5432/f1
+    driver-class-name: org.postgresql.Driver
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  sql:
+    init:
+      mode: always
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 1000
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - openid
+            redirect-uri: ${GOOGLE_REDIRECT_URI}
+          apple:
+            client-id: ${APPLE_CLIENT_ID}
+            client-name: Apple
+            scope: openid
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            redirect-uri: ${APPLE_REDIRECT_URI}
+        provider:
+          apple:
+            authorization-uri: https://appleid.apple.com/auth/authorize
+            token-uri: https://appleid.apple.com/auth/token
+            jwk-set-uri: https://appleid.apple.com/auth/keys
+            issuer-uri: https://appleid.apple.com
+apple:
+  team-id: ${APPLE_TEAM_ID}
+  key-id: ${APPLE_KEY_ID}
+  private-key: ${APPLE_PRIVATE_KEY}
+ntfy:
+  user: ${NTFY_USER}
+  password: ${NTFY_PASSWORD}
+server:
+  error:
+    whitelabel:
+      enabled: false
+  servlet:
+    session:
+      timeout: 30D
+      cookie:
+        max-age: P365D
+        same-site: none
+        secure: true

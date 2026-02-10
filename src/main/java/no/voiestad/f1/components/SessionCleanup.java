@@ -32,7 +32,7 @@ public class SessionCleanup {
                 	SELECT SESSION_ID, LAST_ACCESS_TIME
                 	FROM SPRING_SESSION
                 	WHERE PRINCIPAL_NAME NOT IN (
-                		SELECT google_id from users
+                		SELECT provider_id from user_providers
                 	);
                 """;
         List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
