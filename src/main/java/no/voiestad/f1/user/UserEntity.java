@@ -13,14 +13,12 @@ public class UserEntity {
     @Id
     @Column(nullable = false, name = "user_id")
     private UUID id;
-    @Column(unique = true, nullable = false, name = "google_id")
-    private String googleId;
+
     @Column(unique = true, nullable = false, name = "username", columnDefinition = "citext")
     private String username;
 
-    UserEntity(UUID id, String googleId, String username) {
+    UserEntity(UUID id, String username) {
         this.id = id;
-        this.googleId = googleId;
         this.username = username;
     }
 
@@ -33,10 +31,6 @@ public class UserEntity {
 
     public String username() {
         return username;
-    }
-
-    public String googleId() {
-        return googleId;
     }
 
     void setUsername(String username) {

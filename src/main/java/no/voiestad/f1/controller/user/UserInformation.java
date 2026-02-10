@@ -1,6 +1,7 @@
 package no.voiestad.f1.controller.user;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import no.voiestad.f1.collection.CompetitorGuessYear;
@@ -26,8 +27,8 @@ public class UserInformation {
 	public final List<UserNotifiedCount> notifiedCount;
 	public final List<GuessReminderOption> guessReminderPreferences;
 
-	public UserInformation(UserEntity userEntity, NotificationService notificationService, GuessService guessService) {
-		this.user = UserDto.fromEntity(userEntity);
+	public UserInformation(UserEntity userEntity, Map<String, String> providers, NotificationService notificationService, GuessService guessService) {
+		this.user = UserDto.fromEntity(userEntity, providers);
 		this.topic = notificationService.getNtfyTopic(userEntity.id()).orElse(null);
 		this.driverGuess = guessService.userGuessDataDriver(userEntity.id());
 		this.constructorGuess = guessService.userGuessDataConstructor(userEntity.id());

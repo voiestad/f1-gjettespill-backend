@@ -12,7 +12,13 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface UserRespository extends JpaRepository<UserEntity, UUID> {
 
-    Optional<UserEntity> findByGoogleId(String googleId);
+    @Query("""
+            SELECT u FROM UserProviderEntity up
+            JOIN UserEntity u ON u.id = up.userId
+            WHERE up.provider = :provider
+            AND up.providerId = :providerId
+            """)
+    Optional<UserEntity> findByProviderId(String providerId, String provider);
 
     @Query(value = "SELECT * FROM users WHERE username = :username :: citext", nativeQuery = true)
     Optional<UserEntity> findByUsername(String username);
@@ -22,11 +28,9 @@ public interface UserRespository extends JpaRepository<UserEntity, UUID> {
     @Modifying
     @Query(value = """
             UPDATE users
-            SET username = 'Anonym' || nextVal('anonymous_username_seq'),
-                google_id = :userId
+            SET username = 'Anonym' || nextVal('anonymous_username_seq')
             WHERE user_id = :userId
             """, nativeQuery = true)
-
     void anonymizeUser(UUID userId);
 
     @Query("""

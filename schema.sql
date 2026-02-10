@@ -1,8 +1,21 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 CREATE TABLE IF NOT EXISTS users (
     user_id UUID PRIMARY KEY,
-    google_id TEXT UNIQUE NOT NULL,
     username CITEXT COLLATE "nb_NO.utf8" UNIQUE NOT NULL
+);
+CREATE TABLE IF NOT EXISTS user_providers (
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL,
+    provider_id TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS user_linkings (
+    id SERIAL PRIMARY KEY,
+    user_id UUID UNIQUE NOT NULL,
+    code VARCHAR(32) UNIQUE NOT NULL,
+    valid_to TIMESTAMPTZ NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 CREATE SEQUENCE IF NOT EXISTS anonymous_username_seq START 1;
 CREATE TABLE IF NOT EXISTS years (
@@ -331,4 +344,17 @@ CREATE TABLE IF NOT EXISTS SPRING_SESSION_ATTRIBUTES (
     ATTRIBUTE_BYTES BYTEA NOT NULL,
     CONSTRAINT SPRING_SESSION_ATTRIBUTES_PK PRIMARY KEY (SESSION_PRIMARY_ID, ATTRIBUTE_NAME),
     CONSTRAINT SPRING_SESSION_ATTRIBUTES_FK FOREIGN KEY (SESSION_PRIMARY_ID) REFERENCES SPRING_SESSION(PRIMARY_ID) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS oauth2_authorized_client (
+    client_registration_id VARCHAR(100) NOT NULL,
+    principal_name VARCHAR(200) NOT NULL,
+    access_token_type VARCHAR(100) NOT NULL,
+    access_token_value BYTEA NOT NULL,
+    access_token_issued_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    access_token_expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    access_token_scopes VARCHAR(1000),
+    refresh_token_value BYTEA,
+    refresh_token_issued_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    PRIMARY KEY (client_registration_id, principal_name)
 );

@@ -25,7 +25,8 @@ public class GlobalAspect {
 
     @Before("execution(public * no.voiestad.f1.controller..*(..)) && " +
             "!execution(public * no.voiestad.f1.controller.open..*(..)) && " +
-            "!execution(public * no.voiestad.f1.controller.user.UserSettingsController.changeUsername(..))")
+            "!execution(public * no.voiestad.f1.controller.user.UserSettingsController.changeUsername(..)) && " +
+            "!execution(public * no.voiestad.f1.controller.user.UserSettingsController.linkLogin(..))")
     public void usernameCheck() throws NoUsernameException {
         userService.usernameCheck();
     }

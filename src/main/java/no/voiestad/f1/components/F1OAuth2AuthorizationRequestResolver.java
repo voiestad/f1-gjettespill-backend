@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 
 public class F1OAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
@@ -36,12 +37,18 @@ public class F1OAuth2AuthorizationRequestResolver implements OAuth2Authorization
             return null;
         }
         Map<String, Object> additionalParameters = new HashMap<>(original.getAdditionalParameters());
-        String rememberMe = request.getParameter("remember_me");
-        if (rememberMe != null) {
-            additionalParameters.put("prompt", "consent");
-            additionalParameters.put("access_type", "offline");
+        String registrationId =
+                (String) original.getAttributes()
+                        .get(OAuth2ParameterNames.REGISTRATION_ID);
+        if ("google".equals(registrationId)) {
+            String rememberMe = request.getParameter("remember_me");
+            if (rememberMe != null) {
+                additionalParameters.put("prompt", "consent");
+                additionalParameters.put("access_type", "offline");
+            }
+        } else if ("apple".equals(registrationId)) {
+            additionalParameters.put("response_mode", "form_post");
         }
-
         return OAuth2AuthorizationRequest.from(original)
                 .additionalParameters(additionalParameters)
                 .build();
