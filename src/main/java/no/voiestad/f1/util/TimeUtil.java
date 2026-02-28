@@ -17,7 +17,7 @@ public class TimeUtil {
 	public static final long HOUR = MINUTE * 60;
 	public static final long HALF_HOUR = HOUR / 2;
 	public static final long DAY = HOUR * 24;
-
+	public static final long MONTH = DAY * 30;
 	private static final ZoneId TIMEZONE = ZoneId.of("Europe/Paris");
 
 	public static int getCurrentYear() {
