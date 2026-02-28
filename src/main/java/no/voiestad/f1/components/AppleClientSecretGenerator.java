@@ -2,6 +2,7 @@ package no.voiestad.f1.components;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import no.voiestad.f1.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +30,7 @@ public class AppleClientSecretGenerator {
     public String generateClientSecret() {
         try {
             Date now = new Date();
-            Date expiration = new Date(now.getTime() + 3600 * 1000);
+            Date expiration = new Date(now.getTime() + TimeUtil.MONTH * 4);
 
             return Jwts.builder()
                     .setHeaderParam("kid", keyId)
