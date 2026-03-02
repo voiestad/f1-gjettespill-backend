@@ -8,6 +8,7 @@ import no.voiestad.f1.competitors.CompetitorService;
 import no.voiestad.f1.competitors.constructor.ConstructorEntity;
 import no.voiestad.f1.competitors.driver.DriverEntity;
 import no.voiestad.f1.event.CalculateScoreEvent;
+import no.voiestad.f1.notification.NotificationService;
 import no.voiestad.f1.results.ResultService;
 import no.voiestad.f1.results.domain.CompetitorPosition;
 import no.voiestad.f1.results.request.RaceResultRequestBody;
@@ -37,19 +38,23 @@ public class ManageSeasonController {
     private final ResultService resultService;
     private final CompetitorService competitorService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final NotificationService notificationService;
 
     public ManageSeasonController(
             CutoffService cutoffService,
             YearService yearService,
             RaceService raceService,
             ResultService resultService,
-            CompetitorService competitorService, ApplicationEventPublisher applicationEventPublisher) {
+            CompetitorService competitorService,
+            ApplicationEventPublisher applicationEventPublisher,
+            NotificationService notificationService) {
         this.cutoffService = cutoffService;
         this.yearService = yearService;
         this.raceService = raceService;
         this.resultService = resultService;
         this.competitorService = competitorService;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.notificationService = notificationService;
     }
 
     @PostMapping("/move")
@@ -142,6 +147,9 @@ public class ManageSeasonController {
         if (yearService.isFinishedYear(year)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
+        if (resultService.getStartingGrid(raceId).isEmpty()) {
+            notificationService.clearNotified();
+        }
         resultService.clearStartingGridFromRace(raceId);
         List<DriverEntity> drivers = competitorService.getAllDriversWithYear(requestBody.startingGrid(), year);
         if (drivers.isEmpty()) {
@@ -167,6 +175,9 @@ public class ManageSeasonController {
         Year year = race.year();
         if (yearService.isFinishedYear(year)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        if (resultService.getRaceResult(raceId).isEmpty()) {
+            notificationService.clearNotified();
         }
         resultService.clearResultsFromRace(raceId);
         if (!addRaceResult(requestBody.raceResult(), raceId, year)
