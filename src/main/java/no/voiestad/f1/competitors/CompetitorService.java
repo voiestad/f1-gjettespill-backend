@@ -8,6 +8,7 @@ import no.voiestad.f1.competitors.domain.Color;
 import no.voiestad.f1.competitors.domain.ConstructorName;
 import no.voiestad.f1.competitors.domain.DriverName;
 import no.voiestad.f1.competitors.driver.*;
+import no.voiestad.f1.race.RaceId;
 import no.voiestad.f1.year.Year;
 
 import org.springframework.stereotype.Service;
@@ -77,12 +78,24 @@ public class CompetitorService {
                 .toList();
     }
 
+    public List<DriverDTO> getDriversTeamOrderByStandings(Year year, RaceId raceId) {
+        return driverRepository.findAllByYearOrderByStandings(year, raceId).stream()
+                .map(DriverDTO::fromEntityWithTeam)
+                .toList();
+    }
+
     public void addColorConstructor(ConstructorId constructorId, Color color) {
         constructorColorRepository.save(new ConstructorColorEntity(constructorId, color));
     }
 
     public List<ConstructorDTO> getConstructorsYearWithColors(Year year) {
         return constructorRepository.findAllByYearOrderByPosition(year).stream()
+                .map(ConstructorDTO::fromEntityWithColor)
+                .toList();
+    }
+
+    public List<ConstructorDTO> getConstructorsYearWithColorsOrderByStandings(Year year, RaceId raceId) {
+        return constructorRepository.findAllByYearOrderByStandings(year, raceId).stream()
                 .map(ConstructorDTO::fromEntityWithColor)
                 .toList();
     }

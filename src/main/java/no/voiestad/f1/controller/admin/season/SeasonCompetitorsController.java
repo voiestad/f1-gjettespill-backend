@@ -9,6 +9,8 @@ import no.voiestad.f1.competitors.constructor.ConstructorDTO;
 import no.voiestad.f1.competitors.constructor.ConstructorEntity;
 import no.voiestad.f1.competitors.driver.DriverDTO;
 import no.voiestad.f1.competitors.driver.DriverEntity;
+import no.voiestad.f1.race.RaceId;
+import no.voiestad.f1.race.RaceService;
 import no.voiestad.f1.year.YearService;
 import no.voiestad.f1.competitors.domain.Color;
 import no.voiestad.f1.year.Year;
@@ -24,15 +26,31 @@ public class SeasonCompetitorsController {
 
     private final YearService yearService;
     private final CompetitorService competitorService;
+    private final RaceService raceService;
 
-    public SeasonCompetitorsController(YearService yearService, CompetitorService competitorService) {
+    public SeasonCompetitorsController(YearService yearService, CompetitorService competitorService, RaceService raceService) {
         this.yearService = yearService;
         this.competitorService = competitorService;
+        this.raceService = raceService;
     }
 
     @GetMapping("/drivers/list/{year}")
-    public ResponseEntity<List<DriverDTO>> listDrivers(@PathVariable("year") Year year) {
-        return new ResponseEntity<>(competitorService.getDriversTeam(year), HttpStatus.OK);
+    public ResponseEntity<List<DriverDTO>> listDrivers(
+            @PathVariable("year") Year year,
+            @RequestParam(value = "order", required = false) String order) {
+        List<DriverDTO> drivers = order.equals("standings")
+                ? driverOrderedByStandings(year)
+                : competitorService.getDriversTeam(year);
+        return new ResponseEntity<>(drivers, HttpStatus.OK);
+    }
+
+    private List<DriverDTO> driverOrderedByStandings(Year year) {
+        Optional<RaceId> optRaceId = raceService.getLatestRaceId(year);
+        if (optRaceId.isEmpty()) {
+            return competitorService.getDriversTeam(year);
+        }
+        RaceId raceId = optRaceId.get();
+        return competitorService.getDriversTeamOrderByStandings(year, raceId);
     }
 
     @PostMapping("/drivers/set-team")
@@ -126,16 +144,29 @@ public class SeasonCompetitorsController {
     @Transactional
     public ResponseEntity<?> renameDriver(@RequestParam("driver") DriverEntity driver,
                                           @RequestParam("name") String name) {
-        if (competitorService.renameDriver(driver, name)){
+        if (competitorService.renameDriver(driver, name)) {
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
 
     @GetMapping("/constructors/list/{year}")
-    public ResponseEntity<List<ConstructorDTO>> listConstructors(@PathVariable("year") Year year) {
-        List<ConstructorDTO> constructors = competitorService.getConstructorsYearWithColors(year);
+    public ResponseEntity<List<ConstructorDTO>> listConstructors(
+            @PathVariable("year") Year year,
+            @RequestParam(value = "order", required = false) String order) {
+        List<ConstructorDTO> constructors = order.equals("standings")
+                ? constructorsOrderedByStandings(year)
+                : competitorService.getConstructorsYearWithColors(year);
         return new ResponseEntity<>(constructors, HttpStatus.OK);
+    }
+
+    private List<ConstructorDTO> constructorsOrderedByStandings(Year year) {
+        Optional<RaceId> optRaceId = raceService.getLatestRaceId(year);
+        if (optRaceId.isEmpty()) {
+            return competitorService.getConstructorsYearWithColors(year);
+        }
+        RaceId raceId = optRaceId.get();
+        return competitorService.getConstructorsYearWithColorsOrderByStandings(year, raceId);
     }
 
     @PostMapping("/constructors/add")
