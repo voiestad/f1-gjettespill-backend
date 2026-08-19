@@ -154,7 +154,7 @@ public class SeasonCompetitorsController {
     public ResponseEntity<List<ConstructorDTO>> listConstructors(
             @PathVariable("year") Year year,
             @RequestParam(value = "order", required = false) String order) {
-        List<ConstructorDTO> constructors = order.equals("standings")
+        List<ConstructorDTO> constructors = "standings".equals(order)
                 ? constructorsOrderedByStandings(year)
                 : competitorService.getConstructorsYearWithColors(year);
         return new ResponseEntity<>(constructors, HttpStatus.OK);
