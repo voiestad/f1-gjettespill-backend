@@ -38,7 +38,7 @@ public class SeasonCompetitorsController {
     public ResponseEntity<List<DriverDTO>> listDrivers(
             @PathVariable("year") Year year,
             @RequestParam(value = "order", required = false) String order) {
-        List<DriverDTO> drivers = order.equals("standings")
+        List<DriverDTO> drivers = "standings".equals(order)
                 ? driverOrderedByStandings(year)
                 : competitorService.getDriversTeam(year);
         return new ResponseEntity<>(drivers, HttpStatus.OK);
