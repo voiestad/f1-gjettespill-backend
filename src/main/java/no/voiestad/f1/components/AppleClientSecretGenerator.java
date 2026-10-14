@@ -1,7 +1,7 @@
 package no.voiestad.f1.components;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.Jwts.SIG;
 import no.voiestad.f1.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -33,13 +33,13 @@ public class AppleClientSecretGenerator {
             Date expiration = new Date(now.getTime() + TimeUtil.MONTH * 4);
 
             return Jwts.builder()
-                    .setHeaderParam("kid", keyId)
-                    .setIssuer(teamId)
-                    .setSubject(clientId)
-                    .setAudience("https://appleid.apple.com")
-                    .setIssuedAt(now)
-                    .setExpiration(expiration)
-                    .signWith(getPrivateKey(), SignatureAlgorithm.ES256)
+                    .header().add("kid", keyId).and()
+                    .issuer(teamId)
+                    .subject(clientId)
+                    .audience().add("https://appleid.apple.com").and()
+                    .issuedAt(now)
+                    .expiration(expiration)
+                    .signWith(getPrivateKey(), SIG.ES256)
                     .compact();
         } catch (Exception e) {
             return "";
