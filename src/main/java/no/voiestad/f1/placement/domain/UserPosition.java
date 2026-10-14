@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 @Embeddable

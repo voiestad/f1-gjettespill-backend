@@ -5,7 +5,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 @Embeddable
 public class GuessPosition implements Comparable<GuessPosition> {

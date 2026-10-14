@@ -11,7 +11,7 @@ import java.util.Base64;
 
 import no.voiestad.f1.notification.ntfy.message.NtfyMessage;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -44,6 +44,6 @@ public class NtfySender {
             }
         } catch (IOException | InterruptedException | URISyntaxException ignored) {
         }
-            return false;
+        return false;
     }
 }
