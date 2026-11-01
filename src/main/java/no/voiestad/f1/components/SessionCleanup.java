@@ -7,11 +7,13 @@ import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class SessionCleanup {
+
+    private static final long MAX_IDLE_MILLIS = Duration.ofHours(1).toMillis();
 
     private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
     private final JdbcTemplate jdbcTemplate;
@@ -23,28 +25,25 @@ public class SessionCleanup {
 
     @Scheduled(fixedRate = TimeUtil.HALF_HOUR, initialDelay = TimeUtil.SECOND * 3)
     public void removeUnregisteredSessions() {
-        List<String> unregisteredUsers = getUnregisteredUsers();
-        unregisteredUsers.forEach(sessionRepository::deleteById);
+        getUnregisteredSessionIds().forEach(sessionRepository::deleteById);
     }
 
-    public List<String> getUnregisteredUsers() {
+    public List<String> getUnregisteredSessionIds() {
         final String sql = """
-                	SELECT SESSION_ID, LAST_ACCESS_TIME
-                	FROM SPRING_SESSION
-                	WHERE PRINCIPAL_NAME NOT IN (
-                		SELECT provider_id from user_providers
-                	);
-                """;
-        List<Map<String, Object>> sqlRes = jdbcTemplate.queryForList(sql);
-        return sqlRes.stream()
-                .filter(session -> {
-                    long lastAccess = (long) session.get("LAST_ACCESS_TIME");
-                    long now = System.currentTimeMillis();
-                    long diff = now - lastAccess;
-                    long hourMillis = 3600000;
-                    return diff >= hourMillis;
-                })
-                .map(session -> (String) session.get("SESSION_ID"))
-                .toList();
+            SELECT s.SESSION_ID
+            FROM SPRING_SESSION s
+            WHERE 
+                s.LAST_ACCESS_TIME < ?
+                AND (
+                    s.PRINCIPAL_NAME IS NULL
+                    OR NOT EXISTS (
+                        SELECT 1
+                        FROM user_providers up
+                        WHERE up.provider_id = s.PRINCIPAL_NAME
+                    )
+                )
+        """;
+        long cutoff = System.currentTimeMillis() - MAX_IDLE_MILLIS;
+        return jdbcTemplate.queryForList(sql, String.class, cutoff);
     }
 }
